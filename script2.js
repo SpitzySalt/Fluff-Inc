@@ -75,7 +75,6 @@ const swariaQuotes = [
   { text: "My name is Peachy btw.", condition: () => true },
   { text: "It would be so swawesome~", condition: () => true },
   { text: "Am I really a glorified news ticker?", condition: () => true },
-  { text: "I feel like the title of this game is very misleading.", condition: () => true },
   { text: "Real ones beats the game with no autoclicker.", condition: () => true },
   { text: "The swa elites are so boring. But they do reward me with knowledge points.", condition: () => true },
   {
