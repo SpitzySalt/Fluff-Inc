@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en" id="root" data-theme="light" data-colour="green" data-style="rounded">
+<head>
+  <meta charset="UTF-8">
+  <title>Fluff Inc.</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css?family=Oswald:700|Orbitron:700" rel="stylesheet">
+
+  <style>
+    .top-row {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .bottom-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+    .swaria-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .swaria-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .swaria-speech {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%) translateX(18px);
+      background: white;
+      color: #111;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      font-size: 1.2rem;
+      display: none;
+      max-width: 260px;
+      z-index: 2000;
+    }
+    .swaria-speech.show {
+      display: block;
+    }
+    #swariaCharacter {
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      width: 400px;
+      min-height: 400px;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow: visible;
+      text-align: center;
+    }
+    #subTabNavBar {
+      position: fixed;
+      bottom: 55px;
+      left: 0;
+      width: 100%;
+      background: var(--card-border);
+      display: flex;
+      justify-content: center;
+      padding: 6px 0;
+      z-index: 10;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    }
+    #subTabNav {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    #prismSubTab {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 100;
+      background: linear-gradient(120deg, #e0e7ff 0%, #fff1eb 30%, #ffe3ec 60%, #c1f0f6 100%);
+      min-height: 100vh;
+      padding: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .quest-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5em;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #6c757d;
+    }
+    .quest-item.completed {
+      background: #d4edda;
+      border-left-color: #28a745;
+    }
+    .quest-item span:last-child {
+      font-weight: bold;
+      color: #495057;
+    }
+    .quest-item.completed span:last-child {
+      color: #155724;
+    }
+    #prismSubTab.active {
+      display: flex;
+    }
+    @keyframes prismBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .prism-top-row.triple {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      width: 100%;
+    }
+    #prismSpeech {
+      display: none;
+    }
+    #prismSpeech.show {
+      display: block;
+    }
+    #prismCharacterContainer {
+      position: relative;
+      z-index: 1001;
+      overflow: visible;
+    }
+  </style>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  min-height: 100vh;
+}
+</style>
+      <div id="subTabNavBar">
+        <div id="subTabNav">
+          <button onclick="switchHomeSubTab('gamblingMain')" class="active">Cargo</button>
+          <button onclick="switchHomeSubTab('generatorSubTab')" id="generatorSubTabBtn" style="display:none;">Generators</button>
+          <button onclick="switchHomeSubTab('prismSubTab')" id="prismSubTabBtn" style="display:none;">Lab</button>
+        </div>
+      </div>
+</head>
+<body>
+  <div id="autosaveIndicator" style="position:fixed;top:12px;left:16px;z-index:99999;font-size:1.3em;font-weight:bold;color:#3cf;background:rgba(0,0,0,0.10);padding:0.3em 1.2em;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:none;pointer-events:none;">Saved</div>
+<div id="knowledgeSubTabBar" style="display: none;">
+  <div id="knowledgeSubTabNav">
+    <button onclick="switchKnowledgeSubTab('elementsMain')" class="active">Elements</button>
+    <button onclick="switchKnowledgeSubTab('graduationSubTab')" id="graduationSubTabBtn" style="display:none;">Expansion</button>
+    <button onclick="switchKnowledgeSubTab('infinityResearchSubTab')" id="infinityResearchSubTabBtn" style="display:none;">Infinity Research</button>
+  </div>
+</div>
+<div id="settingsSubTabBar" class="settingsSubTabBar" style="display:none;">
+  <div class="settingsSubTabNav">
+  <button id="settingsSavesTabBtn" class="settingsSubTabBtn active" onclick="switchSettingsSubTab('settingsSavesTab')">Saves</button>
+  <button id="settingsStatsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsStatsTab')">Stats</button>
+  <button id="settingsCreditsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsCreditsTab')">Credits</button>
+  <button id="settingsPremiumTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsPremiumTab')">Premium</button>
+  <button id="settingsHardModeTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsHardModeTab')" style="display:none;">Ţ̶̣̻̓̊h̸̛͉é̸̞̥͜ ̴̘̺̲̅̀͑Q̶͔̇̽ų̵̥̬́̌̿ë̸͚́ś̶̡t̵̥̠͂̏͑</button>
+</div>
+</div>
+<div id="achievementsSubTabBar" class="achievementsSubTabBar" style="display:none;">
+  <div class="achievementsSubTabNav">
+    <button id="achievementsNormalTabBtn" class="achievementsSubTabBtn active" onclick="switchAchievementsSubTab('achievementsNormalTab')">Achievements</button>
+    <button id="achievementsSecretTabBtn" class="achievementsSubTabBtn" onclick="switchAchievementsSubTab('achievementsSecretTab')">Secret Achievements</button>
+  </div>
+</div>
+<div id="gameContainer">
+  <main id="pages">
+    <section id="home" class="page active">
+      <div id="homeSubTabs" style="margin-top: 1rem;">
+        <div id="gamblingMain" class="sub-tab" style="display: block;">
+          <div class="top-row">
+            <div class="card">
+             <h2>Currencies</h2>
+<p><img src="assets/icons/fluff.png" class="icon"> Fluff: <span id="fluff">0</span><span id="fluffInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+  <br><small>+<span id="fluffRate">0</span> fluff per tick</small></p>
+<p><img src="assets/icons/swaria coin.png" class="icon"> Swaria Coins: <span class="currency-value-wrapper"><span id="swaria">0</span><span id="swariaGain" class="gain-popup"></span></span><span id="swariaInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+  <span id="swariaGain" class="gain-popup"></span></p>
+<p><img src="assets/icons/feather.png" class="icon"> Feathers: <span class="currency-value-wrapper"><span id="feathers">0</span><span id="featherGain" class="gain-popup"></span></span><span id="feathersInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+  <span id="featherGain" class="gain-popup"></span></p>
+<p><img src="assets/icons/wing artifact.png" class="icon"> Wing Artifacts: <span class="currency-value-wrapper"><span id="artifacts">0</span><span id="artifactGain" class="gain-popup"></span></span><span id="artifactsInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+  <span id="artifactGain" class="gain-popup"></span></p>
+            </div>
+            <div class="card">
+              <h2>Boxes</h2>
+<button onclick="buyBox('common')">
+  <img src="assets/icons/common box.png" class="icon"> Common (100)
+</button>
+<button onclick="buyBox('uncommon')">
+  <img src="assets/icons/uncommon box.png" class="icon"> Uncommon (300)
+</button>
+<button onclick="buyBox('rare')">
+  <img src="assets/icons/rare box.png" class="icon"> Rare (1000)
+</button>
+<button onclick="buyBox('legendary')">
+  <img src="assets/icons/legendary box.png" class="icon"> Legendary (5000)
+</button>
+<button onclick="buyBox('mythic')">
+  <img src="assets/icons/mythic box.png" class="icon"> Mythic (20000)
+</button>
+            </div>
+            <div class="card">
+              <h2>Deliver to the Swa elites</h2>
+              <p id="kpLine" style="display:none;">
+  <img src="assets/icons/kp.png" class="icon"> Knowledge Points: <span id="kp">0/</span>
+  <span id="kpGain" class="gain-popup"></span>
+</p>
+              <div id="wingProgress">Need 50 Wing artifact for ???: <span id="artifactsResetCheck">0</span></div>
+              <div id="kpPreview" style="display:none; margin-top: 10px; font-weight: bold;"></div>
+              <button id="resetBtn" style="display:none;" onclick="resetGame()"> Deliver your cargo to the Swa elites</button>
+            </div>
+          </div>
+          <div class="bottom-row">
+          <div id="stairsCard" class="floor-btn" onclick="window.currentFloor=2;updateFloor2Visibility();">
+        <span style="font-size:1.5em;margin-right:0.5em;">▲</span>
+        <span>Go to the second floor</span>
+          </div>
+            <div class="card swaria-box">
+              <div class="swaria-container">
+                <img id="swariaCharacter" src="swa normal.png" alt="Swaria Character">
+                <div id="swariaSpeech" class="swaria-speech">Hello there!</div>
+              </div>
+              <div id="swariaHungerDisplay" style="margin-top:1rem; text-align:center;">
+                <div style="font-weight:bold; margin-bottom:0.5rem;">Hunger: <span id="swariaHungerValue">100</span>/100</div>
+                <div style="width:100%; height:20px; background:#333; border-radius:10px; overflow:hidden;">
+                  <div id="swariaHungerBar" style="width:100%; height:100%; background:linear-gradient(90deg, #4CAF50, #8BC34A); transition:width 0.3s ease;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+<div id="generatorSubTab" class="sub-tab" style="display: none;">
+  <div class="card fullwidth">
+    <div class="ceiling-light"></div>
+    <div id="generatorContainer" style="padding: 0.5rem;"></div>
+  </div>
+</div>
+<div id="prismSubTab" class="sub-tab" style="display: none;">
+  <div class="prism-top-row triple">
+    <div>
+      <div class="card">
+        <h2>The Prism</h2>
+        <div id="lightGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;"></div>
+      </div>
+      <div id="prismCharacterContainer" class="card swaria-character-box">
+        <img id="prismCharacter" src="assets/icons/swaria prism.png" alt="Swaria Character" />
+        <div id="prismSpeech" class="swaria-speech">Hello!</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Light Energy</h3>
+      <div class="light-row"><img src="assets/icons/light.png" class="light-icon"><span>Light: <span class="currency-value-wrapper"><span id="lightCount">0</span></span><span id="lightKPMult" style="margin-left: 6px; color: #aaffff; font-weight: bold;"></span></span></div>
+      <div class="light-row"><img src="assets/icons/red light.png" class="light-icon"><span>Red Light: <span class="currency-value-wrapper"><span id="redlightCount">0</span></span></span></div>
+      <div class="light-row"><img src="assets/icons/orange light.png" class="light-icon"><span>Orange Light: <span class="currency-value-wrapper"><span id="orangelightCount">0</span></span></span></div>
+      <div class="light-row"><img src="assets/icons/yellow light.png" class="light-icon"><span>Yellow Light: <span class="currency-value-wrapper"><span id="yellowlightCount">0</span></span></span></div>
+      <div class="light-row"><img src="assets/icons/green light.png" class="light-icon"><span>Green Light: <span class="currency-value-wrapper"><span id="greenlightCount">0</span></span></span></div>
+      <div class="light-row"><img src="assets/icons/blue light.png" class="light-icon"><span>Blue Light: <span class="currency-value-wrapper"><span id="bluelightCount">0</span></span></span></div>
+      <div class="light-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc;"><span style="color: #aaffff; font-weight: bold;">Particle Boost: <span id="particleBoost">+0.0 per click</span></span></div>
+    </div>
+    <div class="card" id="lightUpgradesCard">
+      <h2>Light Generators</h2>
+      <p style="font-size: 0.9rem; margin-bottom: 1rem; color: #666;">Generators produce particles that boost light gain from clicking prism tiles</p>
+      <div class="generator-card light">
+        <button id="lightGenBtn" onclick="handleLightGenClick('light')">Light Generator</button>
+        <div>Light Particles: <span id="lightparticleCount">0</span></div>
+      </div>
+      <div class="generator-card redlight">
+        <button id="redlightGenBtn" onclick="handleLightGenClick('redlight')">Redlight Generator</button>
+        <div>Red Particles: <span id="redlightparticleCount">0</span></div>
+      </div>
+      <div class="generator-card orangelight">
+        <button id="orangelightGenBtn" onclick="handleLightGenClick('orangelight')">Orangelight Generator</button>
+        <div>Orange Particles: <span id="orangelightparticleCount">0</span></div>
+      </div>
+      <div class="generator-card yellowlight">
+        <button id="yellowlightGenBtn" onclick="handleLightGenClick('yellowlight')">Yellowlight Generator</button>
+        <div>Yellow Particles: <span id="yellowlightparticleCount">0</span></div>
+      </div>
+      <div class="generator-card greenlight">
+        <button id="greenlightGenBtn" onclick="handleLightGenClick('greenlight')">Greenlight Generator</button>
+        <div>Green Particles: <span id="greenlightparticleCount">0</span></div>
+      </div>
+      <div class="generator-card bluelight">
+        <button id="bluelightGenBtn" onclick="handleLightGenClick('bluelight')">Bluelight Generator</button>
+        <div>Blue Particles: <span id="bluelightparticleCount">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="chargerSubTab" class="sub-tab" style="display: none;">
+  <div class="generator-flex-row" style="justify-content:center;align-items:center;gap:2.5em;">
+    <div class="generator-right-col" style="margin:auto;">
+      <div class="card" id="chargerCard" style="min-width:320px;max-width:480px;margin:auto;">
+        <h2>The Charger</h2>
+        <p>While charging, this will take your power energy and convert it into charge, charge is used to boost various stuff</p>
+        <div style="margin: 1.5em 0;">
+          <button id="chargerToggleBtn">Turn ON</button>
+        </div>
+        <div style="margin-top: 1em; font-size: 1.2em;">
+          <span id="chargerCharge">0</span>
+          <div id="chargerBoost" style="margin-top:0.5em;"></div>
+          <div id="chargerCurrencyBoost" style="margin-top:0.2em;"></div>
+        </div>
+      </div>
+      <div id="soapChargerBox" class="card soap-charger-box" style="position: relative; display: flex; align-items: center; justify-content: center;">
+        <img id="soapChargerCharacter" class="soap-large" src="assets/icons/soap.png" alt="Soap Character">
+        <div id="soapChargerSpeech" class="soap-charger-speech"></div>
+        <div id="soapChargeEatenText" style="margin-top: 1em; color: #ff6666; font-weight: bold; text-align: center; display: none;"></div>
+      </div>
+    </div>
+    <div class="generator-right-col" style="margin:auto;">
+      <div class="card" style="min-width:480px;max-width:800px;margin:auto;">
+        <h2>Charger Milestones</h2>
+        <div id="chargerMilestoneTable" style="margin-top:1.5em;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+      <div id="terrariumTab" style="display:none; min-height:100vh; width:100vw; position:relative;">
+        <div id="terrariumTopButtons" style="display:flex; justify-content:center; gap:1.5em; margin-top:2em;">
+          <button id="terrariumGrassPatchBtn" class="terrarium-feature-btn">Grass Patch</button>
+          <button id="terrariumPollenUpgradesBtn" class="terrarium-feature-btn">Pollen Upgrades</button>
+          <button id="terrariumNectarizeBtn" class="terrarium-feature-btn">Nectarize</button>
+          <button id="terrariumFlowerGridBtn" class="terrarium-feature-btn">Flower Grid</button>
+        </div>
+        <div id="terrariumGrassPatchArea" style="position:absolute; left:50%; top:18%; transform:translate(-50%,0); width:60vw; height:38vh; background:rgba(0, 33, 0, 0.671); border-radius:32px; box-shadow:0 4px 32px rgba(60,120,60,0.10); display:flex; align-items:center; justify-content:center; flex-direction:column;">
+        </div>
+        <div id="terrariumPollenUpgradesArea" class="terrarium-subtab" style="display:none;">
+  <div class="terrarium-upgrades-bg" style="background:#222; border-radius:24px; padding:2.5em 2em; margin:2em auto 3.5em auto; max-width:900px; box-shadow:0 4px 32px #0008;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.7em;font-size:2em;font-weight:bold;margin-bottom:1.2em;letter-spacing:1px;">
+      <span style="display:flex;align-items:center;gap:0.7em;">
+        <img src="assets/icons/pollen.png" style="width:48px;height:48px;">
+        <span id="terrariumPollenUpgradesCount" style="color:#aaffee;font-size:1.2em;font-weight:bold;">0</span>
+      </span>
+      <span id="terrariumPollenNextUnlock" style="font-size:0.55em;color:#bff;font-weight:normal;white-space:nowrap;">Next upgrade unlocks at level 5</span>
+    </div>
+    <div class="terrarium-upgrade-row" style="display:flex; gap:2.5em; justify-content:center; margin-bottom:0.5em;">
+      <div class="terrarium-upgrade-card" id="pollen-upgrade-1" data-upgrade="pollen1" style="background:#caffff; border:6px solid #33bbaa; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+        <img src="assets/icons/pollen upgrade 1.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/pollen.png" style="width:20px; height:20px;">
+          <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+        </div>
+      </div>
+      <div class="terrarium-upgrade-card" id="pollen-upgrade-2" data-upgrade="pollen2" style="background:#caffff; border:6px solid #33bbaa; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+        <img src="assets/icons/pollen upgrade 2.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/pollen.png" style="width:20px; height:20px;">
+          <span style="color:#33bbaa; font-weight:bold; font-size:1.1em;">100</span>
+        </div>
+      </div>
+      <div class="terrarium-upgrade-card" id="pollen-upgrade-3" data-upgrade="pollen3" style="background:#caffff; border:6px solid #33bbaa; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+        <img src="assets/icons/pollen upgrade 3.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/pollen.png" style="width:20px; height:20px;">
+          <span style="color:#e33; font-weight:bold; font-size:1.1em;">2000</span>
+        </div>
+      </div>
+      <div class="terrarium-upgrade-card" id="pollen-upgrade-4" data-upgrade="pollen4" style="background:#caffff; border:6px solid #33bbaa; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
+        <img src="assets/icons/pollen upgrade 4.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/pollen.png" style="width:20px; height:20px;">
+          <span style="color:#e33; font-weight:bold; font-size:1.1em;">1e9</span>
+        </div>
+      </div>
+      <div class="terrarium-upgrade-card" id="pollen-upgrade-5" data-upgrade="pollen5" style="background:#caffff; border:6px solid #33bbaa; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
+        <img src="assets/icons/pollen upgrade 5.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/pollen.png" style="width:20px; height:20px;">
+          <span style="color:#e33; font-weight:bold; font-size:1.1em;">1e35</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="terrarium-upgrades-bg" style="background:#222; border-radius:24px; padding:2.5em 2em; margin:0 auto 2em auto; max-width:900px; box-shadow:0 4px 32px #0008;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.7em;font-size:2em;font-weight:bold;margin-bottom:1.2em;letter-spacing:1px;">
+      <span style="display:flex;align-items:center;gap:0.7em;">
+        <img src="assets/icons/flower.png" style="width:48px;height:48px;">
+        <span id="terrariumFlowerUpgradesCount" style="color:#ffe0f0;font-size:1.2em;font-weight:bold;">0</span>
+      </span>
+      <span id="terrariumFlowerNextUnlock" style="font-size:0.55em;color:#ffe0f0;font-weight:normal;white-space:nowrap;">Next upgrade unlocks at level 3</span>
+    </div>
+    <div class="terrarium-upgrade-row" style="display:flex; gap:2.5em; justify-content:center;">
+      <div class="terrarium-upgrade-card" id="flower-upgrade-1" data-upgrade="flower1" style="background:#ffe6f0; border:6px solid #ff69b4; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+        <img src="assets/icons/flower upgrade 1.png" style="width:54px; height:54px; margin-bottom:0.2em;">
+        <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold;">0</div>
+        <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+          <img src="assets/icons/flower.png" style="width:20px; height:20px;">
+          <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+        </div>
+      </div>
+    </div>
+  </div>
+    <div id="terrariumNectarUpgradesSection" class="terrarium-upgrades-bg" style="background:#222; border-radius:24px; padding:2.5em 2em; margin:0 auto 2em auto; max-width:900px; box-shadow:0 4px 32px #0008; display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:0.7em;font-size:2em;font-weight:bold;margin-bottom:1.2em;letter-spacing:1px;">
+        <span style="display:flex;align-items:center;gap:0.7em;">
+          <img src="assets/icons/nectar.png" style="width:48px;height:48px;">
+          <span id="terrariumNectarCountUpgradeSection" style="color:#fffbe8;font-size:1.2em;font-weight:bold;">0</span>
+        </span>
+        <span id="terrariumNectarNextUnlock" style="font-size:0.55em;color:#fffbe8;font-weight:normal;white-space:nowrap;">Next upgrade unlocks at nectarize tier 3</span>
+      </div>
+      <div class="terrarium-upgrade-row" style="display:flex; gap:2.5em; justify-content:center;">
+        <div class="terrarium-upgrade-card" id="nectar-upgrade-1" data-upgrade="nectar1" style="background:#fffbe8; border:6px solid #e6c200; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+          <img src="assets/icons/nectar upgrade 1.png" style="width:54px; height:54px; margin-bottom:0.2em; display:block; margin-left:auto; margin-right:auto;">
+          <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
+          <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+            <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
+            <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+          </div>
+        </div>
+        <div class="terrarium-upgrade-card" id="nectar-upgrade-2" data-upgrade="nectar2" style="background:#fffbe8; border:6px solid #e6c200; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative;">
+          <img src="assets/icons/nectar upgrade 2.png" style="width:54px; height:54px; margin-bottom:0.2em; display:block; margin-left:auto; margin-right:auto;">
+          <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
+          <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+            <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
+            <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+          </div>
+        </div>
+        <div class="terrarium-upgrade-card" id="nectar-upgrade-3" data-upgrade="nectar3" style="background:#fffbe8; border:6px solid #e6c200; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
+          <img src="assets/icons/nectar upgrade 3.png" style="width:54px; height:54px; margin-top:1em; display:block; margin-left:auto; margin-right:auto;">
+          <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
+          <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+            <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
+            <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+          </div>
+        </div>
+        <div class="terrarium-upgrade-card" id="nectar-upgrade-4" data-upgrade="nectar4" style="background:#fffbe8; border:6px solid #e6c200; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
+          <img src="assets/icons/nectar upgrade 4.png" style="width:54px; height:54px; margin-top:1em; display:block; margin-left:auto; margin-right:auto;">
+          <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
+          <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+            <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
+            <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+        <div id="terrariumNectarizeArea" class="terrarium-subtab" style="display:none; position:relative; min-height:100vh; width:100%; z-index:10;">
+          <div id="terrariumNectarCard" style="position:absolute; left:5vw; top:7vw; z-index:2;">
+            <div class="terrarium-currency-card" style="background:#fffbe8; border-radius:22px; box-shadow:0 2px 12px rgba(180,180,80,0.10); padding:1.5em 2.5em 1.2em 2.5em; min-width:320px; min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2em;">
+              <div class="terrarium-currency-row">
+                <img src="assets/icons/nectar.png" class="terrarium-currency-img">
+                <div class="terrarium-currency-label">
+                  Nectar: <span id="terrariumNectarCount" class="terrarium-currency-value">0</span>
+                  <div id="terrariumNectarPopup" class="terrarium-gain-popup"></div>
+                </div>
+              </div>
+              <div id="nectarizeResetInfo" style="display:none;"></div>
+            </div>
+          </div>
+          <div id="terrariumNectarizeCharacterCard" style="position:absolute; left:4vw; bottom:7vw; z-index:2;">
+            <div id="terrariumNectarizeCharacterCardInner" style="background:#fffbe8; border-radius:22px; box-shadow:0 2px 12px rgba(180,180,80,0.10); padding:1.5em 2.5em 1.2em 2.5em; min-width:320px; min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.2em;">
+              <div style="position:relative;display:inline-block;">
+                <img id="terrariumNectarizeCharacterImg" src="assets/icons/fluzzer.png" alt="Fluzzer Character" style="width:300px;height:300px;border-radius:18px;">
+                <div id="terrariumNectarizeSpeechBubble" class="swaria-speech"></div>
+              </div>
+            </div>
+          </div>
+          <div id="terrariumNectarizeMachine" style="position:absolute; right:4vw; top:50%; transform:translateY(-50%); z-index:2;">
+            <div class="card" style="background:#2c3e50; border:4px solid #34495e; border-radius:20px; padding:2em; min-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+              <div style="text-align:center; margin-bottom:2em;">
+                <h2 style="color:#ecf0f1; margin-bottom:0.5em;">Nectarize Machine</h2>
+                <div id="nectarizeMachineStatus" style="color:#e74c3c; font-weight:bold; font-size:1.1em;">BROKEN</div>
+              </div>
+              <div id="nectarizeMachineBroken" style="text-align:center;">
+                <button id="repairNectarizeMachineBtn" style="background:#e67e22; color:white; border:none; padding:0.8em 1.5em; border-radius:12px; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(230,126,34,0.3);">
+                  Start Repair Quest
+                </button>
+              </div>
+              <div id="nectarizeMachineWorking" style="display:none; text-align:center;">
+                <button id="nectarizeTerrariumBtn" style="background:#e74c3c; color:white; border:none; padding:0.8em 1.5em; border-radius:12px; font-size:1.1em; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(231,76,60,0.3); display:none;">
+                  Nectarize Reset
+                </button>
+                                  <div id="nectarizePreview" style="display:none;"></div>
+                </div>
+              </div>
+          </div>
+        </div>
+        <div id="nectarizeMilestoneTable" style="position:absolute; left:47.5%; top:35%; transform:translateX(-50%); z-index:2; display:none; text-align:center;">
+          <div class="card" style="background:#2c3e50; border:4px solid #34495e; border-radius:20px; padding:2em; max-width:600px; margin:auto; box-shadow:0 8px 32px rgba(0,0,0,0.4); min-height:110px;">
+            <h3 style="color:#ecf0f1;">Nectarize Milestones</h3>
+            <div id="nectarizeMilestoneTableContent"></div>
+          </div>
+        </div>
+        <div style="position:absolute; left:4vw; bottom:7vw; display:flex; flex-direction:column; align-items:center; gap:2em; z-index:2;">
+          <div id="terrariumPollenCard"></div>
+          <div id="terrariumCharacterCard">
+            <div style="position:relative;display:inline-block;">
+              <img id="terrariumCharacterImg" src="assets/icons/swaria normal.png" alt="Swaria Character" style="width:300px;height:300px;border-radius:18px;">
+              <div id="terrariumSpeechBubble" class="swaria-speech"></div>
+            </div>
+          </div>
+            </div>
+        <div id="terrariumToolButtons" style="position:absolute; right:4vw; bottom:7vw; display:flex; flex-direction:row; z-index:2;">
+          <button id="wateringCanBtn" class="terrarium-tool-btn" title="Watering Can"><span style='font-size:1em;'><img src="assets/icons/watering tool.png" alt="Watering Can" style="width:80px;height:80px;margin-bottom:0.7em;"></span><br><span>Watering Can</span></button>
+          <button id="pollenCollectorBtn" class="terrarium-tool-btn" title="Pollen Collector"><span style='font-size:1em;'><img src="assets/icons/pollen wand tool.png" alt="Pollen Collector" style="width:80px;height:80px;margin-bottom:0.7em;"></span><br><span>Pollen Wand</span></button>
+        </div>
+      </div>
+    </section>
+   <section id="knowledge" class="page">
+  <div id="knowledgeSubTabs">
+    <div id="elementsMain" class="sub-tab active">
+      <div class="card fullwidth">
+        <h2>Swaria Table of Elements</h2>
+        <div id="elementTooltip" class="element-tooltip" style="display: none;"></div>
+        <div class="element-wrapper">
+          <div class="periodic-grid" id="elementGrid"></div>
+        </div>
+      </div>
+    </div>
+<div id="graduationSubTab" class="sub-tab" style="display: none;">
+  <div class="graduation-layout">
+    <div id="graduationSwariaCard" class="card swaria-character-box">
+      <img id="graduationSwariaImage" src="assets/icons/expansion.png" alt="Expansion Icon" />
+      <div id="graduationSwariaSpeech" class="speech-bubble" style="display: none;">
+        Ready to expand the facility!
+      </div>
+      <div class="gradeup-reset-info" style="margin-top: 2rem; color: #ffe066; font-weight: bold; font-size: 1.1rem; text-align: center; text-shadow: 0 1px 4px #2d1857;">
+        Expanding resets everything delivering does + Kp, every elements (except 7 and 8) + some generators upgrades and prism to expand the facility
+      </div>
+    </div>
+    <div class="graduation-content">
+      <div class="graduation-card">
+        <div class="grad-header">
+          <h2 style="display:flex;align-items:center;gap:0.5em;">
+            Expand
+          </h2>
+          <div class="grad-grade">Current expansion: <span id="currentGrade">1</span></div>
+        </div>
+        <div class="grad-challenge-box" id="prestigeRequirement">
+        </div>
+        <div class="grad-button-row">
+          <button onclick="gradeUp()" id="gradeUpBtn" disabled>Expand</button>
+        </div>
+      </div>
+      <div class="graduation-card milestone-card">
+        <h3>Expansion Milestones</h3>
+        <div class="milestone-table-wrapper">
+          <table class="milestone-table">
+            <thead>
+              <tr>
+                <th>Expansion</th>
+                <th>Reward</th>
+              </tr>
+            </thead>
+            <tbody id="milestoneBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+    <section id="achievements" class="page">
+      <div id="achievementsNormalTab" class="achievements-subtab" style="display:block;">
+        <div class="achievements-header">
+          <div class="achievements-progress">
+            <span id="normalUnlockedCount">0</span>/<span id="normalTotalCount">0</span> Achievements completed (<span id="normalProgressPercent">0</span>%)
+          </div>
+        </div>
+        <div id="normalAchievementsGrid" class="achievements-grid">
+        </div>
+      </div>
+      <div id="achievementsSecretTab" class="achievements-subtab" style="display:none;">
+        <div class="achievements-header">
+          <div class="achievements-progress">
+            <span id="secretUnlockedCount">0</span>/<span id="secretTotalCount">0</span> Secret Achievements completed (<span id="secretProgressPercent">0</span>%)
+          </div>
+        </div>
+        <div id="secretAchievementsGrid" class="achievements-grid">
+        </div>
+      </div>
+    </section>
+    <section id="settings" class="page">
+      <div id="settingsSavesTab" class="settings-subtab" style="display:block;">
+        <div class="grid">
+          <div class="card">
+            <h2>Settings</h2>
+            <label style="display:none;">Theme: <select id="themeSelect"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+            <label>Colour: <select id="colorSelect"><option value="green">Green</option><option value="blue">Blue</option><option value="pink">Pink</option></select></label>
+            <label>Style: <select id="styleSelect"><option value="rounded">Rounded</option><option value="square">Square</option></select></label>
+            <label><input type="checkbox" id="confirmResetToggle"> Confirm delivery reset</label>
+            <label id="confirmNectarizeResetLabel" style="display:none;"><input type="checkbox" id="confirmNectarizeResetToggle"> Confirm nectarize reset</label>
+            <label><input type="checkbox" id="autosaveToggle" span style="display:none;"></label>
+          </div>
+          <div class="card">
+            <h2>Save System</h2>
+            <button onclick="exportSave()">Export</button>
+            <button onclick="importSave()">Import</button>
+            <div style="margin-top: 1em;" class="save-slots-group" id="saveSlotsGroup">
+              <div class="save-slots-label"><b>Save Slots:</b></div>
+              <button id="openSaveSlotModalBtn" style="margin-bottom:1em;">Save Files</button>
+              <button id="manualSaveBtn" style="margin-bottom:1em;">Save Game</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="settingsStatsTab" class="settings-subtab" style="display:none;">
+        <div class="grid">
+          <div id="departmentStatsButtons" class="card"></div>
+        </div>
+      </div>
+      <div id="settingsCreditsTab" class="settings-subtab" style="display:none;">
+        <div class="grid">
+          <div class="card">
+            <div style="text-align: center; margin: 2em 0;">
+              <p><strong>Developer:</strong> Spitzy Salt</p>
+              <p><strong>Assets:</strong> Spitzy Salt</p>
+              <p><strong>Game Version:</strong> 0.2</p>
+            <div style="margin: 1.5em 0;">
+              <h4>Massive credits to:</h4>
+              <p>Many incremental games such as Grass Cutting Incremental (lethal dolphin), Bee Swarm Simulator (onett), Incremental Mass Rewritten (MrRedShark77) and Algebraic Progression (randomtuba) for inspiration.</p>
+              <p>To my friend 'The Random Recorder' for the original game idea.</p>
+              <p>And to the original creator of the entire rikkor species 'ForestWind/Genyuu doushi'.</p>
+            </div>
+            <div style="margin: 1.5em 0;">
+              <h4>Special Thanks to all the players who have supported and enjoyed this game!</h4>
+            </div>
+            <div style="text-align: center; margin-top: 2em; font-style: italic; color: #666;">
+              <p>Thx for playing!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="settingsPremiumTab" class="settings-subtab" style="display:none;">
+        <div class="premium-cards-row" style="display: flex; justify-content: center; align-items: stretch; gap: 1.2em; margin-top: 0.5em;">
+          <div class="card" style="min-width:180px;max-width:220px;">
+            <h3>Unlock Vrchat mirror</h3>
+            <h4>Become a mirror dweller (wip)</h4>
+            <p style="font-size:0.95em;"><img src="assets/icons/Swa Buck.png" alt="Swa Bucks" style="width:28px;height:28px;vertical-align:middle;margin-right:0.3em;">Cost: 5000 Swa Bucks.</p>
+            <button style="margin-top:0.7em; font-size:1em; padding:0.5em 1.2em; border-radius:10px;">Buy</button>
+          </div>
+          <div class="card" style="min-width:180px;max-width:220px;">
+            <h3>Unlock Bijou</h3>
+            <h4>A new companion that will collect tokens automatically</h4>
+            <p style="font-size:0.95em;"><img src="assets/icons/Swa Buck.png" alt="Swa Bucks" style="width:28px;height:28px;vertical-align:middle;margin-right:0.3em;">Cost: 500 Swa Bucks.</p>
+            <button style="margin-top:0.7em; font-size:1em; padding:0.5em 1.2em; border-radius:10px;">Buy</button>
+          </div>
+        </div>
+      </div>
+      <div id="settingsHardModeTab" class="settings-subtab" style="display:none;">
+                <div style="display: flex; gap: 2em; align-items: flex-start; justify-content: center; max-width: 1000px; margin: 0 auto;">
+          <div class="card swaria-box" style="text-align: center; padding: 1.5em; flex: 0 0 350px; position: relative;">
+            <div id="hardModeSwariaImg" style="width: 300px; height: 300px; margin: 0 auto; cursor: pointer; position: relative;">
+              <img src="swa normal.png" alt="Swaria" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+            </div>
+            <div id="hardModeSwariaSpeech" class="swaria-speech" style="display: none; position: absolute; top: 75%; left: 50%; transform: translateX(-50%); margin-top: 10px; padding: 0.5em; background: #fff; border-radius: 8px; border: 2px solid #ddd; font-size: 1em; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-width: 150px; max-width: 250px; text-align: center;">
+              Don't do this, it's impossible!
+            </div>
+            </p>
+          </div>
+          <div class="card" style="flex: 1; max-width: 600px;">
+            <h2 style="text-align: center;">For Kitofox Challenge</h2>
+            <div id="hardModeQuestProgress" style="margin-bottom: 1.5em;">
+              <h3 style="text-align: center;">Quest Progress:</h3>
+              <div style="display: grid; gap: 0.8em; font-size: 0.9em;">
+                <div class="quest-item">
+                  <span>Give 10,000 Berry Tokens:</span>
+                  <span id="hardModeBerryProgress">0 / 10,000</span>
+                </div>
+                <div class="quest-item">
+                  <span>Give 5,000 Stardust Tokens:</span>
+                  <span id="hardModeStardustProgress">0 / 3,000</span>
+                </div>
+                <div class="quest-item">
+                  <span>Give 500 Berry Plate Tokens:</span>
+                  <span id="hardModeBerryPlateProgress">0 / 500</span>
+                </div>
+                <div class="quest-item">
+                  <span>Give 500 Mushroom Soup Tokens:</span>
+                  <span id="hardModeMushroomSoupProgress">0 / 500</span>
+                </div>
+                <div class="quest-item">
+                  <span>Click Prism Tiles:</span>
+                  <span id="hardModePrismClicksProgress">0 / 72,700</span>
+                </div>
+                <div class="quest-item">
+                  <span>Open Common Boxes Manually:</span>
+                  <span id="hardModeCommonBoxesProgress">0 / 690,000</span>
+                </div>
+                <div class="quest-item">
+                  <span>Water Flowers:</span>
+                  <span id="hardModeFlowersWateredProgress">0 / 69,420</span>
+                </div>
+                <div class="quest-item">
+                  <span>Refill Power:</span>
+                  <span id="hardModePowerRefillsProgress">0 / 1,500</span>
+                </div>
+                <div class="quest-item">
+                  <span>Poke Soap:</span>
+                  <span id="hardModeSoapPokesProgress">0 / 10,000</span>
+                </div>
+                <div class="quest-item">
+                  <span>Cook Ingredients:</span>
+                  <span id="hardModeIngredientsCookedProgress">0 / 1500</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+</div>
+<nav id="bottomNav">
+  <button class="navBtn active" data-target="home">Departments</button>
+  <button class="navBtn" data-target="cafeteria" id="cafeteriaTab">Cafeteria</button>
+  <button class="navBtn" data-target="knowledge" id="knowledgeTab" style="display:none;">Control center</button>
+  <button class="navBtn" data-target="achievements">Achievements</button>
+  <button class="navBtn" data-target="settings">Settings</button>
+</nav>
+<div id="inventoryModal" style="display:none;position:fixed;left:0;right:0;bottom:0;width:100vw;z-index:9999999999999;justify-content:center;align-items:flex-end;pointer-events:auto;">
+  <div style="margin:0;background:rgba(255,255,255,0.97);border-radius:24px 24px 0 0;box-shadow:0 -4px 32px #0006;padding:1.2em 0.5em 0.7em 0.5em;width:100%;min-height:64px;display:flex;flex-direction:column;align-items:center;">
+    <div style="font-size:1.5em;font-weight:bold;color:#222;margin-bottom:1em;">Inventory</div>
+    <div id="inventoryTokens" style="display:flex;gap:2em;flex-wrap:wrap;justify-content:center;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/Swa Buck.png" class="icon" alt="Swa Bucks Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-swabucks">0</span>
+        <span style="font-size:0.9em;color:#666;">Swa Bucks</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/berry token.png" class="icon" alt="Berries Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-berries">0</span>
+        <span style="font-size:0.9em;color:#666;">Berries</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/mushroom token.png" class="icon" alt="Mushroom Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-mushroom">0</span>
+        <span style="font-size:0.9em;color:#666;">Mushroom</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/spark token.png" class="icon" alt="Sparks Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-sparks">0</span>
+        <span style="font-size:0.9em;color:#666;">Sparks</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/petal token.png" class="icon" alt="Petals Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-petals">0</span>
+        <span style="font-size:0.9em;color:#666;">Petals</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/water token.png" class="icon" alt="Water Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-water">0</span>
+        <span style="font-size:0.9em;color:#666;">Water</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/prisma token.png" class="icon" alt="Prisma Shard Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-prisma">0</span>
+        <span style="font-size:0.9em;color:#666;">Prisma Shard</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/stardust token.png" class="icon" alt="Stardust Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-stardust">0</span>
+        <span style="font-size:0.9em;color:#666;">Stardust</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/berry plate token.png" class="icon" alt="Berry Plate Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-berryPlate">0</span>
+        <span style="font-size:0.9em;color:#666;">Berry Plate</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/mushroom token.png" class="icon" alt="Mushroom Soup Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-mushroomSoup">0</span>
+        <span style="font-size:0.9em;color:#666;">Mushroom Soup</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/battery token.png" class="icon" alt="Batteries Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-batteries">0</span>
+        <span style="font-size:0.9em;color:#666;">Batteries</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/petal token.png" class="icon" alt="Glittering Petals Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-glitteringPetals">0</span>
+        <span style="font-size:0.9em;color:#666;">Glittering Petals</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
+        <img src="assets/icons/prisma token.png" class="icon" alt="Charged Prisma Icon" style="width:48px;height:48px;">
+        <span id="inventoryCount-chargedPrisma">0</span>
+        <span style="font-size:0.9em;color:#666;">Charged Prisma</span>
+      </div>
+    </div>
+  </div>
+</div>
+<section id="cafeteria" class="page" style="display:none;">
+  <div id="cafeteriaSubTabBar" class="cafeteriaSubTabBar">
+    <div id="cafeteriaSubTabNav" class="cafeteriaSubTabNav">
+      <button onclick="switchCafeteriaSubTab('cafeteriaMainSubTab')" id="cafeteriaMainTabBtn" class="cafeteriaSubTabBtn active">Main Hall</button>
+      <button onclick="switchCafeteriaSubTab('kitchenSubTab')" id="kitchenTabBtn" class="cafeteriaSubTabBtn" style="display:none;">Kitchen</button>
+    </div>
+  </div>
+  <div id="cafeteriaMainSubTab" class="cafeteria-subtab sub-tab" style="display:block;">
+    <div id="cafeteriaTopCounter" style="display:flex; justify-content:center; align-items:center; gap:1rem; margin:2rem 0; padding:1rem; background:var(--card-bg); border:2px solid var(--card-border); border-radius:var(--radius); max-width:600px; margin-left:auto; margin-right:auto;">
+      <div style="text-align:center; flex:1;">
+        <h3 style="margin:0 0 0.5rem 0;">Berry Plates: <span id="berryPlatesCount">0</span>/<span id="berryPlatesMax">10</span></h3>
+        <div style="width:100%; height:20px; background:#333; border-radius:10px; overflow:hidden; margin-bottom:0.5rem;">
+          <div id="berryPlateProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #4CAF50, #8BC34A); transition:width 0.3s ease;"></div>
+        </div>
+        <div style="font-size:0.9em; color:#666; margin-bottom:0.5rem;">Restores 10 hunger</div>
+        <button id="collectPlateBtn" onclick="collectBerryPlate()" style="background:var(--accent-color); color:white; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer; font-weight:bold;">Collect Plate</button>
+      </div>
+    </div>
+  </div>
+  <div id="kitchenSubTab" class="cafeteria-subtab sub-tab" style="display:none;">
+    <div class="kitchen-row">
+      <div class="card kitchen-character-card" style="position:relative;">
+        <div style="position:relative;display:inline-block;">
+          <img id="kitchenCharacterImg" src="assets/icons/chef mystic.png" alt="Chef Mystic Character" style="width:300px;height:300px;border-radius:18px;">
+          <div id="kitchenSpeechBubble" class="kitchen-speech-bubble"></div>
+        </div>
+      </div>
+      <div class="card mixing-card">
+        <h3>Mixing</h3>
+        <div>
+          <p>Combine your ingredients here!</p>
+          <button id="mixButton">Mix Ingredients</button>
+        </div>
+      </div>
+      <div class="card ingredient-card">
+        <h3>Ingredients</h3>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1em; margin-top: 1em;">
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/berry token.png" class="icon" alt="Berries Icon" style="background:#ffe6f7; border-radius:8px;">
+            <span id="ingredientCount-berries">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Berries</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/mushroom token.png" class="icon" alt="Mushroom Icon" style="background:#f7e6ff; border-radius:8px;">
+            <span id="ingredientCount-mushroom">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Mushroom</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/spark token.png" class="icon" alt="Sparks Icon" style="background:#e6f7ff; border-radius:8px;">
+            <span id="ingredientCount-sparks">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Sparks</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/petal token.png" class="icon" alt="Petals Icon" style="background:#f7ffe6; border-radius:8px;">
+            <span id="ingredientCount-petals">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Petals</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/water token.png" class="icon" alt="Water Icon" style="background:#e6f7ff; border-radius:8px;">
+            <span id="ingredientCount-water">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Water</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/prisma token.png" class="icon" alt="Prisma Shard Icon" style="background:#e6e6ff; border-radius:8px;">
+            <span id="ingredientCount-prisma">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Prisma Shard</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.7em;">
+            <img src="assets/icons/stardust token.png" class="icon" alt="Stardust Icon" style="background:#e6e6ff; border-radius:8px;">
+            <span id="ingredientCount-stardust">0</span>
+            <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Stardust</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div id="infinityResearchSubTab" class="sub-tab">
+  <div class="card fullwidth" style="margin-top: 20px;">
+    <h2>Thank You!</h2>
+    <p>Thanks for playing the demo of Fluff Inc. New updates will come out in the future!</p>
+  </div>
+</div>
+<div id="digitalClockContainer" style="position:fixed;top:18px;left:24px;right:auto;z-index:2000;display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
+  <div id="digitalClock" style="background:linear-gradient(90deg,#222,#444);color:#ffe066;font-family:'Orbitron',monospace;font-size:2em;font-weight:bold;padding:0.25em 1.1em;border-radius:14px 14px 8px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.18);letter-spacing:0.08em;text-shadow:0 2px 8px #000a;min-width:120px;text-align:left;border:3px solid #ffe066;">starting</div>
+  <button id="inventoryBtn" style="margin-top:8px;padding:0.5em 1.2em;font-size:1.1em;background:linear-gradient(90deg,#ffe066,#ffd700);color:#222;border:none;border-radius:8px 8px 14px 14px;box-shadow:0 2px 8px #0004;cursor:pointer;font-family:'Orbitron',monospace;font-weight:bold;">Inventory</button>
+</div>
+<div id="powerEnergyStatus" style="display:none;position:fixed;top:18px;right:24px;z-index:2000;"></div>
+<div id="dimOverlay"></div>
+<div id="blackoutOverlay"></div>
+<script src="script.js"></script>
+<script src="script2.js"></script>
+<script src="script3.js"></script>
+<script src="infinity.js"></script>
+<script src="daynight.js"></script>
+<script src="cafeteria.js"></script>
+<script src="expansion.js"></script>
+<script src="kitchen.js"></script>
+<script src="prism.js"></script>
+<script src="story.js"></script>
+<script src="charger.js"></script>
+<script src="terrarium.js"></script>
+<script src="terrarium2.js"></script>
+<script src="Flower grid.js"></script>
+<script src="stats.js"></script>
+<script src="premium.js"></script>
+<script src="achievement.js"></script>
+<script src="secret.js"></script>
+<script src="optimization.js"></script>
+<script src="memory-optimization.js"></script>
+<div id="gradeUpAnimation" class="grade-up-animation" style="display:none;">
+  <span class="grade-old"></span>
+  <span class="grade-new"></span>
+</div>
+<div id="saveSlotModal" ...>
+  <div id="saveSlotModalCard" ...>
+    <div id="modalSaveSlotCards"></div> 
+  </div>
+</div>
+<div id="mixModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div class="mix-modal-main" style="background:#fff; border-radius:32px; box-shadow:0 8px 32px #000a; width:600px; height:600px; min-width:320px; min-height:320px; max-width:90vw; max-height:90vh; margin:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+    <button id="mixModalLeftArrow" style="position:absolute; left:-60px; top:50%; transform:translateY(-50%); background:#fff; border:2px solid #ff4444; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:10000; color:#ff4444;">‹</button>
+    <button id="mixModalRightArrow" style="position:absolute; right:-60px; top:50%; transform:translateY(-50%); background:#fff; border:2px solid #ff4444; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:10000; color:#ff4444;">›</button>
+    <div id="mixModalRecipe" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2em;width:100%;max-width:420px;">
+      <h2 id="mixRecipeTitle" style="margin-bottom:0.2em;">Berry Plate</h2>
+      <div style="display:flex;align-items:center;gap:1.2em;">
+        <img id="mixRecipeImage" src="assets/icons/berry plate token.png" alt="Recipe" style="width:140px;height:140px;">
+        <div id="mixRecipeIngredients" style="font-size:1.1em;">
+        </div>
+      </div>
+      <div style="font-size:1.1em;margin-top:0.5em;">Cooking time: <span id="mixCookTime">5</span> min</div>
+      <div style="display:flex;align-items:center;gap:0.7em;margin-top:1.2em;">
+        <input id="mixBulkInput" type="number" min="1" value="1" style="width:3em;text-align:center;font-size:1.2em;">
+        <span id="mixBulkUnit" style="font-size:1em;color:#888;">plates</span>
+      </div>
+      <div id="mixModalStatus" style="margin-top:1.2em;width:100%;text-align:center;"></div>
+      <div id="mixModalActions" style="margin-top:1.2em;width:100%;display:flex;justify-content:center;gap:1.2em;"></div>
+      <div id="mixModalProgress" style="margin-top:1.2em;width:80%;height:18px;background:#eee;border-radius:9px;overflow:hidden;display:none;">
+        <div id="mixModalProgressBar" style="height:100%;width:0%;background:#aaffaa;"></div>
+      </div>
+      <div id="mixModalTimer" style="margin-top:0.7em;font-size:1.1em;color:#444;display:none;"></div>
+    </div>
+  </div>
+</div>
+<div id="giveTokenModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999999999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:24px;box-shadow:0 8px 32px #000a;padding:2.5em 2.5em 2em 2.5em;min-width:320px;max-width:90vw;min-height:180px;display:flex;flex-direction:column;align-items:center;">
+    <div id="giveTokenModalTitle" style="font-size:1.5em;font-weight:bold;color:#222;margin-bottom:1em;text-align:center;"></div>
+    <img id="giveTokenModalImg" src="" alt="Token" style="width:64px;height:64px;margin-bottom:1em;">
+    <div style="display:flex;gap:1.5em;margin-bottom:1.5em;">
+      <button id="giveTokenBtn1" style="font-size:1.1em;padding:0.7em 2em;border-radius:12px;">Give 1</button>
+      <button id="giveTokenBtn10" style="font-size:1.1em;padding:0.7em 2em;border-radius:12px;">Give 10</button>
+      <button id="giveTokenBtn100" style="font-size:1.1em;padding:0.7em 2em;border-radius:12px;">Give 100</button>
+    </div>
+    <button id="giveTokenCancelBtn" style="font-size:1em;padding:0.5em 2em;border-radius:10px;background:#eee;">Cancel</button>
+  </div>
+</div>
+<div id="kpSoftcapModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;">
+  <div id="kpSoftcapModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      The swa elites notices your overgrowing collection of ressources and it's starting to overwhelm them, as a punishment, they will reward you with even less Knowledge points from now on, "get softcaped idiot" they said...
+    </div>
+    <button onclick="closeKpSoftcapModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="firstDeliveryStoryModal" style="display:none; position:fixed; z-index:999999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); backdrop-filter:blur(2px); justify-content:center; align-items:center;">
+  <div style="position:relative; background:white; border-radius:28px; box-shadow:0 12px 48px #0008; padding:3.5em 2.5em 2.5em 2.5em; max-width:600px; width:96vw; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <img src="assets/icons/control center card.png" alt="WIP" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">After delivering every ressources to the Swa elites, the Swa elites rewarded you with Knowledge points, they also sent you a new keycard that grants you access to the control center of the facility, inside the control center is the mysterious Swaria table of swalements, your new goal is to study all 118 swalements.</div>
+    <button onclick="closeFirstDeliveryStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="generatorUnlockStoryModal" style="display:none; position:fixed; z-index:999999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); backdrop-filter:blur(2px); justify-content:center; align-items:center;">
+  <div style="position:relative; background:white; border-radius:28px; box-shadow:0 12px 48px #0008; padding:3.5em 2.5em 2.5em 2.5em; max-width:600px; width:96vw; text-align:center; display:flex; flex-direction:column; align-items:center;">
+    <img src="assets/icons/door.png" alt="WIP" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">You've noticed a strange smell of soap coming from the generator room everytime you walked passed the door, curiosity got the best of you so you've decided to use the newly discovered swalement to hack open the generator room's door. </div>
+    <button onclick="closeGeneratorUnlockStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="kpMildcapModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
+  <div id="kpMildcapModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      The Swa elites are absolutely flabbergasted by your resource hoarding. They have now imposed the <b>mildcap</b>! KP gain is now even more brutally reduced. "Get mildcaped idiot" they say...
+    </div>
+    <button onclick="closeKpMildcapModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="pollenUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#3adbb7; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#fff; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Pollen Value</div>
+    <div id="pollenUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 25</div>
+    <div style="font-size:1.1em; color:#fff; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase pollen value by <span style="color:#0f0">+50%</span> per level.<br>
+      <span style="color:#fff;">This effect is <span style="color:#ff0; font-weight:bold;">doubled</span> every 25 level.</span>
+    </div>
+    <div id="pollenUpgradeEffect" style="font-size:1.1em; color:#fff; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="pollenUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenUpgradeCostValue">15</span> <img src="assets/icons/pollen.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="pollenUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="pollenUpgradeBuyOneBtn" style="background:#1ca3a3; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="pollenUpgradeBuyMaxBtn" style="background:#1ca3a3; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="pollenUpgradeBuyNextBtn" style="background:#1ca3a3; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="pollenToolSpeedUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#3adbb7; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#fff; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Pollen Tool Speed</div>
+    <div id="pollenToolSpeedUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 90</div>
+    <div style="font-size:1.1em; color:#fff; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Each level decreases the cooldown between tool clicks by <span style='color:#0f0'>0.01s</span>.<br>
+    </div>
+    <div id="pollenToolSpeedUpgradeEffect" style="font-size:1.1em; color:#fff; font-weight:bold; margin-bottom:0.7em;">Current tool cooldown: <span style="color:#0ff;">0.500s</span></div>
+    <div id="pollenToolSpeedUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenToolSpeedUpgradeCostValue">100</span> <img src="assets/icons/pollen.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="pollenToolSpeedUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-top:0.2em; margin-bottom:0.7em;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="pollenToolSpeedUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="pollenToolSpeedUpgradeBuyOneBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="pollenToolSpeedUpgradeBuyMaxBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="pollenToolSpeedUpgradeBuyNextBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="extraChargeUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#3adbb7; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#fff; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Extra Charge</div>
+    <div id="extraChargeUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#fff; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase Charge gain by <span style="color:#0f0">+20%</span> per level.<br>
+      <span style="color:#fff;">This effect is <span style="color:#ff0; font-weight:bold;">doubled</span> every 25 levels.</span>
+    </div>
+    <div id="extraChargeUpgradeEffect" style="font-size:1.1em; color:#fff; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="extraChargeUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="extraChargeUpgradeCostValue">2000</span> <img src="assets/icons/pollen.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="extraChargeUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-top:0.2em; margin-bottom:0.7em;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="extraChargeUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="extraChargeUpgradeBuyOneBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="extraChargeUpgradeBuyMaxBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="extraChargeUpgradeBuyNextBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="xpMultiplierUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#3adbb7; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#fff; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">XP Multiplier</div>
+    <div id="xpMultiplierUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#fff; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase XP gain by <span style="color:#0f0">x1.1</span> per level.
+    </div>
+    <div id="xpMultiplierUpgradeEffect" style="font-size:1.1em; color:#fff; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="xpMultiplierUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="xpMultiplierUpgradeCostValue">1e9</span> <img src="assets/icons/pollen.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="xpMultiplierUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-top:0.2em; margin-bottom:0.7em;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="xpMultiplierUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="xpMultiplierUpgradeBuyOneBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="xpMultiplierUpgradeBuyMaxBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="xpMultiplierUpgradeBuyNextBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="flowerFieldExpansionUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#3adbb7; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#fff; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Flower Field Expansion</div>
+    <div id="flowerFieldExpansionUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 6</div>
+    <div style="font-size:1.1em; color:#fff; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Expand the flower field by <span style="color:#0f0">+1 column and +1 row</span> per level.<br>
+      <span style="color:#fff;">Maximum of 6 levels (19x12 grid at max level).</span>
+    </div>
+    <div id="flowerFieldExpansionUpgradeEffect" style="font-size:1.1em; color:#fff; font-weight:bold; margin-bottom:0.7em;">Grid Size: <span style="color:#0ff;">13x6</span></div>
+    <div id="flowerFieldExpansionUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="flowerFieldExpansionUpgradeCostValue">1e35</span> <img src="assets/icons/pollen.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="flowerFieldExpansionUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="flowerFieldExpansionUpgradeBuyOneBtn" style="background:#33bbaa; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+    </div>
+  </div>
+</div>
+<div id="flowerUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#ffe0f0; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Flower Value</div>
+    <div id="flowerUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 25</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase flower gain by <span style="color:#0f0">+25%</span> per level.<br>
+      <span style="color:#222;">This effect is <span style="color:#ff0; font-weight:bold;">doubled</span> every 25 level.</span>
+    </div>
+    <div id="flowerUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0f0;">x1</span></div>
+    <div id="flowerUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="flowerUpgradeCostValue">20</span> <img src="assets/icons/flower.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="flowerUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="flowerUpgradeBuyOneBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="flowerUpgradeBuyMaxBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="flowerUpgradeBuyNextBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="flowerXPUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#ffe0f0; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">XP Value</div>
+    <div id="flowerXPUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 25</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase XP value by <span style='color:#0f0'>+50%</span> per level.<br>
+      <span style="color:#222;">This effect is <span style="color:#ff0; font-weight:bold;">doubled</span> every 25 level.</span>
+    </div>
+    <div id="flowerXPUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0f0;">x1</span></div>
+    <div id="flowerXPUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="flowerXPUpgradeCostValue">100</span> <img src="assets/icons/flower.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="flowerXPUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="flowerXPUpgradeBuyOneBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="flowerXPUpgradeBuyMaxBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="flowerXPUpgradeBuyNextBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="pollenUpgrade2Modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#ffe0f0; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Pollen & Flower Multiplier</div>
+    <div id="pollenUpgrade2Level" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase both pollen and flower gain by <span style='color:#0f0'>x1.2</span> per level.
+    </div>
+    <div id="pollenUpgrade2Effect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0f0;">x1</span> pollen & flowers</div>
+    <div id="pollenUpgrade2Cost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenUpgrade2CostValue">1000</span> <img src="assets/icons/flower.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="pollenUpgrade2CostNext25" style="font-size:1.1em; font-weight:bold; margin-top:0.2em; margin-bottom:0.7em;">Cost to next 25: <span style='color:#f33'>0</span> <img src='assets/icons/flower.png' style='width:20px;vertical-align:middle;'></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="pollenUpgrade2CancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="pollenUpgrade2BuyOneBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="pollenUpgrade2BuyMaxBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+      <button id="pollenUpgrade2BuyNextBtn" style="background:#eebf33; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next</button>
+    </div>
+  </div>
+</div>
+<div id="flowerUpgrade4Modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#ffe0f0; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Nectarize Machine Restoration</div>
+    <div id="flowerUpgrade4Level" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Complete part of the nectarize machine restoration requirement.<br>
+      <span style="color:#222;">This upgrade is required to complete the nectarize quest.</span>
+    </div>
+    <div id="flowerUpgrade4Effect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#ff6b35;">Nectarize Machine Restoration requirement part complete</span></div>
+    <div id="flowerUpgrade4Cost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="flowerUpgrade4CostValue">1e13</span> <img src="assets/icons/flower.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="flowerUpgrade4CancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="flowerUpgrade4BuyOneBtn" style="background:#ff6b35; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+    </div>
+  </div>
+</div>
+<div id="kpNectarUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">KP Nectar</div>
+    <div id="kpNectarUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase KP gain by <span style="color:#0f0">1.1X</span> per level.<br>
+      <span style="color:#222;">Multiplicative effect for KP generation.</span>
+    </div>
+    <div id="kpNectarUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="kpNectarUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="kpNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="kpNectarUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="kpNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="kpNectarUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="kpNectarUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="kpNectarUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
+      <button id="kpNectarUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
+<div id="pollenFlowerNectarUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Pollen and Flower Nectar</div>
+    <div id="pollenFlowerNectarUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Gain <span style="color:#0f0">+50%</span> more pollen and flower per level.<br>
+      <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
+    </div>
+    <div id="pollenFlowerNectarUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="pollenFlowerNectarUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenFlowerNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="pollenFlowerNectarUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="pollenFlowerNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="pollenFlowerNectarUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="pollenFlowerNectarUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="pollenFlowerNectarUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
+      <button id="pollenFlowerNectarUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
+<div id="nectarXpUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Nectar XP</div>
+    <div id="nectarXpUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Gain <span style="color:#0f0">+25%</span> more terrarium XP per level.<br>
+      <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
+    </div>
+    <div id="nectarXpUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="nectarXpUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarXpUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarXpUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarXpUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="nectarXpUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="nectarXpUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="nectarXpUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
+      <button id="nectarXpUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
+<div id="nectarValueUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Nectar Value</div>
+    <div id="nectarValueUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Gain <span style="color:#0f0">+25%</span> more nectar per level.<br>
+      <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
+    </div>
+    <div id="nectarValueUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="nectarValueUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarValueUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarValueUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarValueUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="nectarValueUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="nectarValueUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="nectarValueUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
+      <button id="nectarValueUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
+<script>
+function switchSettingsSubTab(tabId) {
+  document.getElementById('settingsSavesTab').style.display = 'none';
+  document.getElementById('settingsStatsTab').style.display = 'none';
+  document.getElementById('settingsCreditsTab').style.display = 'none';
+  document.getElementById('settingsPremiumTab').style.display = 'none';
+  document.getElementById('settingsHardModeTab').style.display = 'none';
+  document.getElementById('settingsSavesTabBtn').classList.remove('active');
+  document.getElementById('settingsStatsTabBtn').classList.remove('active');
+  document.getElementById('settingsCreditsTabBtn').classList.remove('active');
+  document.getElementById('settingsPremiumTabBtn').classList.remove('active');
+  document.getElementById('settingsHardModeTabBtn').classList.remove('active');
+  document.getElementById(tabId).style.display = 'block';
+  if (tabId === 'settingsSavesTab') {
+    document.getElementById('settingsSavesTabBtn').classList.add('active');
+  } else if (tabId === 'settingsStatsTab') {
+    document.getElementById('settingsStatsTabBtn').classList.add('active');
+  } else if (tabId === 'settingsCreditsTab') {
+    document.getElementById('settingsCreditsTabBtn').classList.add('active');
+  } else if (tabId === 'settingsPremiumTab') {
+    document.getElementById('settingsPremiumTabBtn').classList.add('active');
+  } else if (tabId === 'settingsHardModeTab') {
+    document.getElementById('settingsHardModeTabBtn').classList.add('active');
+  }
+}
+const origShowPage = window.showPage || (typeof showPage === 'function' && showPage);
+window.showPage = function(pageId) {
+  if (origShowPage) origShowPage.apply(this, arguments);
+  document.getElementById('settingsSubTabBar').style.display = (pageId === 'settings') ? 'flex' : 'none';
+};
+let hardModeQuestActive = false; 
+let hardModeQuestProgress = {
+  berryTokens: 0,
+  stardustTokens: 0,
+  berryPlateTokens: 0,
+  mushroomSoupTokens: 0,
+  prismClicks: 0,
+  commonBoxes: 0,
+  flowersWatered: 0,
+  powerRefills: 0,
+  soapPokes: 0,
+  ingredientsCooked: 0
+};
+const hardModeQuestRequirements = {
+  berryTokens: 10000,
+  stardustTokens: 3000,
+  berryPlateTokens: 500,
+  mushroomSoupTokens: 500,
+  prismClicks: 72700,
+  commonBoxes: 690000,
+  flowersWatered: 69420,
+  powerRefills: 1500,
+  soapPokes: 10000,
+  ingredientsCooked: 1500
+};
+const hardModeSwariaMessages = [
+  "Don't do this, it's impossible!",
+  "Stop! You'll never complete this!",
+  "This is madness!",
+  "You're wasting your time!",
+  "Give up already!",
+  "This quest is designed to be impossible!",
+  "Why are you even trying?",
+  "You'll regret starting this!",
+  "This will take forever!",
+  "Are you really that determined?",
+  "This is only for the most stubborn of people. Kito.",
+  "You'll be here until the heat death of the universe!",
+  "I've seen glaciers move faster than your progress!",
+  "Even a snail would give up on this!",
+  "You're more stubborn than a mule!",
+  "This is the definition of insanity!",
+  "You could have learned quantum physics by now!",
+  "A rock has more sense than you!",
+  "You're like a broken record player!",
+  "Oh look, you're still here...",
+  "Surprise, surprise, still grinding away!",
+  "Wow, you haven't given up yet?",
+  "Color me impressed... not!",
+  "You must really love suffering!",
+  "This is your idea of fun?",
+  "Someone needs a hobby!",
+  "You could be doing literally anything else!",
+  "I bet your friends are worried about you!",
+  "This is only quest 1 out of 5.",
+  "At this rate, you'll finish in 47 years!",
+  "You've completed 0.001% of the quest!",
+  "Your progress is statistically insignificant!",
+  "The numbers don't lie, you're doomed!",
+  "You're moving at negative velocity!",
+  "Your efficiency is below zero!",
+  "Even a calculator would give up!",
+  "The math says you should quit!",
+  "Your progress curve is flatlining!",
+  "You could have written a novel by now!",
+  "Time is money, and you're wasting both!",
+  "Your ancestors will be proud... of your persistence!",
+  "Future generations will study your dedication!",
+  "You'll be old and gray before you finish!",
+  "This quest spans multiple lifetimes!",
+  "You're aging faster than you're progressing!",
+  "Time flies when you're doing nothing useful!",
+  "Your youth is slipping away!",
+  "You could have built a time machine by now!",
+  "What is the meaning of life? Certainly not this!",
+  "This is an existential crisis waiting to happen!",
+  "You're like Sisyphus pushing his boulder!",
+  "The universe is laughing at you!",
+  "You're fighting against entropy itself!",
+  "This is a metaphor for futility!",
+  "You're the definition of perseverance!",
+  "The gods are testing your patience!",
+  "You're challenging the very fabric of space-time!",
+  "I've seen paint dry faster than this!",
+  "This is the most pointless quest in the game!",
+  "This is the quest that will break Kito.",
+  "Nothing will be earned from this quest.",
+  "You need therapy after this quest.",
+  "Plz stop.",
+];
+function startHardModeQuest() {
+  if (state.hardModeQuestActive) return;
+  state.hardModeQuestActive = true;
+  showHardModeSwariaMessage();
+  updateHardModeQuestProgress();
+}
+function autoStartHardModeQuest() {
+  if (!state.hardModeQuestActive && state.seenNectarizeResetStory) {
+    startHardModeQuest();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+    if (typeof updateHardModeQuestProgress === 'function') {
+      updateHardModeQuestProgress();
+    }
+  }
+}
+function showHardModeSwariaMessage() {
+  const swariaImg = document.getElementById('hardModeSwariaImg');
+  const speechBubble = document.getElementById('hardModeSwariaSpeech');
+  if (!swariaImg || !speechBubble) return;
+  if (window.hardModeSpeechTimer) {
+    clearTimeout(window.hardModeSpeechTimer);
+  }
+        swariaImg.querySelector('img').src = getHardModeQuestCharacterImage(true); 
+  const randomMessage = hardModeSwariaMessages[Math.floor(Math.random() * hardModeSwariaMessages.length)];
+  speechBubble.textContent = randomMessage;
+  speechBubble.style.display = 'block';
+  window.hardModeSpeechTimer = setTimeout(() => {
+    speechBubble.style.display = 'none';
+          swariaImg.querySelector('img').src = getHardModeQuestCharacterImage(false); 
+    window.hardModeSpeechTimer = null;
+  }, 5000);
+}
+function updateHardModeQuestProgress() {
+  if (!state.hardModeQuestActive) return;
+  hardModeQuestActive = state.hardModeQuestActive;
+  hardModeQuestProgress = state.hardModeQuestProgress;
+  document.getElementById('hardModeBerryProgress').textContent = `${state.hardModeQuestProgress.berryTokens.toLocaleString()} / ${hardModeQuestRequirements.berryTokens.toLocaleString()}`;
+  document.getElementById('hardModeStardustProgress').textContent = `${state.hardModeQuestProgress.stardustTokens.toLocaleString()} / ${hardModeQuestRequirements.stardustTokens.toLocaleString()}`;
+  document.getElementById('hardModeBerryPlateProgress').textContent = `${state.hardModeQuestProgress.berryPlateTokens.toLocaleString()} / ${hardModeQuestRequirements.berryPlateTokens.toLocaleString()}`;
+  document.getElementById('hardModeMushroomSoupProgress').textContent = `${state.hardModeQuestProgress.mushroomSoupTokens.toLocaleString()} / ${hardModeQuestRequirements.mushroomSoupTokens.toLocaleString()}`;
+  document.getElementById('hardModePrismClicksProgress').textContent = `${state.hardModeQuestProgress.prismClicks.toLocaleString()} / ${hardModeQuestRequirements.prismClicks.toLocaleString()}`;
+  document.getElementById('hardModeCommonBoxesProgress').textContent = `${state.hardModeQuestProgress.commonBoxes.toLocaleString()} / ${hardModeQuestRequirements.commonBoxes.toLocaleString()}`;
+  document.getElementById('hardModeFlowersWateredProgress').textContent = `${state.hardModeQuestProgress.flowersWatered.toLocaleString()} / ${hardModeQuestRequirements.flowersWatered.toLocaleString()}`;
+  document.getElementById('hardModePowerRefillsProgress').textContent = `${state.hardModeQuestProgress.powerRefills.toLocaleString()} / ${hardModeQuestRequirements.powerRefills.toLocaleString()}`;
+  document.getElementById('hardModeSoapPokesProgress').textContent = `${state.hardModeQuestProgress.soapPokes.toLocaleString()} / ${hardModeQuestRequirements.soapPokes.toLocaleString()}`;
+  document.getElementById('hardModeIngredientsCookedProgress').textContent = `${state.hardModeQuestProgress.ingredientsCooked.toLocaleString()} / ${hardModeQuestRequirements.ingredientsCooked.toLocaleString()}`;
+  updateQuestItemCompletion('hardModeBerryProgress', state.hardModeQuestProgress.berryTokens >= hardModeQuestRequirements.berryTokens);
+  updateQuestItemCompletion('hardModeStardustProgress', state.hardModeQuestProgress.stardustTokens >= hardModeQuestRequirements.stardustTokens);
+  updateQuestItemCompletion('hardModeBerryPlateProgress', state.hardModeQuestProgress.berryPlateTokens >= hardModeQuestRequirements.berryPlateTokens);
+  updateQuestItemCompletion('hardModeMushroomSoupProgress', state.hardModeQuestProgress.mushroomSoupTokens >= hardModeQuestRequirements.mushroomSoupTokens);
+  updateQuestItemCompletion('hardModePrismClicksProgress', state.hardModeQuestProgress.prismClicks >= hardModeQuestRequirements.prismClicks);
+  updateQuestItemCompletion('hardModeCommonBoxesProgress', state.hardModeQuestProgress.commonBoxes >= hardModeQuestRequirements.commonBoxes);
+  updateQuestItemCompletion('hardModeFlowersWateredProgress', state.hardModeQuestProgress.flowersWatered >= hardModeQuestRequirements.flowersWatered);
+  updateQuestItemCompletion('hardModePowerRefillsProgress', state.hardModeQuestProgress.powerRefills >= hardModeQuestRequirements.powerRefills);
+  updateQuestItemCompletion('hardModeSoapPokesProgress', state.hardModeQuestProgress.soapPokes >= hardModeQuestRequirements.soapPokes);
+  updateQuestItemCompletion('hardModeIngredientsCookedProgress', state.hardModeQuestProgress.ingredientsCooked >= hardModeQuestRequirements.ingredientsCooked);
+  checkHardModeQuestCompletion();
+}
+function updateQuestItemCompletion(progressId, isCompleted) {
+  const progressElement = document.getElementById(progressId);
+  if (!progressElement) return;
+  const questItem = progressElement.closest('.quest-item');
+  if (questItem) {
+    if (isCompleted) {
+      questItem.classList.add('completed');
+    } else {
+      questItem.classList.remove('completed');
+    }
+  }
+}
+function checkHardModeQuestCompletion() {
+  const allComplete = 
+    state.hardModeQuestProgress.berryTokens >= hardModeQuestRequirements.berryTokens &&
+    state.hardModeQuestProgress.stardustTokens >= hardModeQuestRequirements.stardustTokens &&
+    state.hardModeQuestProgress.berryPlateTokens >= hardModeQuestRequirements.berryPlateTokens &&
+    state.hardModeQuestProgress.mushroomSoupTokens >= hardModeQuestRequirements.mushroomSoupTokens &&
+    state.hardModeQuestProgress.prismClicks >= hardModeQuestRequirements.prismClicks &&
+    state.hardModeQuestProgress.commonBoxes >= hardModeQuestRequirements.commonBoxes &&
+    state.hardModeQuestProgress.flowersWatered >= hardModeQuestRequirements.flowersWatered &&
+    state.hardModeQuestProgress.powerRefills >= hardModeQuestRequirements.powerRefills &&
+    state.hardModeQuestProgress.soapPokes >= hardModeQuestRequirements.soapPokes &&
+    state.hardModeQuestProgress.ingredientsCooked >= hardModeQuestRequirements.ingredientsCooked;
+  if (allComplete) {
+    completeHardModeQuest();
+  }
+}
+function completeHardModeQuest() {
+  const questStatus = document.getElementById('hardModeQuestStatus');
+  if (questStatus) {
+    questStatus.textContent = 'Quest Cheated!';
+    questStatus.style.background = '#17a2b8';
+  }
+  const speechBubble = document.getElementById('hardModeSwariaSpeech');
+  if (speechBubble) {
+    speechBubble.textContent = "I... You cheated!";
+    speechBubble.style.display = 'block';
+  }
+  if (typeof window.trackHardModeQuestCompletion === 'function') {
+    window.trackHardModeQuestCompletion();
+  }
+}
+function trackHardModePrismClick() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.prismClicks++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+  if (typeof window.trackPrismLabClick === 'function') {
+    window.trackPrismLabClick();
+  }
+}
+function trackHardModeFlowerWatered() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.flowersWatered++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+}
+function trackHardModePowerRefill() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.powerRefills++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+}
+function trackHardModeCommonBox() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.commonBoxes++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+}
+function trackHardModeSoapPoke() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.soapPokes++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+}
+function trackHardModeIngredientsCooked() {
+  if (state.hardModeQuestActive) {
+    state.hardModeQuestProgress.ingredientsCooked++;
+    updateHardModeQuestProgress();
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+  }
+}
+function checkHardModeTabButtonVisibility() {
+  if (window.hardModePermanentlyUnlocked || 
+      state.seenNectarizeResetStory || 
+      (window.nectarizeResets && window.nectarizeResets >= 1)) {
+    const hardModeTabBtn = document.getElementById('settingsHardModeTabBtn');
+    if (hardModeTabBtn) {
+      hardModeTabBtn.style.display = 'inline-block';
+    }
+    if (!window.hardModePermanentlyUnlocked) {
+      window.hardModePermanentlyUnlocked = true;
+    }
+  }
+}
+window.trackHardModePrismClick = trackHardModePrismClick;
+window.trackHardModeFlowerWatered = trackHardModeFlowerWatered;
+window.trackHardModePowerRefill = trackHardModePowerRefill;
+window.trackHardModeCommonBox = trackHardModeCommonBox;
+window.trackHardModeSoapPoke = trackHardModeSoapPoke;
+window.trackHardModeIngredientsCooked = trackHardModeIngredientsCooked;
+window.updateHardModeQuestProgress = updateHardModeQuestProgress;
+window.autoStartHardModeQuest = autoStartHardModeQuest;
+window.checkHardModeTabButtonVisibility = checkHardModeTabButtonVisibility;
+document.addEventListener('DOMContentLoaded', function() {
+  const swariaImg = document.getElementById('hardModeSwariaImg');
+  if (swariaImg) {
+    swariaImg.addEventListener('click', showHardModeSwariaMessage);
+  }
+  checkHardModeTabButtonVisibility();
+  autoStartHardModeQuest();
+  if (state.hardModeQuestActive) {
+    updateHardModeQuestProgress();
+  }
+  setTimeout(() => {
+    if (typeof window.syncTerrariumVarsFromWindow === 'function') {
+      window.syncTerrariumVarsFromWindow();
+    }
+  }, 500);
+});
+</script>
+<div id="departmentStatsModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fff; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div id="departmentStatsModalTitle" style="font-size:2em; font-weight:bold; color:#222; margin-bottom:0.7em;">Department Stats</div>
+    <div id="departmentStatsModalContent" style="width:100%; margin-bottom:1.5em;"></div>
+    <div style="width:100%; margin-top:1em;">
+      <div style="font-weight:bold; margin-bottom:0.3em;">Friendship Level</div>
+      <div style="background:#eee; border-radius:12px; height:22px; width:100%; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.07);">
+        <div id="departmentFriendshipBar" style="background:linear-gradient(90deg,#bfaaff 40%,#7be87b 100%); height:100%; width:0%; border-radius:12px; transition:width 0.5s;"></div>
+      </div>
+      <div id="departmentFriendshipText" style="margin-top:0.3em; text-align:right; font-size:1.1em; color:#222; font-weight:bold;"></div>
+    </div>
+  </div>
+</div>
+<div id="nectarizeResetStoryModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
+  <div id="nectarizeResetStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      You and Fluzzer watches in pure horror as the Nectarize Machine explodes after your first usage. "seriously!?" You say to yourself. You discover that the machine was ordered from a website called "Temu.com" by the Swa elites. You and Fluzzer look at the damages on the machine. It's not as severe as you thought as you will only need an handfull of petals to repair it.
+    </div>
+    <button onclick="closeNectarizeResetStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="infinityFluffStoryModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
+  <div id="infinityFluffStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/fluff.png" alt="Infinity Fluff" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      As your fluff count reaches unimaginable heights, you witness something extraordinary. The very fabric of reality seems to bend around your fluff collection. The numbers become infinite, transcending the limits of mortal comprehension. You have achieved what was once thought impossible - infinite fluff! The universe itself acknowledges your achievement with a cosmic ∞ symbol.
+    </div>
+    <button onclick="closeInfinityFluffStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+</body>
