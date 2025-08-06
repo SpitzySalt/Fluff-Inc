@@ -1,0 +1,9 @@
+# Block access to development files
+/debug/* https://www.youtube.com/watch?v=dQw4w9WgXcQ 301!
+/.vscode/* https://www.youtube.com/watch?v=dQw4w9WgXcQ 301!
+/*.log https://www.youtube.com/watch?v=dQw4w9WgXcQ 301!
+/*.tmp https://www.youtube.com/watch?v=dQw4w9WgXcQ 301!
+
+# Or simply return 404 for these files
+# /debug/* /404.html 404
+# /.vscode/* /404.html 404

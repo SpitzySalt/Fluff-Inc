@@ -1,0 +1,29 @@
+# Development and debugging files
+*.log
+*.tmp
+.vscode/
+.vs/
+debug/
+debugger/
+node_modules/
+.env
+.env.local
+.DS_Store
+Thumbs.db
+
+# Source maps (if you generate them)
+*.map
+
+# Editor temporary files
+*~
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
