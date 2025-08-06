@@ -391,301 +391,381 @@ const elementData = {
     "symbol": "XI",
     "name": "Expirite"
   },
-   "24": { "symbol": "NU", "name": "Nectarium" },
-  "25": { "symbol": "SP", "name": "Spinglitz"},
-  "26": { "symbol": "WB", "name": "Wibberon"},
-  "27": { "symbol": "ZN", "name": "Zanoodle"},
-  "28": { "symbol": "GL", "name": "Glimfloop"},
-  "29": { "symbol": "PX", "name": "Puffaxite"},
-  "30": { "symbol": "BR", "name": "Breezite"},
-  "31": { "symbol": "CH", "name": "Chirpyx"},
-  "32": { "symbol": "ZO", "name": "Zobblon" },
-  "33": { "symbol": "KF", "name": "Kofflite"},
-  "34": { "symbol": "SQ", "name": "Squeekon"},
-  "35": { "symbol": "NY", "name": "Nyaonium"},
-  "36": { "symbol": "BO", "name": "Boofryst"},
-  "37": { "symbol": "ZU", "name": "Zuffleite"},
-  "38": { "symbol": "PU", "name": "Puddingon"},
-  "39": { "symbol": "SW", "name": "Swizzlor"},
-  "40": { "symbol": "GR", "name": "Gribblex" },
-  "41": { "symbol": "TW", "name": "Twibblum"},
-  "42": { "symbol": "MK", "name": "Mooklite"},
-  "43": { "symbol": "ZZ", "name": "Zazzonium"},
-  "44": { "symbol": "KL", "name": "Klunkite"},
-  "45": { "symbol": "RJ", "name": "Rejigglon"},
-  "46": { "symbol": "BB", "name": "Blubbaron"},
-  "47": { "symbol": "FN", "name": "Fwoompite"},
-  "48": { "symbol": "XD", "name": "Xadipple" },
-  "49": { "symbol": "KP", "name": "Kerpluff"},
-  "50": { "symbol": "FT", "name": "Feathrion"},
+  "24": { 
+    "symbol": "NU", 
+    "name": "Nectarium" 
+  }, //elements 25-117 names are placeholders
+  "25": { 
+    "symbol": "Mn", 
+    "name": "Manganese"
+  },
+  "26": { 
+    "symbol": "Fe", 
+    "name": "Iron"
+  },
+  "27": { 
+    "symbol": "Co", 
+    "name": "Cobalt"
+  },
+  "28": { 
+    "symbol": "Ni", 
+    "name": "Nickel"
+  },
+  "29": { 
+    "symbol": "Cu", 
+    "name": "Copper"
+  },
+  "30": { 
+    "symbol": "Zn", 
+    "name": "Zinc"
+  },
+  "31": { 
+    "symbol": "Ga", 
+    "name": "Gallium"
+  },
+  "32": { 
+    "symbol": "Ge", 
+    "name": "Germanium" 
+  },
+  "33": { 
+    "symbol": "As", 
+    "name": "Arsenic"
+  },
+  "34": { 
+    "symbol": "Se", 
+    "name": "Selenium"
+  },
+  "35": { 
+    "symbol": "Br", 
+    "name": "Bromine"
+  },
+  "36": { 
+    "symbol": "Kr", 
+    "name": "Krypton"
+  },
+  "37": { 
+    "symbol": "Rb", 
+    "name": "Rubidium"
+  },
+  "38": { 
+    "symbol": "Sr", 
+    "name": "Strontium"
+  },
+  "39": { 
+    "symbol": "Y", 
+    "name": "Yttrium"
+  },
+  "40": { 
+    "symbol": "Zr", 
+    "name": "Zirconium"
+  },
+  "41": { 
+    "symbol": "Nb", 
+    "name": "Niobium"
+  },
+  "42": { 
+    "symbol": "Mo", 
+    "name": "Molybdenum"
+  },
+  "43": { 
+    "symbol": "Tc", 
+    "name": "Technetium"
+  },
+  "44": { 
+    "symbol": "Ru", 
+    "name": "Ruthenium"
+  },
+  "45": { 
+    "symbol": "Rh", 
+    "name": "Rhodium"
+  },
+  "46": { 
+    "symbol": "Pd", 
+    "name": "Palladium"
+  },
+  "47": { 
+    "symbol": "Ag", 
+    "name": "Silver"
+  },
+  "48": { 
+    "symbol": "Cd", 
+    "name": "Cadmium"
+  },
+  "49": { 
+    "symbol": "In", 
+    "name": "Indium"
+  },
+  "50": { 
+    "symbol": "Sn", 
+    "name": "Tin"
+  },
   "51": {
-  "symbol": "PB",
-  "name": "Puffblom",
-},
-"52": {
-  "symbol": "WR",
-  "name": "Whirruff",
-},
+    "symbol": "Sb",
+    "name": "Antimony"
+  },
+  "52": {
+    "symbol": "Te",
+    "name": "Tellurium"
+  },
 "53": {
-  "symbol": "GG",
-  "name": "Gigglium",
+  "symbol": "I",
+  "name": "Iodine"
 },
 "54": {
-  "symbol": "ZZ",
-  "name": "Zazzlore",
+  "symbol": "Xe",
+  "name": "Xenon"
 },
 "55": {
-  "symbol": "BN",
-  "name": "Bunobite",
+  "symbol": "Cs",
+  "name": "Cesium"
 },
 "56": {
-  "symbol": "GL",
-  "name": "Glonkite",
+  "symbol": "Ba",
+  "name": "Barium"
 },
 "57": {
-  "symbol": "MB",
-  "name": "Meblump",
+  "symbol": "La",
+  "name": "Lanthanum"
 },
 "58": {
-  "symbol": "DL",
-  "name": "Dazzloon",
+  "symbol": "Ce",
+  "name": "Cerium"
 },
 "59": {
-  "symbol": "BQ",
-  "name": "Blorqite",
+  "symbol": "Pr",
+  "name": "Praseodymium"
 },
 "60": {
-  "symbol": "SN",
-  "name": "Snibbin",
+  "symbol": "Nd",
+  "name": "Neodymium"
 },
  "61": {
-  "symbol": "TW",
-  "name": "Twiblo",
+  "symbol": "Pm",
+  "name": "Promethium"
 },
 "62": {
-  "symbol": "HR",
-  "name": "Hurrloon",
+  "symbol": "Sm",
+  "name": "Samarium"
 },
 "63": {
-  "symbol": "JM",
-  "name": "Jambonium",
+  "symbol": "Eu",
+  "name": "Europium"
 },
 "64": {
-  "symbol": "CH",
-  "name": "Chifflet",
+  "symbol": "Gd",
+  "name": "Gadolinium"
 },
 "65": {
-  "symbol": "AF",
-  "name": "Artefracton",
+  "symbol": "Tb",
+  "name": "Terbium"
 },
 "66": {
-  "symbol": "SQ",
-  "name": "Squishon",
+  "symbol": "Dy",
+  "name": "Dysprosium"
 },
 "67": {
-  "symbol": "BL",
-  "name": "Bloopium",
+  "symbol": "Ho",
+  "name": "Holmium"
 },
 "68": {
-  "symbol": "NK",
-  "name": "Nunklite",
+  "symbol": "Er",
+  "name": "Erbium"
 },
 "69": {
-  "symbol": "GR",
-  "name": "Gribblob",
+  "symbol": "Tm",
+  "name": "Thulium"
 },
 "70": {
-  "symbol": "VX",
-  "name": "Vibrixon",
-}
-,
+  "symbol": "Yb",
+  "name": "Ytterbium"
+},
   "71": {
-    "symbol": "NT",
-    "name": "Noctite"
+    "symbol": "Lu",
+    "name": "Lutetium"
   },
   "72": {
-    "symbol": "WIT",
-    "name": "Whenyusite",
+    "symbol": "Hf",
+    "name": "Hafnium"
   },
   "73": {
-    "symbol": "LOV",
-    "name": "Lumivorite",
+    "symbol": "Ta",
+    "name": "Tantalum"
   },
   "74": {
-    "symbol": "EEN",
-    "name": "Echoen",
+    "symbol": "W",
+    "name": "Tungsten"
   },
   "75": {
-    "symbol": "DAR",
-    "name": "Darium",
+    "symbol": "Re",
+    "name": "Rhenium"
   },
   "76": {
-    "symbol": "MYX",
-    "name": "Mithyx",
+    "symbol": "Os",
+    "name": "Osmium"
   },
   "77": {
-    "symbol": "ZER",
-    "name": "Zepherium",
+    "symbol": "Ir",
+    "name": "Iridium"
   },
   "78": {
-    "symbol": "SUS",
-    "name": "Amogusium"
+    "symbol": "Pt",
+    "name": "Platinum"
   },
   "79": {
-    "symbol": "WGT",
-    "name": "Wiggleite"
+    "symbol": "Au",
+    "name": "Gold"
   },
   "80": {
-    "symbol": "FUR",
-    "name": "Fluffers",
+    "symbol": "Hg",
+    "name": "Mercury",
   },
   "81": {
-  "symbol": "FL",
-  "name": "Flapjackon",
+  "symbol": "Tl",
+  "name": "Thallium",
 },
 "82": {
-  "symbol": "GR",
-  "name": "Grobblegum",
+  "symbol": "Pb",
+  "name": "Lead",
 },
 "83": {
-  "symbol": "SN",
-  "name": "Snizzlore",
+  "symbol": "Bi",
+  "name": "Bismuth",
 },
 "84": {
-  "symbol": "WI",
-  "name": "Wibblite",
+  "symbol": "Po",
+  "name": "Polonium",
 },
 "85": {
-  "symbol": "PU",
-  "name": "Puddlorium",
+  "symbol": "At",
+  "name": "Astatine",
 },
 "86": {
-  "symbol": "BL",
-  "name": "Bloopine",
+  "symbol": "Rn",
+  "name": "Radon",
 },
 "87": {
-  "symbol": "CH",
-  "name": "Chimblar",
+  "symbol": "Fr",
+  "name": "Francium",
 },
 "88": {
-  "symbol": "ZL",
-  "name": "Zlurphex",
+  "symbol": "Ra",
+  "name": "Radium",
 },
 "89": {
-  "symbol": "DO",
-  "name": "Doonkle",
+  "symbol": "Ac",
+  "name": "Actinium",
 },
 "90": {
-  "symbol": "TR",
-  "name": "Trubbite",
+  "symbol": "Th",
+  "name": "Thorium",
 },
  "91": {
-  "symbol": "KL",
-  "name": "Klomperine",
+  "symbol": "Pa",
+  "name": "Protactinium",
 },
 "92": {
-  "symbol": "SM",
-  "name": "Smudgelin",
+  "symbol": "U",
+  "name": "Uranium",
 },
 "93": {
-  "symbol": "BQ",
-  "name": "Bloopquartz",
+  "symbol": "Np",
+  "name": "Neptunium",
 },
 "94": {
-  "symbol": "ZR",
-  "name": "Zarzoom",
+  "symbol": "Pu",
+  "name": "Plutonium",
 },
 "95": {
-  "symbol": "XY",
-  "name": "Xyloof",
+  "symbol": "Am",
+  "name": "Americium",
 },
 "96": {
-  "symbol": "JV",
-  "name": "Javoomite",
+  "symbol": "Cm",
+  "name": "Curium",
 },
 "97": {
-  "symbol": "GG",
-  "name": "Gigglore",
+  "symbol": "Bk",
+  "name": "Berkelium",
 },
 "98": {
-  "symbol": "WT",
-  "name": "Wootonix",
+  "symbol": "Cf",
+  "name": "Californium",
 },
 "99": {
-  "symbol": "SP",
-  "name": "Sporklite",
+  "symbol": "Es",
+  "name": "Einsteinium",
 },
 "100": {
-  "symbol": "DU",
-  "name": "Duzzluff",
+  "symbol": "Fm",
+  "name": "Fermium",
 },
  "101": {
-  "symbol": "FLZ",
-  "name": "Flizzlepop",
+  "symbol": "Md",
+  "name": "Mendelevium",
 },
 "102": {
-  "symbol": "TQ",
-  "name": "Tweakium",
+  "symbol": "No",
+  "name": "Nobelium",
 },
 "103": {
-  "symbol": "BZ",
-  "name": "Bazzlorite",
+  "symbol": "Lr",
+  "name": "Lawrencium",
 },
 "104": {
-  "symbol": "CRN",
-  "name": "Crinkleon",
+  "symbol": "Rf",
+  "name": "Rutherfordium",
 },
 "105": {
-  "symbol": "YH",
-  "name": "Yeehonite",
+  "symbol": "Db",
+  "name": "Dubnium",
 },
 "106": {
-  "symbol": "MKZ",
-  "name": "Minkazo",
+  "symbol": "Sg",
+  "name": "Seaborgium",
 },
 "107": {
-  "symbol": "WN",
-  "name": "Wiggleton",
+  "symbol": "Bh",
+  "name": "Bohrium",
 },
 "108": {
-  "symbol": "SRB",
-  "name": "Scribblite",
+  "symbol": "Hs",
+  "name": "Hassium",
 },
 "109": {
-  "symbol": "ZZ",
-  "name": "Zuzzluff",
+  "symbol": "Mt",
+  "name": "Meitnerium",
 },
 "110": {
-  "symbol": "DLK",
-  "name": "Dorkelium",
+  "symbol": "Ds",
+  "name": "Darmstadtium",
 },
  "111": {
-  "symbol": "SQU",
-  "name": "Squonkonite",
+  "symbol": "Rg",
+  "name": "Roentgenium",
 },
 "112": {
-  "symbol": "FZL",
-  "name": "Fizzlolite",
+  "symbol": "Cn",
+  "name": "Copernicium",
 },
 "113": {
-  "symbol": "BOP",
-  "name": "Bopplar",
+  "symbol": "Nh",
+  "name": "Nihonium",
 },
 "114": {
-  "symbol": "ZRG",
-  "name": "Zarugon",
+  "symbol": "Fl",
+  "name": "Flerovium",
 },
 "115": {
-  "symbol": "TWT",
-  "name": "Twintickle",
+  "symbol": "Mc",
+  "name": "Moscovium",
 },
 "116": {
-  "symbol": "GLR",
-  "name": "Glormium",
+  "symbol": "Lv",
+  "name": "Livermorium",
 },
 "117": {
-  "symbol": "SPF",
-  "name": "Spoofite",
+  "symbol": "Ts",
+  "name": "Tennessine",
 },
 "118": {
   "symbol": "OG",
