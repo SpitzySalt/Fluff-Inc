@@ -4374,7 +4374,7 @@ function showNectarizeQuestProgress() {
     const sparksText = nectarizeQuestGivenSparks >= nectarizeQuestRequirements.sparks ? '✓' : `${nectarizeQuestGivenSparks}/${nectarizeQuestRequirements.sparks}`;
     const petalsText = nectarizeQuestGivenPetals >= nectarizeQuestRequirements.petals ? '✓' : `${nectarizeQuestGivenPetals}/${nectarizeQuestRequirements.petals}`;
     const upgradeText = nectarizeQuestRequirements.upgrade ? '✓' : '✗';
-    repairBtn.textContent = `Quest: ${batteryText} Battery, ${sparksText} Sparks, ${petalsText} Petals, ${upgradeText} Upgrade (${nectarizeQuestProgress}%)`;
+    repairBtn.textContent = `Quest: ${batteryText} Battery, ${sparksText} Sparks, ${petalsText} Petals, ${upgradeText} Flower upgrade 4 (${nectarizeQuestProgress}%)`;
     repairBtn.disabled = true;
   }
 }

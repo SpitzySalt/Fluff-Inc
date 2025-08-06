@@ -373,7 +373,9 @@ function gradeUp() {
   if (typeof window.trackExpansionReset === 'function') {
     window.trackExpansionReset();
   }
-  window.location.reload();
+  setTimeout(() => {
+    window.location.reload();
+  }, 3000);
 }
 
 function updatePrismSubTabVisibility() {
