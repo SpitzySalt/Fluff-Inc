@@ -774,6 +774,26 @@ function addSpeechBubbleCSS() {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(initPremiumSystem, 100);
 });
+
+
+window.addEventListener('load', function() {
+  setTimeout(() => {
+    if (typeof initPremiumSystem === 'function') {
+      initPremiumSystem();
+    }
+  }, 500);
+});
+
+
+const originalShowPage = window.showPage;
+window.showPage = function(pageId) {
+  if (originalShowPage) {
+    originalShowPage.apply(this, arguments);
+  }
+  if (pageId === 'settings' && typeof updatePremiumUI === 'function') {
+    setTimeout(updatePremiumUI, 100);
+  }
+};
 window.premiumSystem = {
   initPremiumSystem,
   savePremiumState,
@@ -799,4 +819,18 @@ window.premiumSystem = {
   hideBijouTalkingOverlay,
   createBijouSpeechBubble,
   addSpeechBubbleCSS
+};
+
+
+window.debugPremium = function() {
+  console.log('Premium State:', window.premiumState);
+  console.log('Swa Bucks:', window.state?.swabucks || 0);
+  if (typeof initPremiumSystem === 'function') {
+    initPremiumSystem();
+    console.log('Premium system reinitialized');
+  }
+  if (typeof updatePremiumUI === 'function') {
+    updatePremiumUI();
+    console.log('Premium UI updated');
+  }
 };
