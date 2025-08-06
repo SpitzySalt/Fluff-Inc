@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Block development files
+Disallow: /.vscode/
+Disallow: /debug/
+Disallow: /*.log
+Disallow: /*.tmp
+
+# Sitemap location
+Sitemap: https://fluffinc.netlify.app/sitemap.xml
