@@ -1,6 +1,7 @@
 // welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
+// Script2 is a continuation of script.js
 
 
 
