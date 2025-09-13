@@ -1,4 +1,4 @@
-let advancedPrismState = {
+ï»¿let advancedPrismState = {
   unlocked: false,
   viSpeechActive: false,
   viSpeechTimeout: null,
@@ -333,7 +333,7 @@ function pokeViWithMainSpeechBubble() {
   if (!isNightTime && Math.random() < 0.2) {
     const prismPotentialExplanations = [
       "Prism Potential is the product of all your light types multiplied together! The more balanced your collection, the higher it grows.",
-      "Did you know? Prism Potential is calculated by multiplying all light amounts: White × Red × Orange × Yellow × Green × Blue. Even having zero of one type makes it work!",
+      "Did you know? Prism Potential is calculated by multiplying all light amounts: White X Red X Orange X Yellow X Green X Blue. Even having zero of one type makes it work!",
       "The secret to massive Prism Potential is balance. You need some of every light type, not just focusing on one color.",
       "Prism Potential grows exponentially when you develop all light types equally. It's the key to upgrading the Prism Core!",
       "Think of Prism Potential like a crystal's harmony - all wavelengths must resonate together to achieve true power."
@@ -370,7 +370,7 @@ function pokeAdvancedPrismCharacter() {
     if (!isNightTime && Math.random() < 0.2) {
       const prismPotentialExplanations = [
         "Prism Potential is the product of all your light types multiplied together! The more balanced your collection, the higher it grows.",
-        "Did you know? Prism Potential is calculated by multiplying all light amounts: White × Red × Orange × Yellow × Green × Blue. Even having zero of one type makes it work!",
+        "Did you know? Prism Potential is calculated by multiplying all light amounts: White X Red X Orange X Yellow X Green X Blue. Even having zero of one type makes it work!",
         "The secret to massive Prism Potential is balance. You need some of every light type, not just focusing on one color.",
         "Prism Potential grows exponentially when you develop all light types equally. It's the key to upgrading the Prism Core!",
         "Think of Prism Potential like a crystal's harmony - all wavelengths must resonate together to achieve true power."
@@ -850,7 +850,7 @@ function openCalibrationMinigame(lightType) {
       calculatedPenalty = 1.0;
     }
     advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(calculatedPenalty);
-    diminishingReturnsEl.textContent = `÷${calculatedPenalty.toFixed(3)}`;
+    diminishingReturnsEl.textContent = `/${calculatedPenalty.toFixed(3)}`;
     if (calculatedPenalty <= 1.2) {
       diminishingReturnsEl.style.color = '#44ff44';
     } else if (calculatedPenalty <= 1.5) {
@@ -948,7 +948,7 @@ function stopCalibration() {
     if (diminishingReturnsEl) {
       const persistentPenalty = advancedPrismState.calibration.sessionPenalty[activeLightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
-      diminishingReturnsEl.textContent = `÷${penaltyValue.toFixed(3)}`;
+      diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
         diminishingReturnsEl.style.color = '#44ff44';
       } else if (penaltyValue <= 1.5) {
@@ -1011,7 +1011,7 @@ function drainLightCurrency(lightType) {
     if (diminishingReturnsEl) {
       const persistentPenalty = advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
-      diminishingReturnsEl.textContent = `÷${penaltyValue.toFixed(3)}`;
+      diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
         diminishingReturnsEl.style.color = '#44ff44';
       } else if (penaltyValue <= 1.5) {
@@ -1091,7 +1091,7 @@ function updateCalibrationMinigame(lightType) {
       }
       advancedPrismState.calibration.lastSessionEfficiency = sessionPenalty;
       advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
-      diminishingReturnsEl.textContent = `÷${sessionPenalty.toFixed(3)}`;
+      diminishingReturnsEl.textContent = `/${sessionPenalty.toFixed(3)}`;
       if (sessionPenalty <= 1.2) {
         diminishingReturnsEl.style.color = '#44ff44';
       } else if (sessionPenalty <= 1.5) {
@@ -1104,7 +1104,7 @@ function updateCalibrationMinigame(lightType) {
     } else {
       const persistentPenalty = advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
-      diminishingReturnsEl.textContent = `÷${penaltyValue.toFixed(3)}`;
+      diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
         diminishingReturnsEl.style.color = '#44ff44';
       } else if (penaltyValue <= 1.5) {
@@ -2062,10 +2062,10 @@ function renderAdvancedPrismUI() {
           Stable Light Rate: <span id="calibrationTimeMultiplier">x1.0</span>
         </div>
         <div style="margin: 0.5rem 0; color: #44ff44; font-weight: bold; text-align: center;">
-          Session Efficiency: <span id="calibrationDiminishingReturns">÷1.000</span>
+          Session Efficiency: <span id="calibrationDiminishingReturns">/1.000</span>
         </div>
         <div style="margin: 0.5rem 0; color: #ff6666; font-weight: bold; text-align: center;">
-          Current Nerf: ÷<span id="calibrationCurrentNerf">1</span> to light gain
+          Current Nerf: /<span id="calibrationCurrentNerf">1</span> to light gain
         </div>
         <div style="margin-top: 1.5rem;">
           <button id="activateCalibrationBtn" onclick="startCalibration()"

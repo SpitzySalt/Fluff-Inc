@@ -1449,7 +1449,7 @@
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">�</div>
+      ">X</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1516,7 +1516,7 @@
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">�</div>
+      ">X</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1584,7 +1584,7 @@
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">�</div>
+      ">X</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1643,7 +1643,7 @@
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">�</div>
+      ">X</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {

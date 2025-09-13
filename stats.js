@@ -1,4 +1,4 @@
-// welcome to the Fluff Inc. game script
+ï»¿// welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
@@ -202,8 +202,8 @@ function getFriendshipBuffs(department, level) {
       1: (lvl) => `Decreases Fluzzer's action interval by ${new Decimal(500).mul(lvl).toNumber()}ms and improves cursor speed by ${new Decimal(8).mul(lvl).toNumber()}%`,
       4: (lvl) => `The pollen collector has a ${10 + Math.max(0, (lvl - 4) * 2)}% chance to perform a petal slice that damages flowers in its path`,
       7: (lvl) => `The pollen collector has a ${1 + Math.max(0, (lvl - 7) * 0.5)}% chance to perform a flower wipe that damages every flower`,
-      10: (lvl) => `The watering can tool will now affect an area of 5×5`,
-      15: (lvl) => `Fluzzer will detect any rustling flowers and go click on it and collect the token + The watering can tool will now affect an area of 6×6`
+      10: (lvl) => `The watering can tool will now affect an area of 5X5`,
+      15: (lvl) => `Fluzzer will detect any rustling flowers and go click on it and collect the token + The watering can tool will now affect an area of 6X6`
     },
     'FrontDesk': {
       1: (lvl) => `Increases chances for higher star Rikkor workers by ${new Decimal(10).mul(lvl).toNumber()}%`,
