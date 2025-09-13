@@ -2,6 +2,8 @@
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
+// DecimalUtils is available globally from decimal_utils.js
+
 
 
 
@@ -49,8 +51,8 @@ const recipes = [
     id: 'berryPlate',
     name: 'Berry Plate',
     image: 'assets/icons/berry plate token.png',
-    cost: { berries: 50, water: 5 },
-    timePer: 5, 
+    cost: { berries: new Decimal(50), water: new Decimal(5) },
+    timePer: new Decimal(5), 
     unit: 'plates',
     rewardProperty: 'berryPlate'
   },
@@ -58,8 +60,8 @@ const recipes = [
     id: 'mushroomSoup',
     name: 'Mushroom Soup',
     image: 'assets/icons/mushroom soup token.png', 
-    cost: { mushroom: 50, water: 5 },
-    timePer: 5, 
+    cost: { mushroom: new Decimal(50), water: new Decimal(5) },
+    timePer: new Decimal(5), 
     unit: 'soups',
     rewardProperty: 'mushroomSoup'
   },
@@ -67,8 +69,8 @@ const recipes = [
     id: 'batteries',
     name: 'Batteries',
     image: 'assets/icons/battery token.png',
-    cost: { sparks: 50, prisma: 5 },
-    timePer: 5, 
+    cost: { sparks: new Decimal(50), prisma: new Decimal(5) },
+    timePer: new Decimal(5), 
     unit: 'batteries',
     rewardProperty: 'batteries'
   },
@@ -76,8 +78,8 @@ const recipes = [
     id: 'glitteringPetals',
     name: 'Glittering Petals',
     image: 'assets/icons/glittering petal token.png', 
-    cost: { petals: 50, stardust: 5 },
-    timePer: 5, 
+    cost: { petals: new Decimal(50), stardust: new Decimal(5) },
+    timePer: new Decimal(5), 
     unit: 'petals',
     rewardProperty: 'glitteringPetals'
   },
@@ -85,8 +87,8 @@ const recipes = [
     id: 'chargedPrisma',
     name: 'Charged Prisma',
     image: 'assets/icons/charged prism token.png', 
-    cost: { prisma: 50, sparks: 10, stardust: 3 },
-    timePer: 5, 
+    cost: { prisma: new Decimal(50), sparks: new Decimal(10), stardust: new Decimal(3) },
+    timePer: new Decimal(5), 
     unit: 'prismas',
     rewardProperty: 'chargedPrisma'
   }
@@ -111,6 +113,11 @@ const INGREDIENT_TYPE_IMAGES = {
   stardust: 'assets/icons/stardust token.png',
   swabucks: 'assets/icons/Swa Buck.png'
 };
+
+// Make kitchen.js variables globally accessible
+window.recipes = recipes;
+window.INGREDIENT_TYPES = INGREDIENT_TYPES;
+window.INGREDIENT_TYPE_IMAGES = INGREDIENT_TYPE_IMAGES;
 
 function getRandomIngredientType(context) {
   let weights;
@@ -146,6 +153,9 @@ function getRandomIngredientType(context) {
   }
   const fallbackType = INGREDIENT_TYPES[0].name;
   return fallbackType;
+
+// Make kitchen.js functions globally accessible
+window.getRandomIngredientType = getRandomIngredientType;
 }
 
 window.activeIngredientTokens = window.activeIngredientTokens || [];
@@ -163,16 +173,57 @@ function getNearbyPosition(element) {
   return { x, y };
 }
 
+// Helper function to get Lepre token burst chance
+function getLepreTokenBurstChance() {
+  if (!window.friendship || !window.friendship.Boutique) return 0;
+  
+  const lepreLevel = window.friendship.Boutique.level || 0;
+  if (lepreLevel < 4) return 0;
+  
+  // Base 10% at level 4, +2% per level after 4
+  const chance = 10 + (2 * Math.max(0, lepreLevel - 4));
+  return chance;
+}
+
 function spawnIngredientToken(context, sourceElement) {
   if (context === 'generator') {
-    const genTab = document.getElementById('generatorSubTab');
-    if (!genTab || genTab.style.display === 'none' || genTab.offsetParent === null) return;
+    const genTab = document.getElementById('generatorMainTab');
+    if (!genTab || genTab.style.display === 'none' || genTab.offsetParent === null) {
+      return;
+    }
   }
   const now = Date.now();
-  if (window.ingredientTokenCooldown[context] && now < window.ingredientTokenCooldown[context]) return;
+  if (window.ingredientTokenCooldown[context] && now < window.ingredientTokenCooldown[context]) {
+    return;
+  }
   let chance = (context === 'generator') ? 1/1000 : (context === 'prism') ? 1/30 :(context === 'terrarium') ? 1/1 : 1/75;
-  if (Math.random() > chance) return;
-  if (typeof window.currentGrade !== 'undefined' && window.currentGrade < 3) return;
+  if (Math.random() > chance) {
+    return;
+  }
+  if (typeof window.currentGrade !== 'undefined' && window.currentGrade < 3) {
+    return;
+  }
+  
+  // Check for Lepre token burst
+  const burstChance = getLepreTokenBurstChance();
+  const shouldBurst = burstChance > 0 && Math.random() * 100 < burstChance;
+  const tokenCount = shouldBurst ? 5 : 1;
+  
+  // Show burst message if burst occurs
+  if (shouldBurst) {
+    console.log(`Lepre token burst! Spawning ${tokenCount} tokens instead of 1!`);
+    
+    // Show visual notification
+    showTokenBurstNotification(sourceElement);
+  }
+  
+  // Spawn the tokens
+  for (let i = 0; i < tokenCount; i++) {
+    spawnSingleIngredientToken(context, sourceElement, i > 0);
+  }
+}
+
+function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false) {
   const type = getRandomIngredientType(context);
   const token = document.createElement('img');
   token.src = INGREDIENT_TYPE_IMAGES[type] || 'assets/icons/flower.png';
@@ -182,9 +233,31 @@ function spawnIngredientToken(context, sourceElement) {
   token.style.width = '48px';
   token.style.height = '48px';
   token.style.transition = 'transform 0.7s cubic-bezier(.4,2,.6,1), opacity 0.5s';
+  token.style.cursor = 'pointer';
   token.dataset.type = type;
-  token.dataset.spawnTime = now;
+  token.dataset.spawnTime = Date.now();
   token.dataset.collected = 'false';
+  
+  // Add special styling for burst tokens
+  if (isBurstToken) {
+    token.style.filter = 'drop-shadow(0 0 8px gold)';
+    token.style.animation = 'tokenBurstGlow 2s ease-in-out infinite alternate';
+    token.dataset.burstToken = 'true';
+    
+    // Add CSS animation if it doesn't exist
+    if (!document.getElementById('tokenBurstStyles')) {
+      const style = document.createElement('style');
+      style.id = 'tokenBurstStyles';
+      style.textContent = `
+        @keyframes tokenBurstGlow {
+          0% { filter: drop-shadow(0 0 8px gold) brightness(1.2) scale(1); }
+          100% { filter: drop-shadow(0 0 12px gold) brightness(1.4) scale(1.05); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+  
   const start = sourceElement.getBoundingClientRect();
   token.style.left = (start.left + start.width/2 - 24) + 'px';
   token.style.top = (start.top + start.height/2 - 24) + 'px';
@@ -194,52 +267,108 @@ function spawnIngredientToken(context, sourceElement) {
     token.style.transform = `translate(${x - (start.left + start.width/2)}px, ${y - (start.top + start.height/2)}px)`;
   }, 10);
   token.style.opacity = '0.5';
-  token.style.filter = 'grayscale(50%)';
+  
+  // Handle filter for burst tokens vs normal tokens
+  if (isBurstToken) {
+    token.style.filter = 'drop-shadow(0 0 8px gold) grayscale(50%)';
+    // Temporarily disable animation during spawn
+    token.style.animation = 'none';
+  } else {
+    token.style.filter = 'grayscale(50%)';
+  }
+  
   setTimeout(() => {
     if (token.dataset.collected !== 'true') {
       token.style.opacity = '1';
-      token.style.filter = 'none';
+      if (isBurstToken) {
+        token.style.filter = 'drop-shadow(0 0 8px gold)';
+        token.style.animation = 'tokenBurstGlow 2s ease-in-out infinite alternate';
+      } else {
+        token.style.filter = 'none';
+      }
     }
   }, 1000);
   token.onclick = function() {
+    console.log(`Debug - Token clicked, type: ${type}, collected: ${token.dataset.collected}`);
     if (token.dataset.collected === 'true') return;
     const spawnTime = parseInt(token.dataset.spawnTime);
     const now = Date.now();
     if (now - spawnTime < 1000) {
+      console.log(`Debug - Token clicked too soon after spawn`);
       return;
     }
     token.dataset.collected = 'true';
+    console.log(`Debug - About to call collectIngredientToken with type: ${type}`);
     collectIngredientToken(type, token);
   };
+  
+  // Remove hover handlers to prevent JS/CSS conflicts - use CSS-only hover
+  // token.onmouseenter and token.onmouseleave removed
   const fadeTimeout = setTimeout(() => {
     if (token.dataset.collected === 'true') return;
     token.style.opacity = '0';
     setTimeout(() => token.remove(), 600);
   }, 10000);
   window.activeIngredientTokens.push({ token, fadeTimeout });
-  window.ingredientTokenCooldown[context] = now + 5000;
+  
+  // Only apply cooldown for the first token in a burst
+  if (!isBurstToken) {
+    window.ingredientTokenCooldown[context] = Date.now() + 5000;
+  }
 }
 
 function collectIngredientToken(type, token) {
+  console.log(`Debug - collectIngredientToken called with type: ${type}`);
   token.style.transform += ' scale(0.2)';
   token.style.opacity = '0';
   setTimeout(() => token.remove(), 400);
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
+  console.log(`Debug - kitchenIngredients before:`, window.kitchenIngredients[type]);
+  
+  // Calculate token gain amount with green stable light buff
+  let tokenGainAmount = new Decimal(1);
+  if (typeof window.applyGreenStableLightBuff === 'function') {
+    tokenGainAmount = window.applyGreenStableLightBuff(tokenGainAmount);
+  }
+  
   if (type === 'swabucks') {
     if (!window.state) window.state = {};
-    if (typeof window.state.swabucks !== 'number') window.state.swabucks = 0;
-    window.state.swabucks += 1;
+    if (!DecimalUtils.isDecimal(window.state.swabucks)) window.state.swabucks = new Decimal(0);
+    window.state.swabucks = window.state.swabucks.add(tokenGainAmount);
+    console.log(`Debug - swabucks after add:`, window.state.swabucks.toString());
+    
+    // Track token collection for front desk automator unlock progress
+    if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
+      window.frontDesk.onTokenCollected();
+    }
+    
     if (typeof saveGame === 'function') saveGame();
+    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
     return;
   }
-  window.kitchenIngredients[type] = (window.kitchenIngredients[type] || 0) + 1;
-  showIngredientGainPopup(token);
+  if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
+    window.kitchenIngredients[type] = new Decimal(0);
+    console.log(`Debug - initialized ${type} to:`, window.kitchenIngredients[type].toString());
+  }
+  window.kitchenIngredients[type] = window.kitchenIngredients[type].add(tokenGainAmount);
+  console.log(`Debug - ${type} after add:`, window.kitchenIngredients[type].toString());
+  showIngredientGainPopup(token, tokenGainAmount);
+  
+  // Track token collection for front desk automator unlock progress
+  if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
+    window.frontDesk.onTokenCollected();
+  }
+  
   if (typeof updateKitchenUI === 'function') updateKitchenUI();
+  if (typeof saveGame === 'function') saveGame();
+  if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
 }
 
-function showIngredientGainPopup(token) {
+function showIngredientGainPopup(token, amount) {
   const popup = document.createElement('div');
-  popup.textContent = '+1';
+  // Format the amount - if it's exactly 1, show +1, otherwise show the decimal value
+  const amountText = amount && amount.eq && amount.eq(1) ? '+1' : `+${amount.toFixed(1)}`;
+  popup.textContent = amountText;
   popup.className = 'ingredient-gain-popup';
   popup.style.position = 'fixed';
   popup.style.left = token.style.left;
@@ -260,21 +389,57 @@ function showIngredientGainPopup(token) {
   setTimeout(() => popup.remove(), 800);
 }
 
+function showTokenBurstNotification(sourceElement) {
+  const burstChance = getLepreTokenBurstChance();
+  const notification = document.createElement('div');
+  notification.textContent = `TOKEN BURST!`;
+  notification.style.position = 'fixed';
+  notification.style.zIndex = 100001;
+  notification.style.fontWeight = 'bold';
+  notification.style.fontSize = '1.5em';
+  notification.style.color = '#ffd700';
+  notification.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+  notification.style.pointerEvents = 'none';
+  notification.style.opacity = '0';
+  notification.style.transform = 'scale(0.5)';
+  notification.style.transition = 'all 0.5s cubic-bezier(.4,2,.6,1)';
+  
+  const rect = sourceElement.getBoundingClientRect();
+  notification.style.left = (rect.left + rect.width/2 - 100) + 'px';
+  notification.style.top = (rect.top - 40) + 'px';
+  
+  document.body.appendChild(notification);
+  
+  // Animate in
+  setTimeout(() => {
+    notification.style.opacity = '1';
+    notification.style.transform = 'scale(1) translateY(-20px)';
+  }, 10);
+  
+  // Fade out and remove
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'scale(1.2) translateY(-40px)';
+    setTimeout(() => notification.remove(), 500);
+  }, 2000);
+}
+
 function updateKitchenUI() {
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
   const types = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'swabucks'];
   types.forEach(type => {
-    if (typeof window.kitchenIngredients[type] !== 'number') window.kitchenIngredients[type] = 0;
+    if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
+      window.kitchenIngredients[type] = new Decimal(0);
+    }
     const el = document.getElementById('ingredientCount-' + type);
     if (el) {
-      el.textContent = window.kitchenIngredients[type];
+      el.textContent = formatNumber(window.kitchenIngredients[type]);
     }
   });
 }
 
 const mysticIdleSpeeches = [
-  "Where's the seasoning? This dish is so bland, even Fluzzer wouldn't eat it!",
-  "I cook for all 7 workers here in this facility, including myself.",
+  { text: "Where's the seasoning? This dish is so bland, even Fluzzer wouldn't eat it!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
   "Welcome to the kitchen Peachy.",
   "If you can't stand the heat, get out of my kitchen!",
   "Lets not overcook our ingredients, or else it will turn into a legendary artifact!",
@@ -292,8 +457,47 @@ const mysticIdleSpeeches = [
   "A meal can bring people together, so make it unforgettable!",
   "No, I will not let you cook, I know you will burn the entire kitchen! But you're welcomed to stay.",
   "Bring me ingredients and I will deliver with greatness.",
-  "You excpect me to cook using prisma shards? Are you insane?"
-];
+  "You excpect me to cook using prisma shards? Are you insane?",
+  "If you want a magic meal, bring me magic ingredients!",
+  "Soap keeps trying to clean my pans. I need those stains for flavor!",
+  "If Vi asks for a light salad, tell them I don't serve photons.",
+  { text: "Lepre once tried to add fabric into the blender, are they trying to make me cook a sweater?", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(4) },
+  { text: "Fluzzer keeps sneaking berries into my recipes. At least they're fresh.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
+  "If you see a floating spoon, it's not haunted—it's just me multitasking.",
+  "No, you can't have dessert until you finish your berry plate.",
+  "If you want to help, start by not touching anything.",
+  "I once made a dish so good, even the Swa elites asked for seconds.",
+  "If you can't pronounce the ingredient, you probably shouldn't eat it.",
+  "A real chef never blames the oven. Unless it's actually the oven's fault.",
+  "If you want to impress me, try not to spill anything for a whole day.",
+  "I don't do fast food. I do fantastic food.",
+  { text: "You should tell that swaria nestled on your head to help me chop vegetables!", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
+  { text: "If Bijou ever gets hungry, tell them that everything I cook is free.", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
+  { text: "I offered Bijou a chef's hat, but the hat was too big for Bijou.", condition: () => window.premiumState && window.premiumState.bijouEnabled },
+  { text: "Bijou's energy is impressive. Maybe I should add more sugar to my recipes to make them move more.", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
+  { text: "If I could bottle Bijou's speed, I'd have dinner ready in weeks!", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
+  
+  // Anomaly-related quotes (only appear after doing an infinity reset at least once)
+  { text: "Strange... everyone's talking about anomalies everywhere, but my kitchen stays perfectly normal. Professional chef privilege!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The anomalies know better than to mess with a master chef's domain. Even cosmic chaos respects good cooking!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "What are you saying? You used the anomaly resolver on me and you're saying I'm 60% anomalous??? How fake!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I hear Tico's dealing with reality tears at the front desk, but here? Not a single dimensional hiccup in my kitchen!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "My kitchen is an anomaly-free sanctuary. The heat from my cooking keeps those dimensional disturbances away!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The Swa elites warned about reality fluctuations, but clearly they didn't account for culinary expertise!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I think the anomalies are scared of my kitchen knives. Smart choice - these blades cut through more than just ingredients!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "While reality tears apart elsewhere, my kitchen remains a bastion of stability. That's the power of proper organization!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I've noticed the anomalies won't even peek through my kitchen window. Professional intimidation at its finest!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The cosmic forces bend to my will here. In this kitchen, I decide what's normal and what's not!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "Anomalies simply don't dare enter my kitchen!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The secret to keeping anomalies away? Maintain kitchen discipline! Even reality respects a well-run culinary operation!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I put up a 'Chef at Work' sign and somehow it doubles as anomaly repellent. Coincidence? I think not!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The dimensional chaos avoids my cooking schedule. Even cosmic disturbances know not to interrupt dinner prep!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I maintain such high culinary standards that even reality itself behaves properly in my kitchen!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The anomalies seem to respect territorial boundaries. This kitchen is MY domain, and they know it!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "My sheer chef's aura naturally repels dimensional instability. Years of kitchen experience have their perks!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "While others struggle with reality tears, I've created a pocket of normalcy through sheer culinary willpower!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The anomalies take one look at my organized spice rack and decide they don't belong here. Smart choice!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 }
+].map(s => typeof s === 'string' ? { text: s, condition: () => true } : s);
 const mysticPokeSpeeches = [
   "Oi! Hands off the chef!",
   "If you poke me again, I'll send you into the event horizon! If I had my staff with me...",
@@ -314,8 +518,19 @@ function showMysticSpeech(type = 'idle', forceSpeech) {
   if (!speechBubble || !mysticImg) return;
   if (speechBubble.style.display === 'block' && !forceSpeech) return;
   let pool = type === 'poke' ? mysticPokeSpeeches : mysticIdleSpeeches;
-  const randomSpeech = pool[Math.floor(Math.random() * pool.length)];
-  speechBubble.textContent = randomSpeech;
+  
+  // Filter speeches by their conditions
+  const availableSpeeches = pool.filter(speech => {
+    if (typeof speech === 'string') return true;
+    return speech.condition ? speech.condition() : true;
+  });
+  
+  if (availableSpeeches.length === 0) return;
+  
+  const randomSpeech = availableSpeeches[Math.floor(Math.random() * availableSpeeches.length)];
+  const speechText = typeof randomSpeech === 'string' ? randomSpeech : randomSpeech.text;
+  
+  speechBubble.textContent = speechText;
   speechBubble.style.display = 'block';
   mysticImg.src = 'assets/icons/chef mystic speech.png';
   if (window.mysticSpeechTimeout) clearTimeout(window.mysticSpeechTimeout);
@@ -370,7 +585,7 @@ function stopMysticRandomSpeechTimer() {
     lastKitchenVisible = visible;
   }
 
-  setInterval(checkKitchenVisibility, 1000); 
+  window.kitchenVisibilityInterval = setInterval(checkKitchenVisibility, 1000); 
   document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
 })();
 (function patchCafeteriaSubTabSwitcher() {
@@ -407,6 +622,7 @@ function stopMysticRandomSpeechTimer() {
 window.spawnIngredientToken = spawnIngredientToken;
 window.INGREDIENT_TYPE_IMAGES = INGREDIENT_TYPE_IMAGES;
 window.showMysticSpeech = showMysticSpeech;
+window.getLepreTokenBurstChance = getLepreTokenBurstChance;
 
 function updateMysticNightState() {
   const mysticImg = document.getElementById('kitchenCharacterImg');
@@ -447,7 +663,7 @@ if (window.daynight && typeof window.daynight.onTimeChange === 'function') {
     lastKitchenVisible = visible;
   }
 
-  setInterval(checkKitchenVisibility, 1000);
+  window.kitchenVisibilityInterval2 = setInterval(checkKitchenVisibility, 1000);
   document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
 })();
 
@@ -516,6 +732,8 @@ window.addEventListener('load', function() {
       cookingRecipeId: null,
       cookingInterval: null,
       cookingTimeout: null
+    ,pausedForHidden: false
+    ,pausedHiddenRemainingMs: 0
     };
     let cooking = window.kitchenCooking.cooking;
     let cookingEndTime = window.kitchenCooking.cookingEndTime;
@@ -525,6 +743,8 @@ window.addEventListener('load', function() {
     let cookingTimeout = window.kitchenCooking.cookingTimeout;
     let pausedForNight = window.kitchenCooking.pausedForNight;
     let pausedRemainingMs = window.kitchenCooking.pausedRemainingMs;
+    let pausedForHidden = window.kitchenCooking.pausedForHidden;
+    let pausedHiddenRemainingMs = window.kitchenCooking.pausedHiddenRemainingMs;
 
     function updateGlobals() {
       window.kitchenCooking.cooking = cooking;
@@ -535,6 +755,8 @@ window.addEventListener('load', function() {
       window.kitchenCooking.cookingRecipeId = cookingRecipeId;
       window.kitchenCooking.cookingInterval = cookingInterval;
       window.kitchenCooking.cookingTimeout = cookingTimeout;
+    window.kitchenCooking.pausedForHidden = pausedForHidden;
+    window.kitchenCooking.pausedHiddenRemainingMs = pausedHiddenRemainingMs;
     }
 
     window.kitchenCooking.updateGlobals = updateGlobals;
@@ -578,10 +800,10 @@ window.addEventListener('load', function() {
         const recipe = recipes.find(r => r.id === cookingRecipeId);
         if (recipe) {
           if (!window.state) window.state = {};
-          if (typeof window.state[recipe.rewardProperty] !== 'number') {
-            window.state[recipe.rewardProperty] = 0;
+          if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+            window.state[recipe.rewardProperty] = new Decimal(0);
           }
-          window.state[recipe.rewardProperty] += cookingAmount;
+          window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
           if (typeof trackHardModeIngredientsCooked === 'function') {
             trackHardModeIngredientsCooked();
           }
@@ -606,6 +828,80 @@ window.addEventListener('load', function() {
         }, 1200);
       }, totalMs);
       updateGlobals();
+        // Attach visibility event listeners for pausing/resuming
+        if (!window._kitchenVisibilityHandlerAttached) {
+          document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+              if (cooking && !pausedForNight && !pausedForHidden) {
+                pausedForHidden = true;
+                pausedHiddenRemainingMs = cookingEndTime - Date.now();
+                clearInterval(cookingInterval);
+                clearTimeout(cookingTimeout);
+                updateGlobals();
+                saveCookingState();
+              }
+            } else if (document.visibilityState === 'visible') {
+              if (cooking && pausedForHidden) {
+                pausedForHidden = false;
+                cookingEndTime = Date.now() + pausedHiddenRemainingMs;
+                updateGlobals();
+                saveCookingState();
+                // Resume timer
+                function updateProgress() {
+                  const now = Date.now();
+                  const elapsed = Math.max(0, (cookingEndTime - now));
+                  const percent = 100 - Math.min(100, (elapsed / pausedHiddenRemainingMs) * 100);
+                  if (mixModalProgressBar) mixModalProgressBar.style.width = percent + '%';
+                  if (mixModalTimer) {
+                    if (now < cookingEndTime) {
+                      const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
+                      const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
+                      mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+                    } else {
+                      mixModalTimer.textContent = 'Done!';
+                    }
+                  }
+                }
+                updateProgress();
+                cookingInterval = setInterval(updateProgress, 200);
+                cookingTimeout = setTimeout(function() {
+                  clearInterval(cookingInterval);
+                  const recipe = recipes.find(r => r.id === cookingRecipeId);
+                  if (recipe) {
+                    if (!window.state) window.state = {};
+                    if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+                      window.state[recipe.rewardProperty] = new Decimal(0);
+                    }
+                    window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
+                    if (typeof trackHardModeIngredientsCooked === 'function') {
+                      trackHardModeIngredientsCooked();
+                    }
+                    if (typeof window.trackFoodAchievement === 'function') {
+                      window.trackFoodAchievement();
+                    }
+                  }
+                  if (typeof saveGame === 'function') saveGame();
+                  if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+                  cooking = false;
+                  cookingRecipeId = null;
+                  updateGlobals();
+                  saveCookingState();
+                  clearCookingState();
+                  if (mixBulkInput) mixBulkInput.disabled = false;
+                  if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
+                  if (mixModalTimer) mixModalTimer.textContent = 'Done!';
+                  setTimeout(() => {
+                    if (mixModalProgress) mixModalProgress.style.display = 'none';
+                    if (mixModalTimer) mixModalTimer.style.display = 'none';
+                    updateMixModalUI();
+                  }, 1200);
+                }, pausedHiddenRemainingMs);
+                updateGlobals();
+              }
+            }
+          });
+          window._kitchenVisibilityHandlerAttached = true;
+        }
     }
     window.kitchenStartCooking = startCooking;
 
@@ -681,6 +977,73 @@ window.addEventListener('load', function() {
     }
     window.kitchenPauseCookingForNight = pauseCookingForNight;
     window.kitchenResumeCookingFromNight = resumeCookingFromNight;
+      // Expose for visibility pause/resume
+      window.kitchenPauseCookingForHidden = function() {
+        if (!cooking || pausedForNight || pausedForHidden) return;
+        pausedForHidden = true;
+        pausedHiddenRemainingMs = cookingEndTime - Date.now();
+        clearInterval(cookingInterval);
+        clearTimeout(cookingTimeout);
+        updateGlobals();
+        saveCookingState();
+      };
+      window.kitchenResumeCookingFromHidden = function() {
+        if (!cooking || !pausedForHidden) return;
+        pausedForHidden = false;
+        cookingEndTime = Date.now() + pausedHiddenRemainingMs;
+        updateGlobals();
+        saveCookingState();
+        function updateProgress() {
+          const now = Date.now();
+          const elapsed = Math.max(0, (cookingEndTime - now));
+          const percent = 100 - Math.min(100, (elapsed / pausedHiddenRemainingMs) * 100);
+          if (mixModalProgressBar) mixModalProgressBar.style.width = percent + '%';
+          if (mixModalTimer) {
+            if (now < cookingEndTime) {
+              const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
+              const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
+              mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+            } else {
+              mixModalTimer.textContent = 'Done!';
+            }
+          }
+        }
+        updateProgress();
+        cookingInterval = setInterval(updateProgress, 200);
+        cookingTimeout = setTimeout(function() {
+          clearInterval(cookingInterval);
+          const recipe = recipes.find(r => r.id === cookingRecipeId);
+          if (recipe) {
+            if (!window.state) window.state = {};
+            if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+              window.state[recipe.rewardProperty] = new Decimal(0);
+            }
+            window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
+            if (typeof trackHardModeIngredientsCooked === 'function') {
+              trackHardModeIngredientsCooked();
+            }
+            if (typeof window.trackFoodAchievement === 'function') {
+              window.trackFoodAchievement();
+            }
+          }
+          if (typeof saveGame === 'function') saveGame();
+          if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+          cooking = false;
+          cookingRecipeId = null;
+          updateGlobals();
+          saveCookingState();
+          clearCookingState();
+          if (mixBulkInput) mixBulkInput.disabled = false;
+          if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
+          if (mixModalTimer) mixModalTimer.textContent = 'Done!';
+          setTimeout(() => {
+            if (mixModalProgress) mixModalProgress.style.display = 'none';
+            if (mixModalTimer) mixModalTimer.style.display = 'none';
+            updateMixModalUI();
+          }, 1200);
+        }, pausedHiddenRemainingMs);
+        updateGlobals();
+      };
     window.addEventListener('beforeunload', function() {
       saveCookingState();
     });
@@ -721,14 +1084,40 @@ window.addEventListener('load', function() {
       const costs = {};
       const totalCosts = {};
       for (const [ingredient, amount] of Object.entries(recipe.cost)) {
-        costs[ingredient] = amount;
-        totalCosts[ingredient] = amount * bulkAmount;
+        let adjustedAmount = amount;
+        
+        // Apply Mystic's friendship buff for main ingredients (level 4+)
+        if (window.friendship && window.friendship.Kitchen && window.friendship.Kitchen.level >= 4) {
+          // Check if this is a main ingredient (costs 50)
+          if (amount.eq && amount.eq(50)) {
+            const reduction = (window.friendship.Kitchen.level - 3) * 2; // Level 4 = -2, Level 5 = -4, etc.
+            adjustedAmount = amount.sub(reduction);
+            // Ensure we don't go below 1
+            if (adjustedAmount.lt(1)) {
+              adjustedAmount = new Decimal(1);
+            }
+            console.log(`Applied Mystic's friendship buff to ${ingredient}: ${amount.toString()} → ${adjustedAmount.toString()} (-${reduction})`);
+          }
+        }
+        
+        costs[ingredient] = adjustedAmount;
+        totalCosts[ingredient] = DecimalUtils.multiply(adjustedAmount, bulkAmount);
       }
-      let time = recipe.timePer * bulkAmount;
+      let time = DecimalUtils.multiply(recipe.timePer, bulkAmount);
+      
+      // Apply temporary Mystic cooking speed boost (if active)
       if (window.state && window.state.mysticCookingSpeedBoost && window.state.mysticCookingSpeedBoost > 0) {
-        time = time / 1.5; 
+        time = time.div(1.5); 
       }
-      if (mixCookTime) mixCookTime.textContent = `${time}`;
+      
+      // Apply Mystic's friendship cooking speed buff (level 1+)
+      if (window.friendship && window.friendship.Kitchen && window.friendship.Kitchen.level >= 1) {
+        const speedBoostPercent = window.friendship.Kitchen.level * 2; // 2% per level
+        const speedMultiplier = 1 + (speedBoostPercent / 100); // Convert to multiplier
+        time = time.div(speedMultiplier);
+        console.log(`Applied Mystic's friendship cooking speed buff: ${speedBoostPercent}% faster (${speedMultiplier}x speed)`);
+      }
+      if (mixCookTime) mixCookTime.textContent = DecimalUtils.formatDecimal(time, 2);
       if (mixRecipeIngredients) {
         mixRecipeIngredients.innerHTML = '';
         for (const [ingredient, amount] of Object.entries(totalCosts)) {
@@ -740,7 +1129,7 @@ window.addEventListener('load', function() {
           img.style.verticalAlign = 'middle';
           img.style.marginRight = '0.3em';
           div.appendChild(img);
-          div.appendChild(document.createTextNode(`x ${amount}`));
+          div.appendChild(document.createTextNode(`x ${formatNumber(amount)}`));
           mixRecipeIngredients.appendChild(div);
         }
       }
@@ -751,7 +1140,8 @@ window.addEventListener('load', function() {
         const kitchenIngredients = window.kitchenIngredients || {};
         let hasAllIngredients = true;
         for (const [ingredient, amount] of Object.entries(totalCosts)) {
-          if ((kitchenIngredients[ingredient] || 0) < amount) {
+          const available = kitchenIngredients[ingredient] || new Decimal(0);
+          if (DecimalUtils.isDecimal(available) ? available.lt(amount) : new Decimal(available).lt(amount)) {
             hasAllIngredients = false;
             break;
           }
@@ -770,10 +1160,10 @@ window.addEventListener('load', function() {
               const cookedRecipe = recipes.find(r => r.id === cookingRecipeId);
               if (cookedRecipe) {
                 if (!window.state) window.state = {};
-                if (typeof window.state[cookedRecipe.rewardProperty] !== 'number') {
-                  window.state[cookedRecipe.rewardProperty] = 0;
+                if (!DecimalUtils.isDecimal(window.state[cookedRecipe.rewardProperty])) {
+                  window.state[cookedRecipe.rewardProperty] = new Decimal(0);
                 }
-                window.state[cookedRecipe.rewardProperty] += cookingAmount;
+                window.state[cookedRecipe.rewardProperty] = window.state[cookedRecipe.rewardProperty].add(cookingAmount);
                 if (typeof trackHardModeIngredientsCooked === 'function') {
                   trackHardModeIngredientsCooked();
                 }
@@ -811,10 +1201,13 @@ window.addEventListener('load', function() {
             if (cooking) return;
             if (!hasAllIngredients) return;
             for (const [ingredient, amount] of Object.entries(totalCosts)) {
-              window.kitchenIngredients[ingredient] -= amount;
+              if (!DecimalUtils.isDecimal(window.kitchenIngredients[ingredient])) {
+                window.kitchenIngredients[ingredient] = new Decimal(0);
+              }
+              window.kitchenIngredients[ingredient] = window.kitchenIngredients[ingredient].sub(amount);
             }
             if (typeof updateKitchenUI === 'function') updateKitchenUI();
-            startCooking(bulkAmount, time, recipe.id);
+            startCooking(bulkAmount, time.toNumber(), recipe.id);
           };
         }
         mixModalActions.appendChild(cookBtn);
@@ -1108,3 +1501,334 @@ window.addEventListener('load', function() {
     }
   });
 })();
+
+// Debug function to test Lepre token burst
+window.testLepreTokenBurst = function() {
+  console.log('=== TESTING LEPRE TOKEN BURST ===');
+  
+  // Check current friendship level
+  const lepreLevel = window.friendship?.Boutique?.level || 0;
+  const burstChance = getLepreTokenBurstChance();
+  
+  console.log(`Current Lepre friendship level: ${lepreLevel}`);
+  console.log(`Current token burst chance: ${burstChance}%`);
+  
+  if (lepreLevel < 4) {
+    console.log('⚠️ Lepre needs to be at least level 4 for token burst!');
+    console.log('Use window.testLepreFriendship(50) to increase friendship level');
+    return;
+  }
+  
+  // Test burst probability by simulating 100 spawns
+  let burstCount = 0;
+  for (let i = 0; i < 100; i++) {
+    if (Math.random() * 100 < burstChance) {
+      burstCount++;
+    }
+  }
+  
+  console.log(`In 100 simulated spawns, ${burstCount} would have been bursts`);
+  console.log(`Expected: ~${burstChance} bursts`);
+  
+  // Show burst chance progression
+  console.log('\n📈 Burst Chance Progression:');
+  for (let level = 4; level <= 15; level++) {
+    const chance = 10 + (2 * Math.max(0, level - 4));
+    console.log(`Level ${level}: ${chance}%`);
+  }
+  
+  // Test actual token spawn (if in kitchen area)
+  console.log('\n🧪 To test actual token burst:');
+  console.log('1. Go to an area where tokens spawn (Cargo, Generator, Terrarium, or Prism)');
+  console.log('2. Perform actions that spawn tokens');
+  console.log('3. Watch for golden glowing tokens when burst occurs!');
+  console.log('4. Use window.forceTokenBurst() to see a guaranteed burst');
+  
+  return {
+    lepreLevel,
+    burstChance,
+    simulatedBursts: burstCount
+  };
+};
+
+// Debug function to force a token burst for testing
+window.forceTokenBurst = function() {
+  console.log('🎉 Forcing a token burst for testing...');
+  
+  // Find a suitable source element for spawning
+  const cargoSection = document.querySelector('#pages') || document.body;
+  const rect = cargoSection.getBoundingClientRect();
+  
+  // Create a mock source element at the center of the screen
+  const mockSource = {
+    getBoundingClientRect: () => ({
+      left: rect.width / 2,
+      top: rect.height / 2,
+      width: 50,
+      height: 50
+    })
+  };
+  
+  console.log('Spawning 5 tokens at screen center...');
+  
+  // Show burst notification
+  showTokenBurstNotification(mockSource);
+  
+  // Spawn tokens with slight delays for visual effect
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      spawnSingleIngredientToken('cargo', mockSource, i > 0);
+    }, i * 100);
+  }
+  
+  console.log('✅ Token burst spawned! Look for the golden glowing tokens!');
+};
+
+// Debug function to test Mystic's friendship buff for recipe costs
+window.testMysticRecipeBuff = function(friendshipLevel = 4) {
+  console.log(`🧪 Testing Mystic's recipe buff at friendship level ${friendshipLevel}...`);
+  
+  // Set Mystic's friendship level
+  if (!window.friendship) {
+    console.log('📝 Initializing friendship system...');
+    window.friendship = {
+      Kitchen: { level: 0, points: new Decimal(0) }
+    };
+  }
+  if (!window.friendship.Kitchen) {
+    window.friendship.Kitchen = { level: 0, points: new Decimal(0) };
+  }
+  
+  window.friendship.Kitchen.level = friendshipLevel;
+  console.log(`✅ Set Mystic's friendship level to ${friendshipLevel}`);
+  
+  // Calculate expected reduction
+  const expectedReduction = Math.max(0, (friendshipLevel - 3) * 2);
+  console.log(`🎯 Expected main ingredient reduction: -${expectedReduction}`);
+  
+  console.log(`📊 Recipe cost analysis:`);
+  
+  // Analyze each recipe
+  window.recipes.forEach(recipe => {
+    console.log(`\n🍳 ${recipe.name}:`);
+    
+    Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
+      let adjustedAmount = amount;
+      let wasMainIngredient = false;
+      
+      // Apply the same logic as in the actual code
+      if (window.friendship && window.friendship.Kitchen && window.friendship.Kitchen.level >= 4) {
+        if (amount.eq && amount.eq(50)) {
+          wasMainIngredient = true;
+          const reduction = (window.friendship.Kitchen.level - 3) * 2;
+          adjustedAmount = amount.sub(reduction);
+          if (adjustedAmount.lt(1)) {
+            adjustedAmount = new Decimal(1);
+          }
+        }
+      }
+      
+      const status = wasMainIngredient ? '🔥' : '🔹';
+      const changeText = wasMainIngredient ? ` → ${adjustedAmount.toString()}` : '';
+      console.log(`  ${status} ${ingredient}: ${amount.toString()}${changeText}`);
+    });
+  });
+  
+  console.log(`\n💡 To see this buff in action:`);
+  console.log(`1. Go to the Kitchen tab`);
+  console.log(`2. Click on any recipe (Berry Plate, Mushroom Soup, etc.)`);
+  console.log(`3. Check the ingredient requirements - main ingredients should be reduced!`);
+  
+  return {
+    friendshipLevel,
+    expectedReduction,
+    recipes: window.recipes.map(recipe => ({
+      name: recipe.name,
+      originalCosts: recipe.cost,
+      hasMainIngredient: Object.values(recipe.cost).some(amount => amount.eq && amount.eq(50))
+    }))
+  };
+};
+
+// Debug function to test multiple friendship levels
+window.testAllMysticRecipeBuffs = function() {
+  console.log('🧪 Testing Mystic\'s recipe buff at different friendship levels...');
+  
+  const testLevels = [1, 3, 4, 5, 6, 8, 10, 15];
+  const results = [];
+  
+  testLevels.forEach(level => {
+    console.log(`\n--- Testing Level ${level} ---`);
+    const result = window.testMysticRecipeBuff(level);
+    results.push(result);
+  });
+  
+  console.log('\n📊 Summary:');
+  results.forEach(result => {
+    const hasReduction = result.expectedReduction > 0;
+    const status = hasReduction ? '✅' : '⭕';
+    console.log(`${status} Level ${result.friendshipLevel}: -${result.expectedReduction} main ingredient cost`);
+  });
+  
+  return results;
+};
+
+// Debug function to show current recipe costs with friendship buff applied
+window.showCurrentRecipeCosts = function() {
+  console.log('📋 Current Recipe Costs (with friendship buff applied):');
+  
+  const mysticLevel = window.friendship?.Kitchen?.level || 0;
+  const reduction = Math.max(0, (mysticLevel - 3) * 2);
+  
+  console.log(`Mystic friendship level: ${mysticLevel}`);
+  console.log(`Main ingredient reduction: -${reduction}\n`);
+  
+  window.recipes.forEach(recipe => {
+    console.log(`🍳 ${recipe.name}:`);
+    
+    Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
+      let finalAmount = amount;
+      let isMainIngredient = false;
+      
+      if (mysticLevel >= 4 && amount.eq && amount.eq(50)) {
+        isMainIngredient = true;
+        finalAmount = amount.sub(reduction);
+        if (finalAmount.lt(1)) {
+          finalAmount = new Decimal(1);
+        }
+      }
+      
+      const prefix = isMainIngredient ? '🔥' : '  ';
+      const suffix = isMainIngredient ? ` (reduced from ${amount.toString()})` : '';
+      console.log(`${prefix} ${ingredient}: ${finalAmount.toString()}${suffix}`);
+    });
+    
+    console.log(''); // Empty line for spacing
+  });
+};
+
+// Debug function to force update a recipe modal to see the buff in action
+window.testMysticBuffInModal = function(recipeId = 'mushroomSoup', friendshipLevel = 5) {
+  console.log(`🧪 Testing Mystic's buff in recipe modal for ${recipeId} at level ${friendshipLevel}...`);
+  
+  // Set friendship level
+  if (!window.friendship) window.friendship = {};
+  if (!window.friendship.Kitchen) window.friendship.Kitchen = { level: 0, points: new Decimal(0) };
+  window.friendship.Kitchen.level = friendshipLevel;
+  
+  // Find the recipe
+  const recipe = window.recipes.find(r => r.id === recipeId);
+  if (!recipe) {
+    console.error(`❌ Recipe ${recipeId} not found!`);
+    console.log('Available recipes:', window.recipes.map(r => r.id));
+    return;
+  }
+  
+  console.log(`✅ Set Mystic level to ${friendshipLevel} and found recipe: ${recipe.name}`);
+  console.log(`💡 Original costs:`, recipe.cost);
+  
+  // Calculate what the costs should be with the buff
+  const expectedReduction = Math.max(0, (friendshipLevel - 3) * 2);
+  console.log(`🎯 Expected main ingredient reduction: -${expectedReduction}`);
+  
+  // Show expected costs
+  console.log(`📊 Expected costs with buff:`);
+  Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
+    let expectedAmount = amount;
+    if (friendshipLevel >= 4 && amount.eq && amount.eq(50)) {
+      expectedAmount = amount.sub(expectedReduction);
+      if (expectedAmount.lt(1)) expectedAmount = new Decimal(1);
+      console.log(`  🔥 ${ingredient}: ${expectedAmount.toString()} (reduced from ${amount.toString()})`);
+    } else {
+      console.log(`  🔹 ${ingredient}: ${amount.toString()} (no change)`);
+    }
+  });
+  
+  console.log(`\n💡 To verify:`);
+  console.log(`1. Go to Kitchen tab`);
+  console.log(`2. Click on "${recipe.name}" recipe`);
+  console.log(`3. Check if the ingredient costs match the expected values above!`);
+  
+  return {
+    recipeId,
+    recipeName: recipe.name,
+    friendshipLevel,
+    expectedReduction,
+    originalCosts: recipe.cost
+  };
+};
+
+// Debug function to test Mystic's cooking speed friendship buff
+window.testMysticCookingSpeed = function(friendshipLevel = 3) {
+  console.log(`🧪 Testing Mystic's cooking speed buff at friendship level ${friendshipLevel}...`);
+  
+  // Set Mystic's friendship level
+  if (!window.friendship) {
+    console.log('📝 Initializing friendship system...');
+    if (typeof window.initFriendshipFunctions === 'function') {
+      window.initFriendshipFunctions();
+    }
+  }
+  
+  if (!window.friendship.Kitchen) {
+    window.friendship.Kitchen = { level: 0, points: new Decimal(0) };
+  }
+  
+  window.friendship.Kitchen.level = friendshipLevel;
+  console.log(`✅ Set Mystic's friendship level to ${friendshipLevel}`);
+  
+  // Calculate expected speed boost
+  if (friendshipLevel >= 1) {
+    const speedBoostPercent = friendshipLevel * 2;
+    const speedMultiplier = 1 + (speedBoostPercent / 100);
+    const originalTime = 5; // All recipes take 5 minutes base time
+    const newTime = originalTime / speedMultiplier;
+    
+    console.log(`📊 Cooking Speed Analysis:`);
+    console.log(`  Base cooking time: ${originalTime} minutes`);
+    console.log(`  Speed boost: ${speedBoostPercent}% (${speedMultiplier}x speed)`);
+    console.log(`  New cooking time: ${newTime.toFixed(2)} minutes`);
+    console.log(`  Time saved: ${(originalTime - newTime).toFixed(2)} minutes per recipe`);
+    
+    // Test formatting with DecimalUtils
+    const timeDecimal = new Decimal(newTime);
+    const formattedTime = DecimalUtils.formatDecimal(timeDecimal, 2);
+    console.log(`  Formatted cooking time: ${formattedTime} minutes`);
+  } else {
+    console.log(`❌ Level ${friendshipLevel} is too low for cooking speed buff (requires level 1+)`);
+  }
+  
+  console.log(`\n💡 To verify:`);
+  console.log(`1. Go to Kitchen tab`);
+  console.log(`2. Click on any recipe (e.g., "Glittering Petals")`);
+  console.log(`3. Check if the cooking time is properly formatted (should be like "3.85" not "3.8461538461538461")`);
+  console.log(`4. Watch console for "Applied Mystic's friendship cooking speed buff" message`);
+  
+  return {
+    friendshipLevel,
+    speedBoostPercent: friendshipLevel >= 1 ? friendshipLevel * 2 : 0,
+    expectedCookingTime: friendshipLevel >= 1 ? 5 / (1 + (friendshipLevel * 2 / 100)) : 5
+  };
+};
+
+// Debug function to test cooking time formatting
+window.testCookingTimeFormatting = function() {
+  console.log(`🧪 Testing cooking time number formatting...`);
+  
+  // Test various time values
+  const testTimes = [5, 3.8461538461538461, 2.5, 1.23456789, 0.666666666];
+  
+  console.log(`📊 Formatting Tests:`);
+  testTimes.forEach(time => {
+    const timeDecimal = new Decimal(time);
+    const formatted = DecimalUtils.formatDecimal(timeDecimal, 2);
+    console.log(`  ${time} → "${formatted}"`);
+  });
+  
+  console.log(`\n💡 The cooking time should now show clean formatted numbers instead of long decimals!`);
+  
+  return testTimes.map(time => ({
+    original: time,
+    formatted: DecimalUtils.formatDecimal(new Decimal(time), 2)
+  }));
+};

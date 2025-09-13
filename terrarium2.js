@@ -78,7 +78,45 @@ const nectarizeMilestoneData = [
     unlocked: false,
     reward: 'nectar'
   },
+  {
+    tier: 5,
+    level: 110,
+    effect: "+^0.05 to cargo currencies each nectarize tier starting at 5",
+    unlocked: false,
+    reward: 'cargo'
+  },
+  {
+    tier: 6,
+    level: 130,
+    effect: "+^0.05 to lab currencies each nectarize tier starting at 6",
+    unlocked: false,
+    reward: 'lab'
+  },
+  {
+    tier: 7,
+    level: 150,
+    effect: "+^0.1 to charge gain each nectarize tier starting at 7",
+    unlocked: false,
+    reward: 'charge'
+  },
+  {
+    tier: 8,
+    level: 170,
+    effect: "+^0.1 to KP gain each nectarize tier starting at 8",
+    unlocked: false,
+    reward: 'kp'
+  },
+  {
+    tier: 9,
+    level: 190,
+    effect: "+^0.2 infinity point gain each nectarize tier starting at 9",
+    unlocked: false,
+    reward: 'infinity'
+  },
 ];
+
+// Make terrarium2.js variables globally accessible
+window.nectarizeMilestoneData = nectarizeMilestoneData;
 
 function checkNectarizeMilestones() {
   const currentTier = window.nectarizeTier || 0;
@@ -98,6 +136,10 @@ function renderNectarizeMilestoneTable() {
     milestoneTable.style.display = 'none';
     return;
   }
+
+// Make terrarium2.js functions globally accessible
+window.checkNectarizeMilestones = checkNectarizeMilestones;
+window.renderNectarizeMilestoneTable = renderNectarizeMilestoneTable;
   checkNectarizeMilestones();
   let visibleMilestones = 1; 
   const currentTier = window.nectarizeTier || 0;
@@ -133,7 +175,33 @@ function renderNectarizeMilestoneTable() {
         const effectiveTiers = Math.max(0, currentTier - 3);
         currentBonus = effectiveTiers * 50;
       }
-      const bonusText = `+${currentBonus}% ${ms.reward === 'xp' ? 'XP' : ms.reward} gain`;
+      
+      let bonusText;
+      if (ms.reward === 'cargo' || ms.reward === 'lab') {
+        // For cargo (tier 5) and lab (tier 6), show ^0.05 per tier
+        const effectiveTiers = Math.max(0, currentTier - (ms.tier - 1));
+        const exponentBonus = effectiveTiers * 0.05;
+        bonusText = `+ ^${exponentBonus.toFixed(2)} ${ms.reward === 'cargo' ? 'cargo' : 'lab'} gain`;
+      } else if (ms.reward === 'charge') {
+        // For charge (tier 7), show ^0.1 per tier
+        const effectiveTiers = Math.max(0, currentTier - 6);
+        const exponentBonus = effectiveTiers * 0.1;
+        bonusText = `+ ^${exponentBonus.toFixed(1)} charge gain`;
+      } else if (ms.reward === 'kp') {
+        // For KP (tier 8), show ^0.1 per tier
+        const effectiveTiers = Math.max(0, currentTier - 7);
+        const exponentBonus = effectiveTiers * 0.1;
+        bonusText = `+ ^${exponentBonus.toFixed(1)} KP gain`;
+      } else if (ms.reward === 'infinity') {
+        // For infinity (tier 9), show ^0.2 per tier
+        const effectiveTiers = Math.max(0, currentTier - 8);
+        const exponentBonus = effectiveTiers * 0.2;
+        bonusText = `+ ^${exponentBonus.toFixed(1)} infinity point gain`;
+      } else {
+        // For percentage-based rewards (pollen, flowers, xp, nectar)
+        bonusText = `+${currentBonus}% ${ms.reward === 'xp' ? 'XP' : ms.reward} gain`;
+      }
+      
       status = `<span style="color: #155724; font-weight: bold; padding: 3px 8px; border-radius: 4px;">${bonusText}</span>`;
       rowStyle = 'background: #f8f9fa; border-bottom: 1px solid #e9ecef;';
     }
@@ -163,31 +231,58 @@ function hideNectarizeMilestoneTable() {
 function getNectarizeMilestoneBonus() {
   checkNectarizeMilestones();
   const currentTier = window.nectarizeTier || 0;
-  let pollenBonus = 0;
-  let flowerBonus = 0;
-  let xpBonus = 0;
-  let nectarBonus = 0;
+  let pollenBonus = new Decimal(0);
+  let flowerBonus = new Decimal(0);
+  let xpBonus = new Decimal(0);
+  let nectarBonus = new Decimal(0);
+  let cargoExponent = new Decimal(0);
+  let labExponent = new Decimal(0);
+  let chargeExponent = new Decimal(0);
+  let kpExponent = new Decimal(0);
+  let infinityExponent = new Decimal(0);
+  
   nectarizeMilestoneData.forEach(milestone => {
     if (milestone.unlocked) {
       if (milestone.reward === 'pollen') {
-        pollenBonus += currentTier * 100;
+        pollenBonus = pollenBonus.add(new Decimal(currentTier).mul(100));
       } else if (milestone.reward === 'flowers') {
         const effectiveTiers = Math.max(0, currentTier - 1);
-        flowerBonus += effectiveTiers * 100;
+        flowerBonus = flowerBonus.add(new Decimal(effectiveTiers).mul(100));
       } else if (milestone.reward === 'xp') {
         const effectiveTiers = Math.max(0, currentTier - 2);
-        xpBonus += effectiveTiers * 100;
+        xpBonus = xpBonus.add(new Decimal(effectiveTiers).mul(100));
       } else if (milestone.reward === 'nectar') {
         const effectiveTiers = Math.max(0, currentTier - 3);
-        nectarBonus += effectiveTiers * 50;
+        nectarBonus = nectarBonus.add(new Decimal(effectiveTiers).mul(50));
+      } else if (milestone.reward === 'cargo') {
+        const effectiveTiers = Math.max(0, currentTier - 4);
+        cargoExponent = cargoExponent.add(new Decimal(effectiveTiers).mul(0.05));
+      } else if (milestone.reward === 'lab') {
+        const effectiveTiers = Math.max(0, currentTier - 5);
+        labExponent = labExponent.add(new Decimal(effectiveTiers).mul(0.05));
+      } else if (milestone.reward === 'charge') {
+        const effectiveTiers = Math.max(0, currentTier - 6);
+        chargeExponent = chargeExponent.add(new Decimal(effectiveTiers).mul(0.1));
+      } else if (milestone.reward === 'kp') {
+        const effectiveTiers = Math.max(0, currentTier - 7);
+        kpExponent = kpExponent.add(new Decimal(effectiveTiers).mul(0.1));
+      } else if (milestone.reward === 'infinity') {
+        const effectiveTiers = Math.max(0, currentTier - 8);
+        infinityExponent = infinityExponent.add(new Decimal(effectiveTiers).mul(0.2));
       }
     }
   });
+  
   return {
-    pollen: 1 + (pollenBonus / 100), 
-    flowers: 1 + (flowerBonus / 100), 
-    xp: 1 + (xpBonus / 100), 
-    nectar: 1 + (nectarBonus / 100) 
+    pollen: new Decimal(1).add(pollenBonus.div(100)), 
+    flowers: new Decimal(1).add(flowerBonus.div(100)), 
+    xp: new Decimal(1).add(xpBonus.div(100)), 
+    nectar: new Decimal(1).add(nectarBonus.div(100)),
+    cargoExponent: cargoExponent,
+    labExponent: labExponent,
+    chargeExponent: chargeExponent,
+    kpExponent: kpExponent,
+    infinityExponent: infinityExponent
   };
 }
 
@@ -334,22 +429,38 @@ function simulatePlayerClick(index, cols, rows) {
       }
     }
   }
-  pollenGained = Math.floor(pollenGained * window.getPollenValueUpgradeEffect?.(window.pollenValueUpgradeLevel || 0));
-  pollenGained = Math.floor(pollenGained * Math.pow(2, (window.terrariumLevel || 1) - 1));
-  pollenGained = Math.floor(pollenGained * window.getFlowerUpgrade3Effect?.(window.pollenValueUpgrade2Level || 0));
+  pollenGained = new Decimal(pollenGained).mul(window.getPollenValueUpgradeEffect?.(window.pollenValueUpgradeLevel || 0) || 1).floor();
+  pollenGained = pollenGained.mul(new Decimal(2).pow((window.terrariumLevel || 1) - 1)).floor();
+  pollenGained = pollenGained.mul(window.getFlowerUpgrade3Effect?.(window.pollenValueUpgrade2Level || 0) || 1).floor();
   const milestoneBonus = window.getNectarizeMilestoneBonus?.();
   if (milestoneBonus?.pollen) {
-    pollenGained = Math.floor(pollenGained * milestoneBonus.pollen);
+    pollenGained = pollenGained.mul(milestoneBonus.pollen).floor();
   }
-  flowersCollected = Math.floor(flowersCollected * window.getFlowerValueUpgradeEffect?.(window.flowerValueUpgradeLevel || 0));
-  flowersCollected = Math.floor(flowersCollected * window.getFlowerUpgrade3Effect?.(window.pollenValueUpgrade2Level || 0));
+  // Apply missing multipliers that Fluzzer was not getting
+  pollenGained = pollenGained.mul(window.getPollenFlowerNectarUpgradeEffect?.(window.pollenFlowerNectarUpgradeLevel || 0) || 1).floor();
+  // Apply Element 21 boost (X10 pollen multiplier) if owned
+  const elementsRef = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  if (elementsRef && elementsRef[21]) {
+    pollenGained = pollenGained.mul(10).floor();
+  }
+  flowersCollected = new Decimal(flowersCollected).mul(window.getFlowerValueUpgradeEffect?.(window.flowerValueUpgradeLevel || 0) || 1).floor();
+  flowersCollected = flowersCollected.mul(window.getFlowerUpgrade3Effect?.(window.pollenValueUpgrade2Level || 0) || 1).floor();
   if (milestoneBonus?.flowers) {
-    flowersCollected = Math.floor(flowersCollected * milestoneBonus.flowers);
+    flowersCollected = flowersCollected.mul(milestoneBonus.flowers).floor();
   }
-  const flowerGainFinal = Math.floor(flowersCollected * window.getTerrariumFlowerMultiplier?.(window.terrariumLevel || 1));
+  // Apply missing multipliers that Fluzzer was not getting for flowers
+  flowersCollected = flowersCollected.mul(window.getPollenFlowerNectarUpgradeEffect?.(window.pollenFlowerNectarUpgradeLevel || 0) || 1).floor();
+  const flowerGainFinal = flowersCollected.mul(window.getTerrariumFlowerMultiplier?.(window.terrariumLevel || 1) || 1).floor();
+  
+  // Apply Element 22 boost to final flower gain (X5 flowers multiplier) if owned
+  let finalFlowerGain = flowerGainFinal;
+  const elementsRef2 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  if (elementsRef2 && elementsRef2[22]) {
+    finalFlowerGain = finalFlowerGain.mul(5).floor();
+  }
   return {
     pollen: pollenGained,
-    flowers: flowerGainFinal,
+    flowers: finalFlowerGain,
     xp: xpGained
   };
 }

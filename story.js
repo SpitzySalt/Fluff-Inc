@@ -218,6 +218,108 @@ function closeInfinityFluffStoryModal() {
     }
   });
 })();
+
+function showElement25StoryModal() {
+  const element25StoryModal = document.getElementById('element25StoryModal');
+  if (element25StoryModal) {
+    element25StoryModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Set the flag to mark that the element 25 story modal has been seen
+    if (!window.state) {
+      window.state = {};
+    }
+    window.state.seenElement25StoryModal = true;
+    
+    // Save the game to persist the flag
+    if (typeof saveGame === 'function') {
+      saveGame();
+    }
+    
+    // Check for advanced prism unlock
+    if (typeof window.checkAdvancedPrismUnlock === 'function') {
+      window.checkAdvancedPrismUnlock();
+    }
+  }
+}
+
+function closeElement25StoryModal() {
+  const element25StoryModal = document.getElementById('element25StoryModal');
+  if (element25StoryModal) {
+    element25StoryModal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  
+  // Set the flag to mark that the element 25 story modal has been seen
+  if (!window.state) {
+    window.state = {};
+  }
+  window.state.seenElement25StoryModal = true;
+  
+  // Save the game to persist the flag
+  if (typeof saveGame === 'function') {
+    saveGame();
+  }
+  
+  // Check for advanced prism unlock
+  if (typeof window.checkAdvancedPrismUnlock === 'function') {
+    window.checkAdvancedPrismUnlock();
+  }
+}
+
+function showInfinityResetStoryModal() {
+  const infinityResetStoryModal = document.getElementById('infinityResetStoryModal');
+  if (infinityResetStoryModal) {
+    infinityResetStoryModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeInfinityResetStoryModal() {
+  const infinityResetStoryModal = document.getElementById('infinityResetStoryModal');
+  if (infinityResetStoryModal) {
+    infinityResetStoryModal.style.display = 'none';
+    document.body.style.overflow = '';
+    
+    // Update anomaly detector visibility after infinity reset story
+    if (typeof window.anomalySystem !== 'undefined' && window.anomalySystem.updateDetectorVisibility) {
+      window.anomalySystem.updateDetectorVisibility();
+    }
+    
+    if (window._reloadAfterStoryModal) {
+      window._reloadAfterStoryModal = false;
+      window.location.reload();
+    }
+  }
+}
+
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('infinityResetStoryModal');
+    if (modal) {
+      const btn = modal.querySelector('button');
+      if (btn) {
+        btn.onclick = function() {
+          closeInfinityResetStoryModal();
+        };
+      }
+    }
+  });
+})();
+
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('element25StoryModal');
+    if (modal) {
+      const btn = modal.querySelector('button');
+      if (btn) {
+        btn.onclick = function() {
+          closeElement25StoryModal();
+        };
+      }
+    }
+  });
+})();
 window.showFirstDeliveryStoryModal = showFirstDeliveryStoryModal;
 window.closeFirstDeliveryStoryModal = closeFirstDeliveryStoryModal;
 window.showGeneratorUnlockStoryModal = showGeneratorUnlockStoryModal;
@@ -230,3 +332,7 @@ window.showNectarizeResetStoryModal = showNectarizeResetStoryModal;
 window.closeNectarizeResetStoryModal = closeNectarizeResetStoryModal;
 window.showInfinityFluffStoryModal = showInfinityFluffStoryModal;
 window.closeInfinityFluffStoryModal = closeInfinityFluffStoryModal;
+window.showElement25StoryModal = showElement25StoryModal;
+window.closeElement25StoryModal = closeElement25StoryModal;
+window.showInfinityResetStoryModal = showInfinityResetStoryModal;
+window.closeInfinityResetStoryModal = closeInfinityResetStoryModal;

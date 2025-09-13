@@ -206,17 +206,17 @@ function addPremiumEventListeners() {
 }
 
 function buyBijou() {
-  const cost = 500;
+  const cost = new Decimal(500);
   if (window.premiumState.bijouUnlocked) {
     return;
   }
-  const currentSwabucks = (window.state && typeof window.state.swabucks === 'number') ? window.state.swabucks : 0;
-  if (currentSwabucks < cost) {
-    alert(`You need ${cost} Swa Bucks to unlock Bijou!`);
+  const currentSwabucks = window.state && window.state.swabucks ? new Decimal(window.state.swabucks) : new Decimal(0);
+  if (currentSwabucks.lt(cost)) {
+    alert(`You need ${DecimalUtils.formatDecimal(cost)} Swa Bucks to unlock Bijou!`);
     return;
   }
-  if (confirm(`Are you sure you want to unlock Bijou for ${cost} Swa Bucks?`)) {
-    window.state.swabucks = currentSwabucks - cost;
+  if (confirm(`Are you sure you want to unlock Bijou for ${DecimalUtils.formatDecimal(cost)} Swa Bucks?`)) {
+    window.state.swabucks = currentSwabucks.sub(cost);
     window.premiumState.bijouUnlocked = true;
     window.premiumState.bijouEnabled = true; 
     savePremiumState();
@@ -246,17 +246,17 @@ function buyBijou() {
 }
 
 function buyVrchatMirror() {
-  const cost = 5000;
+  const cost = new Decimal(5000);
   if (window.premiumState.vrchatMirrorUnlocked) {
     return;
   }
-  const currentSwabucks = (window.state && typeof window.state.swabucks === 'number') ? window.state.swabucks : 0;
-  if (currentSwabucks < cost) {
-    alert(`You need ${cost} Swa Bucks to unlock VRChat Mirror!`);
+  const currentSwabucks = window.state && window.state.swabucks ? new Decimal(window.state.swabucks) : new Decimal(0);
+  if (currentSwabucks.lt(cost)) {
+    alert(`You need ${DecimalUtils.formatDecimal(cost)} Swa Bucks to unlock VRChat Mirror!`);
     return;
   }
-  if (confirm(`Are you sure you want to unlock VRChat Mirror for ${cost} Swa Bucks?`)) {
-    window.state.swabucks = currentSwabucks - cost;
+  if (confirm(`Are you sure you want to unlock VRChat Mirror for ${DecimalUtils.formatDecimal(cost)} Swa Bucks?`)) {
+    window.state.swabucks = currentSwabucks.sub(cost);
     window.premiumState.vrchatMirrorUnlocked = true;
     savePremiumState();
     saveGame();
@@ -517,8 +517,8 @@ function checkBijouCollection(token) {
   token.dataset.bijouChecked = 'true';
   setTimeout(() => {
     if (token.dataset.collected === 'true') return; 
-    const randomValue = Math.random();
-    if (randomValue < 0.50) {
+    const randomValue = Math.random(); // Keep for probability, but could use Decimal for game mechanics
+    if (randomValue < 0.50) { // 50% collection chance
       bijouCollectToken(token);
     } else {
     }
@@ -559,8 +559,8 @@ function processBijouCollectionQueue() {
   const startY = tokenRect.top + tokenRect.height / 2;
   const endX = bijouRect.left + bijouRect.width / 2;
   const endY = bijouRect.top + bijouRect.height / 2;
-  const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-  const duration = Math.max(500, Math.min(1500, distance * 2)); 
+  const distance = new Decimal(endX - startX).pow(2).add(new Decimal(endY - startY).pow(2)).sqrt();
+  const duration = Decimal.max(500, Decimal.min(1500, distance.mul(2))).toNumber(); 
   token.style.transition = `all ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
   token.style.zIndex = '1001'; 
   requestAnimationFrame(() => {
@@ -595,21 +595,31 @@ function collectTokenManually(type, token) {
   token.style.opacity = '0';
   setTimeout(() => token.remove(), 400);
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
+  
+  // Calculate token gain amount with green stable light buff
+  let tokenGainAmount = new Decimal(1);
+  if (typeof applyGreenStableLightBuff === 'function') {
+    tokenGainAmount = applyGreenStableLightBuff(tokenGainAmount);
+  }
+  
   if (type === 'swabucks') {
     if (!window.state) window.state = {};
-    if (typeof window.state.swabucks !== 'number') window.state.swabucks = 0;
-    window.state.swabucks += 1;
+    if (!window.state.swabucks) window.state.swabucks = new Decimal(0);
+    window.state.swabucks = new Decimal(window.state.swabucks).add(tokenGainAmount);
     if (typeof saveGame === 'function') saveGame();
+    showIngredientGainPopup(token, tokenGainAmount);
     return;
   }
-  window.kitchenIngredients[type] = (window.kitchenIngredients[type] || 0) + 1;
-  showIngredientGainPopup(token);
+  window.kitchenIngredients[type] = new Decimal(window.kitchenIngredients[type] || 0).add(tokenGainAmount);
+  showIngredientGainPopup(token, tokenGainAmount);
   if (typeof updateKitchenUI === 'function') updateKitchenUI();
 }
 
-function showIngredientGainPopup(token) {
+function showIngredientGainPopup(token, amount) {
   const popup = document.createElement('div');
-  popup.textContent = '+1';
+  // Format the amount - if it's exactly 1, show +1, otherwise show the decimal value
+  const amountText = amount && amount.eq && amount.eq(1) ? '+1' : `+${amount.toFixed(1)}`;
+  popup.textContent = amountText;
   popup.className = 'ingredient-gain-popup';
   popup.style.position = 'fixed';
   popup.style.left = token.style.left;

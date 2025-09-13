@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" id="root" data-theme="light" data-colour="green" data-style="rounded">
 <head>
   <meta charset="UTF-8">
@@ -183,6 +183,8 @@
     }
     #prismSpeech {
       display: none;
+      max-width: 500px !important; /* Make Vi's speech bubble wider when swapped */
+      min-width: 400px; /* Ensure it's not too narrow */
     }
     #prismSpeech.show {
       display: block;
@@ -191,6 +193,207 @@
       position: relative;
       z-index: 1001;
       overflow: visible;
+    }
+    
+    /* Boutique Styles */
+    .boutique-container {
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .boutique-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .boutique-currency-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: var(--radius);
+    }
+    
+    .boutique-items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .boutique-item {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .boutique-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .boutique-item-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .boutique-item-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
+    
+    .boutique-item-name {
+      margin: 0;
+      font-size: 1.3rem;
+      color: var(--text-color);
+    }
+    
+    .boutique-item-description {
+      margin: 0;
+      color: var(--text-color-secondary, #666);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    
+    .boutique-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+    
+    .boutique-item-price {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .currency-icon {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .boutique-buy-btn {
+      padding: 0.6rem 1.2rem;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+    }
+    
+    .boutique-buy-btn:hover:not(.disabled) {
+      background: linear-gradient(135deg, #45a049, #3d8b40);
+      transform: translateY(-1px);
+    }
+    
+    .boutique-buy-btn.disabled {
+      background: #ccc;
+      color: #999;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .boutique-buy-btn:active:not(.disabled) {
+      transform: translateY(0);
+    }
+    
+    /* New boutique styles for categories and stock */
+    .boutique-restock-info {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    
+    .boutique-item.normal {
+      border-left: 4px solid #2196F3;
+    }
+    
+    .boutique-item.better {
+      border-left: 4px solid #FF9800;
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.05), rgba(255, 193, 7, 0.05));
+    }
+    
+    .boutique-item.premium {
+      border-left: 4px solid #9C27B0;
+      background: linear-gradient(135deg, rgba(156, 39, 176, 0.08), rgba(233, 30, 99, 0.08));
+      box-shadow: 0 2px 8px rgba(156, 39, 176, 0.15);
+    }
+    
+    .boutique-item-title {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    
+    .boutique-item-category {
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    
+    .boutique-item-category.normal {
+      background: rgba(33, 150, 243, 0.2);
+      color: #1565C0;
+    }
+    
+    .boutique-item-category.better {
+      background: rgba(255, 152, 0, 0.2);
+      color: #E65100;
+    }
+    
+    .boutique-item-category.premium {
+      background: rgba(156, 39, 176, 0.2);
+      color: #6A1B9A;
+      font-weight: bold;
+    }
+    
+    .boutique-item-stock {
+      margin: 0.5rem 0;
+      text-align: center;
+    }
+    
+    .stock-text {
+      font-size: 0.9rem;
+      font-weight: bold;
+      padding: 0.3rem 0.6rem;
+      background: rgba(76, 175, 80, 0.1);
+      color: #2E7D32;
+      border-radius: 6px;
+    }
+    
+    .stock-text.out-of-stock {
+      background: rgba(244, 67, 54, 0.1);
+      color: #C62828;
+    }
+    
+    .boutique-item.out-of-stock {
+      opacity: 0.6;
+      filter: grayscale(50%);
+    }
+    
+    .boutique-item.out-of-stock .boutique-item-icon {
+      opacity: 0.5;
     }
   </style>
 <style>
@@ -206,12 +409,16 @@ body {
       <div id="subTabNavBar">
         <div id="subTabNav">
           <button onclick="switchHomeSubTab('gamblingMain')" class="active">Cargo</button>
-          <button onclick="switchHomeSubTab('generatorSubTab')" id="generatorSubTabBtn" style="display:none;">Generators</button>
+          <button onclick="switchHomeSubTab('generatorMainTab')" id="generatorSubTabBtn" style="display:none;">Generators</button>
           <button onclick="switchHomeSubTab('prismSubTab')" id="prismSubTabBtn" style="display:none;">Lab</button>
+          <button onclick="switchHomeSubTab('boutiqueSubTab')" id="boutiqueSubTabBtn" style="display:none;">Boutique</button>
         </div>
       </div>
 </head>
 <body>
+  <!-- Infinity Challenge Visual Filter -->
+  <div id="infinityChallengeFilter" class="infinity-challenge-filter"></div>
+  
   <div id="autosaveIndicator" style="position:fixed;top:12px;left:16px;z-index:99999;font-size:1.3em;font-weight:bold;color:#3cf;background:rgba(0,0,0,0.10);padding:0.3em 1.2em;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:none;pointer-events:none;">Saved</div>
 <div id="knowledgeSubTabBar" style="display: none;">
   <div id="knowledgeSubTabNav">
@@ -225,7 +432,8 @@ body {
   <button id="settingsSavesTabBtn" class="settingsSubTabBtn active" onclick="switchSettingsSubTab('settingsSavesTab')">Saves</button>
   <button id="settingsStatsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsStatsTab')">Stats</button>
   <button id="settingsCreditsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsCreditsTab')">Credits</button>
-  <button id="settingsPremiumTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsPremiumTab')">Premium</button>
+  <button id="settingsRecoveryTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsRecoveryTab')">Recovery</button>
+
   <button id="settingsHardModeTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsHardModeTab')" style="display:none;">Ţ̶̣̻̓̊h̸̛͉é̸̞̥͜ ̴̘̺̲̅̀͑Q̶͔̇̽ų̵̥̬́̌̿ë̸͚́ś̶̡t̵̥̠͂̏͑</button>
 </div>
 </div>
@@ -243,13 +451,13 @@ body {
           <div class="top-row">
             <div class="card">
              <h2>Currencies</h2>
-<p><img src="assets/icons/fluff.png" class="icon"> Fluff: <span id="fluff">0</span><span id="fluffInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+<p><img src="assets/icons/fluff.png" class="icon"> Fluff: <span id="fluff">0</span><span id="fluffInfinity" style="margin-left:8px;color:#6495ed;font-weight:bold;text-shadow:0 0 5px rgba(100,149,237,0.8);"></span>
   <br><small>+<span id="fluffRate">0</span> fluff per tick</small></p>
-<p><img src="assets/icons/swaria coin.png" class="icon"> Swaria Coins: <span class="currency-value-wrapper"><span id="swaria">0</span><span id="swariaGain" class="gain-popup"></span></span><span id="swariaInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+<p><img src="assets/icons/swaria coin.png" class="icon"> Swaria Coins: <span class="currency-value-wrapper"><span id="swaria">0</span><span id="swariaGain" class="gain-popup"></span></span><span id="swariaInfinity" style="margin-left:8px;color:#6495ed;font-weight:bold;text-shadow:0 0 5px rgba(100,149,237,0.8);"></span>
   <span id="swariaGain" class="gain-popup"></span></p>
-<p><img src="assets/icons/feather.png" class="icon"> Feathers: <span class="currency-value-wrapper"><span id="feathers">0</span><span id="featherGain" class="gain-popup"></span></span><span id="feathersInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+<p><img src="assets/icons/feather.png" class="icon"> Feathers: <span class="currency-value-wrapper"><span id="feathers">0</span><span id="featherGain" class="gain-popup"></span></span><span id="feathersInfinity" style="margin-left:8px;color:#6495ed;font-weight:bold;text-shadow:0 0 5px rgba(100,149,237,0.8);"></span>
   <span id="featherGain" class="gain-popup"></span></p>
-<p><img src="assets/icons/wing artifact.png" class="icon"> Wing Artifacts: <span class="currency-value-wrapper"><span id="artifacts">0</span><span id="artifactGain" class="gain-popup"></span></span><span id="artifactsInfinity" style="margin-left:8px;color:#bfaaff;font-weight:bold;"></span>
+<p><img src="assets/icons/wing artifact.png" class="icon"> Wing Artifacts: <span class="currency-value-wrapper"><span id="artifacts">0</span><span id="artifactGain" class="gain-popup"></span></span><span id="artifactsInfinity" style="margin-left:8px;color:#6495ed;font-weight:bold;text-shadow:0 0 5px rgba(100,149,237,0.8);"></span>
   <span id="artifactGain" class="gain-popup"></span></p>
             </div>
             <div class="card">
@@ -282,7 +490,7 @@ body {
             </div>
           </div>
           <div class="bottom-row">
-          <div id="stairsCard" class="floor-btn" onclick="window.currentFloor=2;updateFloor2Visibility();">
+          <div id="stairsCard" class="floor-btn" onclick="window.currentFloor=2;const labBtn=document.getElementById('prismSubTabBtn');const genBtn=document.getElementById('generatorSubTabBtn');if(labBtn)labBtn.style.setProperty('display','none','important');if(genBtn)genBtn.style.setProperty('display','none','important');updateFloor2Visibility();">
         <span style="font-size:1.5em;margin-right:0.5em;">▲</span>
         <span>Go to the second floor</span>
           </div>
@@ -300,90 +508,206 @@ body {
             </div>
           </div>
         </div>
-<div id="generatorSubTab" class="sub-tab" style="display: none;">
-  <div class="card fullwidth">
-    <div class="ceiling-light"></div>
-    <div id="generatorContainer" style="padding: 0.5rem;"></div>
+<div id="generatorMainTab" class="sub-tab" style="display: none;">
+  <div id="generatorTopButtons" style="display:flex; justify-content:center; gap:1.5em; margin-top:2em;">
+    <button id="generatorBoxGenBtn" class="generator-feature-btn">Box Generators</button>
+    <button id="generatorChargerBtn" class="generator-feature-btn">Charger</button>
+  </div>
+  
+  <div id="generatorBoxGenArea" class="generator-subtab" style="display:block;">
+    <div class="card fullwidth">
+      <div class="ceiling-light"></div>
+      <div id="generatorContainer" style="padding: 0.5rem;"></div>
+    </div>
+  </div>
+  
+  <div id="generatorChargerArea" class="generator-subtab" style="display:none;">
+    <div id="chargerSubTab" class="charger-container">
+      <div class="generator-flex-row" style="justify-content:center;align-items:flex-start;gap:2.5em;">
+        <div class="generator-right-col" style="margin:0;display:flex;flex-direction:column;gap:1.5em;">
+          <div class="card" id="chargerCard" style="position: relative;">
+            <h2>The Charger</h2>
+            <p>While charging, this will take your power energy and convert it into charge, charge is used to boost various stuff</p>
+            <div style="margin: 1.5em 0; position: relative; z-index: 2;">
+              <button id="chargerToggleBtn" class="go-to-charger-btn">Turn ON</button>
+            </div>
+            <div style="margin-top: 1em; font-size: 1.2em; position: relative; z-index: 2;">
+              <span id="chargerCharge">0</span>
+              <div id="chargerBoost" style="margin-top:0.5em;"></div>
+              <div id="chargerCurrencyBoost" style="margin-top:0.2em;"></div>
+            </div>
+          </div>
+          <div id="soapChargerBox" class="card soap-charger-box" style="position: relative; display: flex; align-items: center; justify-content: center;">
+            <img id="soapChargerCharacter" class="soap-large" src="assets/icons/soap.png" alt="Soap Character">
+            <div id="soapChargerSpeech" class="soap-charger-speech"></div>
+            <div id="soapChargeEatenText" style="margin-top: 1em; color: #ff6666; font-weight: bold; text-align: center; display: none;"></div>
+          </div>
+        </div>
+        <div class="generator-right-col" style="margin:auto;">
+          <div class="card" style="position: relative; min-width:600px; max-width:900px; padding:2.5em 2.5em;">
+            <h2>Charger Milestones</h2>
+            <div id="chargerMilestoneTable" style="margin-top:1.5em;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="prismSubTab" class="sub-tab" style="display: none;">
-  <div class="prism-top-row triple">
-    <div>
+  <div id="prismTopButtons" style="display:flex; justify-content:center; gap:1.5em; margin-top:0.5em;">
+    <button id="prismMainBtn" class="prism-feature-btn active">The Prism</button>
+    <button id="prismAdvancedBtn" class="prism-feature-btn" style="display:none;">Advanced Prism</button>
+  </div>
+  
+  <div id="prismMainArea" class="prism-subtab" style="display:block;">
+    <div class="prism-top-row triple">
+      <div>
+        <div class="card">
+          <h2>The Prism</h2>
+          <div id="lightGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;"></div>
+        </div>
+        <div id="prismCharacterContainer" class="card swaria-character-box">
+          <img id="prismCharacter" src="assets/icons/swaria prism.png" alt="Swaria Character" />
+          <div id="prismSpeech" class="swaria-speech">Hello!</div>
+        </div>
+      </div>
       <div class="card">
-        <h2>The Prism</h2>
-        <div id="lightGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;"></div>
+        <h3>Light Energy</h3>
+        <div class="light-row" style="position: relative;">
+          <img src="assets/icons/light.png" class="light-icon"><span>Pure Light: <span class="currency-value-wrapper"><span id="lightCount" style="position: relative;">0</span></span><span id="lightKPMult" style="margin-left: 6px; color: #aaffff; font-weight: bold;"></span></span>
+          <div id="lightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 125px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="position: relative;"><img src="assets/icons/red light.png" class="light-icon"><span>Red Light: <span class="currency-value-wrapper"><span id="redlightCount">0</span></span></span>
+          <div id="redLightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 150px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="position: relative;"><img src="assets/icons/orange light.png" class="light-icon"><span>Orange Light: <span class="currency-value-wrapper"><span id="orangelightCount">0</span></span></span>
+          <div id="orangeLightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 180px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="position: relative;"><img src="assets/icons/yellow light.png" class="light-icon"><span>Yellow Light: <span class="currency-value-wrapper"><span id="yellowlightCount">0</span></span></span>
+          <div id="yellowLightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 170px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="position: relative;"><img src="assets/icons/green light.png" class="light-icon"><span>Green Light: <span class="currency-value-wrapper"><span id="greenlightCount">0</span></span></span>
+          <div id="greenLightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 170px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="position: relative;"><img src="assets/icons/blue light.png" class="light-icon"><span>Blue Light: <span class="currency-value-wrapper"><span id="bluelightCount">0</span></span></span>
+          <div id="blueLightEnergyNerfDisplay" style="position: absolute; top: -18px; left: 170px; color: #ff6666; font-size: 0.8em; font-weight: bold; display: none !important; pointer-events: none; z-index: 10; visibility: hidden; white-space: nowrap;"></div>
+        </div>
+        <div class="light-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc;"><span style="color: #aaffff; font-weight: bold;">Particle Boost: <span id="particleBoost">+0.0 per click</span></span></div>
       </div>
-      <div id="prismCharacterContainer" class="card swaria-character-box">
-        <img id="prismCharacter" src="assets/icons/swaria prism.png" alt="Swaria Character" />
-        <div id="prismSpeech" class="swaria-speech">Hello!</div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Light Energy</h3>
-      <div class="light-row"><img src="assets/icons/light.png" class="light-icon"><span>Light: <span class="currency-value-wrapper"><span id="lightCount">0</span></span><span id="lightKPMult" style="margin-left: 6px; color: #aaffff; font-weight: bold;"></span></span></div>
-      <div class="light-row"><img src="assets/icons/red light.png" class="light-icon"><span>Red Light: <span class="currency-value-wrapper"><span id="redlightCount">0</span></span></span></div>
-      <div class="light-row"><img src="assets/icons/orange light.png" class="light-icon"><span>Orange Light: <span class="currency-value-wrapper"><span id="orangelightCount">0</span></span></span></div>
-      <div class="light-row"><img src="assets/icons/yellow light.png" class="light-icon"><span>Yellow Light: <span class="currency-value-wrapper"><span id="yellowlightCount">0</span></span></span></div>
-      <div class="light-row"><img src="assets/icons/green light.png" class="light-icon"><span>Green Light: <span class="currency-value-wrapper"><span id="greenlightCount">0</span></span></span></div>
-      <div class="light-row"><img src="assets/icons/blue light.png" class="light-icon"><span>Blue Light: <span class="currency-value-wrapper"><span id="bluelightCount">0</span></span></span></div>
-      <div class="light-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc;"><span style="color: #aaffff; font-weight: bold;">Particle Boost: <span id="particleBoost">+0.0 per click</span></span></div>
-    </div>
-    <div class="card" id="lightUpgradesCard">
-      <h2>Light Generators</h2>
-      <p style="font-size: 0.9rem; margin-bottom: 1rem; color: #666;">Generators produce particles that boost light gain from clicking prism tiles</p>
-      <div class="generator-card light">
-        <button id="lightGenBtn" onclick="handleLightGenClick('light')">Light Generator</button>
-        <div>Light Particles: <span id="lightparticleCount">0</span></div>
-      </div>
-      <div class="generator-card redlight">
-        <button id="redlightGenBtn" onclick="handleLightGenClick('redlight')">Redlight Generator</button>
-        <div>Red Particles: <span id="redlightparticleCount">0</span></div>
-      </div>
-      <div class="generator-card orangelight">
-        <button id="orangelightGenBtn" onclick="handleLightGenClick('orangelight')">Orangelight Generator</button>
-        <div>Orange Particles: <span id="orangelightparticleCount">0</span></div>
-      </div>
-      <div class="generator-card yellowlight">
-        <button id="yellowlightGenBtn" onclick="handleLightGenClick('yellowlight')">Yellowlight Generator</button>
-        <div>Yellow Particles: <span id="yellowlightparticleCount">0</span></div>
-      </div>
-      <div class="generator-card greenlight">
-        <button id="greenlightGenBtn" onclick="handleLightGenClick('greenlight')">Greenlight Generator</button>
-        <div>Green Particles: <span id="greenlightparticleCount">0</span></div>
-      </div>
-      <div class="generator-card bluelight">
-        <button id="bluelightGenBtn" onclick="handleLightGenClick('bluelight')">Bluelight Generator</button>
-        <div>Blue Particles: <span id="bluelightparticleCount">0</span></div>
+      <div class="card" id="lightUpgradesCard">
+        <h2>Light Generators</h2>
+        <p style="font-size: 0.9rem; margin-bottom: 1rem; color: #666;">Generators produce particles that boost light gain from clicking prism tiles</p>
+        <div class="generator-card light">
+          <button id="lightGenBtn" onclick="handleLightGenClick('light')">Light Generator</button>
+          <div>Light Particles: <span id="lightparticleCount">0</span></div>
+        </div>
+        <div class="generator-card redlight">
+          <button id="redlightGenBtn" onclick="handleLightGenClick('redlight')">Redlight Generator</button>
+          <div>Red Particles: <span id="redlightparticleCount">0</span></div>
+        </div>
+        <div class="generator-card orangelight">
+          <button id="orangelightGenBtn" onclick="handleLightGenClick('orangelight')">Orangelight Generator</button>
+          <div>Orange Particles: <span id="orangelightparticleCount">0</span></div>
+        </div>
+        <div class="generator-card yellowlight">
+          <button id="yellowlightGenBtn" onclick="handleLightGenClick('yellowlight')">Yellowlight Generator</button>
+          <div>Yellow Particles: <span id="yellowlightparticleCount">0</span></div>
+        </div>
+        <div class="generator-card greenlight">
+          <button id="greenlightGenBtn" onclick="handleLightGenClick('greenlight')">Greenlight Generator</button>
+          <div>Green Particles: <span id="greenlightparticleCount">0</span></div>
+        </div>
+        <div class="generator-card bluelight">
+          <button id="bluelightGenBtn" onclick="handleLightGenClick('bluelight')">Bluelight Generator</button>
+          <div>Blue Particles: <span id="bluelightparticleCount">0</span></div>
+        </div>
       </div>
     </div>
   </div>
+  
+  <div id="prismAdvancedArea" class="prism-subtab" style="display:none;">
+    <!-- Advanced lab content will be rendered by JavaScript -->
+  </div>
 </div>
-<div id="chargerSubTab" class="sub-tab" style="display: none;">
-  <div class="generator-flex-row" style="justify-content:center;align-items:center;gap:2.5em;">
-    <div class="generator-right-col" style="margin:auto;">
-      <div class="card" id="chargerCard" style="min-width:320px;max-width:480px;margin:auto;">
-        <h2>The Charger</h2>
-        <p>While charging, this will take your power energy and convert it into charge, charge is used to boost various stuff</p>
-        <div style="margin: 1.5em 0;">
-          <button id="chargerToggleBtn">Turn ON</button>
+<div id="boutiqueSubTab" class="sub-tab" style="display: none;">
+  <div class="boutique-container">
+  <div style="display: flex; gap: 30rem; align-items: flex-start; margin-bottom: 1rem;">
+      <div style="flex: 0 0 220px; display: flex; flex-direction: column; align-items: center;">
+        <div class="card swaria-character-box" id="lepreCharacterCard" style="width: 400px; height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+          <img id="lepreCharacterImage" src="assets/icons/lepre.png" alt="Lepre" class="character-image" style="width: 300px; height: 300px; border-radius: 12px; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterSpeaking" src="assets/icons/lepre speech.png" alt="Lepre Speaking" class="character-image speaking" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterThanks" src="assets/icons/lepre thx.png" alt="Lepre Thanks" class="character-image thanks" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterMad" src="assets/icons/lepre mad.png" alt="Lepre Mad" class="character-image mad" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterMadSpeaking" src="assets/icons/lepre mad speech.png" alt="Lepre Mad Speaking" class="character-image mad-speaking" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterAngry" src="assets/icons/lepre angry.png" alt="Lepre Angry" class="character-image angry" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <img id="lepreCharacterAngrySpeaking" src="assets/icons/lepre angry speech.png" alt="Lepre Angry Speaking" class="character-image angry-speaking" style="width: 300px; height: 300px; border-radius: 12px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; cursor: pointer;" onclick="if(window.boutique) window.boutique.pokeLepre()">
+          <!-- Invisible clickable area for Lepre's chest zipper -->
+          <div id="lepreChestZipper" style="position: absolute; top: 85%; left: 55%; transform: translate(-50%, -50%); width: 30px; height: 40px; cursor: pointer; z-index: 10; background: transparent;" onclick="if(window.boutique) window.boutique.clickChestZipper(event)" title="Chest Zipper (Don't touch!)"></div>
         </div>
-        <div style="margin-top: 1em; font-size: 1.2em;">
-          <span id="chargerCharge">0</span>
-          <div id="chargerBoost" style="margin-top:0.5em;"></div>
-          <div id="chargerCurrencyBoost" style="margin-top:0.2em;"></div>
+        
+       
+      </div>
+      
+      <!-- Lepre Angry Warning Card (positioned between Lepre and Daily Selection) -->
+      <div class="card" id="lepreAngryWarning" style="flex: 0 0 280px; display: none;">
+        <div id="lepreAngryContent">
+          <!-- Content will be filled by JavaScript -->
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+          <button 
+            id="apologizeButton" 
+            onclick="if(window.boutique) window.boutique.apologizeToLepre()"
+            style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;"
+          >
+            Apologize
+          </button>
+          <div id="apologizeCount" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
+            <!-- Apologize count will be filled by JavaScript -->
+          </div>
         </div>
       </div>
-      <div id="soapChargerBox" class="card soap-charger-box" style="position: relative; display: flex; align-items: center; justify-content: center;">
-        <img id="soapChargerCharacter" class="soap-large" src="assets/icons/soap.png" alt="Soap Character">
-        <div id="soapChargerSpeech" class="soap-charger-speech"></div>
-        <div id="soapChargeEatenText" style="margin-top: 1em; color: #ff6666; font-weight: bold; text-align: center; display: none;"></div>
+      
+      <div class="card" id="dailySelectionCard" style="flex: 0 0 280px;">
+        <h3 style="margin: 0 0 0.5rem 0; color: #333;">Daily Selection</h3>
+  <p style="margin: 0 0 0.8rem 0; color: #666; font-size: 0.9rem;">Shop restocks every hour</p>
+        <div id="restockTimer" style="font-size: 0.9rem; color: #888;">
+          <!-- Timer will be filled by JavaScript -->
+        </div>
+        
+        <!-- Daily Free Swa Bucks Button -->
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
+          <button 
+            id="dailyFreeBucksBtn" 
+            onclick="if(window.boutique) window.boutique.claimFreeBucks()"
+            style="
+              width: 100%; 
+              padding: 12px 16px; 
+              background: linear-gradient(135deg, #4CAF50, #45a049); 
+              color: white; 
+              border: 2px solid #4CAF50; 
+              border-radius: 10px; 
+              font-weight: bold;
+              font-size: 14px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              box-shadow: 0 3px 6px rgba(76, 175, 80, 0.3);
+              text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+              position: relative;
+              overflow: hidden;
+            "
+            onmouseover="if(!this.disabled) { this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(76, 175, 80, 0.4)'; }"
+            onmouseout="if(!this.disabled) { this.style.transform='translateY(0px)'; this.style.boxShadow='0 3px 6px rgba(76, 175, 80, 0.3)'; }"
+          >
+            <span id="freeBucksButtonText"> +1 Swa Bucks</span>
+            <br>
+            <small id="freeBucksAmount" style="font-size: 11px; opacity: 0.9;">(Daily reward)</small>
+          </button>
+        </div>
       </div>
     </div>
-    <div class="generator-right-col" style="margin:auto;">
-      <div class="card" style="min-width:480px;max-width:800px;margin:auto;">
-        <h2>Charger Milestones</h2>
-        <div id="chargerMilestoneTable" style="margin-top:1.5em;"></div>
-      </div>
+    
+    <div id="boutiqueItemsContainer" class="boutique-items-grid">
+      <!-- Items will be dynamically generated here -->
     </div>
   </div>
 </div>
@@ -503,6 +827,14 @@ body {
         </div>
         <div class="terrarium-upgrade-card" id="nectar-upgrade-4" data-upgrade="nectar4" style="background:#fffbe8; border:6px solid #e6c200; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
           <img src="assets/icons/nectar upgrade 4.png" style="width:54px; height:54px; margin-top:1em; display:block; margin-left:auto; margin-right:auto;">
+          <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
+          <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
+            <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
+            <span style="color:#e33; font-weight:bold; font-size:1.1em;">10</span>
+          </div>
+        </div>
+        <div class="terrarium-upgrade-card" id="nectar-upgrade-5" data-upgrade="nectar5" style="background:#fffbe8; border:6px solid #6495ed; border-radius:50%; width:110px; height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 2px 12px #0006; cursor:pointer; position:relative; display:none;">
+          <img src="assets/icons/nectar upgrade 5.png" style="width:54px; height:54px; margin-top:1em; display:block; margin-left:auto; margin-right:auto;">
           <div class="terrarium-upgrade-level" style="font-size:1.1em; color:#333; font-weight:bold; text-align:center;">0</div>
           <div style="position:absolute; bottom:-2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:0.2em;">
             <img src="assets/icons/nectar.png" style="width:20px; height:20px;">
@@ -656,6 +988,9 @@ body {
             <label style="display:none;">Theme: <select id="themeSelect"><option value="light">Light</option><option value="dark">Dark</option></select></label>
             <label>Colour: <select id="colorSelect"><option value="green">Green</option><option value="blue">Blue</option><option value="pink">Pink</option></select></label>
             <label>Style: <select id="styleSelect"><option value="rounded">Rounded</option><option value="square">Square</option></select></label>
+            <label>Notation: <select id="notationSelect"><option value="numeral">Numeral (1K, 1M)</option><option value="scientific">Scientific (1e3, 1e6)</option><option value="engineering">Engineering (1.000e3)</option><option value="cancer">Cancer (🦀🦀🦀)</option><option value="zalgo">Zalgo (C̵̭̓ǒ̶̤r̷̭̄r̶̰̆ù̷̦p̴̰̾t̵̰̊)</option></select></label>
+            <label><input type="checkbox" id="disableOfflineProgressToggle"> Disable offline progress</label>
+            <span style="font-size: 0.9em; color: #ff6b6b; font-weight: bold; margin-left: 10px; margin-bottom: 10px; display: block;">Very important to avoid data corruption</span>
             <label><input type="checkbox" id="confirmResetToggle"> Confirm delivery reset</label>
             <label id="confirmNectarizeResetLabel" style="display:none;"><input type="checkbox" id="confirmNectarizeResetToggle"> Confirm nectarize reset</label>
             <label><input type="checkbox" id="autosaveToggle" span style="display:none;"></label>
@@ -687,7 +1022,7 @@ body {
               <p><strong>Game Version:</strong> 0.2</p>
             <div style="margin: 1.5em 0;">
               <h4>Massive credits to:</h4>
-              <p>Many incremental games such as Grass Cutting Incremental (lethal dolphin), Bee Swarm Simulator (onett), Incremental Mass Rewritten (MrRedShark77) and Algebraic Progression (randomtuba) for inspiration.</p>
+              <p>Many incremental games such as Grass Cutting Incremental (lethal dolphin), Bee Swarm Simulator (onett), Incremental Mass Rewritten (MrRedShark77), to I Am On Observation Duty (Notovia) and Algebraic Progression (randomtuba) for inspiration.</p>
               <p>To my friend 'The Random Recorder' for the original game idea.</p>
               <p>And to the original creator of the entire rikkor species 'ForestWind/Genyuu doushi'.</p>
             </div>
@@ -696,25 +1031,60 @@ body {
             </div>
             <div style="text-align: center; margin-top: 2em; font-style: italic; color: #666;">
               <p>Thx for playing!</p>
+            <a href="https://discord.gg/T8E6ywfU" target="_blank" rel="noopener" style="display:inline-block;padding:0.6em 1.2em;background:#5865F2;color:#fff;border-radius:8px;font-weight:bold;text-decoration:none;font-size:1.1em;margin-top:0.7em;box-shadow:0 2px 8px #5865F288;transition:background 0.2s;">Join our Discord!</a>
             </div>
           </div>
         </div>
       </div>
       </div>
-      <div id="settingsPremiumTab" class="settings-subtab" style="display:none;">
+      <div id="settingsRecoveryTab" class="settings-subtab" style="display:none;">
         <div class="grid">
-          <div class="premium-cards-row" style="display: flex; justify-content: center; align-items: stretch; gap: 1.2em; margin-top: 0.5em;">
-            <div class="card" style="min-width:180px;max-width:220px;">
-              <h3>Unlock Vrchat mirror</h3>
-              <h4>Become a mirror dweller (wip)</h4>
-              <p style="font-size:0.95em;"><img src="assets/icons/Swa Buck.png" alt="Swa Bucks" style="width:28px;height:28px;vertical-align:middle;margin-right:0.3em;">Cost: 5000 Swa Bucks.</p>
-              <button style="margin-top:0.7em; font-size:1em; padding:0.5em 1.2em; border-radius:10px;">Buy</button>
-            </div>
-            <div class="card" style="min-width:180px;max-width:220px;">
-              <h3>Unlock Bijou</h3>
-              <h4>A new companion that will collect tokens automatically</h4>
-              <p style="font-size:0.95em;"><img src="assets/icons/Swa Buck.png" alt="Swa Bucks" style="width:28px;height:28px;vertical-align:middle;margin-right:0.3em;">Cost: 500 Swa Bucks.</p>
-              <button style="margin-top:0.7em; font-size:1em; padding:0.5em 1.2em; border-radius:10px;">Buy</button>
+          <div class="card">
+            <div style="text-align: center; margin: 2em 0;">
+              <h3>Delivery Reset Recovery</h3>
+              <p style="margin-bottom: 2em; color: #666;">Export your game data from the last delivery reset for backup purposes.</p>
+              
+              <div style="margin: 2em 0;">
+                <button id="exportLastDeliveryBtn" onclick="exportLastDeliveryReset()" style="
+                  padding: 1.2em 2em; 
+                  border: none; 
+                  border-radius: 12px; 
+                  background: linear-gradient(135deg, #4CAF50, #45a049); 
+                  color: white; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  font-size: 1.2em; 
+                  transition: all 0.3s; 
+                  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                  min-width: 300px;
+                ">
+                  Export Code from Last Delivery Reset
+                </button>
+                
+                <div id="lastDeliveryInfo" style="
+                  margin-top: 1.5em; 
+                  padding: 1em; 
+                  background: #f5f5f5; 
+                  border-radius: 8px; 
+                  color: #666; 
+                  font-size: 0.9em;
+                  display: none;
+                ">
+                  <div id="lastDeliveryTimestamp"></div>
+                  <div id="lastDeliveryGrade"></div>
+                </div>
+                
+                <div id="recoveryExportStatus" style="
+                  margin-top: 1em; 
+                  padding: 0.8em; 
+                  border-radius: 6px; 
+                  display: none;
+                ">
+                  <!-- Export status messages will appear here -->
+                </div>
+              </div>
+              
             </div>
           </div>
         </div>
@@ -783,6 +1153,7 @@ body {
     </section>
 </div>
 <nav id="bottomNav">
+  <button class="navBtn" data-target="frontdesk" id="frontDeskTab" style="display:none;">Front Desk</button>
   <button class="navBtn active" data-target="home">Departments</button>
   <button class="navBtn" data-target="cafeteria" id="cafeteriaTab">Cafeteria</button>
   <button class="navBtn" data-target="knowledge" id="knowledgeTab" style="display:none;">Control center</button>
@@ -839,7 +1210,7 @@ body {
         <span style="font-size:0.9em;color:#666;">Berry Plate</span>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
-        <img src="assets/icons/mushroom token.png" class="icon" alt="Mushroom Soup Icon" style="width:48px;height:48px;">
+        <img src="assets/icons/mushroom soup token.png" class="icon" alt="Mushroom Soup Icon" style="width:48px;height:48px;">
         <span id="inventoryCount-mushroomSoup">0</span>
         <span style="font-size:0.9em;color:#666;">Mushroom Soup</span>
       </div>
@@ -861,6 +1232,90 @@ body {
     </div>
   </div>
 </div>
+<div id="anomalyDetectorModal" style="display:none;position:fixed;left:0;right:0;bottom:0;width:100vw;z-index:9999999999999;justify-content:center;align-items:flex-end;pointer-events:auto;">
+  <div style="margin:0;background:rgba(255,255,255,0.97);border-radius:24px 24px 0 0;box-shadow:0 -4px 32px #0006;padding:0.8em 0.5em 0.5em 0.5em;width:100%;min-height:120px;display:flex;flex-direction:column;align-items:center;">
+    <div id="anomalyDetectorList" style="display:flex;gap:1em;flex-wrap:wrap;justify-content:center;min-height:60px;align-items:center;">
+    </div>
+  </div>
+</div>
+<section id="frontdesk" class="page" style="display:none;">
+  <div class="frontdesk-container">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+      <!-- Tico Character Card (left side) -->
+      <div style="flex: 0 0 180px; display: flex; flex-direction: column; align-items: center;">
+        <div class="card swaria-character-box" id="ticoCharacterCard" style="width: 320px; height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+          <img id="ticoCharacterImage" src="assets/icons/tico.png" alt="Tico" class="character-image" 
+               style="width: 220px; height: 220px; border-radius: 12px; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block;"
+               onclick="if(window.frontDesk) window.frontDesk.pokeTico()">
+          
+          <img id="ticoCharacterSpeaking" src="assets/icons/tico speech.png" alt="Tico Speaking" class="character-image speaking" 
+               style="width: 220px; height: 220px; border-radius: 12px; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;"
+               onclick="if(window.frontDesk) window.frontDesk.pokeTico()">
+          
+          <!-- Speech bubble for Tico -->
+          <div id="ticoSpeechBubble" class="swaria-speech" style="display: none;"></div>
+          
+          <!-- Food Rations Counter -->
+          <div id="ticoFoodRations" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; text-align: center;">
+            Food Rations: 0
+          </div>
+        </div>
+      </div>
+      
+      <!-- Available Workers Card (right side) -->
+      <div class="card" id="availableWorkersCard" style="flex: 0 0 320px; width: 320px; height: 320px; max-width: 320px; max-height: 320px; margin-right: 2rem; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box;">
+        <h3 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.0rem;">Available Workers</h3>
+        <div id="arrivalTimer" style="font-size: 0.75rem; color: #888; margin-bottom: 0.7rem;">
+          Next arrival in: <span id="nextArrivalTime">--:--</span>
+        </div>
+        
+        <!-- Available Worker Slots (up to 3) -->
+        <div id="availableWorkerSlots" style="display: flex; gap: 0.6rem; justify-content: center;">
+          <div class="available-worker-slot" id="availableSlot1" style="width: 85px; height: 105px; border: 2px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9f9; position: relative;">
+            <div class="worker-placeholder" style="color: #999; font-size: 0.7rem; text-align: center;">Empty</div>
+          </div>
+          <div class="available-worker-slot" id="availableSlot2" style="width: 85px; height: 105px; border: 2px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9f9; position: relative;">
+            <div class="worker-placeholder" style="color: #999; font-size: 0.7rem; text-align: center;">Empty</div>
+          </div>
+          <div class="available-worker-slot" id="availableSlot3" style="width: 85px; height: 105px; border: 2px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f9f9f9; position: relative;">
+            <div class="worker-placeholder" style="color: #999; font-size: 0.7rem; text-align: center;">Empty</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Worker Assignment Slots (bottom section) -->
+    <div class="worker-slots-container" style="margin-top: -1rem;">
+      <h3 style="margin: 0 0 1rem 0; color: #333; text-align: center;">Worker Assignments</h3>
+      <div id="workerSlots" class="worker-slots-grid">
+        <!-- Worker slots will be dynamically generated here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Job Assignment Modal -->
+  <div id="jobAssignmentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeFrontDeskModal()">&times;</span>
+      <h3>Assign Job</h3>
+      <div id="jobOptions">
+        <!-- Job options will be filled by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <div id="fireWorkerModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="window.frontDesk.closeFireModal()">&times;</span>
+      <h3>Fire Worker</h3>
+      <p>Do you really wanna fire <span id="fireWorkerName"></span>?</p>
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+        <button onclick="window.frontDesk.confirmFireWorker()" style="background-color: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Yes</button>
+        <button onclick="window.frontDesk.closeFireModal()" style="background-color: #95a5a6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">No</button>
+      </div>
+    </div>
+  </div>
+</section>
 <section id="cafeteria" class="page" style="display:none;">
   <div id="cafeteriaSubTabBar" class="cafeteriaSubTabBar">
     <div id="cafeteriaSubTabNav" class="cafeteriaSubTabNav">
@@ -871,12 +1326,11 @@ body {
   <div id="cafeteriaMainSubTab" class="cafeteria-subtab sub-tab" style="display:block;">
     <div id="cafeteriaTopCounter" style="display:flex; justify-content:center; align-items:center; gap:1rem; margin:2rem 0; padding:1rem; background:var(--card-bg); border:2px solid var(--card-border); border-radius:var(--radius); max-width:600px; margin-left:auto; margin-right:auto;">
       <div style="text-align:center; flex:1;">
-        <h3 style="margin:0 0 0.5rem 0;">Berry Plates: <span id="berryPlatesCount">0</span>/<span id="berryPlatesMax">10</span></h3>
-        <div style="width:100%; height:20px; background:#333; border-radius:10px; overflow:hidden; margin-bottom:0.5rem;">
-          <div id="berryPlateProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, #4CAF50, #8BC34A); transition:width 0.3s ease;"></div>
+        <h3 style="margin:0 0 0.5rem 0; color:var(--text-color);">Break Times</h3>
+        <div style="font-size:1.1em; color:var(--accent-color); font-weight:bold; margin:1rem 0;">
+          12:00-13:30 and 18:00-19:30
         </div>
-        <div style="font-size:0.9em; color:#666; margin-bottom:0.5rem;">Restores 10 hunger</div>
-        <button id="collectPlateBtn" onclick="collectBerryPlate()" style="background:var(--accent-color); color:white; border:none; padding:0.5rem 1rem; border-radius:8px; cursor:pointer; font-weight:bold;">Collect Plate</button>
+        <div style="font-size:0.9em; color:#666;">Characters take breaks during these hours</div>
       </div>
     </div>
   </div>
@@ -939,9 +1393,820 @@ body {
   </div>
 </section>
 <div id="infinityResearchSubTab" class="sub-tab">
-  <div class="card fullwidth" style="margin-top: 20px;">
-    <h2>Thank You!</h2>
-    <p>Thanks for playing the demo of Fluff Inc. New updates will come out in the future!</p>
+  <!-- Infinity Research Sub-Tab Navigation -->
+  <div id="infinityResearchSubTabBar">
+    <div id="infinityResearchSubTabNav">
+      <button onclick="switchInfinityResearchSubTab('infinityReset')" id="infinityResetBtn" class="infinity-sub-tab-btn active">Infinity Reset</button>
+      <button onclick="switchInfinityResearchSubTab('infinityResearchMain')" id="infinityResearchMainBtn" class="infinity-sub-tab-btn" style="display:none;">Infinity Research</button>
+      <button onclick="switchInfinityResearchSubTab('infinityShop')" id="infinityShopBtn" class="infinity-sub-tab-btn" style="display:none;">Infinity Tree</button>
+      <button onclick="switchInfinityResearchSubTab('infinityChallenge')" id="infinityChallengeBtn" class="infinity-sub-tab-btn" style="display:none;">Infinity Challenge</button>
+    </div>
+  </div>
+
+  <!-- Infinity Research Sub-Tab Content -->
+  <div id="infinityResearchSubTabs">
+    <!-- Infinity Reset Tab -->
+    <div id="infinityReset" class="infinity-sub-tab active">
+      <div class="infinity-card">
+        <h2>∞ Infinity Reset ∞</h2>
+        <p>Reset everything expansion does as well as expansion levels, every elements (including 7, 8) and terrarium content to increase your total infinity.</p>
+        
+        <button class="infinity-reset-btn" id="performInfinityReset" disabled>Perform Infinity Reset</button>
+      </div>
+    </div>
+
+    <!-- Main Infinity Research Tab -->
+    <div id="infinityResearchMain" class="infinity-sub-tab">
+      <!-- Two-card layout for infinity benefits and currency research -->
+      <div class="infinity-main-layout">
+        <!-- Left Card: Infinity Benefits -->
+        <div class="infinity-benefits-card">
+          <div class="benefits-header">
+            <h3>∞ Infinity Benefits</h3>
+            <div class="total-infinity-count">
+              <span class="infinity-total-label">Total ∞:</span>
+              <span class="infinity-total-value" id="totalInfinityCount">0</span>
+            </div>
+          </div>
+          
+          <div class="benefits-content">
+            <!-- Vertical Progress Bar -->
+            <div class="infinity-progress-container">
+              <div class="progress-bar-labels">
+                <div class="progress-milestone" data-milestone="0">
+                  <span class="milestone-number">0</span>
+                </div>
+                <div class="progress-milestone" data-milestone="1">
+                  <span class="milestone-number">1</span>
+                </div>
+                <div class="progress-milestone" data-milestone="2">
+                  <span class="milestone-number">2</span>
+                </div>
+                <div class="progress-milestone" data-milestone="4">
+                  <span class="milestone-number">4</span>
+                </div>
+                <div class="progress-milestone" data-milestone="8">
+                  <span class="milestone-number">8</span>
+                </div>
+                <div class="progress-milestone" data-milestone="15">
+                  <span class="milestone-number">15</span>
+                </div>
+                <div class="progress-milestone" data-milestone="50">
+                  <span class="milestone-number">50</span>
+                </div>
+              </div>
+              
+              <div class="vertical-progress-bar">
+                <div class="progress-bar-background">
+                  <div class="progress-bar-fill" id="infinityProgressFill" style="height: 0%"></div>
+                  <div class="progress-bar-shimmer"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Permanent Buffs List -->
+            <div class="permanent-buffs">
+              <div class="buffs-list">
+                <div class="buff-item locked" data-requirement="50">
+                  <div class="buff-requirement">50∞</div>
+                  <div class="buff-description" data-hidden-text="Break infinity"></div>
+                </div>
+                
+                <div class="buff-item locked" data-requirement="15">
+                  <div class="buff-requirement">15∞</div>
+                  <div class="buff-description" data-hidden-text="Automatically earn expansion levels, expansion no longer resets anything"></div>
+                </div>
+                
+                <div class="buff-item locked" data-requirement="8">
+                  <div class="buff-requirement">8∞</div>
+                  <div class="buff-description" data-hidden-text="Each completed infinity challenge gives 5X more infinity points"></div>
+                </div>
+                
+                <div class="buff-item locked" data-requirement="4">
+                  <div class="buff-requirement">4∞</div>
+                  <div class="buff-description" data-hidden-text="Unlock Infinity challenges"></div>
+                </div>
+                
+                <div class="buff-item locked" data-requirement="2">
+                  <div class="buff-requirement">2∞</div>
+                  <div class="buff-description" data-hidden-text="Gain 3X more Infinity points generation based on total infinity reached"></div>
+                </div>
+                
+                <div class="buff-item unlocked" data-requirement="1">
+                  <div class="buff-requirement">1∞</div>
+                  <div class="buff-description" data-hidden-text="Unlock Infinity Tree"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Card: Infinity Currency Research -->
+        <div class="infinity-research-card">
+          <div class="research-nav-buttons">
+            <button class="infinity-sub-tab-btn active" onclick="switchInfinityResearchTab('cargo')">Cargo</button>
+            <button class="infinity-sub-tab-btn" onclick="switchInfinityResearchTab('lab')">Lab</button>
+            <button class="infinity-sub-tab-btn" onclick="switchInfinityResearchTab('terrarium')">Terrarium</button>
+          </div>
+          
+          <!-- Cargo Tab Content -->
+          <div id="infinityResearchCargo" class="infinity-research-content active">
+            <div class="infinity-currencies-grid">
+              <!-- Top Row -->
+              <div class="infinity-currency-item" id="fluffCurrencyItem">
+                <img src="assets/icons/infinity fluff.png" alt="Infinity Fluff" class="infinity-currency-icon">
+                <div class="nerf-display" id="fluffNerfDisplay">
+                  <span class="nerf-label">Cargo Currencies:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="fluffInfinityCount">0∞</span>
+                    <span class="nerf-value" id="fluffNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="fluffCapBtn" onclick="toggleInfinityCap('fluff')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="fluffCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="fluffDiscoveryOverlay">
+                  <span class="discovery-text">Discover fluff infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="swariaCoinsCurrencyItem">
+                <img src="assets/icons/infinity swaria coins.png" alt="Infinity Swaria Coins" class="infinity-currency-icon">
+                <div class="nerf-display" id="swariaCoinsNerfDisplay">
+                  <span class="nerf-label">Box Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="swariaInfinityCount">0∞</span>
+                    <span class="nerf-value" id="swariaNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="swariaCapBtn" onclick="toggleInfinityCap('swaria')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="swariaCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="swariaDiscoveryOverlay">
+                  <span class="discovery-text">Discover swaria coin infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <!-- Bottom Row -->
+              <div class="infinity-currency-item" id="feathersCurrencyItem">
+                <img src="assets/icons/infinity feather.png" alt="Infinity Feather" class="infinity-currency-icon">
+                <div class="nerf-display" id="feathersNerfDisplay">
+                  <span class="nerf-label">Lab Currencies:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="feathersInfinityCount">0∞</span>
+                    <span class="nerf-value" id="feathersNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="feathersCapBtn" onclick="toggleInfinityCap('feathers')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="feathersCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="feathersDiscoveryOverlay">
+                  <span class="discovery-text">Discover feather infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="artifactsCurrencyItem">
+                <img src="assets/icons/infinity wing artifact.png" alt="Infinity Wing Artifact" class="infinity-currency-icon">
+                <div class="nerf-display" id="artifactsNerfDisplay">
+                  <span class="nerf-label">Charge:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="artifactsInfinityCount">0∞</span>
+                    <span class="nerf-value" id="artifactsNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="artifactsCapBtn" onclick="toggleInfinityCap('artifacts')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="artifactsCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="artifactsDiscoveryOverlay">
+                  <span class="discovery-text">Discover wing artifact infinity to reveal their nerfs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Terrarium Tab Content -->
+          <div id="infinityResearchTerrarium" class="infinity-research-content">
+            <div class="infinity-currencies-grid terrarium-single-row">
+              <div class="infinity-currency-item" id="terrariumPollenCurrencyItem">
+                <img src="assets/icons/pollen.png" alt="Infinity Pollen" class="infinity-currency-icon">
+                <div class="nerf-display" id="terrariumPollenNerfDisplay">
+                  <span class="nerf-label">Pollen Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="terrariumPollenInfinityCount">0∞</span>
+                    <span class="nerf-value" id="terrariumPollenNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="terrariumPollenCapBtn" onclick="toggleInfinityCap('terrariumPollen')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="terrariumPollenCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="terrariumPollenDiscoveryOverlay">
+                  <span class="discovery-text">Discover pollen infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="terrariumFlowersCurrencyItem">
+                <img src="assets/icons/flower.png" alt="Infinity Flowers" class="infinity-currency-icon">
+                <div class="nerf-display" id="terrariumFlowersNerfDisplay">
+                  <span class="nerf-label">Flower Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="terrariumFlowersInfinityCount">0∞</span>
+                    <span class="nerf-value" id="terrariumFlowersNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="terrariumFlowersCapBtn" onclick="toggleInfinityCap('terrariumFlowers')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="terrariumFlowersCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="terrariumFlowersDiscoveryOverlay">
+                  <span class="discovery-text">Discover flower infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="terrariumNectarCurrencyItem">
+                <img src="assets/icons/nectar.png" alt="Infinity Nectar" class="infinity-currency-icon">
+                <div class="nerf-display" id="terrariumNectarNerfDisplay">
+                  <span class="nerf-label">Nectar Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="terrariumNectarInfinityCount">0∞</span>
+                    <span class="nerf-value" id="terrariumNectarNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="terrariumNectarCapBtn" onclick="toggleInfinityCap('terrariumNectar')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="terrariumNectarCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="terrariumNectarDiscoveryOverlay">
+                  <span class="discovery-text">Discover nectar infinity to reveal their nerfs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Lab Tab Content -->
+          <div id="infinityResearchLab" class="infinity-research-content">
+            <div class="infinity-currencies-grid lab-2x3-grid">
+              <!-- Row 1: Light, Red Light, Orange Light -->
+              <div class="infinity-currency-item" id="lightCurrencyItem">
+                <img src="assets/icons/light.png" alt="Infinity Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="lightNerfDisplay">
+                  <span class="nerf-label">Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="lightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="lightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="lightCapBtn" onclick="toggleInfinityCap('light')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="lightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="lightDiscoveryOverlay">
+                  <span class="discovery-text">Discover light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="redLightCurrencyItem">
+                <img src="assets/icons/red light.png" alt="Infinity Red Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="redLightNerfDisplay">
+                  <span class="nerf-label">Red Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="redLightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="redLightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="redLightCapBtn" onclick="toggleInfinityCap('redLight')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="redLightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="redLightDiscoveryOverlay">
+                  <span class="discovery-text">Discover red light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="orangeLightCurrencyItem">
+                <img src="assets/icons/orange light.png" alt="Infinity Orange Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="orangeLightNerfDisplay">
+                  <span class="nerf-label">Orange Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="orangeLightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="orangeLightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="orangeLightCapBtn" onclick="toggleInfinityCap('orangeLight')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="orangeLightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="orangeLightDiscoveryOverlay">
+                  <span class="discovery-text">Discover orange light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <!-- Row 2: Yellow Light, Green Light, Blue Light -->
+              <div class="infinity-currency-item" id="yellowLightCurrencyItem">
+                <img src="assets/icons/yellow light.png" alt="Infinity Yellow Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="yellowLightNerfDisplay">
+                  <span class="nerf-label">Yellow Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="yellowLightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="yellowLightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="yellowLightCapBtn" onclick="toggleInfinityCap('yellowLight')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="yellowLightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="yellowLightDiscoveryOverlay">
+                  <span class="discovery-text">Discover yellow light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="greenLightCurrencyItem">
+                <img src="assets/icons/green light.png" alt="Infinity Green Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="greenLightNerfDisplay">
+                  <span class="nerf-label">Green Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="greenLightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="greenLightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="greenLightCapBtn" onclick="toggleInfinityCap('greenLight')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="greenLightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="greenLightDiscoveryOverlay">
+                  <span class="discovery-text">Discover green light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+              
+              <div class="infinity-currency-item" id="blueLightCurrencyItem">
+                <img src="assets/icons/blue light.png" alt="Infinity Blue Light" class="infinity-currency-icon">
+                <div class="nerf-display" id="blueLightNerfDisplay">
+                  <span class="nerf-label">Blue Light Generation:</span>
+                  <div class="nerf-info">
+                    <span class="infinity-count" id="blueLightInfinityCount">0∞</span>
+                    <span class="nerf-value" id="blueLightNerfValue">^1.00</span>
+                  </div>
+                </div>
+                <button class="infinity-cap-btn" id="blueLightCapBtn" onclick="toggleInfinityCap('blueLight')" 
+                        title="Turning the cap on or off will force reset every currency back to 0 (fluff, swaria coins, feather, wing artifact, light, red light, orange light, yellow light, green light, blue light, pollen, flower, nectar)">
+                  <span id="blueLightCapText">Cap: OFF</span>
+                </button>
+                <div class="discovery-overlay" id="blueLightDiscoveryOverlay">
+                  <span class="discovery-text">Discover blue light infinity to reveal their nerfs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Infinity Tree Tab -->
+    <div id="infinityShop" class="infinity-sub-tab">
+      <div class="infinity-card">
+        <div class="infinity-tree-currencies">
+          <div class="tree-currency-compact">
+            <div class="currency-display">
+              <span class="currency-label">Infinity Theorems: <span class="currency-value" id="infinityTheoremsDisplay">0</span></span>
+            </div>
+            
+            <div class="theorem-progress">
+              <div class="progress-info">
+                <span><img src="assets/icons/infinity point.png" alt="Infinity Points" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;">Infinity Points: <span id="theoremProgress">0</span> / <span id="theoremCost">10</span></span>
+                <span id="infinityPointsRate" style="color: #4CAF50; font-weight: bold; margin-left: 1rem;">(+0/s)</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" id="theoremProgressBar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Infinity Upgrade Tree -->
+        <div class="infinity-upgrade-tree">
+          <!-- Respec Button -->
+          <div class="respec-section">
+            <button class="respec-button" id="respecInfinityBtn">Respec Infinity Theorems</button>
+            <div class="respec-warning">Respec your infinity theorems will force an expansion reset</div>
+          </div>
+          
+          <!-- Tier 1 - Starting upgrades -->
+          <div class="tree-tier" data-tier="1">
+            <div class="tree-node" id="upgrade-swalementDiscovery" data-upgrade="swalementDiscovery" title="Reveals the next swalement in the table">
+              <div class="node-icon"></div>
+              <div class="node-title">Infinite Swalement Discovery</div>
+              <div class="node-description">Discover 1 new swalement every level.</div>
+              <div class="node-cost">Cost: <span class="cost-value">1</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/94</div>
+            </div>
+          </div>
+          
+          <!-- Tier 2 Separator -->
+          <div class="tier-separator" data-tier="2">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 2</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/1</span> levels from Tier 1</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+          
+          <!-- Tier 2 - Branch into two paths -->
+          <div class="tree-tier" data-tier="2">
+            <div class="tree-node" id="upgrade-currency" data-upgrade="currency" title="Boosts all cargo currencies (fluff, swaria, feathers, artifacts)">
+              <div class="node-icon"><img src="assets/icons/common box.png" alt="Cargo Boost"></div>
+              <div class="node-title">Cargo Boost</div>
+              <div class="node-description">^0.05 boost per level</div>
+              <div class="node-cost">Cost: <span class="cost-value">2</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-generator" data-upgrade="generator" title="Boosts all lab currencies (light, redLight, orangeLight, etc.)">
+              <div class="node-icon"><img src="assets/icons/light.png" alt="Light Boost"></div>
+              <div class="node-title">Light Boost</div>
+              <div class="node-description">^0.05 boost per level</div>
+              <div class="node-cost">Cost: <span class="cost-value">2</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+          </div>
+          
+          <!-- Tier 3 Separator -->
+          <div class="tier-separator" data-tier="3">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 3</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/8</span> levels from Tier 2</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+          
+          <!-- Tier 3 - More specialized branches -->
+          <div class="tree-tier" data-tier="3">
+            <div class="tree-node" id="upgrade-infinity" data-upgrade="infinity" title="Reduces infinity nerf penalties">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">WIP</div>
+              <div class="node-cost">Cost: <span class="cost-value">999</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-automation" data-upgrade="automation" title="Automates various game functions">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">WIP</div>
+              <div class="node-cost">Cost: <span class="cost-value">999</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-expansion" data-upgrade="expansion" title="Boosts expansion-related mechanics">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">WIP</div>
+              <div class="node-cost">Cost: <span class="cost-value">999</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+          </div>
+          
+          <!-- Tier 4 Separator -->
+          <div class="tier-separator" data-tier="4">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 4</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/12</span> levels from Tier 3</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+          
+          <!-- Tier 4 - Advanced upgrades -->
+          <div class="tree-tier" data-tier="4">
+            <div class="tree-node" id="upgrade-ultimate" data-upgrade="ultimate" title="Ultimate power boost to everything">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">8</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/10</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-transcendent" data-upgrade="transcendent" title="Transcends normal limits">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">8</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/10</div>
+            </div>
+          </div>
+
+          <!-- Tier 5 Separator -->
+          <div class="tier-separator" data-tier="5">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 5</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/8</span> levels from Tier 4</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 5 - Specialist upgrades -->
+          <div class="tree-tier" data-tier="5">
+            <div class="tree-node" id="upgrade-dimensional" data-upgrade="dimensional" title="Shifts currencies into higher dimensions, multiplying their effectiveness exponentially">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">15</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-temporal" data-upgrade="temporal" title="Dilates time to accelerate all production rates dramatically">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">15</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-quantum" data-upgrade="quantum" title="Quantum tunneling allows resources to bypass normal production limits">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">15</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+          </div>
+
+          <!-- Tier 6 Separator -->
+          <div class="tier-separator" data-tier="6">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 6</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/7</span> levels from Tier 5</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 6 - Master upgrades -->
+          <div class="tree-tier" data-tier="6">
+            <div class="tree-node" id="upgrade-singularity" data-upgrade="singularity" title="Creates a singularity that warps space-time, massively amplifying all gains">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">30</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/3</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-omnipotent" data-upgrade="omnipotent" title="Omnipotent force multiplies all effects by astronomical amounts">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">30</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/3</div>
+            </div>
+          </div>
+
+          <!-- Tier 7 Separator -->
+          <div class="tier-separator" data-tier="7">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 7</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/4</span> levels from Tier 6</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 7 - Legendary upgrades -->
+          <div class="tree-tier" data-tier="7">
+            <div class="tree-node" id="upgrade-cosmic" data-upgrade="cosmic" title="Ascend to cosmic levels, multiplying everything by universal constants">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">50</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/3</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-eternal" data-upgrade="eternal" title="Eternal infinity breaks the boundaries of mathematical limits">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">100</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/3</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-beyond" data-upgrade="beyond" title="Beyond existence itself - transcends all known reality">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">250</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/3</div>
+            </div>
+          </div>
+
+          <!-- Tier 8 Separator -->
+          <div class="tier-separator" data-tier="8">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 8</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/3</span> levels from Tier 7</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 8 - Primordial upgrades -->
+          <div class="tree-tier" data-tier="8">
+            <div class="tree-node" id="upgrade-genesis" data-upgrade="genesis" title="Genesis power creates reality from nothingness">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">500</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-void" data-upgrade="void" title="Void mastery harnesses the power of absolute nothingness">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">500</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-multiverse" data-upgrade="multiverse" title="Multiverse dominion spans infinite parallel realities">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">500</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-nexus" data-upgrade="nexus" title="Reality Nexus connects all possible existences">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">500</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/5</div>
+            </div>
+          </div>
+
+          <!-- Tier 9 Separator -->
+          <div class="tier-separator" data-tier="9">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 9</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/3</span> levels from Tier 8</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 9 - Omniversal upgrades -->
+          <div class="tree-tier" data-tier="9">
+            <div class="tree-node" id="upgrade-alpha" data-upgrade="alpha" title="Alpha Force - The beginning of all mathematics">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-omega" data-upgrade="omega" title="Omega Force - The end of all limitations">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-delta" data-upgrade="delta" title="Delta Force - Change incarnate">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-sigma" data-upgrade="sigma" title="Sigma Force - Summation of all possibilities">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-theta" data-upgrade="theta" title="Theta Force - Angular perfection">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-lambda" data-upgrade="lambda" title="Lambda Force - Wavelength of existence">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-phi" data-upgrade="phi" title="Phi Force - Golden ratio perfection">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+            
+            <div class="tree-node" id="upgrade-psi" data-upgrade="psi" title="Psi Force - Quantum consciousness">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">1000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+          </div>
+
+          <!-- Tier 10 Separator -->
+          <div class="tier-separator" data-tier="10">
+            <div class="separator-line"></div>
+            <div class="tier-info">
+              <div class="tier-name">TIER 10</div>
+              <div class="tier-requirement">Requires: <span class="requirement-progress">0/6</span> levels from Tier 9</div>
+              <div class="tier-status">LOCKED</div>
+            </div>
+            <div class="separator-line"></div>
+          </div>
+
+          <!-- Tier 10 - The Ultimate -->
+          <div class="tree-tier" data-tier="10">
+            <div class="tree-node" id="upgrade-godhood" data-upgrade="godhood" title="Godhood - Transcend beyond all mathematical and conceptual limitations. The final ascension.">
+              <div class="node-icon">WIP</div>
+              <div class="node-title">???</div>
+              <div class="node-cost">Cost: <span class="cost-value">10000</span> IT</div>
+              <div class="node-level">Level: <span class="level-value">0</span>/1</div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Infinity Challenge Tab -->
+    <div id="infinityChallenge" class="infinity-sub-tab">
+      <div class="infinity-card">
+        <div class="infinity-challenge-container">
+          <!-- Left side: Challenge buttons -->
+          <div class="challenge-buttons-panel">
+            <div class="challenge-warning">
+              <p>Entering any Infinity Challenge will force a infinity reset while keeping expansion levels</p>
+            </div>
+            
+            <!-- Challenge Grid - 2x2 layout -->
+            <div class="challenge-grid">
+              <!-- First Row -->
+              <div class="challenge-row">
+                <!-- Challenge 1 -->
+                <div class="challenge-button-container">
+                  <button class="infinity-challenge-button" id="ic1Btn" onclick="selectInfinityChallenge(1)" data-unlocked="true">
+                    ∞C:1
+                  </button>
+                  <div class="challenge-completion" id="ic1Completion">0/5</div>
+                </div>
+                
+                <!-- Challenge 2 -->
+                <div class="challenge-button-container">
+                  <button class="infinity-challenge-button locked" id="ic2Btn" onclick="selectInfinityChallenge(2)" data-unlocked="false">
+                    ∞C:2
+                  </button>
+                  <div class="challenge-completion" id="ic2Completion">0/5</div>
+                </div>
+              </div>
+              
+              <!-- Second Row -->
+              <div class="challenge-row">
+                <!-- Challenge 3 -->
+                <div class="challenge-button-container" id="ic3Container" style="visibility: hidden;">
+                  <button class="infinity-challenge-button locked" id="ic3Btn" onclick="selectInfinityChallenge(3)" data-unlocked="false">
+                    ∞C:3
+                  </button>
+                  <div class="challenge-completion" id="ic3Completion">0/5</div>
+                </div>
+                
+                <!-- Challenge 4 -->
+                <div class="challenge-button-container" id="ic4Container" style="visibility: hidden;">
+                  <button class="infinity-challenge-button locked" id="ic4Btn" onclick="selectInfinityChallenge(4)" data-unlocked="false">
+                    ∞C:4
+                  </button>
+                  <div class="challenge-completion" id="ic4Completion">0/5</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right side: Challenge description -->
+          <div class="challenge-description-panel">
+            <div class="challenge-details" id="challengeDetails">
+              <h3 id="challengeTitle">Infinity Challenge 1-1</h3>
+              <p id="challengeDescription">Reach 1 infinity with your cargo currency square rooted</p>
+              <div class="challenge-requirement" id="challengeRequirement">
+                Reach 1 Total ∞ with Every Currency
+              </div>
+              <button class="start-challenge-button" id="startChallengeBtn" onclick="startInfinityChallenge()">
+                Start Infinity Challenge
+              </button>
+              <div class="challenge-reward" id="challengeReward">
+                Reward: Boost all cargo currency gain based on KP amount
+                <div class="challenge-current-boost" id="challengeCurrentBoost" style="margin-top: 0.5em; padding: 0.6em; background: rgba(255, 165, 0, 0.1); border: 1px solid #ffa500; border-radius: 6px; color: #ffa500; font-weight: bold; text-align: center; font-size: 0.9em;">
+                  Current Boost: x1.00 to all cargo currencies
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="digitalClockContainer" style="position:fixed;top:18px;left:24px;right:auto;z-index:2000;display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
@@ -949,20 +2214,32 @@ body {
   <button id="inventoryBtn" style="margin-top:8px;padding:0.5em 1.2em;font-size:1.1em;background:linear-gradient(90deg,#ffe066,#ffd700);color:#222;border:none;border-radius:8px 8px 14px 14px;box-shadow:0 2px 8px #0004;cursor:pointer;font-family:'Orbitron',monospace;font-weight:bold;">Inventory</button>
 </div>
 <div id="powerEnergyStatus" style="display:none;position:fixed;top:18px;right:24px;z-index:2000;"></div>
+<div id="anomalyDetectorContainer" style="display:none;position:fixed;top:88px;right:24px;z-index:2000;">
+  <button id="anomalyDetectorBtn" style="padding:0.5em 0.7em;font-size:1.1em;background:linear-gradient(90deg,#ff6b6b,#ff8e8e);color:#fff;border:none;border-radius:8px;box-shadow:0 2px 8px #0004;cursor:pointer;font-family:'Orbitron',monospace;font-weight:bold;text-shadow:0 1px 2px #000;width:100%;min-width:200px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
+    <img src="assets/icons/anomaly resolver.png" alt="Anomaly Resolver" style="width:24px;height:24px;">
+    <span>Anomaly resolver</span>
+  </button>
+</div>
 <div id="dimOverlay"></div>
 <div id="blackoutOverlay"></div>
+<script src="break_eternity.js"></script>
+<script src="decimal_utils.js"></script>
 <script src="script.js"></script>
 <script src="script2.js"></script>
 <script src="script3.js"></script>
 <script src="infinity.js"></script>
+<script src="anomalie.js"></script>
 <script src="daynight.js"></script>
 <script src="cafeteria.js"></script>
 <script src="expansion.js"></script>
 <script src="kitchen.js"></script>
 <script src="prism.js"></script>
+<script src="advanced prism.js"></script>
 <script src="story.js"></script>
 <script src="charger.js"></script>
 <script src="terrarium.js"></script>
+<script src="water filter.js"></script>
+<script src="observatory.js"></script>
 <script src="terrarium2.js"></script>
 <script src="Flower grid.js"></script>
 <script src="stats.js"></script>
@@ -971,6 +2248,9 @@ body {
 <script src="secret.js"></script>
 <script src="optimization.js"></script>
 <script src="memory-optimization.js"></script>
+<script src="merchant.js"></script>
+<script src="front desk.js"></script>
+<script src="permanent-tab-unlock.js"></script>
 <div id="gradeUpAnimation" class="grade-up-animation" style="display:none;">
   <span class="grade-old"></span>
   <span class="grade-new"></span>
@@ -1208,6 +2488,23 @@ body {
     </div>
   </div>
 </div>
+<div id="flowerUpgrade5Modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#ffe0f0; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Flower Light</div>
+    <div id="flowerUpgrade5Level" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase every light type gain by <span style="color:#0f0">x1.1</span> per level.<br>
+      <span style="color:#222;">This effect applies to all light types in the prism lab.</span>
+    </div>
+    <div id="flowerUpgrade5Effect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="flowerUpgrade5Cost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="flowerUpgrade5CostValue">1e38</span> <img src="assets/icons/flower.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="flowerUpgrade5CancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="flowerUpgrade5BuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="flowerUpgrade5BuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
 <div id="kpNectarUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
   <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
     <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">KP Nectar</div>
@@ -1217,8 +2514,8 @@ body {
       <span style="color:#222;">Multiplicative effect for KP generation.</span>
     </div>
     <div id="kpNectarUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
-    <div id="kpNectarUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="kpNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
-    <div id="kpNectarUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="kpNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="kpNectarUpgradeCost" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="kpNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="kpNectarUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="kpNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
     <div style="display:flex; gap:1.2em; margin-top:1.2em;">
       <button id="kpNectarUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
       <button id="kpNectarUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
@@ -1236,8 +2533,8 @@ body {
       <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
     </div>
     <div id="pollenFlowerNectarUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
-    <div id="pollenFlowerNectarUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenFlowerNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
-    <div id="pollenFlowerNectarUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="pollenFlowerNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="pollenFlowerNectarUpgradeCost" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="pollenFlowerNectarUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="pollenFlowerNectarUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="pollenFlowerNectarUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
     <div style="display:flex; gap:1.2em; margin-top:1.2em;">
       <button id="pollenFlowerNectarUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
       <button id="pollenFlowerNectarUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
@@ -1255,8 +2552,8 @@ body {
       <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
     </div>
     <div id="nectarXpUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
-    <div id="nectarXpUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarXpUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
-    <div id="nectarXpUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarXpUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarXpUpgradeCost" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarXpUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarXpUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarXpUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
     <div style="display:flex; gap:1.2em; margin-top:1.2em;">
       <button id="nectarXpUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
       <button id="nectarXpUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
@@ -1274,13 +2571,31 @@ body {
       <span style="color:#222;">This effect is <span style="color:rgb(255, 119, 0); font-weight:bold;">doubled</span> every 25 levels.</span>
     </div>
     <div id="nectarValueUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
-    <div id="nectarValueUpgradeCost" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarValueUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
-    <div id="nectarValueUpgradeCostNext25" style="font-size:1.1em; color:#f33; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarValueUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarValueUpgradeCost" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarValueUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarValueUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarValueUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
     <div style="display:flex; gap:1.2em; margin-top:1.2em;">
       <button id="nectarValueUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
       <button id="nectarValueUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
       <button id="nectarValueUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
       <button id="nectarValueUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
+    </div>
+  </div>
+</div>
+<div id="nectarInfinityUpgradeModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
+  <div style="background:#fffbe8; border-radius:24px; box-shadow:0 8px 32px #000a; padding:2.5em 2.5em 2em 2.5em; min-width:340px; max-width:95vw; margin:auto; display:flex; flex-direction:column; align-items:center;">
+    <div style="font-size:2em; font-weight:bold; color:#222; text-shadow:0 2px 8px #0008; margin-bottom:0.5em;">Nectar Infinity Points</div>
+    <div id="nectarInfinityUpgradeLevel" style="font-size:1.2em; color:#222; font-weight:bold; margin-bottom:0.7em;">Level 0 / 1000</div>
+    <div style="font-size:1.1em; color:#222; font-weight:600; text-align:center; margin-bottom:0.7em;">
+      Increase infinity point gain by <span style="color:#0f0">x1.1</span> per level.
+    </div>
+    <div id="nectarInfinityUpgradeEffect" style="font-size:1.1em; color:#222; font-weight:bold; margin-bottom:0.7em;">Effect: <span style="color:#0ff;">x1</span></div>
+    <div id="nectarInfinityUpgradeCost" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost: <span id="nectarInfinityUpgradeCostValue">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div id="nectarInfinityUpgradeCostNext25" style="font-size:1.1em; font-weight:bold; margin-bottom:0.7em;">Cost to next 25: <span id="nectarInfinityUpgradeCostNext25Value">10</span> <img src="assets/icons/nectar.png" style="width:24px;vertical-align:middle;"></div>
+    <div style="display:flex; gap:1.2em; margin-top:1.2em;">
+      <button id="nectarInfinityUpgradeCancelBtn" style="background:#222; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Cancel</button>
+      <button id="nectarInfinityUpgradeBuyOneBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy One</button>
+      <button id="nectarInfinityUpgradeBuyNext25Btn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Next 25</button>
+      <button id="nectarInfinityUpgradeBuyMaxBtn" style="background:#e6c200; color:#fff; border-radius:12px; font-size:1.1em; padding:0.6em 1.5em; border:none; font-weight:bold; box-shadow:0 2px 8px #0006; cursor:pointer;">Buy Max</button>
     </div>
   </div>
 </div>
@@ -1308,11 +2623,29 @@ body {
 </div>
 <div id="infinityFluffStoryModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
   <div id="infinityFluffStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
-    <img src="assets/icons/fluff.png" alt="Infinity Fluff" style="width:180px;height:180px;margin-bottom:2em;" />
+    <img src="assets/icons/infinity fluff.png" alt="Infinity Fluff" style="width:180px;height:180px;margin-bottom:2em;" />
     <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
-      As your fluff count reaches unimaginable heights, you witness something extraordinary. The very fabric of reality seems to bend around your fluff collection. The numbers become infinite, transcending the limits of mortal comprehension. You have achieved what was once thought impossible - infinite fluff! The universe itself acknowledges your achievement with a cosmic ∞ symbol.
+      As your fluff count reaches unimaginable heights, you witness something extraordinary. The very fabric of reality seems to bend around your fluff collection. You watch as all of your fluff merges together to create 1 infinity fluff. There it is, the ultimate fluff. But something seems off...
     </div>
     <button onclick="closeInfinityFluffStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="element25StoryModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
+  <div id="element25StoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/door explosion.png" alt="Mystic Element" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      After researching Swalement #25, Oblitarium, you realize the explosive properties of this element. Instead of applying its power directly into the fluff production, you instead decided to blow up the super thin door inside the prism lab, you now have access to the rest of the lab, but you will not get the extra boost to fluff production...
+    </div>
+    <button onclick="closeElement25StoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="infinityResetStoryModal" style="position:fixed;z-index:999999;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.75);backdrop-filter:blur(2px);justify-content:center;align-items:center;display:none;">
+  <div id="infinityResetStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <img src="assets/icons/infinity reset story modal.png" alt="Infinity Reset" style="width:180px;height:180px;margin-bottom:2em;" />
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
+      After doing the first infinity reset, you recieved a new gift from the Swa elites, an anomaly detector. There is a note attached to it, it reads "We have detected an unusual fluctation in the fabric of reality around the facility, anomalies will start appearing and you will need to find them and remove them using this device, these anomalies can appear anywhere and at any time, for each anomaly present, they will affect your production until you remove them, be careful. Good luck, The Swa Elites."
+    </div>
+    <button onclick="closeInfinityResetStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>
 </div>
 </body>

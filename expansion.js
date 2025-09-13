@@ -1,6 +1,8 @@
-// welcome to the Fluff Inc. game script
+﻿// welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
+
+// DecimalUtils is available globally from decimal_utils.js
 
 
 
@@ -50,65 +52,36 @@
 
 window.updateElementGrid = window.updateElementGrid || function () {};
 if (!state.grade) state.grade = 1;
-if (typeof state.viAutoLightQuestStarted === 'undefined') state.viAutoLightQuestStarted = false;
-if (typeof state.viAutoLightQuestProgress === 'undefined') state.viAutoLightQuestProgress = 0;
-if (typeof state.viAutoLightUnlocked === 'undefined') state.viAutoLightUnlocked = false;
-if (typeof state.viAutoRedLightQuestStarted === 'undefined') state.viAutoRedLightQuestStarted = false;
-if (typeof state.viAutoRedLightQuestProgress === 'undefined') state.viAutoRedLightQuestProgress = 0;
-if (typeof state.viAutoRedLightUnlocked === 'undefined') state.viAutoRedLightUnlocked = false;
 
 function calculatePowerGeneratorCap() {
-  let baseCap = 100;
-  if (state.grade >= 2) {
-    baseCap += (state.grade - 1) * 20;
+  let baseCap = new Decimal(100);
+  if (state.grade.gte(2)) {
+    baseCap = baseCap.add(state.grade.sub(1).mul(20));
   }
   return baseCap;
 }
 
-function activateViAutoLightQuest() {
-  if (!state) return;
-  if (state.grade >= 5) {
-    if (!state.quests) state.quests = {};
-    if (typeof state.quests.viAutoLightGenerator === 'undefined' || state.quests.viAutoLightGenerator === 'not_started') {
-      state.quests.viAutoLightGenerator = 'started';
-      state.quests.viAutoLightGeneratorProgress = 0;
-      if (typeof window.showViResponse === 'function') {
-        setTimeout(() => {
-          window.showViResponse("Peachy, your work is impressive. If you bring me 15 Prisma Shards, I can build you an automatic light collector.");
-        }, 3000);
-      }
-    }
-  }
-}
+// Make expansion functions globally accessible
+window.calculatePowerGeneratorCap = calculatePowerGeneratorCap;
 
-function activateViAutoRedLightQuest() {
-  if (!state) return;
-  if (state.grade >= 7) {
-    if (!state.quests) state.quests = {};
-    if (typeof state.quests.viAutoRedLightGenerator === 'undefined' || state.quests.viAutoRedLightGenerator === 'not_started') {
-      if (state.quests.viAutoLightGenerator === 'completed') {
-        state.quests.viAutoRedLightGenerator = 'started';
-        state.quests.viAutoRedLightGeneratorProgress = 0;
-        state.quests.viAutoRedLightGeneratorChargedProgress = 0;
-        if (typeof window.showViResponse === 'function') {
-          setTimeout(() => {
-            window.showViResponse("Impressive work with the light collector! I have another project. Bring me 1 Charged Prisma Token and 40 Prisma Shards, and I'll build you an automatic red light collector.");
-          }, 3000);
-        }
-      }
-    }
-  }
-}
+
+
+// Make expansion functions globally accessible
+window.calculatePowerGeneratorCap = calculatePowerGeneratorCap;
 
 function updateGradeUI() {
-  activateViAutoLightQuest(); 
-  activateViAutoRedLightQuest(); 
   const gradeDisplay = document.getElementById("currentGrade");
   const gradeUpBtn = document.getElementById("gradeUpBtn");
   const reqDisplay = document.getElementById("prestigeRequirement");
-  if (gradeDisplay) gradeDisplay.textContent = state.grade;
-  const nextCost = getGradeKPCost(state.grade + 1);
-  if (swariaKnowledge.kp >= nextCost) {
+  
+  // Convert Decimal grade to number for display
+  const currentGrade = DecimalUtils.isDecimal(state.grade) ? state.grade.toNumber() : (state.grade || 1);
+  if (gradeDisplay) gradeDisplay.textContent = currentGrade;
+  
+  const nextGrade = currentGrade + 1;
+  const nextCost = getGradeKPCost(nextGrade);
+  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  if (kpDecimal.gte(nextCost)) {
     gradeUpBtn.disabled = false;
     gradeUpBtn.classList.add("glow");
   } else {
@@ -116,44 +89,57 @@ function updateGradeUI() {
     gradeUpBtn.classList.remove("glow");
   }
   if (reqDisplay) {
-    reqDisplay.textContent = `Reach ${formatNumber(nextCost)} KP to unlock expansion ${state.grade + 1}.`;
+    reqDisplay.textContent = `Reach ${formatNumber(nextCost)} KP to unlock expansion ${nextGrade}.`;
+  }
+  
+  // Update boutique button visibility when grade changes
+  if (typeof window.updateBoutiqueButtonVisibility === 'function') {
+    window.updateBoutiqueButtonVisibility();
   }
 }
 
 function getGradeKPCost(grade) {
-  if (grade === 2) return 2e4; 
-  if (grade >= 3 && grade <= 6) return Math.pow(10, 10 * (grade - 2)); 
-  if (grade > 6) {
-    let base = Math.pow(10, 40); 
-    return base * Math.pow(1e20, grade - 6);
-  }
+  if (grade === 2) return new Decimal("2e4"); // 20000 KP
+  if (grade === 3) return new Decimal("1e10"); // 1e10 KP
+  if (grade === 4) return new Decimal("1e20"); // 1e20 KP
+  if (grade === 5) return new Decimal("1e30"); // 1e30 KP
+  if (grade === 6) return new Decimal("1e40"); // 1e40 KP
+  if (grade === 7) return new Decimal("1e50"); // 1e50 KP
+  if (grade === 8) return new Decimal("1e727"); // 1e727 KP
+  if (grade === 9) return new Decimal("1.8e308"); // 1.8e308 KP
+  if (grade === 10) return new Decimal("1e1000"); // 1e1000 KP (final expansion)
+  
+  // Fallback for any grades beyond 10 (shouldn't happen with final expansion at 10)
+  return new Decimal("1e1000");
 }
 
 const gradePrestigeMilestones = [
-  { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab' },
+  { grade: 1, reward: 'Unlock the cargo and the generator.' },
+  { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab and the permanently front desk' },
     { grade: 3, reward: 'Double light gain and swaria coins gain for every new expansion starting at third expansion' },
-    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light' },
+    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light, Unlock the merchant.' },
     { grade: 5, reward: 'Double red light gain and Wing artifact gain for every new expansion starting at fourth expansion, unlock the charger' },
     { grade: 6, reward: 'Unlock orange light and unlock the second floor' },
-    { grade: 7, reward: 'Double orange light gain and expand the control center' },
-    { grade: 8, reward: 'Unlock yellow light and expand the prism lab' },
-    { grade: 10, reward: 'Unlock the challenge tab' },
-    { grade: 28, reward: 'Unlock ???' },
+    { grade: 7, reward: 'Double orange light gain and expand the terrarium' },
+    { grade: 8, reward: '(wip)' },
+    { grade: 9, reward: '(wip)' },
+    { grade: 10, reward: '(wip)' },
 ];
 
 function updateMilestoneTable() {
   const milestoneBody = document.getElementById('milestoneBody');
   if (!milestoneBody) return;
   const milestones = [
-    { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab' },
+    { grade: 1, reward: 'Unlock the cargo and the generator.' },
+    { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab and permanently unlock the front desk' },
     { grade: 3, reward: 'Double light gain and swaria coins gain for every new expansion starting at third expansion, Unlock the kitchen.' },
-    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light' },
+    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light, Unlock the merchant.' },
     { grade: 5, reward: 'Double red light and Wing artifact for every new expansion starting at fifth expansion, unlock the charger' },
     { grade: 6, reward: 'Unlock orange light and unlock the second floor' },
-    { grade: 7, reward: 'Double orange light gain and expand the control center' },
-    { grade: 8, reward: 'Unlock yellow light and expand the prism lab (wip)' },
-    { grade: 10, reward: 'Unlock the challenge tab (wip)' },
-    { grade: 28, reward: 'Unlock ???' },
+    { grade: 7, reward: 'Double orange light gain and expand the terrarium' },
+    { grade: 8, reward: '(wip)' },
+    { grade: 9, reward: '(wip)' },
+    { grade: 10, reward: '(wip)' },
   ];
   milestoneBody.innerHTML = '';
   milestones.forEach(m => {
@@ -228,10 +214,11 @@ function showGradeUpAnimation(oldGrade, newGrade) {
   }, 1800);
 }
 
+// Reset terrarium content - now only used for infinity reset, not expansion reset
 function resetTerrariumContent() {
-  window.terrariumPollen = 0;
-  window.terrariumFlowers = 0;
-  window.terrariumXP = 0;
+  window.terrariumPollen = new Decimal(0);
+  window.terrariumFlowers = new Decimal(0);
+  window.terrariumXP = new Decimal(0);
   window.terrariumLevel = 1;
   window.terrariumPollenValueUpgradeLevel = 0;
   window.terrariumPollenValueUpgrade2Level = 0;
@@ -286,18 +273,29 @@ function resetTerrariumContent() {
 window.resetTerrariumContent = resetTerrariumContent;
 
 function gradeUp() {
-  const nextCost = getGradeKPCost(state.grade + 1);
-  if (swariaKnowledge.kp < nextCost) return;
-  const oldGrade = state.grade;
-  const newGrade = (state.grade || 1) + 1;
-  showGradeUpAnimation(oldGrade, newGrade);
-  swariaKnowledge.kp = 1;
-  state.grade = newGrade;
-  if (typeof window.trackGradeMilestone === 'function') {
-    window.trackGradeMilestone(newGrade);
+  const currentGrade = DecimalUtils.isDecimal(state.grade) ? state.grade.toNumber() : (state.grade || 1);
+  const nextGrade = currentGrade + 1;
+  const nextCost = getGradeKPCost(nextGrade);
+  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  if (kpDecimal.lt(nextCost)) return;
+  const oldGrade = currentGrade;
+  showGradeUpAnimation(oldGrade, nextGrade);
+  swariaKnowledge.kp = new Decimal(1);
+  state.grade = new Decimal(nextGrade);
+  
+  // Update front desk unlock status
+  if (typeof window.frontDesk !== 'undefined' && window.frontDesk.updateHighestGrade) {
+    window.frontDesk.updateHighestGrade();
   }
-  activateViAutoLightQuest(); 
-  activateViAutoRedLightQuest(); 
+  
+  // Update nectarize button visibility based on new grade
+  if (typeof window.updateNectarizeButtonVisibility === 'function') {
+    window.updateNectarizeButtonVisibility();
+  }
+  
+  if (typeof window.trackGradeMilestone === 'function') {
+    window.trackGradeMilestone(nextGrade);
+  }
   state.powerMaxEnergy = calculatePowerGeneratorCap();
   state.powerEnergy = state.powerMaxEnergy; 
   generatorUpgrades = {
@@ -314,13 +312,13 @@ function gradeUp() {
       gen.upgrades = 0; 
     });
   }
-  state.boxesProduced = 0;
+  state.boxesProduced = new Decimal(0);
   state.boxesProducedByType = {
-    common: 0,
-    uncommon: 0,
-    rare: 0,
-    legendary: 0,
-    mythic: 0
+    common: new Decimal(0),
+    uncommon: new Decimal(0),
+    rare: new Decimal(0),
+    legendary: new Decimal(0),
+    mythic: new Decimal(0)
   };
   const keep = [7, 8];
   for (let key in boughtElements) {
@@ -328,14 +326,14 @@ function gradeUp() {
       delete boughtElements[key];
     }
   }
-  state.fluff = 0;
-  state.swaria = 0;
-  state.feathers = 0;
-  state.artifacts = 0;
-  state.fluffInfinityCount = 0;
-  state.swariaInfinityCount = 0;
-  state.feathersInfinityCount = 0;
-  state.artifactsInfinityCount = 0;
+  state.fluff = new Decimal(0);
+  state.swaria = new Decimal(0);
+  state.feathers = new Decimal(0);
+  state.artifacts = new Decimal(0);
+  state.fluffInfinityCount = new Decimal(0);
+  state.swariaInfinityCount = new Decimal(0);
+  state.feathersInfinityCount = new Decimal(0);
+  state.artifactsInfinityCount = new Decimal(0);
   if (window.prismState) {
     [
       'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
@@ -358,16 +356,13 @@ function gradeUp() {
       bluelight: false
     };
   }
-  resetTerrariumContent();
+  // Terrarium content is now preserved during expansion resets
+  // resetTerrariumContent(); // Commented out to preserve terrarium progress
+  console.log('[EXPANSION RESET] Terrarium content preserved during expansion reset');
   resetChargerWhenAvailable();
-  if (state.grade >= 5) {
-    const chargerBtn = document.getElementById("chargerSubTabBtn");
-    if (chargerBtn) {
-      chargerBtn.style.display = "inline-block";
-    }
-  }
+  // Charger is now part of the generator main tab, no separate button needed
   const calculatedCap = calculatePowerGeneratorCap();
-  if (state.powerEnergy > calculatedCap) {
+  if (state.powerEnergy.gt(calculatedCap)) {
     state.powerEnergy = calculatedCap;
   }
   if (typeof window.trackExpansionReset === 'function') {
@@ -379,8 +374,17 @@ function gradeUp() {
 }
 
 function updatePrismSubTabVisibility() {
-  if (state.grade >= 2) {
-    document.getElementById("prismSubTabBtn").style.display = "inline-block";
+  const labBtn = document.getElementById("prismSubTabBtn");
+  if (!labBtn) return;
+  
+  // Hide Observatory button on floor 2 (per user request)
+  if (window.currentFloor === 2) {
+    labBtn.style.setProperty('display', 'none', 'important');
+    labBtn.textContent = 'Observatory';
+  } else if (state.grade >= 2) {
+    labBtn.style.display = "inline-block";
+  } else {
+    labBtn.style.display = "none";
   }
 }
 
@@ -389,23 +393,36 @@ window.gradeUp = gradeUp;
 function getLightGain(baseLight) {
   let grade = state.grade || 1;
   if (grade >= 3) {
-    return baseLight * Math.pow(2, grade - 2); 
+    baseLight = DecimalUtils.multiply(baseLight, new Decimal(2).pow(grade - 2)); 
   }
+  
+  // Apply flower upgrade 5 effect
+  if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
+    baseLight = baseLight.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+  }
+  
+  // Lab boost is now handled in addCurrency, not here
   return baseLight;
 }
 
 function getSwariaCoinGain(baseSwaria) {
   let grade = state.grade || 1;
   if (grade >= 3) {
-    return baseSwaria * Math.pow(2, grade - 2); 
+    baseSwaria = DecimalUtils.multiply(baseSwaria, new Decimal(2).pow(grade - 2)); 
   }
+  
+  // Apply green light boost to swaria coins
+  if (window.prismState && window.prismState.greenlight && window.prismState.greenlight.gt(0)) {
+    baseSwaria = baseSwaria.mul(window.prismState.greenlight);
+  }
+  
   return baseSwaria;
 }
 
 function getFeatherGain(baseFeather) {
   let grade = state.grade || 1;
   if (grade >= 4) {
-    return baseFeather * Math.pow(2, grade - 2); 
+    return DecimalUtils.multiply(baseFeather, new Decimal(2).pow(grade - 2)); 
   }
   return baseFeather;
 }
@@ -413,8 +430,15 @@ function getFeatherGain(baseFeather) {
 function getRedlightGain(baseRedlight) {
   let grade = state.grade || 1;
   if (grade >= 5) {
-    return baseRedlight * Math.pow(2, grade - 4); 
+    baseRedlight = DecimalUtils.multiply(baseRedlight, new Decimal(2).pow(grade - 4)); 
   }
+  
+  // Apply flower upgrade 5 effect
+  if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
+    baseRedlight = baseRedlight.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+  }
+  
+  // Lab boost is now handled in addCurrency, not here
   return baseRedlight;
 }
 
@@ -423,8 +447,15 @@ window.getRedlightGain = getRedlightGain;
 function getOrangelightGain(baseOrangelight) {
   let grade = state.grade || 1;
   if (grade >= 7) {
-    return baseOrangelight * Math.pow(2, grade - 6); 
+    baseOrangelight = DecimalUtils.multiply(baseOrangelight, new Decimal(2).pow(grade - 6)); 
   }
+  
+  // Apply flower upgrade 5 effect
+  if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
+    baseOrangelight = baseOrangelight.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+  }
+  
+  // Lab boost is now handled in addCurrency, not here
   return baseOrangelight;
 }
 
@@ -433,66 +464,14 @@ window.getOrangelightGain = getOrangelightGain;
 function getWingArtifactGainMultiplier() {
   let grade = state.grade || 1;
   if (grade >= 5) {
-    return Math.pow(2, grade - 4); 
+    return new Decimal(2).pow(grade - 4); 
   }
-  return 1;
+  return new Decimal(1);
 }
 
-function getAutoLightGainPerSecond() {
-  if (!state.quests || state.quests.viAutoLightGenerator !== 'completed') {
-    return 0;
-  }
-  let grade = state.grade || 1;
-  if (grade >= 5) {
-    let baseGain = 1;
-    let particleBoost = 0;
-    if (window.prismState) {
-      const particleTypes = ['lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'];
-      particleTypes.forEach(particleType => {
-        const count = Math.floor(window.prismState[particleType] || 0);
-        particleBoost += count * 0.1;
-      });
-    }
-    if (window.boughtElements && window.boughtElements[13]) {
-      baseGain *= 5;
-      particleBoost *= 5;
-    }
-    let totalClickGain = baseGain + particleBoost;
-    if (grade >= 3) {
-      totalClickGain = window.getLightGain(totalClickGain);
-    }
-    return totalClickGain * 0.1;
-  }
-  return 0;
-}
 
-function getAutoRedLightGainPerSecond() {
-  if (!state.quests || state.quests.viAutoRedLightGenerator !== 'completed') {
-    return 0;
-  }
-  let grade = state.grade || 1;
-  if (grade >= 7) {
-    let baseGain = 1;
-    let particleBoost = 0;
-    if (window.prismState) {
-      const particleTypes = ['lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'];
-      particleTypes.forEach(particleType => {
-        const count = Math.floor(window.prismState[particleType] || 0);
-        particleBoost += count * 0.1;
-      });
-    }
-    if (window.boughtElements && window.boughtElements[13]) {
-      baseGain *= 5;
-      particleBoost *= 5;
-    }
-    let totalClickGain = baseGain + particleBoost;
-    if (grade >= 5 && typeof window.getRedlightGain === 'function') {
-      totalClickGain = window.getRedlightGain(totalClickGain);
-    }
-    return totalClickGain * 0.1;
-  }
-  return 0;
-}
+
+
 
 function switchCafeteriaSubTab(subTabId) {
   document.querySelectorAll('.cafeteria-subtab').forEach(tab => tab.style.display = 'none');
@@ -545,15 +524,24 @@ document.addEventListener('DOMContentLoaded', function() {
   window.gradeUp = function() {
     origGradeUp.apply(this, arguments);
     updateKitchenUnlock();
-    activateViAutoLightQuest(); 
-    activateViAutoRedLightQuest(); 
+    
+    // Check front desk unlock after grade up
+    if (typeof window.frontDesk !== 'undefined' && window.frontDesk.checkUnlock) {
+      window.frontDesk.checkUnlock();
+    }
   };
   const origLoadGame = window.loadGame;
   window.loadGame = function() {
     origLoadGame.apply(this, arguments);
     updateKitchenUnlock();
-    activateViAutoLightQuest(); 
-    activateViAutoRedLightQuest(); 
+    
+    // Check front desk unlock after loading
+    if (typeof window.frontDesk !== 'undefined' && window.frontDesk.checkUnlock) {
+      window.frontDesk.checkUnlock();
+    }
+    if (typeof window.frontDesk !== 'undefined' && window.frontDesk.loadState) {
+      window.frontDesk.loadState();
+    }
   };
   document.querySelectorAll('#bottomNav .navBtn[data-target]').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -573,8 +561,6 @@ document.addEventListener('DOMContentLoaded', function() {
       kitchenNavBtn.classList.add('active');
     };
   }
-  activateViAutoLightQuest();
-  activateViAutoRedLightQuest();
   const expansionIcon = document.getElementById('graduationSwariaImage');
   if (expansionIcon) {
     expansionIcon.addEventListener('click', function() {
@@ -584,5 +570,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-window.activateViAutoRedLightQuest = activateViAutoRedLightQuest;
-window.getAutoRedLightGainPerSecond = getAutoRedLightGainPerSecond;

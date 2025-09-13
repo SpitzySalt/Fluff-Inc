@@ -1,6 +1,11 @@
+// Ensure quest functions are available globally
+window.giveSparksToSoap = giveSparksToSoap;
+window.giveBatteriesToSoap = giveBatteriesToSoap;
 // welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
+
+// DecimalUtils is available globally from decimal_utils.js
 
 
 
@@ -56,15 +61,15 @@ function loadChargerState() {
       if (parsed && parsed.chargerState) {
         const chargerData = parsed.chargerState;
         if (typeof chargerData.charge !== 'undefined') {
-          charger.charge = chargerData.charge;
+          charger.charge = DecimalUtils.isDecimal(chargerData.charge) ? chargerData.charge : new Decimal(chargerData.charge || 0);
         }
         charger.milestoneQuests = {
-          3: { required: 10, given: 0, completed: false }, 
-          4: { required: 15, given: 0, completed: false }, 
-          5: { required: 25, given: 0, completed: false }, 
-          6: { required: 50, given: 0, completed: false }, 
-          7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-          8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }  
+          3: { required: 10, given: new Decimal(0), completed: false }, 
+          4: { required: 15, given: new Decimal(0), completed: false }, 
+          5: { required: 25, given: new Decimal(0), completed: false }, 
+          6: { required: 50, given: new Decimal(0), completed: false }, 
+          7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
+          8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
         };
         if (Array.isArray(chargerData.milestones)) {
           chargerData.milestones.forEach((ms, idx) => {
@@ -76,7 +81,8 @@ function loadChargerState() {
         if (chargerData.milestoneQuests) {
           Object.entries(chargerData.milestoneQuests).forEach(([index, quest]) => {
             if (charger.milestoneQuests[index]) {
-              charger.milestoneQuests[index].given = quest.given || 0;
+              // Always load as Decimal
+              charger.milestoneQuests[index].given = DecimalUtils.isDecimal(quest.given) ? quest.given : new Decimal(quest.given || 0);
               charger.milestoneQuests[index].completed = quest.completed || false;
               if ((index === '7' || index === '8') && typeof quest.batteryGiven !== 'undefined') {
                 charger.milestoneQuests[index].batteryGiven = quest.batteryGiven;
@@ -103,12 +109,12 @@ function loadChargerState() {
           charger.charge = parsed.charge;
         }
         charger.milestoneQuests = {
-          3: { required: 10, given: 0, completed: false }, 
-          4: { required: 15, given: 0, completed: false }, 
-          5: { required: 25, given: 0, completed: false }, 
-          6: { required: 50, given: 0, completed: false }, 
-          7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-          8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }  
+          3: { required: 10, given: new Decimal(0), completed: false }, 
+          4: { required: 15, given: new Decimal(0), completed: false }, 
+          5: { required: 25, given: new Decimal(0), completed: false }, 
+          6: { required: 50, given: new Decimal(0), completed: false }, 
+          7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
+          8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
         };
         if (Array.isArray(parsed.milestones)) {
           parsed.milestones.forEach((ms, idx) => {
@@ -120,7 +126,8 @@ function loadChargerState() {
         if (parsed.milestoneQuests) {
           Object.entries(parsed.milestoneQuests).forEach(([index, quest]) => {
             if (charger.milestoneQuests[index]) {
-              charger.milestoneQuests[index].given = quest.given || 0;
+              // Always load as Decimal
+              charger.milestoneQuests[index].given = DecimalUtils.isDecimal(quest.given) ? quest.given : new Decimal(quest.given || 0);
               charger.milestoneQuests[index].completed = quest.completed || false;
             }
           });
@@ -141,24 +148,24 @@ function loadChargerState() {
 function saveChargerState() {
   if (!charger.milestoneQuests) {
     charger.milestoneQuests = {
-      3: { required: 10, given: 0, completed: false },
-      4: { required: 15, given: 0, completed: false },
-      5: { required: 25, given: 0, completed: false }, 
-      6: { required: 50, given: 0, completed: false }, 
-      7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-      8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }  
+      3: { required: 10, given: new Decimal(0), completed: false },
+      4: { required: 15, given: new Decimal(0), completed: false },
+      5: { required: 25, given: new Decimal(0), completed: false }, 
+      6: { required: 50, given: new Decimal(0), completed: false }, 
+      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
+      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
     };
   }
   const stateToSave = {
-    charge: charger.charge,
+    charge: DecimalUtils.isDecimal(charger.charge) ? charger.charge.toString() : charger.charge,
     milestones: charger.milestones.map(ms => ({ unlocked: ms.unlocked })),
     milestoneQuests: {
-      3: { required: 10, given: (charger.milestoneQuests && charger.milestoneQuests[3]) ? charger.milestoneQuests[3].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[3]) ? charger.milestoneQuests[3].completed || false : false },
-      4: { required: 15, given: (charger.milestoneQuests && charger.milestoneQuests[4]) ? charger.milestoneQuests[4].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[4]) ? charger.milestoneQuests[4].completed || false : false },
-      5: { required: 25, given: (charger.milestoneQuests && charger.milestoneQuests[5]) ? charger.milestoneQuests[5].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[5]) ? charger.milestoneQuests[5].completed || false : false },
-      6: { required: 50, given: (charger.milestoneQuests && charger.milestoneQuests[6]) ? charger.milestoneQuests[6].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[6]) ? charger.milestoneQuests[6].completed || false : false },
-      7: { required: 30, given: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].completed || false : false, batteryRequired: 1, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].batteryGiven || 0 : 0 },
-      8: { required: 75, given: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].given || 0 : 0, completed: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].completed || false : false, batteryRequired: 2, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].batteryGiven || 0 : 0 }
+  3: { required: 10, given: (charger.milestoneQuests && charger.milestoneQuests[3]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[3].given) ? charger.milestoneQuests[3].given.toString() : new Decimal(charger.milestoneQuests[3].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[3]) ? charger.milestoneQuests[3].completed || false : false },
+  4: { required: 15, given: (charger.milestoneQuests && charger.milestoneQuests[4]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[4].given) ? charger.milestoneQuests[4].given.toString() : new Decimal(charger.milestoneQuests[4].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[4]) ? charger.milestoneQuests[4].completed || false : false },
+  5: { required: 25, given: (charger.milestoneQuests && charger.milestoneQuests[5]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[5].given) ? charger.milestoneQuests[5].given.toString() : new Decimal(charger.milestoneQuests[5].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[5]) ? charger.milestoneQuests[5].completed || false : false },
+  6: { required: 50, given: (charger.milestoneQuests && charger.milestoneQuests[6]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[6].given) ? charger.milestoneQuests[6].given.toString() : new Decimal(charger.milestoneQuests[6].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[6]) ? charger.milestoneQuests[6].completed || false : false },
+  7: { required: 30, given: (charger.milestoneQuests && charger.milestoneQuests[7]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[7].given) ? charger.milestoneQuests[7].given.toString() : new Decimal(charger.milestoneQuests[7].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].completed || false : false, batteryRequired: 1, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].batteryGiven || 0 : 0 },
+  8: { required: 75, given: (charger.milestoneQuests && charger.milestoneQuests[8]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[8].given) ? charger.milestoneQuests[8].given.toString() : new Decimal(charger.milestoneQuests[8].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].completed || false : false, batteryRequired: 2, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].batteryGiven || 0 : 0 }
     },
     questStage: state?.soapChargeQuest?.stage || 0
   };
@@ -177,18 +184,18 @@ function saveChargerState() {
 
 let charger = {
   isOn: false,
-  charge: 0,
+  charge: new Decimal(0),
   questDialogueShown: false, 
   milestones: [
-    { amount: 10, unlocked: false, effect: 'Boost your charge gain based on how much charge you have.' },
-    { amount: 100, unlocked: false, effect: 'Boost the 4 main currency gain (fluff, swaria coins, feathers, artifacts) based on your charge.' },
-    { amount: 2500, unlocked: false, effect: 'Boost every light gain based on your charge.' },
-    { amount: 10000, unlocked: false, effect: 'Every OoM of charge after 10000, reduce the amount of red tiles by 1 in the generator minigame' },
-    { amount: 25000, unlocked: false, effect: 'Boost the amount of box generated based on charge amount' },
-    { amount: 1e6, unlocked: false, effect: 'Boost your charge gain based on how much charge you have but slower' },
-    { amount: 1e10, unlocked: false, effect: 'Boost pollen and flower gain based on your charge' },
-    { amount: 1e16, unlocked: false, effect: 'Boost terrarium xp gain based on your charge' },
-    { amount: 1e30, unlocked: false, effect: 'Boost nectar gain based on your charge' },
+    { amount: new Decimal(10), unlocked: false, effect: 'Boost your charge gain based on how much charge you have.' },
+    { amount: new Decimal(100), unlocked: false, effect: 'Boost the 4 main currency gain (fluff, swaria coins, feathers, artifacts) based on your charge.' },
+    { amount: new Decimal(2500), unlocked: false, effect: 'Boost every light gain based on your charge.' },
+    { amount: new Decimal(10000), unlocked: false, effect: 'Every OoM of charge after 10000, reduce the amount of red tiles by 1 in the generator minigame' },
+    { amount: new Decimal(25000), unlocked: false, effect: 'Boost the amount of box generated based on charge amount' },
+    { amount: new Decimal("1e6"), unlocked: false, effect: 'Boost your charge gain based on how much charge you have but slower' },
+    { amount: new Decimal("1e10"), unlocked: false, effect: 'Boost pollen and flower gain based on your charge' },
+    { amount: new Decimal("1e20"), unlocked: false, effect: 'Boost terrarium xp gain based on your charge' },
+    { amount: new Decimal("1e30"), unlocked: false, effect: 'Boost nectar gain based on your charge' },
   ],
   chargePerSecond: 1,
   lastTick: Date.now(),
@@ -206,6 +213,12 @@ const chargerBtn = document.getElementById('chargerToggleBtn');
 const chargerChargeEl = document.getElementById('chargerCharge');
 let chargerBoostEl = document.getElementById('chargerBoost');
 let chargerCurrencyBoostEl = document.getElementById('chargerCurrencyBoost');
+
+// Make charger UI elements globally accessible
+window.chargerBtn = chargerBtn;
+window.chargerChargeEl = chargerChargeEl;
+window.chargerBoostEl = chargerBoostEl;
+window.chargerCurrencyBoostEl = chargerCurrencyBoostEl;
 
 function ensureChargerBoostElements() {
   if (!chargerBoostEl) {
@@ -227,6 +240,11 @@ function ensureChargerBoostElements() {
 }
 
 function updateChargerUI() {
+  // Ensure charger.charge is a Decimal
+  if (!DecimalUtils.isDecimal(charger.charge)) {
+    charger.charge = new Decimal(charger.charge || 0);
+  }
+  
   checkChargerMilestones();
   ensureChargerBoostElements();
   if (typeof state !== 'undefined') {
@@ -235,21 +253,29 @@ function updateChargerUI() {
     }
     if (!charger.milestoneQuests || !state.soapChargeQuest.initialized) {
       charger.milestoneQuests = {
-        3: { required: 10, given: 0, completed: false }, 
-        4: { required: 15, given: 0, completed: false }, 
-        5: { required: 25, given: 0, completed: false }, 
-        6: { required: 50, given: 0, completed: false }, 
-        7: { required: 30, given: 0, completed: false },
-        8: { required: 75, given: 0, completed: false }, 
+        3: { required: 10, given: new Decimal(0), completed: false }, 
+        4: { required: 15, given: new Decimal(0), completed: false }, 
+        5: { required: 25, given: new Decimal(0), completed: false }, 
+        6: { required: 50, given: new Decimal(0), completed: false }, 
+        7: { required: 30, given: new Decimal(0), completed: false },
+        8: { required: 75, given: new Decimal(0), completed: false }, 
       };
       state.soapChargeQuest.initialized = true;
     }
     if (state.soapChargeQuest && state.soapChargeQuest.initialized) {
-      if (charger.milestones[6] && charger.milestones[6].unlocked && state.soapChargeQuest.stage < 4) {
-        state.soapChargeQuest.stage = 4;
-      }
-      if (charger.milestones[7] && charger.milestones[7].unlocked && state.soapChargeQuest.stage < 5) {
-        state.soapChargeQuest.stage = 5;
+      // Automatically advance quest stage for all soap charger quests if the corresponding milestone is unlocked
+      const questMilestoneStages = [
+        { milestone: 3, stage: 1 },
+        { milestone: 4, stage: 2 },
+        { milestone: 5, stage: 3 },
+        { milestone: 6, stage: 4 },
+        { milestone: 7, stage: 5 },
+        { milestone: 8, stage: 6 }
+      ];
+      for (const { milestone, stage } of questMilestoneStages) {
+        if (charger.milestones[milestone] && charger.milestones[milestone].unlocked && state.soapChargeQuest.stage < stage) {
+          state.soapChargeQuest.stage = stage;
+        }
       }
     }
   }
@@ -260,6 +286,24 @@ function updateChargerUI() {
     } else {
       chargerCard.classList.remove('on');
     }
+    
+    // Update title and styling for Mk.2
+    const titleElement = chargerCard.querySelector('h2');
+    if (titleElement) {
+      if (isChargerMk2()) {
+        titleElement.textContent = 'The Charger Mk.2';
+        titleElement.style.color = 'rgba(33, 150, 243, 0.9)';
+        chargerCard.style.setProperty('background', 'linear-gradient(135deg, #181D36 0%, #1a1f38 100%)', 'important');
+        chargerCard.style.setProperty('border', '2px solid rgba(33, 150, 243, 0.6)', 'important');
+        chargerCard.style.setProperty('box-shadow', '0 4px 20px rgba(33, 150, 243, 0.3)', 'important');
+      } else {
+        titleElement.textContent = 'The Charger';
+        titleElement.style.color = '';
+        chargerCard.style.removeProperty('background');
+        chargerCard.style.removeProperty('border');
+        chargerCard.style.removeProperty('box-shadow');
+      }
+    }
   }
   if (chargerBtn) {
     chargerBtn.textContent = charger.isOn ? 'Turn OFF' : 'Turn ON';
@@ -267,13 +311,21 @@ function updateChargerUI() {
   }
   if (chargerChargeEl) {
     const gain = getChargerGain();
+    let gainText = `+${formatNumber(gain)}/s`;
+    
+    // Show auto-generation info for Mk.2
+    if (isChargerMk2()) {
+      const autoGain = gain.mul(0.01);
+      gainText += `<br><span style="color:#2196F3;font-size:0.85em;">+${formatNumber(autoGain)}/s auto (Mk.2)</span>`;
+    }
+    
     chargerChargeEl.innerHTML = `
       <span style="font-size:1.3em;font-weight:bold;vertical-align:middle;">
         <img src='assets/icons/charge.png' style='width:2.2em;height:2.2em;vertical-align:middle;margin-right:0.2em;'>
         <span style='margin-right:0.3em;'>Charge:</span>
         ${formatNumber(charger.charge)}
       </span>
-      <span style="color:#3cf;font-size:0.95em;margin-left:0.7em;">+${formatNumber(gain)}/s</span>
+      <span style="color:#3cf;font-size:0.95em;margin-left:0.7em;">${gainText}</span>
     `;
   }
   const chargeEatenText = document.getElementById('soapChargeEatenText');
@@ -289,6 +341,28 @@ function updateChargerUI() {
   if (chargerCurrencyBoostEl) chargerCurrencyBoostEl.textContent = '';
   const milestoneTable = document.getElementById('chargerMilestoneTable');
   if (milestoneTable) {
+    // Apply Mk.2 styling to the milestone table container
+    const milestoneCard = milestoneTable.closest('.card');
+    if (milestoneCard) {
+      if (isChargerMk2()) {
+        milestoneCard.style.setProperty('background', 'linear-gradient(135deg, #181D36 0%, #1a1f38 100%)', 'important');
+        milestoneCard.style.setProperty('border', '2px solid rgba(33, 150, 243, 0.6)', 'important');
+        milestoneCard.style.setProperty('box-shadow', '0 4px 20px rgba(33, 150, 243, 0.3)', 'important');
+        const milestoneTitle = milestoneCard.querySelector('h2');
+        if (milestoneTitle) {
+          milestoneTitle.style.color = 'rgba(33, 150, 243, 0.9)';
+        }
+      } else {
+        milestoneCard.style.removeProperty('background');
+        milestoneCard.style.removeProperty('border');
+        milestoneCard.style.removeProperty('box-shadow');
+        const milestoneTitle = milestoneCard.querySelector('h2');
+        if (milestoneTitle) {
+          milestoneTitle.style.color = '';
+        }
+      }
+    }
+    
     let html = '<table style="width:100%;border-collapse:collapse;">';
     html += '<tr><th style="text-align:left;padding:4px 8px;">Milestone</th><th style="text-align:left;padding:4px 8px;">Effect</th><th style="text-align:left;padding:4px 8px;">Status</th></tr>';
     let visibleMilestones = 4; 
@@ -304,66 +378,111 @@ function updateChargerUI() {
       if (idx >= visibleMilestones && !ms.unlocked) return;
       let status = '';
       if (!ms.unlocked) {
-        status = `<span style=\"color:#888;\">Need ${ms.amount} charge</span>`;
+        status = `<span style=\"color:#888;\">Need ${formatNumber(ms.amount)} charge</span>`;
       } else {
         if (idx === 0) {
-          const boost = 1 + Math.pow(Math.max(0, charger.charge - 10), 0.5);
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const boost = new Decimal(1).add(DecimalUtils.pow(Decimal.max(0, charger.charge.sub(10)), 0.5));
+          const boostText = formatNumber(boost);
           status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} charge</span>`;
         } else if (idx === 1) {
-          let boost = 1;
-          if (charger.charge >= 100) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 100), 0.25);
+          let boost = new Decimal(1);
+          let isSoftcapped = false;
+          if (charger.charge.gte(100)) {
+            let effectiveCharge = charger.charge.sub(100);
+            let softcapThreshold = new Decimal("1e30").sub(100); // 1e30 - 100
+            
+            if (effectiveCharge.lte(softcapThreshold)) {
+              // Below softcap: normal formula
+              boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.5));
+            } else {
+              // Above softcap: calculate pre-softcap value + softcapped portion
+              let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.5));
+              let excessCharge = effectiveCharge.sub(softcapThreshold);
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.25); // Reduced from 0.5 to 0.25
+              boost = preSoftcapBoost.add(softcappedPortion);
+              isSoftcapped = true;
+            }
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} all main currencies</span>`;
+          const boostText = formatNumber(boost);
+          const softcapText = isSoftcapped ? '<br><span style="color:#ff4444;font-size:0.8em;">(softcapped)</span>' : '';
+          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} all main currencies</span>${softcapText}`;
         } else if (idx === 2) {
-          let boost = 1;
-          if (charger.charge >= 2500) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 2500), 0.3);
+          let boost = new Decimal(1);
+          let isSoftcapped = false;
+          if (charger.charge.gte(2500)) {
+            let effectiveCharge = charger.charge.sub(2500);
+            let softcapThreshold = new Decimal("1e30").sub(2500); // 1e30 - 2500
+            
+            if (effectiveCharge.lte(softcapThreshold)) {
+              // Below softcap: normal formula
+              boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.3));
+            } else {
+              // Above softcap: calculate pre-softcap value + softcapped portion
+              let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.3));
+              let excessCharge = effectiveCharge.sub(softcapThreshold);
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.15); // Reduced from 0.3 to 0.15
+              boost = preSoftcapBoost.add(softcappedPortion);
+              isSoftcapped = true;
+            }
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} all lights</span>`;
+          const boostText = formatNumber(boost);
+          const softcapText = isSoftcapped ? '<br><span style="color:#ff4444;font-size:0.8em;">(softcapped)</span>' : '';
+          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} all lights</span>${softcapText}`;
         } else if (idx === 3) {
           let reduction = 0;
-          if (ms.unlocked && typeof charger.charge !== 'undefined' && charger.charge >= 10000) {
-            reduction = 1 + Math.floor(Math.log10(charger.charge) - Math.log10(10000));
+          if (ms.unlocked && typeof charger.charge !== 'undefined' && charger.charge.gte(10000)) {
+            reduction = 1 + Math.floor(charger.charge.log10().toNumber() - new Decimal(10000).log10().toNumber());
           }
           status = `<span style=\"color:#ffe066;font-weight:bold;\">-${reduction} red tile${reduction === 1 ? '' : 's'}</span>`;
         } else if (idx === 4) {
-          let boost = 1;
-          if (charger.charge >= 25000) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 25000), 0.2);
+          let boost = new Decimal(1);
+          let isSoftcapped = false;
+          if (charger.charge.gte(25000)) {
+            let effectiveCharge = charger.charge.sub(25000);
+            let softcapThreshold = new Decimal("1e30").sub(25000); // 1e30 - 25000
+            
+            if (effectiveCharge.lte(softcapThreshold)) {
+              // Below softcap: normal formula
+              boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.2));
+            } else {
+              // Above softcap: calculate pre-softcap value + softcapped portion
+              let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.2));
+              let excessCharge = effectiveCharge.sub(softcapThreshold);
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.1); // Reduced from 0.2 to 0.1
+              boost = preSoftcapBoost.add(softcappedPortion);
+              isSoftcapped = true;
+            }
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} box generation</span>`;
+          const boostText = formatNumber(boost);
+          const softcapText = isSoftcapped ? '<br><span style="color:#ff4444;font-size:0.8em;">(softcapped)</span>' : '';
+          status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} box generation</span>${softcapText}`;
         } else if (idx === 5) {
-          let boost = 1;
-          if (charger.charge >= 1e6) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 1e6), 0.3);
+          let boost = new Decimal(1);
+          if (charger.charge.gte("1e6")) {
+            boost = new Decimal(1).add(DecimalUtils.pow(Decimal.max(0, charger.charge.sub("1e6")), 0.3));
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const boostText = formatNumber(boost);
           status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} charge (slow)</span>`;
         } else if (idx === 6) {
           let boost = 1;
-          if (charger.charge >= 1e10) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 1e10), 0.05);
+          if (charger.charge.gte(new Decimal("1e10"))) {
+            boost = 1 + charger.charge.sub(new Decimal("1e10")).max(0).pow(0.05).toNumber();
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const boostText = formatNumber(new Decimal(boost));
           status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} pollen & flowers</span>`;
         } else if (idx === 7) {
           let boost = 1;
-          if (charger.charge >= 1e16) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 1e16), 0.05);
+          if (charger.charge.gte(new Decimal("1e20"))) {
+            boost = 1 + charger.charge.sub(new Decimal("1e20")).max(0).pow(0.05).toNumber();
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const boostText = formatNumber(new Decimal(boost));
           status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} terrarium XP</span>`;
         } else if (idx === 8) {
           let boost = 1;
-          if (charger.charge >= 1e30) {
-            boost = 1 + Math.pow(Math.max(0, charger.charge - 1e30), 0.05);
+          if (charger.charge.gte(new Decimal("1e30"))) {
+            boost = 1 + charger.charge.sub(new Decimal("1e30")).max(0).pow(0.05).toNumber();
           }
-          const boostText = boost >= 1e6 ? boost.toExponential(2) : boost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          const boostText = formatNumber(new Decimal(boost));
           status = `<span style=\"color:#ffe066;font-weight:bold;\">×${boostText} nectar</span>`;
         } else {
           status = '<span style="color:#2ecc40;font-weight:bold;">Unlocked</span>';
@@ -378,33 +497,38 @@ function updateChargerUI() {
               if (idx === 7) {
                 const batteryTokens = (typeof state !== 'undefined' && state.batteryTokens) ? state.batteryTokens : 0;
                 const sparks = (typeof state !== 'undefined' && state.sparks) ? state.sparks : 0;
-                const batteryProgress = "0/1"; 
+                const batteryProgress = "0/1";
                 const sparkProgress = `${Math.min(sparks, 30)}/30`;
-                milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
+                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
               } else {
                 milestoneStatus = `<span style="color:#888;">Quest not initialized</span>`;
               }
-            } else if (idx === 3 && state && state.soapChargeQuest && state.soapChargeQuest.stage === 0) {
-              milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge<br>${quest.given || 0}/${quest.required || 0} sparks</span>`;
-            } else if (idx === 7) {
-              const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 1}`;
-              const sparkProgress = `${quest.given || 0}/${quest.required || 0}`;
-              milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
-            } else if (idx === 8) {
-              const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 2}`;
-              const sparkProgress = `${quest.given || 0}/${quest.required || 0}`;
-              milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge<br>${batteryProgress} batteries and ${sparkProgress} sparks</span>`;
             } else {
-              milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge<br>${quest.given || 0}/${quest.required || 0} sparks</span>`;
+              // Always display quest.given and quest.required as numbers (handle Decimal)
+              const given = (quest.given && typeof quest.given.toNumber === 'function') ? quest.given.toNumber() : (Number(quest.given) || 0);
+              const required = (quest.required && typeof quest.required.toNumber === 'function') ? quest.required.toNumber() : (Number(quest.required) || 0);
+              if (idx === 3 && state && state.soapChargeQuest && state.soapChargeQuest.stage === 0) {
+                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${given}/${required} sparks</span>`;
+              } else if (idx === 7) {
+                const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 1}`;
+                const sparkProgress = `${given}/${required}`;
+                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
+              } else if (idx === 8) {
+                const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 2}`;
+                const sparkProgress = `${given}/${required}`;
+                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} batteries and ${sparkProgress} sparks</span>`;
+              } else {
+                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${given}/${required} sparks</span>`;
+              }
             }
           } else {
-            milestoneStatus = `<span style="color:#888;">Need ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge</span>`;
+            milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge</span>`;
           }
         } else {
           milestoneStatus = status;
         }
       html += `<tr style="background:${!ms.unlocked ? '#f8f8f8' : '#eaffea'};">
-        <td style="padding:4px 8px;">Reach ${ms.amount >= 1e6 ? ms.amount.toExponential(0) : formatNumber(ms.amount)} charge</td>
+        <td style="padding:4px 8px;">Reach ${formatNumber(ms.amount)} charge</td>
         <td style="padding:4px 8px;">${effectText}</td>
         <td style="padding:4px 8px;">${milestoneStatus}</td>
       </tr>`;
@@ -434,6 +558,16 @@ function turnChargerOn() {
 function turnChargerOff() {
   charger.isOn = false;
   updateChargerUI();
+}
+
+// Helper function to check if Charger Mk.2 is active (Soap friendship level 15+)
+function isChargerMk2() {
+  if (window.friendship && window.friendship.Generator) {
+    return window.friendship.Generator.level >= 15;
+  } else if (typeof friendship !== 'undefined' && friendship.Generator) {
+    return friendship.Generator.level >= 15;
+  }
+  return false;
 }
 
 function chargerTick(diff) {
@@ -511,11 +645,12 @@ function chargerTick(diff) {
       }
     }
   }
+  // Regular charge generation when charger is on
   if (charger.isOn) {
     if (typeof state !== 'undefined' && typeof state.powerEnergy !== 'undefined') {
-      state.powerEnergy -= 10 * diff;
-      if (state.powerEnergy < 0) state.powerEnergy = 0;
-      if (state.powerEnergy === 0) {
+      state.powerEnergy = state.powerEnergy.sub(new Decimal(10).mul(diff));
+      if (state.powerEnergy.lt(0)) state.powerEnergy = new Decimal(0);
+      if (state.powerEnergy.eq(0)) {
         charger.isOn = false;
         if (typeof updatePowerGeneratorUI === 'function') updatePowerGeneratorUI();
         return;
@@ -523,7 +658,40 @@ function chargerTick(diff) {
       if (typeof updatePowerGeneratorUI === 'function') updatePowerGeneratorUI();
     }
     let gain = getChargerGain();
-    charger.charge += gain * diff;
+    
+    // Show yellow light boost popup (throttled)
+    if (window.prismState && window.prismState.yellowlight && window.prismState.yellowlight.gte("1e30") && 
+        typeof window.showPrismGainPopup === 'function') {
+      
+      // Throttle popup to show only every 3 seconds
+      if (!charger.lastYellowLightPopupTime) charger.lastYellowLightPopupTime = 0;
+      const now = Date.now();
+      if (now - charger.lastYellowLightPopupTime > 3000) {
+        // Formula: 2^(log10(yellowlight) - 30) where each order of magnitude doubles the boost
+        const logYellow = window.prismState.yellowlight.log10();
+        const exponent = logYellow - 30; // Orders of magnitude above 1e30
+        const yellowBoostMultiplier = new Decimal(2).pow(exponent);
+        const totalGainPerSecond = gain;
+        const baseGainPerSecond = totalGainPerSecond.div(yellowBoostMultiplier);
+        const yellowLightContribution = totalGainPerSecond.sub(baseGainPerSecond);
+        
+        if (yellowLightContribution.gt(0.1)) {
+          window.showPrismGainPopup('chargerCharge', yellowLightContribution, 'charge/s from yellow light');
+          charger.lastYellowLightPopupTime = now;
+        }
+      }
+    }
+    
+    charger.charge = charger.charge.add(gain.mul(diff));
+    if (typeof window.trackChargeMilestone === 'function') {
+      window.trackChargeMilestone(charger.charge);
+    }
+  }
+  
+  // Charger Mk.2 automatic charge generation (1% of charge gain even when off)
+  if (isChargerMk2()) {
+    let autoGain = getChargerGain().mul(0.01); // 1% of normal charge gain
+    charger.charge = charger.charge.add(autoGain.mul(diff));
     if (typeof window.trackChargeMilestone === 'function') {
       window.trackChargeMilestone(charger.charge);
     }
@@ -531,45 +699,95 @@ function chargerTick(diff) {
 }
 
 function getChargerGain() {
-  let gain = charger.chargePerSecond;
+  let gain = new Decimal(charger.chargePerSecond);
   if (window.terrariumExtraChargeUpgradeLevel > 0) {
-    gain *= window.getExtraChargeUpgradeEffect(window.terrariumExtraChargeUpgradeLevel);
+    gain = gain.mul(window.getExtraChargeUpgradeEffect(window.terrariumExtraChargeUpgradeLevel));
   }
-  if (boughtElements && boughtElements[17]) gain *= 2;
-  if (boughtElements && boughtElements[18]) gain *= 2;
-  if (boughtElements && boughtElements[19]) gain *= 2;
+  if (boughtElements && boughtElements[17]) gain = gain.mul(2);
+  if (boughtElements && boughtElements[18]) gain = gain.mul(2);
+  if (boughtElements && boughtElements[19]) gain = gain.mul(2);
   if (charger.milestones[0].unlocked) {
-    gain *= 1 + Math.pow(Math.max(0, charger.charge - 10), 0.5);
+    gain = gain.mul(new Decimal(1).add(DecimalUtils.pow(Decimal.max(0, charger.charge.sub(10)), 0.5)));
   }
   if (window._chargerChargeBoost && window._chargerChargeBoost > 1) {
-    gain *= window._chargerChargeBoost;
+    gain = gain.mul(window._chargerChargeBoost);
   }
+  
+  // Apply yellow light boost to charge gain
+  if (window.prismState && window.prismState.yellowlight && window.prismState.yellowlight.gte("1e30")) {
+    // Formula: 2^(log10(yellowlight) - 30) where each order of magnitude doubles the boost
+    const logYellow = window.prismState.yellowlight.log10();
+    const exponent = logYellow - 30; // Orders of magnitude above 1e30
+    const yellowBoost = new Decimal(2).pow(exponent);
+    gain = gain.mul(yellowBoost);
+  }
+  
+  // Apply nectarize milestone charge exponent boost
+  if (typeof window.getNectarizeMilestoneBonus === 'function') {
+    const milestoneBonus = window.getNectarizeMilestoneBonus();
+    if (milestoneBonus.chargeExponent && milestoneBonus.chargeExponent.gt(0)) {
+      gain = gain.pow(new Decimal(1).add(milestoneBonus.chargeExponent));
+    }
+  }
+  
   return gain;
 }
 
 function checkChargerMilestones() {
+  // Ensure charger.charge is a Decimal
+  if (!DecimalUtils.isDecimal(charger.charge)) {
+    charger.charge = new Decimal(charger.charge || 0);
+  }
+  
   if (!charger.milestoneQuests) {
     charger.milestoneQuests = {
-      3: { required: 10, given: 0, completed: false }, 
-      4: { required: 15, given: 0, completed: false }, 
-      5: { required: 25, given: 0, completed: false }, 
-      6: { required: 50, given: 0, completed: false }, 
-      7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-      8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }  
+      3: { required: 10, given: new Decimal(0), completed: false }, 
+      4: { required: 15, given: new Decimal(0), completed: false }, 
+      5: { required: 25, given: new Decimal(0), completed: false }, 
+      6: { required: 50, given: new Decimal(0), completed: false }, 
+      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
+      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
     };
+  }
+  
+  // Auto-unlock milestones if a later milestone quest is completed
+  // This fixes cases where milestones get stuck due to quest order issues
+  if (typeof state !== 'undefined' && state.soapChargeQuest && state.soapChargeQuest.initialized) {
+    for (let idx = 3; idx < charger.milestones.length; idx++) {
+      if (!charger.milestones[idx].unlocked && charger.charge.gte(charger.milestones[idx].amount)) {
+        // Check if any later milestone quest is completed
+        for (let laterIdx = idx + 1; laterIdx < Math.min(charger.milestones.length, 9); laterIdx++) {
+          const laterQuest = charger.milestoneQuests[laterIdx];
+          if (laterQuest && laterQuest.completed) {
+            // A later milestone is complete, so auto-unlock this one
+            charger.milestones[idx].unlocked = true;
+            const currentQuest = charger.milestoneQuests[idx];
+            if (currentQuest) {
+              currentQuest.completed = true;
+            }
+            console.log(`Auto-unlocked milestone ${idx} because milestone ${laterIdx} is already complete`);
+            break; // Only need to find one later completed milestone
+          }
+        }
+      }
+    }
   }
   if (typeof state !== 'undefined' && state.soapChargeQuest && state.soapChargeQuest.initialized) {
     charger.milestones.forEach((ms, idx) => {
       if (!ms.unlocked) {
         if (idx < 3) {
-          if (charger.charge >= ms.amount) {
+          if (charger.charge.gte(ms.amount)) {
             ms.unlocked = true;
           }
         } else {
           const quest = charger.milestoneQuests[idx];
+          // Ensure quest.given is a Decimal
+          if (quest && !DecimalUtils.isDecimal(quest.given)) {
+            quest.given = new Decimal(quest.given || 0);
+          }
           const batteryRequirementMet = (idx === 7 || idx === 8) ? 
             (quest.batteryGiven >= quest.batteryRequired) : true;
-          if (quest && !quest.completed && quest.given >= quest.required && batteryRequirementMet && charger.charge >= ms.amount) {
+          if (quest && !quest.completed && DecimalUtils.gte(quest.given, quest.required) && batteryRequirementMet && charger.charge.gte(ms.amount)) {
             ms.unlocked = true;
             quest.completed = true;
             if (typeof state !== 'undefined' && state.soapChargeQuest) {
@@ -601,60 +819,102 @@ function checkChargerMilestones() {
 }
 
 function applyChargerMilestoneEffects() {
+  // Ensure charger.charge is a Decimal
+  if (!DecimalUtils.isDecimal(charger.charge)) {
+    charger.charge = new Decimal(charger.charge || 0);
+  }
+  
   const milestoneElementMap = [null, null, null, 17, 18, 19];
   if (charger.milestones[1].unlocked) {
-    let boost = 1;
-    if (charger.charge >= 100) {
-      boost = 1 + Math.pow(Math.max(0, charger.charge - 100), 0.5);
+    let boost = new Decimal(1);
+    if (charger.charge.gte(100)) {
+      let effectiveCharge = charger.charge.sub(100);
+      let softcapThreshold = new Decimal("1e30").sub(100); // 1e30 - 100
+      
+      if (effectiveCharge.lte(softcapThreshold)) {
+        // Below softcap: normal formula
+        boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.5));
+      } else {
+        // Above softcap: calculate pre-softcap value + softcapped portion
+        let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.5));
+        let excessCharge = effectiveCharge.sub(softcapThreshold);
+        let softcappedPortion = DecimalUtils.pow(excessCharge, 0.25); // Reduced from 0.5 to 0.25
+        boost = preSoftcapBoost.add(softcappedPortion);
+      }
     }
     window._chargerCurrencyBoost = boost;
   } else {
-    window._chargerCurrencyBoost = 1;
+    window._chargerCurrencyBoost = new Decimal(1);
   }
   if (charger.milestones[2] && charger.milestones[2].unlocked) {
-    let lightBoost = 1;
-    if (charger.charge >= 2500) {
-      lightBoost = 1 + Math.pow(Math.max(0, charger.charge - 2500), 0.3);
+    let lightBoost = new Decimal(1);
+    if (charger.charge.gte(2500)) {
+      let effectiveCharge = charger.charge.sub(2500);
+      let softcapThreshold = new Decimal("1e30").sub(2500); // 1e30 - 2500
+      
+      if (effectiveCharge.lte(softcapThreshold)) {
+        // Below softcap: normal formula
+        lightBoost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.3));
+      } else {
+        // Above softcap: calculate pre-softcap value + softcapped portion
+        let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.3));
+        let excessCharge = effectiveCharge.sub(softcapThreshold);
+        let softcappedPortion = DecimalUtils.pow(excessCharge, 0.15); // Reduced from 0.3 to 0.15
+        lightBoost = preSoftcapBoost.add(softcappedPortion);
+      }
     }
     window._chargerLightBoost = lightBoost;
   } else {
-    window._chargerLightBoost = 1;
+    window._chargerLightBoost = new Decimal(1);
   }
   if (charger.milestones[3] && charger.milestones[3].unlocked) {
     let redTileReduction = 0;
-    if (charger.charge >= 10000) {
-      redTileReduction = 1 + Math.floor(Math.log10(charger.charge) - Math.log10(10000));
+    if (charger.charge.gte(10000)) {
+      redTileReduction = 1 + Math.floor(charger.charge.log10().toNumber() - new Decimal(10000).log10().toNumber());
     }
     window._chargerRedTileReduction = redTileReduction;
   } else {
     window._chargerRedTileReduction = 0;
   }
-  if (charger.milestones[4] && charger.milestones[4].unlocked && charger.charge >= 25000) {
-    let boxBoost = 1 + Math.pow(Math.max(0, charger.charge - 25000), 0.2); 
+  if (charger.milestones[4] && charger.milestones[4].unlocked && charger.charge.gte(25000)) {
+    let effectiveCharge = charger.charge.sub(25000);
+    let softcapThreshold = new Decimal("1e30").sub(25000); // 1e30 - 25000
+    let boxBoost;
+    
+    if (effectiveCharge.lte(softcapThreshold)) {
+      // Below softcap: normal formula
+      boxBoost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.2));
+    } else {
+      // Above softcap: calculate pre-softcap value + softcapped portion
+      let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.2));
+      let excessCharge = effectiveCharge.sub(softcapThreshold);
+      let softcappedPortion = DecimalUtils.pow(excessCharge, 0.1); // Reduced from 0.2 to 0.1
+      boxBoost = preSoftcapBoost.add(softcappedPortion);
+    }
     window._chargerBoxBoost = boxBoost;
   } else {
-    window._chargerBoxBoost = 1;
+    window._chargerBoxBoost = new Decimal(1);
   }
-  if (charger.milestones[5] && charger.milestones[5].unlocked && charger.charge >= 1e6) {
-    let chargeBoost = 1 + Math.pow(Math.max(0, charger.charge - 1e6), 0.1); 
+  if (charger.milestones[5] && charger.milestones[5].unlocked && charger.charge.gte("1e6")) {
+    let chargeBoost = new Decimal(1).add(DecimalUtils.pow(Decimal.max(0, charger.charge.sub("1e6")), 0.1)); 
     window._chargerChargeBoost = chargeBoost;
   } else {
     window._chargerChargeBoost = 1;
   }
-  if (charger.milestones[6] && charger.milestones[6].unlocked && charger.charge >= 1e10) {
-    let terrariumBoost = 1 + Math.pow(Math.max(0, charger.charge - 1e10), 0.05);
+  if (charger.milestones[6] && charger.milestones[6].unlocked && charger.charge.gte(new Decimal("1e10"))) {
+    let terrariumBoost = 1 + charger.charge.sub(new Decimal("1e10")).max(0).pow(0.05).toNumber();
     window._chargerTerrariumBoost = terrariumBoost;
   } else {
     window._chargerTerrariumBoost = 1;
   }
-  if (charger.milestones[7] && charger.milestones[7].unlocked && charger.charge >= 1e16) {
-    let terrariumXpBoost = 1 + Math.pow(Math.max(0, charger.charge - 1e16), 0.05);
+  if (charger.milestones[7] && charger.milestones[7].unlocked && charger.charge.gte(new Decimal("1e20"))) {
+    let terrariumXpBoost = 1 + charger.charge.sub(new Decimal("1e20")).max(0).pow(0.05).toNumber();
     window._chargerTerrariumXpBoost = terrariumXpBoost;
   } else {
     window._chargerTerrariumXpBoost = 1;
   }
-  if (charger.milestones[8] && charger.milestones[8].unlocked && charger.charge >= 1e30) {
-    let nectarBoost = 1 + Math.pow(Math.max(0, charger.charge - 1e30), 0.05);
+  if (charger.milestones[8] && charger.milestones[8].unlocked && charger.charge.gte(new Decimal("1e30"))) {
+    let nectarBoost = 1 + charger.charge.sub(new Decimal("1e30")).max(0).pow(0.05).toNumber();
     window._chargerNectarBoost = nectarBoost;
   } else {
     window._chargerNectarBoost = 1;
@@ -680,7 +940,7 @@ if (!window._chargerGainPatched) {
     const origGetFluffRate = window.getFluffRate;
     window.getFluffRate = function() {
       let base = origGetFluffRate();
-      if (window._chargerCurrencyBoost) base *= window._chargerCurrencyBoost;
+      if (window._chargerCurrencyBoost) base = DecimalUtils.multiply(base, window._chargerCurrencyBoost);
       return base;
     };
   }
@@ -688,7 +948,7 @@ if (!window._chargerGainPatched) {
     const origGetSwariaCoinGain = window.getSwariaCoinGain;
     window.getSwariaCoinGain = function(val) {
       let base = origGetSwariaCoinGain(val);
-      if (window._chargerCurrencyBoost) base *= window._chargerCurrencyBoost;
+      if (window._chargerCurrencyBoost) base = DecimalUtils.multiply(base, window._chargerCurrencyBoost);
       return base;
     };
   }
@@ -696,25 +956,25 @@ if (!window._chargerGainPatched) {
 }
 
 function logChargeGainRate() {
-  let multiplier = 1;
+  let multiplier = new Decimal(1);
   if (window.terrariumExtraChargeUpgradeLevel > 0) {
     const extraChargeBonus = window.getExtraChargeUpgradeEffect(window.terrariumExtraChargeUpgradeLevel);
-    multiplier *= extraChargeBonus;
+    multiplier = multiplier.mul(extraChargeBonus);
   }
   if (boughtElements) {
     if (boughtElements[17]) {
-      multiplier *= 2;
+      multiplier = multiplier.mul(2);
     }
     if (boughtElements[18]) {
-      multiplier *= 2;
+      multiplier = multiplier.mul(2);
     }
     if (boughtElements[19]) {
-      multiplier *= 2;
+      multiplier = multiplier.mul(2);
     }
   }
   if (charger.milestones[0].unlocked) {
-    const milestone1Boost = 1 + Math.pow(Math.max(0, charger.charge - 10), 0.5);
-    multiplier *= milestone1Boost;
+    const milestone1Boost = new Decimal(1).add(DecimalUtils.pow(Decimal.max(0, charger.charge.sub(10)), 0.5));
+    multiplier = multiplier.mul(milestone1Boost);
   }
   if (window._chargerChargeBoost > 1) {
     multiplier *= window._chargerChargeBoost;
@@ -771,19 +1031,11 @@ if (!window._chargerLightGainPatched) {
       const origFn = window[fnName];
       window[fnName] = function(...args) {
         let base = origFn.apply(this, args);
-        if (window._chargerLightBoost && window._chargerLightBoost > 1) base *= window._chargerLightBoost;
-        return base;
+  if (window._chargerLightBoost && window._chargerLightBoost > 1) base = new Decimal(base).mul(window._chargerLightBoost);
+  return base;
       };
     }
   });
-  if (typeof window.getAutoLightGainPerSecond === "function") {
-    const origAutoLight = window.getAutoLightGainPerSecond;
-    window.getAutoLightGainPerSecond = function(...args) {
-      let base = origAutoLight.apply(this, args);
-      if (window._chargerLightBoost && window._chargerLightBoost > 1) base *= window._chargerLightBoost;
-      return base;
-    };
-  }
   window._chargerLightGainPatched = true;
 }
 if (!window._chargerTerrariumPatched) {
@@ -819,7 +1071,9 @@ if (!window._chargerTerrariumPatched) {
 if (!window._chargerTerrariumXpPatched) {
   window.applyChargerTerrariumXpBoost = function(baseXpGain) {
     if (window._chargerTerrariumXpBoost && window._chargerTerrariumXpBoost > 1) {
-      const xpBoost = Math.floor(baseXpGain * (window._chargerTerrariumXpBoost - 1));
+      // Calculate the total boosted XP and subtract the original to get the bonus
+      const boostedTotal = Math.floor(baseXpGain * window._chargerTerrariumXpBoost);
+      const xpBoost = boostedTotal - baseXpGain;
       if (xpBoost > 0) {
         return xpBoost;
       }
@@ -873,16 +1127,18 @@ function giveSparksToSoap(amount) {
   }
   amount = Math.max(0, parseInt(amount) || 0);
   if (amount === 0) return;
+  
   if (!charger.milestoneQuests) {
     charger.milestoneQuests = {
-      3: { required: 10, given: 0, completed: false },
-      4: { required: 15, given: 0, completed: false },
-      5: { required: 25, given: 0, completed: false },
-      6: { required: 50, given: 0, completed: false },
-      7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 },
-      8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }
+      3: { required: 10, given: new Decimal(0), completed: false },
+      4: { required: 15, given: new Decimal(0), completed: false },
+      5: { required: 25, given: new Decimal(0), completed: false },
+      6: { required: 50, given: new Decimal(0), completed: false },
+      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 },
+      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }
     };
   }
+  
   let currentMilestoneIndex;
   let questStage = state.soapChargeQuest.stage;
   if (questStage === 0 && !charger.milestones[3].unlocked) {
@@ -898,20 +1154,32 @@ function giveSparksToSoap(amount) {
   } else if (questStage === 5 && !charger.milestones[8].unlocked) {
     currentMilestoneIndex = 8; 
   }
+  
   if (currentMilestoneIndex !== undefined) {
-      const quest = charger.milestoneQuests[currentMilestoneIndex];
+    const quest = charger.milestoneQuests[currentMilestoneIndex];
     if (!quest) return;
     if (quest.completed) {
       showSoapQuestMessage("This effect is already unlocked!");
       return;
     }
-    quest.given += amount;
+    // DEBUG LOGGING
+    console.log('[giveSparksToSoap] stage:', state.soapChargeQuest.stage, 'milestone:', currentMilestoneIndex, 'before given:', quest.given ? quest.given.toString() : quest.given);
+    // Ensure quest.given is a Decimal and add the amount
+    if (!DecimalUtils.isDecimal(quest.given)) {
+      quest.given = new Decimal(quest.given || 0);
+    }
+    quest.given = quest.given.plus(amount);
+    console.log('[giveSparksToSoap] after given:', quest.given.toString());
     saveChargerState();
-    if (quest.given >= quest.required) {
+    // Check if quest requirement is met (convert to numbers for simple comparison)
+    const givenAmount = quest.given.toNumber();
+    if (givenAmount >= quest.required) {
       const neededCharge = charger.milestones[currentMilestoneIndex].amount;
-      if (charger.charge >= neededCharge) {
+      const currentCharge = DecimalUtils.isDecimal(charger.charge) ? charger.charge.toNumber() : charger.charge;
+      if (currentCharge >= neededCharge) {
         quest.completed = true;
         charger.milestones[currentMilestoneIndex].unlocked = true;
+        // Update quest stage and show completion message
         if (currentMilestoneIndex === 3) {
           state.soapChargeQuest.stage = 1;
           showSoapQuestCompletionMessage("Perfect! Now the fourth effect is working. Each OoM of charge over 10,000 will reduce red tiles by 1 in the generator minigame! Let's get 15 more sparks for the next effect!");
@@ -931,18 +1199,19 @@ function giveSparksToSoap(amount) {
           state.soapChargeQuest.stage = 6;
           showSoapQuestCompletionMessage("TRANSCENDENT! You've unlocked the ultimate charge effect - your charge will now boost your nectar gain! All charge effects are now truly complete!");
         }
-        saveChargerState(); 
+        saveChargerState();
+        if (typeof updateChargerUI === 'function') updateChargerUI();
       } else {
         const neededCharge = charger.milestones[currentMilestoneIndex].amount;
         showSoapQuestMessage(`You have enough sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
       }
     } else {
-      const remaining = quest.required - quest.given;
-      showSoapQuestMessage(`Thanks! Just ${remaining} more sparks needed for this effect!`);
+      const remaining = quest.required - givenAmount;
+      showSoapQuestMessage(`Thanks! I still need ${remaining} more sparks to get this effect working.`);
     }
     updateChargerUI();
-    }
   }
+}
 
 function resetChargerTabState() {
   charger.questDialogueShown = false; 
@@ -972,6 +1241,74 @@ function showSoapQuestCompletionMessage(message) {
   showSoapQuestMessage(message, 12000); 
 }
 
+function giveBatteriesToSoap(amount) {
+  if (typeof state === 'undefined' || !state.soapChargeQuest || !state.soapChargeQuest.initialized) {
+    return;
+  }
+  amount = Math.max(0, parseInt(amount) || 0);
+  if (amount === 0) return;
+  
+  if (!charger.milestoneQuests) {
+    charger.milestoneQuests = {
+      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 },
+      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }
+    };
+  }
+  
+  let currentMilestoneIndex;
+  let questStage = state.soapChargeQuest.stage;
+  if (questStage === 4 && !charger.milestones[7].unlocked) {
+    currentMilestoneIndex = 7;
+  } else if (questStage === 5 && !charger.milestones[8].unlocked) {
+    currentMilestoneIndex = 8;
+  }
+  
+  if (currentMilestoneIndex !== undefined) {
+    const quest = charger.milestoneQuests[currentMilestoneIndex];
+    if (!quest) return;
+    if (quest.completed) {
+      showSoapQuestMessage("This effect is already unlocked!");
+      return;
+    }
+    
+    if (typeof quest.batteryGiven !== 'number') quest.batteryGiven = 0;
+    const batteryNeeded = quest.batteryRequired - quest.batteryGiven;
+    const batteryContribution = Math.min(amount, batteryNeeded);
+    
+    if (batteryContribution > 0) {
+      quest.batteryGiven += batteryContribution;
+      saveChargerState();
+    }
+    
+    // Check quest completion (convert Decimal to number for comparison)
+    const givenSparks = DecimalUtils.isDecimal(quest.given) ? quest.given.toNumber() : quest.given;
+    if (quest.batteryGiven >= quest.batteryRequired && givenSparks >= quest.required) {
+      const neededCharge = charger.milestones[currentMilestoneIndex].amount;
+      const currentCharge = DecimalUtils.isDecimal(charger.charge) ? charger.charge.toNumber() : charger.charge;
+      
+      if (currentCharge >= neededCharge) {
+        quest.completed = true;
+        charger.milestones[currentMilestoneIndex].unlocked = true;
+        if (currentMilestoneIndex === 7) {
+          state.soapChargeQuest.stage = 5;
+          showSoapQuestCompletionMessage("LEGENDARY! Now I have everything I need! The final effect is now working! For the ultimate effect, I need 2 batteries and 75 sparks!");
+        } else if (currentMilestoneIndex === 8) {
+          state.soapChargeQuest.stage = 6;
+          showSoapQuestCompletionMessage("TRANSCENDENT! Now I have everything I need! The ultimate effect is now working! All charge effects are truly complete!");
+        }
+        saveChargerState();
+      } else {
+        showSoapQuestMessage(`You have enough batteries and sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
+      }
+    } else if (quest.batteryGiven >= quest.batteryRequired) {
+      showSoapQuestMessage(`Perfect! I have the ${quest.batteryRequired === 1 ? 'battery' : 'batteries'} I need! I still need ${quest.required - givenSparks} more sparks for this effect.`);
+    } else {
+      showSoapQuestMessage(`Thanks! I still need ${quest.batteryRequired - quest.batteryGiven} more ${quest.batteryRequired - quest.batteryGiven === 1 ? 'battery' : 'batteries'} for this effect.`);
+    }
+    updateChargerUI();
+  }
+}
+
 window.updateChargerUI = updateChargerUI;
 window.showSoapChargerClickMessage = showSoapChargerClickMessage;
 window.soapChargerGetsMad = soapChargerGetsMad;
@@ -979,6 +1316,7 @@ window.soapEatCharge = soapEatCharge;
 window.initializeChargerElementUnlocking = initializeChargerElementUnlocking;
 window.resetChargerTabState = resetChargerTabState; 
 window.giveSparksToSoap = giveSparksToSoap; 
+window.giveBatteriesToSoap = giveBatteriesToSoap;
 
 function showSoapChargerClickMessage() {
   const soapImg = document.getElementById("soapChargerCharacter");
@@ -1093,17 +1431,17 @@ function soapEatCharge() {
   let message;
   let messageDuration;
   if (isBigNom) {
-    chargeToEat = Math.floor(charger.charge * 0.5);
+    chargeToEat = charger.charge.mul(0.5).floor();
     message = "Big nom, I just eated half your charge";
     messageDuration = 10000; 
     charger.soapIsMad = true; 
   } else {
-    chargeToEat = Math.floor(charger.charge * 0.01);
+    chargeToEat = charger.charge.mul(0.01).floor();
     message = soapEatingQuotes[Math.floor(Math.random() * soapEatingQuotes.length)];
     messageDuration = 5000; 
   }
-  charger.charge -= chargeToEat;
-  charger.soapChargeEaten += chargeToEat;
+  charger.charge = charger.charge.sub(chargeToEat);
+  charger.soapChargeEaten = charger.soapChargeEaten.add(chargeToEat);
   if (window.state) {
     window.state.soapTotalChargeEaten = (window.state.soapTotalChargeEaten || 0) + chargeToEat;
   }
@@ -1148,7 +1486,7 @@ function showSoapChargerSpeech() {
 }
 
 function resetCharger() {
-  window.charger.charge = 0;
+  window.charger.charge = new Decimal(0);
   updateChargerUI();
 }
 

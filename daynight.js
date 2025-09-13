@@ -141,7 +141,12 @@
     }
   }
 
-  setInterval(() => {
+  window.daynightMainInterval = setInterval(() => {
+    // Don't advance time if game is paused
+    if (window.isGamePaused) {
+      return;
+    }
+    
     gameMinutes = (gameMinutes + 1) % (24 * 60);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('swariaGameMinutes', gameMinutes);

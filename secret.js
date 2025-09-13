@@ -255,6 +255,51 @@ const secretAchievements = {
     rewarded: false,
     realDescription: 'Click the expansion icon'
   },
+  secret16: {
+    id: 'secret16',
+    name: 'Omega Scammed',
+    description: '???',
+    icon: 'assets/icons/Lepre speech.png',
+    type: 'secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'secret',
+    row: 3,
+    position: 5,
+    rewarded: false,
+    realDescription: 'Buy any item from the boutique while Lepre is very mad'
+  },
+  secret17: {
+    id: 'secret17',
+    name: 'Just keep waiting',
+    description: '???',
+    icon: 'assets/icons/light.png',
+    type: 'secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'secret',
+    row: 4,
+    position: 1,
+    rewarded: false,
+    realDescription: 'Obtain the 1/10000000 chance on a game tick'
+  },
+  secret18: {
+    id: 'secret18',
+    name: 'Kicked out',
+    description: '???',
+    icon: 'assets/icons/light.png',
+    type: 'secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'secret',
+    row: 4,
+    position: 2,
+    rewarded: false,
+    realDescription: 'Touch lepre\'s chest zipper'
+  },
   secret15: {
     id: 'secret15',
     name: 'The last one is always the hardest',
@@ -265,8 +310,8 @@ const secretAchievements = {
     unlocked: false,
     progress: 0,
     category: 'secret',
-    row: 3,
-    position: 5,
+    row: 4,
+    position: 3,
     rewarded: false,
     realDescription: 'Complete the impossible quest'
   },
@@ -309,8 +354,8 @@ function handleSecretAchievementClick(achievementId) {
 function updateSecretAchievementProgress(achievementId, value) {
   const achievement = secretAchievements[achievementId];
   if (achievement && !achievement.unlocked) {
-    achievement.progress = Math.max(achievement.progress, value);
-    if (achievement.progress >= achievement.requirement) {
+    achievement.progress = Decimal.max(achievement.progress || new Decimal(0), new Decimal(value));
+    if (achievement.progress.gte(achievement.requirement || new Decimal(0))) {
       unlockSecretAchievement(achievementId);
     }
   }
@@ -325,7 +370,7 @@ function loadSecretAchievements() {
     Object.keys(savedData.achievements).forEach(id => {
       if (secretAchievements[id]) {
         secretAchievements[id].unlocked = savedData.achievements[id].unlocked;
-        secretAchievements[id].progress = savedData.achievements[id].progress;
+        secretAchievements[id].progress = new Decimal(savedData.achievements[id].progress || 0);
         secretAchievements[id].rewarded = savedData.achievements[id].rewarded || false;
         if (secretAchievements[id].unlocked) {
           updateSecretAchievementDescription(id);
@@ -335,7 +380,7 @@ function loadSecretAchievements() {
   } else {
     Object.values(secretAchievements).forEach(achievement => {
       achievement.unlocked = false;
-      achievement.progress = 0;
+      achievement.progress = new Decimal(0);
       achievement.rewarded = false;
       achievement.description = '???';
     });
@@ -349,7 +394,7 @@ function saveSecretAchievements() {
   Object.keys(secretAchievements).forEach(id => {
     saveData.achievements[id] = {
       unlocked: secretAchievements[id].unlocked,
-      progress: secretAchievements[id].progress,
+      progress: (secretAchievements[id].progress || new Decimal(0)).toString(),
       rewarded: secretAchievements[id].rewarded
     };
   });
@@ -359,6 +404,18 @@ function saveSecretAchievements() {
 }
 
 function initSecretAchievements() {
+  // Initialize all secret achievements with proper Decimal values
+  Object.values(secretAchievements).forEach(achievement => {
+    if (typeof achievement.requirement === 'number') {
+      achievement.requirement = new Decimal(achievement.requirement);
+    }
+    if (typeof achievement.progress === 'number') {
+      achievement.progress = new Decimal(achievement.progress);
+    }
+    if (!achievement.progress) {
+      achievement.progress = new Decimal(0);
+    }
+  });
   loadSecretAchievements();
 }
 

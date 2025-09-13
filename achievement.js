@@ -58,9 +58,9 @@ const achievements = {
     description: 'Collect 100 fluff',
     icon: 'assets/icons/fluff.png',
     type: 'fluff',
-    requirement: 100,
+    requirement: new Decimal(100),
     unlocked: false,
-    progress: 0,
+    progress: new Decimal(0),
     category: 'normal',
     row: 1,
     position: 1,
@@ -72,9 +72,9 @@ const achievements = {
     description: 'Collect 500 Swaria coins',
     icon: 'assets/icons/swaria coin.png',
     type: 'swaria',
-    requirement: 500,
+    requirement: new Decimal(500),
     unlocked: false,
-    progress: 0,
+    progress: new Decimal(0),
     category: 'normal',
     row: 1,
     position: 2,
@@ -86,9 +86,9 @@ const achievements = {
     description: 'Do your first delivery reset',
     icon: 'assets/icons/common box.png',
     type: 'delivery',
-    requirement: 1,
+    requirement: new Decimal(1),
     unlocked: false,
-    progress: 0,
+    progress: new Decimal(0),
     category: 'normal',
     row: 1,
     position: 3,
@@ -100,9 +100,9 @@ const achievements = {
     description: 'Collect 2,500 feathers',
     icon: 'assets/icons/feather.png',
     type: 'feathers',
-    requirement: 2500,
+    requirement: new Decimal(2500),
     unlocked: false,
-    progress: 0,
+    progress: new Decimal(0),
     category: 'normal',
     row: 1,
     position: 4,
@@ -114,9 +114,9 @@ const achievements = {
     description: 'Collect 10,000 wing artifacts',
     icon: 'assets/icons/wing artifact.png',
     type: 'artifacts',
-    requirement: 10000,
+    requirement: new Decimal(10000),
     unlocked: false,
-    progress: 0,
+    progress: new Decimal(0),
     category: 'normal',
     row: 1,
     position: 5,
@@ -142,7 +142,7 @@ const achievements = {
     description: 'Collect 1000 KP',
     icon: 'assets/icons/kp.png',
     type: 'kp',
-    requirement: 1000,
+    requirement: new Decimal(1000),
     unlocked: false,
     progress: 0,
     category: 'normal',
@@ -212,7 +212,7 @@ const achievements = {
     description: 'Collect 1e6 KP',
     icon: 'assets/icons/kp.png',
     type: 'kp',
-    requirement: 1000000,
+    requirement: new Decimal("1000000"),
     unlocked: false,
     progress: 0,
     category: 'normal',
@@ -276,27 +276,13 @@ const achievements = {
     position: 1,
     rewarded: false
   },
-  LightAutomation: {
-    id: 'LightAutomation',
-    name: 'Light automation???',
-    description: 'Start automaticaly generating light',
-    icon: 'assets/icons/light.png',
-    type: 'autolight',
-    requirement: 1,
-    unlocked: false,
-    progress: 0,
-    category: 'normal',
-    row: 4,
-    position: 2,
-    rewarded: false
-  },
   ChargingUp: {
     id: 'ChargingUp',
     name: 'Charging up',
     description: 'Collect 20,000 charge',
     icon: 'assets/icons/charge.png',
     type: 'charge',
-    requirement: 20000,
+    requirement: new Decimal(20000),
     unlocked: false,
     progress: 0,
     category: 'normal',
@@ -360,13 +346,13 @@ const achievements = {
     position: 2,
     rewarded: false
   },
-  ElectrifyingProgress: {
-    id: 'ElectrifyingProgress',
-    name: 'Electrifying progress',
-    description: 'Collect 1e30 charge',
-    icon: 'assets/icons/charge.png',
-    type: 'charge',
-    requirement: 1e30,
+  No7thExpansion: {
+    id: 'No7thExpansion',
+    name: 'Expansion 7 here I come!!!',
+    description: 'Collect 1e50 KP',
+    icon: 'assets/icons/kp.png',
+    type: 'kp',
+    requirement: 1e50,
     unlocked: false,
     progress: 0,
     category: 'normal',
@@ -374,13 +360,13 @@ const achievements = {
     position: 3,
     rewarded: false
   },
-  No7thExpansion: {
-    id: 'No7thExpansion',
-    name: 'What!? I can not expand???',
-    description: 'Collect 1e50 KP',
-    icon: 'assets/icons/kp.png',
-    type: 'kp',
-    requirement: 1e50,
+  ElectrifyingProgress: {
+    id: 'ElectrifyingProgress',
+    name: 'Electrifying progress',
+    description: 'Collect 1e30 charge',
+    icon: 'assets/icons/charge.png',
+    type: 'charge',
+    requirement: 1e30,
     unlocked: false,
     progress: 0,
     category: 'normal',
@@ -403,6 +389,10 @@ const achievements = {
     rewarded: false
   },
 };
+
+// Make achievements globally accessible
+window.achievements = achievements;
+
 let achievementStats = {
   totalClicks: 0,
   totalPlayTime: 0,
@@ -412,7 +402,28 @@ let achievementStats = {
 let achievementPopupQueue = [];
 let isShowingPopup = false;
 
+// Make achievement variables globally accessible
+window.achievementStats = achievementStats;
+window.achievementPopupQueue = achievementPopupQueue;
+window.isShowingPopup = isShowingPopup;
+
+// Initialize all achievements with proper Decimal values
+function initializeAchievementDecimals() {
+  Object.values(achievements).forEach(achievement => {
+    if (typeof achievement.requirement === 'number') {
+      achievement.requirement = new Decimal(achievement.requirement);
+    }
+    if (typeof achievement.progress === 'number') {
+      achievement.progress = new Decimal(achievement.progress);
+    }
+    if (!achievement.progress) {
+      achievement.progress = new Decimal(0);
+    }
+  });
+}
+
 function initAchievements() {
+  initializeAchievementDecimals();
   loadAchievements();
   updateAchievementsDisplay();
   startAchievementTracking();
@@ -432,7 +443,7 @@ function loadAchievements() {
     Object.keys(savedData.achievements).forEach(id => {
       if (achievements[id]) {
         achievements[id].unlocked = savedData.achievements[id].unlocked;
-        achievements[id].progress = savedData.achievements[id].progress;
+        achievements[id].progress = new Decimal(savedData.achievements[id].progress || 0);
         achievements[id].rewarded = savedData.achievements[id].rewarded || false;
       }
     });
@@ -440,7 +451,7 @@ function loadAchievements() {
   } else {
     Object.values(achievements).forEach(achievement => {
       achievement.unlocked = false;
-      achievement.progress = 0;
+      achievement.progress = new Decimal(0);
       achievement.rewarded = false;
     });
     achievementStats = {
@@ -460,7 +471,7 @@ function saveAchievements() {
   Object.keys(achievements).forEach(id => {
     saveData.achievements[id] = {
       unlocked: achievements[id].unlocked,
-      progress: achievements[id].progress,
+      progress: (achievements[id].progress || new Decimal(0)).toString(),
       rewarded: achievements[id].rewarded
     };
   });
@@ -475,8 +486,8 @@ function saveAchievements() {
 function updateAchievementProgress(type, value) {
   Object.values(achievements).forEach(achievement => {
     if (achievement.type === type && !achievement.unlocked) {
-      achievement.progress = Math.max(achievement.progress, value);
-      if (achievement.progress >= achievement.requirement) {
+      achievement.progress = Decimal.max(achievement.progress || new Decimal(0), new Decimal(value));
+      if (achievement.progress.gte(achievement.requirement || new Decimal(0))) {
         unlockAchievement(achievement.id);
       }
     }
@@ -487,7 +498,7 @@ function unlockAchievement(achievementId) {
   const achievement = achievements[achievementId];
   if (achievement && !achievement.unlocked) {
     achievement.unlocked = true;
-    achievement.progress = achievement.requirement;
+    achievement.progress = achievement.requirement || new Decimal(0);
     showAchievementNotification(achievement);
     saveAchievements();
     updateAchievementsDisplay();
@@ -532,6 +543,12 @@ function claimAchievementReward(achievementId) {
         rewardAmount = 20; 
       } else if (achievementId === 'secret15') {
         rewardAmount = 10000; 
+      } else if (achievementId === 'secret16') {
+        rewardAmount = 1100; 
+      } else if (achievementId === 'secret17') {
+        rewardAmount = 50; // 50 Swa Bucks for the ultra-rare achievement
+      } else if (achievementId === 'secret18') {
+        rewardAmount = 20; // 20 Swa Bucks for touching Lepre's chest zipper
       } else {
         const isLastInRow = achievement.position === 5;
         rewardAmount = isLastInRow ? 25 : 15;
@@ -554,11 +571,11 @@ function claimAchievementReward(achievementId) {
       window.addSwaBucks(rewardAmount);
     } else {
       if (!window.state) window.state = {};
-      if (typeof window.state.swabucks !== 'number') window.state.swabucks = 0;
-      window.state.swabucks += rewardAmount;
+      if (!window.state.swabucks) window.state.swabucks = new Decimal(0);
+      window.state.swabucks = new Decimal(window.state.swabucks).add(rewardAmount);
       const swabucksElement = document.getElementById('inventoryCount-swabucks');
       if (swabucksElement) {
-        swabucksElement.textContent = window.state.swabucks;
+        swabucksElement.textContent = DecimalUtils.formatDecimal(window.state.swabucks);
       }
       if (typeof window.saveGame === 'function') {
         window.saveGame();
@@ -726,7 +743,7 @@ function updateNormalAchievements() {
   if (unlockedCount) unlockedCount.textContent = unlocked;
   if (totalCount) totalCount.textContent = total;
   if (progressPercent) {
-    const percent = total > 0 ? Math.round((unlocked / total) * 100 * 100) / 100 : 0;
+    const percent = total > 0 ? new Decimal(unlocked).div(total).mul(100).mul(100).round().div(100).toNumber() : 0;
     progressPercent.textContent = percent;
   }
 }
@@ -788,7 +805,7 @@ function updateSecretAchievements() {
   if (unlockedCount) unlockedCount.textContent = unlocked;
   if (totalCount) totalCount.textContent = total;
   if (progressPercent) {
-    const percent = total > 0 ? Math.round((unlocked / total) * 100 * 100) / 100 : 0;
+    const percent = total > 0 ? new Decimal(unlocked).div(total).mul(100).mul(100).round().div(100).toNumber() : 0;
     progressPercent.textContent = percent;
   }
 }
@@ -796,7 +813,10 @@ function updateSecretAchievements() {
 function createAchievementCard(achievement) {
   const card = document.createElement('div');
   card.className = `achievement-card ${achievement.unlocked ? 'unlocked' : ''}`;
-  const progressPercent = Math.min((achievement.progress / achievement.requirement) * 100, 100);
+  const progressPercent = Decimal.min(
+    new Decimal(achievement.progress || 0).div(achievement.requirement || 1).mul(100), 
+    100
+  ).toNumber();
   const isLastInRow = achievement.position === 5;
   let rewardAmount;
   if (achievement.category === 'secret') {
@@ -974,10 +994,21 @@ function trackGradeMilestone(currentGrade) {
 }
 
 function trackElementDiscovery(boughtElements) {
-  const discoveredCount = Object.keys(boughtElements).filter(key => boughtElements[key]).length;
-  updateAchievementProgress('elements', discoveredCount);
-  if (boughtElements[7]) {
-    updateAchievementProgress('element7', 1);
+  try {
+    // Safety check for undefined or null boughtElements
+    if (!boughtElements || typeof boughtElements !== 'object') {
+      console.warn('[ACHIEVEMENT] trackElementDiscovery called with invalid boughtElements:', boughtElements);
+      return;
+    }
+    
+    const discoveredCount = Object.keys(boughtElements).filter(key => boughtElements[key]).length;
+    updateAchievementProgress('elements', discoveredCount);
+    if (boughtElements[7]) {
+      updateAchievementProgress('element7', 1);
+    }
+  } catch (error) {
+    console.error('[ACHIEVEMENT] Error in trackElementDiscovery:', error);
+    console.error('[ACHIEVEMENT] boughtElements value:', boughtElements);
   }
 }
 
@@ -1006,7 +1037,7 @@ function trackRedLightParticleGeneration() {
 
 function forceUnlockRedLightAchievement() {
   if (achievements.RedLightParticles && !achievements.RedLightParticles.unlocked) {
-    achievements.RedLightParticles.progress = 1;
+    achievements.RedLightParticles.progress = new Decimal(1);
     unlockAchievement('RedLight');
   } else {
   }
@@ -1020,10 +1051,6 @@ function checkRedLightAchievement() {
     }
   } else {
   }
-}
-
-function trackViAutoLightQuestCompletion() {
-  updateAchievementProgress('autolight', 1);
 }
 
 function trackChargeMilestone(currentCharge) {
@@ -1049,7 +1076,7 @@ function trackInfinityMilestone(infinityCount) {
 function resetAchievements() {
   Object.values(achievements).forEach(achievement => {
     achievement.unlocked = false;
-    achievement.progress = 0;
+    achievement.progress = new Decimal(0);
     achievement.rewarded = false;
   });
   achievementStats = {
@@ -1144,7 +1171,6 @@ window.trackElementDiscovery = trackElementDiscovery;
 window.trackGeneratorUnlocks = trackGeneratorUnlocks;
 window.trackLightParticleGeneration = trackLightParticleGeneration;
 window.trackRedLightParticleGeneration = trackRedLightParticleGeneration;
-window.trackViAutoLightQuestCompletion = trackViAutoLightQuestCompletion;
 window.trackChargeMilestone = trackChargeMilestone;
 window.trackFlowerMilestone = trackFlowerMilestone;
 window.trackNectarMilestone = trackNectarMilestone;
