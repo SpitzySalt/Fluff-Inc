@@ -1,4 +1,4 @@
-class FrontDesk {
+ï»¿class FrontDesk {
   constructor() {
     this.availableWorkers = [];
     this.assignedWorkers = {};
@@ -1449,7 +1449,7 @@ class FrontDesk {
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">×</div>
+      ">ï¿½</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1516,7 +1516,7 @@ class FrontDesk {
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">×</div>
+      ">ï¿½</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1584,7 +1584,7 @@ class FrontDesk {
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">×</div>
+      ">ï¿½</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -1643,7 +1643,7 @@ class FrontDesk {
         cursor: pointer;
         font-size: 12px;
         font-weight: bold;
-      ">×</div>
+      ">ï¿½</div>
     `;
     document.body.appendChild(popup);
     setTimeout(() => {
@@ -3215,7 +3215,7 @@ class FrontDesk {
         const timeRemaining = Math.max(0, this.workerLifetime - (Date.now() - worker.arrivalTime));
         const minutesLeft = Math.floor(timeRemaining / 60000);
         const starColor = worker.starData.color;
-        const starDisplay = '?'.repeat(worker.stars) + '?'.repeat(5 - worker.stars);
+        const starDisplay = 'â­'.repeat(worker.stars) + 'â˜†'.repeat(5 - worker.stars);
         slot.innerHTML = `
           <div class="worker-card ${this.selectedWorker && this.selectedWorker.id === worker.id ? 'selected' : ''}"
                draggable="true"
@@ -3253,7 +3253,7 @@ class FrontDesk {
         slotElement.innerHTML = `
           <div class="worker-slot-header">
             <h4 class="worker-slot-title ${worker ? 'worker-name-clickable' : ''}" ${worker ? `onclick="window.frontDesk.startRenameWorker('${worker.id}')"` : ''}>${worker ? `${worker.displayName || worker.name}${worker.job ? ` - <span style="font-size: 0.8em; font-weight: normal;">${this.getJobName(worker.job)}</span>` : ''}` : `Slot ${i}`}</h4>
-            ${worker ? `<div class="worker-stars-header" style="color: ${worker.starData ? worker.starData.color : '#FFD700'}">${'?'.repeat(worker.stars)}${'?'.repeat(5 - worker.stars)}</div>` : ''}
+            ${worker ? `<div class="worker-stars-header" style="color: ${worker.starData ? worker.starData.color : '#FFD700'}">${'â­'.repeat(worker.stars)}${'â˜†'.repeat(5 - worker.stars)}</div>` : ''}
             <div class="worker-slot-buttons">
               <button class="assign-job-btn" onclick="window.frontDesk.openJobModal(${i})" ${!worker ? 'disabled' : ''}>
                 Assign Job
