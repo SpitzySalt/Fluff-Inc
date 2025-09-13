@@ -1,4 +1,4 @@
-﻿// welcome to the Fluff Inc. game script
+// welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
@@ -358,7 +358,7 @@ function gradeUp() {
   }
   // Terrarium content is now preserved during expansion resets
   // resetTerrariumContent(); // Commented out to preserve terrarium progress
-  console.log('[EXPANSION RESET] Terrarium content preserved during expansion reset');
+
   resetChargerWhenAvailable();
   // Charger is now part of the generator main tab, no separate button needed
   const calculatedCap = calculatePowerGeneratorCap();

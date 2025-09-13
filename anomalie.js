@@ -109,7 +109,7 @@ window.anomalySystem = {
         this.setupPrismGreyDetection(); // Setup prism grey anomaly detection
         this.setupNotationScrambleDetection(); // Setup notation scramble anomaly detection
         this.loadAnomalyState(); // Restore anomalies from localStorage
-        console.log('Anomaly system initialized (automatic spawning enabled)');
+
     },
     
     // Setup the detector button functionality
@@ -198,9 +198,9 @@ window.anomalySystem = {
             if (this.findModeActive) {
                 this.removeAnomaly(anomalyId);
                 this.giveAnomalyReward();
-                console.log('Anomaly removed in find mode!');
+
             } else {
-                console.log('Activate find mode first to remove anomalies');
+
             }
         });
         
@@ -226,8 +226,7 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log(`Spawned ${type} anomaly #${anomalyId}`);
+
     },
     
     // Get CSS styles for different anomaly types
@@ -298,8 +297,7 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log(`Removed anomaly #${anomalyId}`);
+
     },
     
     // Remove all anomalies
@@ -315,8 +313,7 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log(`Removed ${count} anomalies`);
+
     },
     
     // Give reward for removing anomaly
@@ -387,8 +384,7 @@ window.anomalySystem = {
         
         // Add global click handler for anomaly detection
         this.globalClickHandler = (event) => {
-            console.log('Global click handler triggered, target:', event.target, 'closest soap overlay:', event.target.closest('.soap-generator-overlay'));
-            
+
             // Don't trigger if already analyzing or searching
             if (this.analyzing || this.searching) return;
             
@@ -399,15 +395,15 @@ window.anomalySystem = {
             
             // Check if clicking on a soap generator overlay
             if (event.target.closest('.soap-generator-overlay')) {
-                console.log('Clicked on soap generator overlay, target class:', event.target.className);
+
                 // If it's specifically the invisible clickable overlay, allow analysis
                 if (event.target.classList.contains('soap-anomaly-click-overlay')) {
-                    console.log('Clicked on invisible clickable overlay, triggering analysis...');
+
                     // Let the soap generator analyze function handle this directly
                     this.analyzeSoapGeneratorAnomaly(true);
                     return;
                 }
-                console.log('Not the invisible overlay, returning early');
+
                 // Otherwise, let the soap generator specific handler deal with it
                 return;
             }
@@ -417,8 +413,7 @@ window.anomalySystem = {
                 // Block the actual button functionality
                 event.preventDefault();
                 event.stopPropagation();
-                console.log('Button click blocked during find mode, but analyzing...');
-                
+
                 // But still trigger analysis - don't return here!
                 // Continue to the analysis section below
             }
@@ -440,8 +435,7 @@ window.anomalySystem = {
         
         // Add global right-click handler for anomaly search
         this.globalRightClickHandler = (event) => {
-            console.log('Global right-click handler triggered');
-            
+
             // Don't trigger if already analyzing or searching
             if (this.analyzing || this.searching) return;
             
@@ -480,7 +474,7 @@ window.anomalySystem = {
         
         // Optional: Add a subtle overlay or visual indicator
         const searchModeStatus = this.isSearchModeUnlocked() ? 'right click to search for nearby anomalies' : 'right click search locked (need Soap friendship level 7+)';
-        console.log(`Find mode activated - Left click anywhere to scan for anomalies, ${searchModeStatus}`);
+
     },
     
     // Disable find mode
@@ -517,8 +511,7 @@ window.anomalySystem = {
             document.removeEventListener('contextmenu', this.globalRightClickHandler);
             this.globalRightClickHandler = null;
         }
-        
-        console.log('Find mode deactivated');
+
     },
     
     // Update find mode cursor styles for all relevant elements
@@ -773,7 +766,7 @@ window.anomalySystem = {
                          (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
         
         if (soapLevel >= 10 && this.activeAnomalies.boxGeneratorFreezeAnomaly) {
-            console.log(`Soap friendship level ${soapLevel} detected - automatically removing box generator freeze anomaly!`);
+
             this.fixBoxGeneratorFreezeAnomaly();
         }
         
@@ -970,8 +963,7 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log('Clock anomaly spawned! Time display going wild...');
+
     },
     
     // Spawn backward clock anomaly
@@ -990,14 +982,12 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log('Backward clock anomaly spawned! Time ticking backwards...');
+
     },
     
     // Start clock anomaly effect
     startClockAnomaly: function() {
-        console.log('Starting clock anomaly effect');
-        
+
         // Find and disable the real clock update interval
         this.disableRealClockUpdates();
         
@@ -1005,14 +995,12 @@ window.anomalySystem = {
         this.clockAnomalyInterval = setInterval(() => {
             this.wildClockUpdate();
         }, 10); // Update every 10ms for 100x wild effect
-        
-        console.log('Clock anomaly interval started');
+
     },
     
     // Start backward clock anomaly effect
     startBackwardClockAnomaly: function() {
-        console.log('Starting backward clock anomaly effect');
-        
+
         // Disable real clock updates first
         this.disableRealClockUpdatesForBackward();
         
@@ -1030,8 +1018,7 @@ window.anomalySystem = {
         this.backwardClockAnomalyInterval = setInterval(() => {
             this.backwardClockUpdate();
         }, 1000); // Update every 1000ms for normal backward ticking
-        
-        console.log('Backward clock anomaly interval started');
+
     },
     
     // Update backward clock display
@@ -1053,7 +1040,7 @@ window.anomalySystem = {
                 const timeString = h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
                 
                 backwardClockElement.textContent = timeString;
-                console.log('Backward clock updated (game time):', timeString);
+
             } else {
                 // Fallback to real time if daynight system not available
                 this.backwardClockDisplayTime -= 1000;
@@ -1067,7 +1054,7 @@ window.anomalySystem = {
                 });
                 
                 backwardClockElement.textContent = timeString;
-                console.log('Backward clock updated (real time fallback):', timeString);
+
             }
         }
     },
@@ -1080,7 +1067,7 @@ window.anomalySystem = {
             this.originalClockDisplay = clockElement.style.display;
             this.originalClockVisibility = clockElement.style.visibility;
             clockElement.style.visibility = 'hidden';
-            console.log('Real digital clock hidden during backward anomaly');
+
         }
         
         // Store reference to original functions and disable them
@@ -1104,8 +1091,7 @@ window.anomalySystem = {
         
         // Create backward clock overlay
         this.createBackwardClockOverlay();
-        
-        console.log('Real clock updates disabled for backward anomaly');
+
     },
     
     // Create overlay for backward clock display
@@ -1157,13 +1143,12 @@ window.anomalySystem = {
         
         // Add click handler for anomaly detection
         backwardClockOverlay.addEventListener('click', () => {
-            console.log('Backward clock overlay clicked, find mode:', this.findModeActive, 'analyzing:', this.analyzing, 'searching:', this.searching);
+
             if (this.findModeActive && !this.analyzing && !this.searching) {
                 this.analyzeClockAnomaly(true); // Pass true for targeted click on overlay
             }
         });
-        
-        console.log('Backward clock overlay created');
+
     },
     
     // Disable real clock updates and hide real clock
@@ -1174,7 +1159,7 @@ window.anomalySystem = {
             this.originalClockDisplay = clockElement.style.display;
             this.originalClockVisibility = clockElement.style.visibility;
             clockElement.style.visibility = 'hidden';
-            console.log('Real digital clock hidden during anomaly');
+
         }
         
         // Store reference to original functions and disable them
@@ -1245,13 +1230,12 @@ window.anomalySystem = {
         
         // Add click handler for anomaly detection
         wildClockOverlay.addEventListener('click', () => {
-            console.log('Wild clock overlay clicked, find mode:', this.findModeActive, 'analyzing:', this.analyzing, 'searching:', this.searching);
+
             if (this.findModeActive && !this.analyzing && !this.searching) {
                 this.analyzeClockAnomaly(true); // Pass true for targeted click on overlay
             }
         });
-        
-        console.log('Wild clock overlay created');
+
     },
     
     // Wild clock update function (100x speed)
@@ -1299,10 +1283,9 @@ window.anomalySystem = {
         setTimeout(() => {
             const clockElement = document.getElementById('digitalClock');
             if (clockElement) {
-                console.log('Digital clock element found, setting up detection');
-                
+
                 clockElement.addEventListener('click', () => {
-                    console.log('Clock clicked, find mode:', this.findModeActive, 'analyzing:', this.analyzing, 'searching:', this.searching);
+
                     if (this.findModeActive && !this.analyzing && !this.searching) {
                         this.analyzeClockAnomaly(true); // Pass true for targeted click
                     }
@@ -1319,7 +1302,7 @@ window.anomalySystem = {
                 // Set up visual feedback updates
                 this.setupClockVisualFeedback();
             } else {
-                console.log('Digital clock element not found');
+
             }
         }, 1000);
     },
@@ -1330,11 +1313,10 @@ window.anomalySystem = {
         setTimeout(() => {
             const boxButtons = this.getBoxButtons();
             if (boxButtons.length === 5) {
-                console.log('Found all 5 box buttons, setting up detection');
-                
+
                 boxButtons.forEach((btn, index) => {
                     btn.addEventListener('click', (event) => {
-                        console.log('Box button clicked, find mode:', this.findModeActive, 'analyzing:', this.analyzing, 'searching:', this.searching);
+
                         if (this.findModeActive && !this.analyzing && !this.searching && this.activeAnomalies.boxOrderAnomaly) {
                             // Prevent the actual box purchase
                             event.preventDefault();
@@ -1350,7 +1332,7 @@ window.anomalySystem = {
                     });
                 });
             } else {
-                console.log('Could not find all 5 box buttons for detection setup');
+
             }
         }, 1000);
     },
@@ -1433,7 +1415,7 @@ window.anomalySystem = {
         
         // Prevent spawning if cargo OMEGA box anomaly is active (mutual exclusion)
         if (this.activeAnomalies.cargoOmegaBoxAnomaly) {
-            console.log('Cannot spawn box order anomaly: OMEGA box anomaly is active');
+
             return;
         }
         
@@ -1449,14 +1431,12 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log('Box order anomaly spawned! Box buttons randomized...');
+
     },
     
     // Start box order anomaly effect
     startBoxOrderAnomaly: function() {
-        console.log('Starting box order anomaly effect');
-        
+
         // Find the box buttons container
         const boxButtons = this.getBoxButtons();
         if (boxButtons.length === 5) {
@@ -1479,10 +1459,9 @@ window.anomalySystem = {
             randomizedButtons.forEach(btn => {
                 container.appendChild(btn);
             });
-            
-            console.log('Box buttons randomized successfully');
+
         } else {
-            console.log('Could not find all 5 box buttons');
+
         }
     },
     
@@ -1504,9 +1483,7 @@ window.anomalySystem = {
     // Fix box order anomaly
     fixBoxOrderAnomaly: function() {
         if (!this.activeAnomalies.boxOrderAnomaly) return;
-        
-        console.log('Fixing box order anomaly');
-        
+
         // Restore original order
         if (this.originalBoxOrder && this.originalBoxOrder.length === 5) {
             // Remove all current buttons
@@ -1521,8 +1498,7 @@ window.anomalySystem = {
                     btnInfo.parent.appendChild(btnInfo.element);
                 }
             });
-            
-            console.log('Box order restored to original');
+
         }
         
         // Clean up
@@ -1537,8 +1513,7 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Box order anomaly fixed! Button order restored to normal.');
+
     },
     
     // Analyze box order anomaly
@@ -1546,8 +1521,7 @@ window.anomalySystem = {
         if (this.analyzing || this.searching) return;
         
         this.analyzing = true;
-        console.log('Analyzing box order for anomalies...');
-        
+
         // Show analyzing feedback
         this.showAnalyzing();
         
@@ -1574,8 +1548,7 @@ window.anomalySystem = {
         if (this.analyzing || this.searching) return;
         
         this.analyzing = true;
-        console.log('Analyzing for anomalies...');
-        
+
         // Show analyzing feedback
         this.showAnalyzing();
         
@@ -1605,8 +1578,7 @@ window.anomalySystem = {
         if (this.analyzing || this.searching) return;
         
         this.analyzing = true;
-        console.log('Analyzing clock for anomalies...');
-        
+
         // Show analyzing feedback
         this.showAnalyzing();
         
@@ -1634,7 +1606,7 @@ window.anomalySystem = {
     
     // Fix clock anomaly
     fixClockAnomaly: function() {
-        console.log('Fixing clock anomaly');
+
         this.activeAnomalies.clockAnomaly = false;
         
         // Stop the wild clock interval
@@ -1654,13 +1626,12 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Clock anomaly fixed! Time display restored to normal.');
+
     },
     
     // Fix backward clock anomaly
     fixBackwardClockAnomaly: function() {
-        console.log('Fixing backward clock anomaly');
+
         this.activeAnomalies.backwardClockAnomaly = false;
         
         // Stop the backward clock interval
@@ -1680,8 +1651,7 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Backward clock anomaly fixed! Time display restored to normal.');
+
     },
     
     // Restore real clock updates for backward clock anomaly
@@ -1691,27 +1661,27 @@ window.anomalySystem = {
         if (clockElement) {
             clockElement.style.visibility = this.originalClockVisibility || '';
             clockElement.style.display = this.originalClockDisplay || '';
-            console.log('Real digital clock visibility restored');
+
         }
         
         // Remove backward clock overlay
         const backwardClockOverlay = document.getElementById('backwardClockOverlay');
         if (backwardClockOverlay) {
             backwardClockOverlay.remove();
-            console.log('Backward clock overlay removed');
+
         }
         
         // Restore original functions
         if (window.originalUpdateDigitalClock) {
             window.updateDigitalClock = window.originalUpdateDigitalClock;
             window.originalUpdateDigitalClock = null;
-            console.log('Restored original updateDigitalClock function');
+
         }
         
         if (window.originalUpdateClock) {
             window.updateClock = window.originalUpdateClock;
             window.originalUpdateClock = null;
-            console.log('Restored original updateClock function');
+
         }
         
         // Force an immediate clock update to show correct time
@@ -1723,8 +1693,7 @@ window.anomalySystem = {
                 window.updateClock();
             }
         }, 50);
-        
-        console.log('Real clock updates restored for backward anomaly');
+
     },
     
     // Restore real clock updates
@@ -1742,28 +1711,27 @@ window.anomalySystem = {
                 clockElement.style.border = this.originalClockStyles.border;
                 clockElement.style.outline = this.originalClockStyles.outline;
             }
-            
-            console.log('Real digital clock visibility restored');
+
         }
         
         // Remove wild clock overlay
         const wildClockOverlay = document.getElementById('wildClockOverlay');
         if (wildClockOverlay) {
             wildClockOverlay.remove();
-            console.log('Wild clock overlay removed');
+
         }
         
         // Restore original functions
         if (window.originalUpdateDigitalClock) {
             window.updateDigitalClock = window.originalUpdateDigitalClock;
             window.originalUpdateDigitalClock = null;
-            console.log('Restored original updateDigitalClock function');
+
         }
         
         if (window.originalUpdateClock) {
             window.updateClock = window.originalUpdateClock;
             window.originalUpdateClock = null;
-            console.log('Restored original updateClock function');
+
         }
         
         // Force an immediate clock update to show correct time
@@ -1795,14 +1763,12 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log('NEW Soap generator anomaly spawned!');
+
     },
     
     // Start soap generator anomaly effect - NEW APPROACH
     startSoapGeneratorAnomaly: function() {
-        console.log('Starting NEW soap generator anomaly implementation');
-        
+
         // Transform existing power generators directly
         this.transformPowerGeneratorsToSoap();
         
@@ -1811,19 +1777,17 @@ window.anomalySystem = {
         
         // Setup tab monitoring instead of aggressive maintenance
         this.setupGeneratorsTabMonitoring();
-        
-        console.log('NEW Soap generator transformation complete');
+
     },
     
     // Transform existing power generators into soap generators - SIMPLE APPROACH
     transformPowerGeneratorsToSoap: function() {
         const powerGenerators = document.querySelectorAll('.power-generator');
-        console.log('Found', powerGenerators.length, 'power generators to transform');
-        
+
         // Check if already transformed
         const alreadyTransformed = document.querySelectorAll('.power-generator[data-soap-transformed="true"]');
         if (alreadyTransformed.length === powerGenerators.length && powerGenerators.length > 0) {
-            console.log('All power generators already transformed to soap, skipping');
+
             return;
         }
         
@@ -1890,8 +1854,7 @@ window.anomalySystem = {
             
             // Mark as transformed
             generator.setAttribute('data-soap-transformed', 'true');
-            
-            console.log('Transformed power generator', index, 'to soap generator');
+
         });
         
         // Set up global click detection using event delegation
@@ -1912,14 +1875,14 @@ window.anomalySystem = {
             const clickDetector = event.target.closest('.soap-click-detector');
             
             if ((soapGenerator || clickDetector) && this.findModeActive && !this.analyzing && !this.searching) {
-                console.log('Soap generator clicked in find mode!');
+
                 event.stopPropagation();
                 this.analyzeSoapGeneratorAnomaly(true);
             }
         };
         
         document.addEventListener('click', this.soapGlobalClickHandler);
-        console.log('Soap click detection set up with event delegation');
+
     },
     
     // Setup monitoring for Generators tab clicks to re-apply soap transformation
@@ -1936,14 +1899,14 @@ window.anomalySystem = {
             
             // Check if click is on the "Generators" tab button
             if (clickedButton && clickedButton.textContent && clickedButton.textContent.trim() === 'Generators') {
-                console.log('Generators tab clicked - re-applying soap transformation if needed');
+
                 shouldReapply = true;
             }
             
             // Check if click is on the "Box Generators" sub-tab button
             if (clickedButton && (clickedButton.id === 'generatorBoxGenBtn' || 
                 (clickedButton.textContent && clickedButton.textContent.trim() === 'Box Generators'))) {
-                console.log('Box Generators sub-tab clicked - re-applying soap transformation if needed');
+
                 shouldReapply = true;
             }
             
@@ -1959,7 +1922,7 @@ window.anomalySystem = {
         };
         
         document.addEventListener('click', this.generatorsTabHandler);
-        console.log('Generators tab monitoring set up for both main tab and Box Generators sub-tab');
+
     },
     
     // Analyze soap generator anomaly - SIMPLIFIED
@@ -1967,8 +1930,7 @@ window.anomalySystem = {
         if (this.analyzing || this.searching) return;
         
         this.analyzing = true;
-        console.log('Analyzing NEW soap generator anomaly...');
-        
+
         // Add analyzing animation class for cursor change and start animation
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -1995,8 +1957,7 @@ window.anomalySystem = {
     
     // Fix soap generator anomaly - SIMPLIFIED
     fixSoapGeneratorAnomaly: function() {
-        console.log('Fixing NEW soap generator anomaly...');
-        
+
         this.activeAnomalies.soapGeneratorAnomaly = false;
         
         // Stop bubble animation
@@ -2042,15 +2003,14 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('NEW Soap generator anomaly fixed!');
+
     },
     
     // Start bubble animation
     startBubbleAnimation: function() {
         // Only start if not already running
         if (this.bubbleInterval) {
-            console.log('Bubble animation already running, skipping');
+
             return;
         }
         
@@ -2061,8 +2021,7 @@ window.anomalySystem = {
         this.bubbleInterval = setInterval(() => {
             this.spawnSoapBubble();
         }, 1000 + Math.random() * 2000); // Random interval between 1-3 seconds
-        
-        console.log('Bubble animation started');
+
     },
     
     // Add bubble container to the document body for screen-wide bubbles
@@ -2154,11 +2113,9 @@ window.anomalySystem = {
             generator.removeAttribute('data-soap-transformed');
             generator.removeAttribute('data-soap-original-content');
             generator.removeAttribute('data-soap-original-styles');
-            
-            console.log('Restored power generator', index, 'from soap transformation');
+
         });
-        
-        console.log('All power generators restored from soap transformation');
+
     },
     
     // UI Feedback Functions
@@ -2221,8 +2178,7 @@ window.anomalySystem = {
         if (this.searching) return;
         
         this.searching = true;
-        console.log('Searching for nearby anomalies...');
-        
+
         // Show searching feedback
         this.showSearching();
         
@@ -2385,9 +2341,9 @@ window.anomalySystem = {
         
         try {
             localStorage.setItem('anomalySystemState', JSON.stringify(state));
-            console.log('Anomaly state saved to localStorage');
+
         } catch (error) {
-            console.error('Failed to save anomaly state:', error);
+
         }
     },
     
@@ -2396,7 +2352,7 @@ window.anomalySystem = {
         try {
             const savedState = localStorage.getItem('anomalySystemState');
             if (!savedState) {
-                console.log('No saved anomaly state found');
+
                 return;
             }
             
@@ -2487,10 +2443,9 @@ window.anomalySystem = {
                     }
                 });
             }
-            
-            console.log('Anomaly state loaded from localStorage:', state);
+
         } catch (error) {
-            console.error('Failed to load anomaly state:', error);
+
             // Clear corrupted data
             localStorage.removeItem('anomalySystemState');
         }
@@ -2498,8 +2453,7 @@ window.anomalySystem = {
     
     // Restore a clock anomaly from saved state
     restoreClockAnomaly: function(savedAnomaly) {
-        console.log('Restoring clock anomaly from saved state');
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -2516,8 +2470,7 @@ window.anomalySystem = {
     
     // Restore a backward clock anomaly from saved state
     restoreBackwardClockAnomaly: function(savedAnomaly) {
-        console.log('Restoring backward clock anomaly from saved state');
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -2534,8 +2487,7 @@ window.anomalySystem = {
     
     // Restore a box order anomaly from saved state
     restoreBoxOrderAnomaly: function(savedAnomaly) {
-        console.log('Restoring box order anomaly from saved state');
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -2552,8 +2504,7 @@ window.anomalySystem = {
     
     // Restore a soap generator anomaly from saved state
     restoreSoapGeneratorAnomaly: function(savedAnomaly) {
-        console.log('Restoring soap generator anomaly from saved state');
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -2577,38 +2528,33 @@ window.anomalySystem = {
             spawnTime: savedAnomaly.spawnTime,
             element: null // Will be recreated if needed
         });
-        
-        console.log(`Restored ${savedAnomaly.type} anomaly #${savedAnomaly.id} from saved state`);
+
     },
     
     // Clear anomaly state from localStorage
     clearAnomalyState: function() {
         try {
             localStorage.removeItem('anomalySystemState');
-            console.log('Anomaly state cleared from localStorage');
+
         } catch (error) {
-            console.error('Failed to clear anomaly state:', error);
+
         }
     },
 
     // Shop Price Anomaly Functions
     spawnShopPriceAnomaly: function() {
-        console.log('spawnShopPriceAnomaly called');
-        
+
         if (this.activeAnomalies.shopPriceAnomaly) {
-            console.log('Shop price anomaly already active, skipping');
+
             return; // Already active
         }
-        
-        console.log('Spawning shop price anomaly...');
+
         this.activeAnomalies.shopPriceAnomaly = true;
         
         // Select one random item from the first 6 slots to affect
         const firstSixItems = ['berries', 'mushroom', 'petals', 'water', 'stardust', 'sparks'];
         this.anomalyAffectedItem = firstSixItems[Math.floor(Math.random() * firstSixItems.length)];
-        
-        console.log('Selected item for anomaly:', this.anomalyAffectedItem);
-        
+
         this.anomalies.push({
             id: this.nextId++,
             type: 'shopPrice',
@@ -2621,17 +2567,15 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log(`Shop price anomaly spawned! ${this.anomalyAffectedItem} now costs 727 swa bucks`);
+
     },
 
     // Start shop price anomaly effect
     startShopPriceAnomaly: function() {
-        console.log('Starting shop price anomaly effect for item:', this.anomalyAffectedItem);
-        
+
         // Check if boutique system is ready
         if (!window.boutique) {
-            console.log('Boutique system not ready, retrying in 500ms...');
+
             setTimeout(() => {
                 this.startShopPriceAnomaly();
             }, 500);
@@ -2640,24 +2584,24 @@ window.anomalySystem = {
         
         // Check if we have a valid affected item
         if (!this.anomalyAffectedItem) {
-            console.log('ERROR: No affected item found for shop price anomaly!');
+
             return;
         }
         
         // Store original price calculation function (only once)
         if (!window.boutique.originalGetCurrentPrice) {
-            console.log('Storing original getCurrentPrice function');
+
             window.boutique.originalGetCurrentPrice = window.boutique.getCurrentPrice;
         }
         
         // Always override the function (even if it was overridden before)
-        console.log('Setting up price override for item:', this.anomalyAffectedItem);
+
         window.boutique.getCurrentPrice = function(itemId) {
             // Check if shop price anomaly is active and this is the affected item
             if (window.anomalySystem && 
                 window.anomalySystem.activeAnomalies.shopPriceAnomaly && 
                 itemId === window.anomalySystem.anomalyAffectedItem) {
-                console.log('Price override applied for', itemId, '- returning 727');
+
                 return 727; // Only the selected item costs 727 swa bucks
             }
             // Otherwise use original function
@@ -2666,8 +2610,7 @@ window.anomalySystem = {
         
         // Refresh the boutique UI if it's currently open
         this.refreshBoutiqueUI();
-        
-        console.log(`Shop price anomaly effect started - ${this.anomalyAffectedItem} now costs 727 swa bucks`);
+
     },
 
     // Refresh boutique UI to show new prices
@@ -2708,17 +2651,16 @@ window.anomalySystem = {
                         
                         if (itemIdMatch) {
                             const clickedItemId = itemIdMatch[1];
-                            console.log('Clicked on shop item:', clickedItemId);
-                            console.log('Affected item:', this.anomalyAffectedItem);
-                            
+
+
                             // Only trigger analysis if clicked on the affected item
                             if (clickedItemId === this.anomalyAffectedItem) {
-                                console.log('Clicked on the correct affected item!');
+
                                 event.preventDefault();
                                 event.stopPropagation();
                                 this.analyzeShopPriceAnomaly(true);
                             } else {
-                                console.log('Clicked on wrong item - no analysis triggered');
+
                                 // Optionally show a "No anomaly detected" message for wrong items
                                 this.analyzeShopPriceAnomaly(false);
                             }
@@ -2734,8 +2676,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing shop for price anomalies...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -2762,7 +2703,7 @@ window.anomalySystem = {
 
     // Fix shop price anomaly
     fixShopPriceAnomaly: function() {
-        console.log('Fixing shop price anomaly for item:', this.anomalyAffectedItem);
+
         this.activeAnomalies.shopPriceAnomaly = false;
         
         // Restore original price calculation function
@@ -2785,18 +2726,15 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Shop price anomaly fixed! Prices restored to normal.');
+
     },
 
     // Restore shop price anomaly from saved state
     restoreShopPriceAnomaly: function(savedAnomaly) {
-        console.log('Restoring shop price anomaly from saved state:', savedAnomaly);
-        
+
         // Restore the affected item from saved data
         this.anomalyAffectedItem = savedAnomaly.affectedItem;
-        console.log('Restored affected item:', this.anomalyAffectedItem);
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -2807,8 +2745,7 @@ window.anomalySystem = {
         
         // Set active state
         this.activeAnomalies.shopPriceAnomaly = true;
-        console.log('Shop price anomaly state set to active');
-        
+
         // Start the shop price anomaly effect
         this.startShopPriceAnomaly();
     },
@@ -2823,8 +2760,7 @@ window.anomalySystem = {
     
     // Spawn dark void anomaly
     spawnDarkVoidAnomaly: function() {
-        console.log('Spawning dangerous dark void anomaly!');
-        
+
         if (this.activeAnomalies.darkVoidAnomaly) return; // Already active
         
         this.activeAnomalies.darkVoidAnomaly = true;
@@ -2842,20 +2778,18 @@ window.anomalySystem = {
         
         // Save state
         this.saveAnomalyState();
-        
-        console.log('Dangerous dark void anomaly spawned! Player has 10 seconds to fix it!');
+
     },
 
     // Start dark void anomaly effect
     startDarkVoidAnomaly: function() {
-        console.log('Starting dark void anomaly effect...');
-        
+
         // Initialize timing and state
         this.darkVoidProgress = 0;
         this.darkVoidPaused = true; // Always start paused until player clicks cargo tab
         
         // Always setup cargo tab monitoring to wait for player to click cargo tab
-        console.log('Dark void anomaly spawned - waiting for player to click cargo tab to start progression');
+
         this.setupCargoTabMonitoring();
         
         // Setup detection for cargo tab clicks
@@ -3012,82 +2946,75 @@ window.anomalySystem = {
             // Look for cargo tab button clicks with multiple selectors
             const cargoTabButton1 = document.querySelector('[onclick*="switchHomeSubTab(\'cargo\')"]');
             const cargoTabButton2 = document.querySelector('[onclick*="switchHomeSubTab(\\"cargo\\")"]');
-            
-            console.log('Click detected, checking if cargo tab button was clicked...');
-            console.log('Clicked element:', event.target);
-            console.log('Clicked element onclick:', event.target.onclick);
-            console.log('Clicked element textContent:', event.target.textContent);
-            console.log('Cargo tab button (single quotes):', cargoTabButton1);
-            console.log('Cargo tab button (double quotes):', cargoTabButton2);
-            
+
+
+
+
+
+
             // More comprehensive check for cargo tab button click
             let isCargoTabButtonClick = false;
             
             // Check direct element match
             if (event.target === cargoTabButton1 || event.target === cargoTabButton2) {
                 isCargoTabButtonClick = true;
-                console.log('Direct cargo tab button match found');
+
             }
             
             // Check onclick attribute contains cargo switch
             if (event.target.onclick && event.target.onclick.toString().includes("switchHomeSubTab") && 
                 (event.target.onclick.toString().includes("cargo") || event.target.onclick.toString().includes("Cargo"))) {
                 isCargoTabButtonClick = true;
-                console.log('Cargo tab onclick attribute match found');
+
             }
             
             // Check if element contains "Cargo" text and is a button/clickable
             if ((event.target.textContent && event.target.textContent.includes('Cargo')) &&
                 (event.target.tagName === 'BUTTON' || event.target.onclick || event.target.style.cursor === 'pointer')) {
                 isCargoTabButtonClick = true;
-                console.log('Cargo text content match found');
+
             }
             
             // Check closest parent for cargo tab functionality
             const closestCargoElement = event.target.closest && event.target.closest('[onclick*="cargo"]');
             if (closestCargoElement) {
                 isCargoTabButtonClick = true;
-                console.log('Closest cargo element match found');
+
             }
-            
-            console.log('Final cargo tab click decision:', isCargoTabButtonClick);
-            
+
             if (isCargoTabButtonClick) {
-                console.log('Cargo tab button clicked - starting dark void anomaly progression!');
-                
+
                 // Small delay to ensure tab switch has completed
                 setTimeout(() => {
                     if (this.darkVoidPaused && this.activeAnomalies.darkVoidAnomaly) {
-                        console.log('Starting dark void progression after cargo tab click...');
+
                         this.darkVoidPaused = false;
                         // Set start time to now since we're starting fresh
                         this.darkVoidStartTime = Date.now();
                         // Create the overlay now that player clicked cargo tab
                         this.createDarkVoidOverlay();
-                        console.log('Dark void overlay created');
+
                         this.startDarkVoidProgression();
-                        console.log('Dark void progression started');
+
                         // Remove this monitor since we're no longer paused
                         document.removeEventListener('click', this.cargoTabMonitor);
                         this.cargoTabMonitor = null;
-                        console.log('Cargo tab monitoring removed - anomaly is now active');
+
                     } else {
-                        console.log('Dark void anomaly not started - paused:', this.darkVoidPaused, 'active:', this.activeAnomalies.darkVoidAnomaly);
+
                     }
                 }, 100); // Small delay to ensure tab switch has completed
             }
         };
         
         document.addEventListener('click', this.cargoTabMonitor);
-        console.log('Cargo tab monitoring set up - dark void will start when player clicks cargo tab button');
-        
+
         // Remove the fallback timer since we want it to only start on cargo tab click
     },
 
     // Start the dark void progression (gradually consuming screen)
     startDarkVoidProgression: function() {
-        console.log('Starting dark void progression timer...');
-        
+
         // Clear any existing timer
         if (this.darkVoidProgressTimer) {
             clearInterval(this.darkVoidProgressTimer);
@@ -3118,7 +3045,7 @@ window.anomalySystem = {
                     overlay.style.boxShadow = '0 -20px 50px rgba(128, 0, 128, 0.8)';
                 }
             } else {
-                console.log('Warning: Dark void overlay not found! Progress:', this.darkVoidProgress + '%');
+
             }
             
             // Check if time is up
@@ -3126,8 +3053,7 @@ window.anomalySystem = {
                 this.triggerDarkVoidConsequences();
             }
         }, 100); // Update every 100ms for smoother progression (10 seconds total)
-        
-        console.log('Dark void progression timer started');
+
     },
 
     // Setup detection for clicking anywhere to fix the anomaly when find mode is active
@@ -3155,25 +3081,14 @@ window.anomalySystem = {
                                              el.offsetParent !== null && 
                                              getComputedStyle(el).display !== 'none'
                                          );
-                
-                console.log('Dark void click detected:', {
-                    findModeActive: this.findModeActive,
-                    analyzing: this.analyzing,
-                    darkVoidActive: this.activeAnomalies.darkVoidAnomaly,
-                    cargoTabVisible: isCargoTabVisible,
-                    cargoTab1: cargoTab1,
-                    cargoTab2: cargoTab2,
-                    cargoTab3: cargoTab3,
-                    cargoTab4: cargoTab4
-                });
-                
+
                 if (isCargoTabVisible) {
-                    console.log('Valid dark void fix click detected! Player can click anywhere when in cargo tab.');
+
                     event.preventDefault();
                     event.stopPropagation();
                     this.analyzeDarkVoidAnomaly(true);
                 } else {
-                    console.log('Dark void anomaly detected but player is not in cargo tab - cannot fix');
+
                     // No popup needed - player will see the dark void overlay as indication
                 }
             }
@@ -3221,8 +3136,7 @@ window.anomalySystem = {
         if (this.analyzing) return; // Prevent multiple analyses
         
         this.analyzing = true;
-        console.log('Analyzing dark void anomaly...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -3246,8 +3160,7 @@ window.anomalySystem = {
 
     // Fix dark void anomaly
     fixDarkVoidAnomaly: function() {
-        console.log('Fixing dark void anomaly!');
-        
+
         this.activeAnomalies.darkVoidAnomaly = false;
         this.darkVoidPaused = false;
         
@@ -3286,14 +3199,12 @@ window.anomalySystem = {
         
         // Give reward (shows the standard black "Anomaly Fixed!" popup)
         this.giveAnomalyReward();
-        
-        console.log('Dark void anomaly fixed successfully!');
+
     },
 
     // Trigger consequences when dark void isn't fixed in time
     triggerDarkVoidConsequences: function() {
-        console.log('Dark void anomaly not fixed in time! Applying consequences...');
-        
+
         // Stop the progression timer
         if (this.darkVoidProgressTimer) {
             clearInterval(this.darkVoidProgressTimer);
@@ -3338,14 +3249,12 @@ window.anomalySystem = {
         
         // Save state
         this.saveAnomalyState();
-        
-        console.log('Dark void consequences applied!');
+
     },
 
     // Apply 25% inventory token loss
     applyInventoryTokenLoss: function() {
-        console.log('Applying 25% inventory token loss...');
-        
+
         let tokensLost = 0;
         let tokensLostList = [];
         
@@ -3362,7 +3271,7 @@ window.anomalySystem = {
                         window.kitchenIngredients[tokenType] = currentAmount.sub(lossAmount);
                         tokensLost += lossAmount.toNumber();
                         tokensLostList.push(`${lossAmount.toString()} ${tokenType}`);
-                        console.log(`Lost ${lossAmount.toString()} ${tokenType}`);
+
                     }
                 }
             });
@@ -3394,7 +3303,7 @@ window.anomalySystem = {
                         }
                         tokensLost += lossAmount.toNumber();
                         tokensLostList.push(`${lossAmount.toString()} ${tokenType}`);
-                        console.log(`Lost ${lossAmount.toString()} ${tokenType}`);
+
                     }
                 }
             });
@@ -3407,8 +3316,7 @@ window.anomalySystem = {
         
         // Save game
         if (typeof saveGame === 'function') saveGame();
-        
-        console.log(`Total tokens lost: ${tokensLost}`);
+
         return { totalLost: tokensLost, itemsLost: tokensLostList };
     },
 
@@ -3422,11 +3330,9 @@ window.anomalySystem = {
     showSwariaDarkVoidFailureSpeech: function() {
         const swariaImage = document.getElementById("swariaCharacter");
         const swariaSpeech = document.getElementById("swariaSpeech");
-        
-        console.log('Looking for Swaria elements:', { swariaImage, swariaSpeech });
-        
+
         if (!swariaSpeech || !swariaImage) {
-            console.log('Swaria speech elements not found, creating custom speech bubble');
+
             this.createCustomSwariaSpeech();
             return;
         }
@@ -3465,8 +3371,7 @@ window.anomalySystem = {
                 }
             }
         }, 6000);
-        
-        console.log('Swaria dark void failure speech triggered using existing speech system');
+
     },
 
     // Create custom Swaria speech if normal elements aren't found
@@ -3508,20 +3413,18 @@ window.anomalySystem = {
                 }
             }, 500);
         }, 6000);
-        
-        console.log('Custom Swaria speech bubble created');
+
     },
 
     // Restore dark void anomaly from saved state
     restoreDarkVoidAnomaly: function(savedAnomaly) {
-        console.log('Restoring dark void anomaly from saved state:', savedAnomaly);
-        
+
         // Calculate how much time has passed
         const elapsed = Date.now() - savedAnomaly.spawnTime;
         
         // If more than 10 seconds have passed, trigger consequences immediately
         if (elapsed >= this.darkVoidDuration) {
-            console.log('Dark void anomaly expired while game was closed - applying consequences');
+
             this.triggerDarkVoidConsequences();
             return;
         }
@@ -3540,9 +3443,7 @@ window.anomalySystem = {
         // Restore the anomaly with remaining time
         this.darkVoidStartTime = savedAnomaly.spawnTime;
         const remainingTime = this.darkVoidDuration - elapsed;
-        
-        console.log(`Restoring dark void anomaly with ${remainingTime}ms remaining`);
-        
+
         // Start the effect with current progress (will check if in cargo tab and pause if needed)
         this.startDarkVoidAnomaly();
     },
@@ -3550,8 +3451,7 @@ window.anomalySystem = {
     // PRISM MIRROR ANOMALY: Light rays go in opposite direction
     // Spawn prism mirror anomaly
     spawnPrismMirrorAnomaly: function() {
-        console.log('Spawning prism mirror anomaly!');
-        
+
         if (this.activeAnomalies.prismMirrorAnomaly) return; // Already active
         
         this.activeAnomalies.prismMirrorAnomaly = true;
@@ -3568,21 +3468,18 @@ window.anomalySystem = {
         
         // Save state
         this.saveAnomalyState();
-        
-        console.log('Prism mirror anomaly spawned! Light rays are now mirrored!');
+
     },
 
     // Start prism mirror anomaly effect
     startPrismMirrorAnomaly: function() {
-        console.log('Starting prism mirror anomaly effect...');
-        
+
         // Apply visual changes to existing prism rays
         this.mirrorExistingPrismRays();
         
         // Setup detection for prism tab clicks
         this.setupPrismMirrorDetection();
-        
-        console.log('Prism mirror anomaly effect started - light rays now go up-left instead of up-right');
+
     },
 
     // Mirror existing prism light rays
@@ -3695,8 +3592,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing prism for light ray anomalies...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -3721,7 +3617,7 @@ window.anomalySystem = {
 
     // Fix prism mirror anomaly
     fixPrismMirrorAnomaly: function() {
-        console.log('Fixing prism mirror anomaly!');
+
         this.activeAnomalies.prismMirrorAnomaly = false;
         
         // Restore original light ray directions
@@ -3748,14 +3644,12 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Prism mirror anomaly fixed! Light rays restored to normal direction.');
+
     },
 
     // Restore prism mirror anomaly from saved state
     restorePrismMirrorAnomaly: function(savedAnomaly) {
-        console.log('Restoring prism mirror anomaly from saved state:', savedAnomaly);
-        
+
         // Add to anomalies array
         this.anomalies.push({
             id: savedAnomaly.id,
@@ -3774,13 +3668,12 @@ window.anomalySystem = {
     // NOTE: This anomaly has mutual exclusion with boxOrderAnomaly since both affect the boxes area
     // Spawn cargo OMEGA box anomaly
     spawnCargoOmegaBoxAnomaly: function() {
-        console.log('Spawning cargo OMEGA box anomaly!');
-        
+
         if (this.activeAnomalies.cargoOmegaBoxAnomaly) return; // Already active
         
         // Prevent spawning if box order anomaly is active (mutual exclusion)
         if (this.activeAnomalies.boxOrderAnomaly) {
-            console.log('Cannot spawn OMEGA box anomaly: Box order anomaly is active');
+
             return;
         }
         
@@ -3798,37 +3691,32 @@ window.anomalySystem = {
         
         // Save state
         this.saveAnomalyState();
-        
-        console.log('Cargo OMEGA box anomaly spawned! OMEGA boxes are now available in cargo!');
+
     },
 
     // Start cargo OMEGA box anomaly effect
     startCargoOmegaBoxAnomaly: function() {
-        console.log('Starting cargo OMEGA box anomaly effect...');
-        
+
         // Add OMEGA box to cargo tab
         this.addOmegaBoxToCargo();
         
         // Setup detection for cargo tab clicks
         this.setupCargoOmegaBoxDetection();
-        
-        console.log('Cargo OMEGA box anomaly effect started - OMEGA boxes now available!');
+
     },
 
     // Add OMEGA box to cargo tab
     addOmegaBoxToCargo: function(retryCount = 0) {
-        console.log(`addOmegaBoxToCargo called (attempt ${retryCount + 1})`);
-        
+
         // Check if OMEGA box already exists
         if (document.getElementById('omegaBox')) {
-            console.log('OMEGA box already exists in DOM');
+
             return;
         }
         
         // Debug: Log current DOM state
         const allCards = document.querySelectorAll('.card');
-        console.log(`Found ${allCards.length} cards in DOM`);
-        
+
         // Find the Boxes card container
         const boxesCards = document.querySelectorAll('.card');
         let boxesContainer = null;
@@ -3837,7 +3725,7 @@ window.anomalySystem = {
         for (let card of boxesCards) {
             const heading = card.querySelector('h2');
             if (heading) {
-                console.log(`Found card with heading: "${heading.textContent.trim()}"`);
+
                 if (heading.textContent.trim() === 'Boxes') {
                     boxesContainer = card;
                     break;
@@ -3846,19 +3734,19 @@ window.anomalySystem = {
         }
         
         if (!boxesContainer) {
-            console.log(`Boxes container not found (attempt ${retryCount + 1}/5). Available cards:`);
+
             allCards.forEach((card, i) => {
                 const heading = card.querySelector('h2');
-                console.log(`  Card ${i}: ${heading ? heading.textContent.trim() : 'No heading'}`);
+
             });
             
             if (retryCount < 4) {
-                console.log(`Retrying in 2 seconds...`);
+
                 setTimeout(() => {
                     this.addOmegaBoxToCargo(retryCount + 1);
                 }, 2000); // Increased delay from 1s to 2s
             } else {
-                console.log('Failed to find Boxes container after 5 attempts');
+
             }
             return;
         }
@@ -3867,7 +3755,7 @@ window.anomalySystem = {
         const mythicButton = boxesContainer.querySelector('button[onclick*="mythic"]');
         
         if (!mythicButton) {
-            console.log('Mythic box button not found, adding OMEGA box at end of boxes container');
+
         }
         
         // Create OMEGA box button element (matching the existing box structure)
@@ -3933,9 +3821,7 @@ window.anomalySystem = {
         } else {
             boxesContainer.appendChild(omegaBox);
         }
-        
-        console.log('OMEGA box added to Boxes card with rainbow effects!');
-        
+
         // Set up detection immediately after creating the box
         this.setupOmegaBoxClickDetection();
     },
@@ -3953,20 +3839,19 @@ window.anomalySystem = {
             
             // Give rewards (ultra rare items)
             this.giveOmegaBoxRewards();
-            
-            console.log('OMEGA box opened! Fluff deducted:', requiredFluff.toString());
+
         } else {
-            console.log('Not enough fluff for OMEGA box. Required:', requiredFluff.toString(), 'Current:', currentFluff.toString());
+
             // Could show a message to player here
         }
     },
 
     // Give OMEGA box rewards
     giveOmegaBoxRewards: function() {
-        console.log('Giving OMEGA box rewards...');
+
         // This would integrate with the game's reward system
         // For now, just log that rewards were given
-        console.log('Ultra rare rewards given from OMEGA box!');
+
     },
 
     // Setup detection for cargo OMEGA box anomaly
@@ -3974,17 +3859,16 @@ window.anomalySystem = {
         // This function is called from startCargoOmegaBoxAnomaly
         // The actual detection setup happens in setupOmegaBoxClickDetection
         // which is called after the OMEGA box is created
-        console.log('setupCargoOmegaBoxDetection called - detection will be set up after box creation');
+
     },
     
     // Setup click detection specifically for the OMEGA box
     setupOmegaBoxClickDetection: function() {
         const omegaBox = document.getElementById('omegaBox');
         if (omegaBox) {
-            console.log('Setting up OMEGA box click detection');
-            
+
             omegaBox.addEventListener('click', (event) => {
-                console.log('OMEGA box clicked, find mode:', this.findModeActive, 'analyzing:', this.analyzing, 'anomaly active:', this.activeAnomalies.cargoOmegaBoxAnomaly);
+
                 if (this.findModeActive && !this.analyzing && this.activeAnomalies.cargoOmegaBoxAnomaly) {
                     // Prevent the actual box purchase
                     event.preventDefault();
@@ -3999,7 +3883,7 @@ window.anomalySystem = {
                 }
             });
         } else {
-            console.log('Could not find OMEGA box for detection setup');
+
         }
     },
 
@@ -4008,8 +3892,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing cargo for OMEGA box anomalies...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -4034,10 +3917,9 @@ window.anomalySystem = {
 
     // Fix cargo OMEGA box anomaly
     fixCargoOmegaBoxAnomaly: function() {
-        console.log('Fixing cargo OMEGA box anomaly!');
-        
+
         if (!this.activeAnomalies.cargoOmegaBoxAnomaly) {
-            console.log('No cargo OMEGA box anomaly active to fix');
+
             return;
         }
         
@@ -4062,16 +3944,14 @@ window.anomalySystem = {
         
         // Give reward (shows the standard black "Anomaly Fixed!" popup)
         this.giveAnomalyReward();
-        
-        console.log('Cargo OMEGA box anomaly fixed! OMEGA boxes removed from cargo.');
+
     },
 
     // Restore cargo OMEGA box anomaly from saved state
     restoreCargoOmegaBoxAnomaly: function(savedAnomaly) {
-        console.log('Restoring cargo OMEGA box anomaly from saved state:', savedAnomaly);
-        
+
         if (this.activeAnomalies.cargoOmegaBoxAnomaly) {
-            console.log('Cargo OMEGA box anomaly already active, skipping restore');
+
             return;
         }
         
@@ -4082,14 +3962,13 @@ window.anomalySystem = {
         this.activeAnomalies.cargoOmegaBoxAnomaly = true;
         
         // Start the cargo OMEGA box anomaly effect with multiple retry attempts
-        console.log('Starting OMEGA box restoration with retry logic...');
+
         this.attemptOmegaBoxRestoration(0);
     },
 
     // Attempt OMEGA box restoration with retry logic
     attemptOmegaBoxRestoration: function(attemptCount) {
-        console.log(`OMEGA box restoration attempt ${attemptCount + 1}/10`);
-        
+
         // Check if DOM is ready by looking for essential elements
         const boxesCards = document.querySelectorAll('.card');
         let domReady = false;
@@ -4103,10 +3982,10 @@ window.anomalySystem = {
         }
         
         if (domReady) {
-            console.log('DOM is ready, starting OMEGA box anomaly effect...');
+
             this.startCargoOmegaBoxAnomaly();
         } else {
-            console.log(`DOM not ready yet (attempt ${attemptCount + 1}), retrying...`);
+
             if (attemptCount < 9) {
                 // Increase delay with each attempt: 1s, 2s, 3s, etc.
                 const delay = (attemptCount + 1) * 1000;
@@ -4114,7 +3993,7 @@ window.anomalySystem = {
                     this.attemptOmegaBoxRestoration(attemptCount + 1);
                 }, delay);
             } else {
-                console.log('Failed to restore OMEGA box after 10 attempts - DOM may not be ready');
+
                 // As a last resort, try to add the OMEGA box anyway
                 this.startCargoOmegaBoxAnomaly();
             }
@@ -4137,25 +4016,22 @@ window.anomalySystem = {
         
         // Save state to persist across refreshes
         this.saveAnomalyState();
-        
-        console.log('Blurple light anomaly spawned! Blue Light text changed to Blurple Light');
+
     },
 
     // Start blurple light anomaly effect
     startBlurpleLightAnomaly: function() {
-        console.log('Starting blurple light anomaly effect');
-        
+
         // Find all elements that contain "Blue Light" text and replace with "Blurple Light"
         this.replaceBluelightText();
-        
-        console.log('Blurple light anomaly effect started - Blue Light is now Blurple Light');
+
     },
 
     // Replace Blue Light text with Blurple Light
     replaceBluelightText: function() {
         // Clear previous text storage if it exists (in case of multiple calls)
         if (this.originalBluelightTexts) {
-            console.log('Clearing previous text storage for fresh replacement');
+
             this.originalBluelightTexts = [];
         } else {
             this.originalBluelightTexts = [];
@@ -4186,8 +4062,7 @@ window.anomalySystem = {
             });
             textNode.textContent = originalText.replace(/Blue Light/g, 'Blurple Light');
         });
-        
-        console.log(`Replaced Blue Light text in ${textNodes.length} text nodes`);
+
     },
 
     // Setup blurple light anomaly detection
@@ -4239,12 +4114,11 @@ window.anomalySystem = {
             
             // Only trigger if clicking specifically in the Light Energy card area
             if (isInLightEnergyCard) {
-                console.log('Clicked in Light Energy card area - analyzing blurple light anomaly');
+
                 this.analyzeBlurpleLightAnomaly(true);
             }
         }, true);
-        
-        console.log('Blurple light anomaly detection setup complete - only detectable by clicking on Light Energy card area');
+
     },
 
     // Analyze blurple light anomaly (triggered by clicking anywhere)
@@ -4252,8 +4126,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing blurple light anomaly...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -4277,9 +4150,7 @@ window.anomalySystem = {
     // Fix blurple light anomaly
     fixBlurpleLightAnomaly: function() {
         if (!this.activeAnomalies.blurpleLightAnomaly) return;
-        
-        console.log('Fixing blurple light anomaly');
-        
+
         // Restore original text
         if (this.originalBluelightTexts) {
             this.originalBluelightTexts.forEach(({ node, originalText }) => {
@@ -4304,16 +4175,14 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
-        
-        console.log('Blurple light anomaly fixed! Blue Light text restored to normal.');
+
     },
 
     // Restore blurple light anomaly from saved state
     restoreBlurpleLightAnomaly: function(savedAnomaly) {
-        console.log('Restoring blurple light anomaly from saved state:', savedAnomaly);
-        
+
         if (this.activeAnomalies.blurpleLightAnomaly) {
-            console.log('Blurple light anomaly already active, skipping restore');
+
             return;
         }
         
@@ -4359,12 +4228,11 @@ window.anomalySystem = {
             
             // Only trigger if clicking on prism tiles/grid
             if (isPrismTile) {
-                console.log('Clicked on prism tile - analyzing grey anomaly');
+
                 this.analyzePrismGreyAnomaly(true);
             }
         }, true);
-        
-        console.log('Prism grey anomaly detection setup complete - detectable by clicking on prism tiles');
+
     },
 
     // === NOTATION SCRAMBLE ANOMALY DETECTION ===
@@ -4400,16 +4268,14 @@ window.anomalySystem = {
                 
                 // Check if clicked element contains formatted numbers (currency displays, etc.)
                 const isNumberDisplay = this.isNumberDisplay(target);
-                console.log('Is number display:', isNumberDisplay, 'Text:', target.textContent);
-                
+
                 if (isNumberDisplay) {
-                    console.log('Clicked on number display while notation anomaly active - analyzing...');
+
                     this.analyzeNotationScrambleAnomaly(true);
                 }
             }
         }, true);
-        
-        console.log('Notation scramble anomaly detection setup complete - detectable by clicking on notation dropdown or number displays');
+
     },
 
     // Helper function to detect if an element is displaying a formatted number
@@ -4417,23 +4283,22 @@ window.anomalySystem = {
         if (!element) return false;
         
         const text = element.textContent ? element.textContent.trim() : '';
-        console.log('Checking element for number display:', element, 'Text:', text);
-        
+
         // Check specific element IDs first (most reliable)
         if (element.id && ['fluff', 'swaria', 'feathers', 'artifacts', 'kp'].includes(element.id)) {
-            console.log('Found currency element by ID:', element.id);
+
             return true;
         }
         
         // Check if element is inside a currency wrapper
         if (element.closest && element.closest('.currency-value-wrapper')) {
-            console.log('Found element inside currency wrapper');
+
             return true;
         }
         
         // Check for gain popup elements
         if (element.classList && element.classList.contains('gain-popup')) {
-            console.log('Found gain popup element');
+
             return true;
         }
         
@@ -4452,19 +4317,18 @@ window.anomalySystem = {
             
             for (let pattern of numberPatterns) {
                 if (pattern.test(text)) {
-                    console.log('Found number pattern match:', pattern, 'in text:', text);
+
                     return true;
                 }
             }
             
             // Check for "+X per tick" patterns
             if (/\+\d+.*per tick/i.test(text)) {
-                console.log('Found per tick pattern');
+
                 return true;
             }
         }
-        
-        console.log('Not a number display element');
+
         return false;
     },
 
@@ -4472,18 +4336,16 @@ window.anomalySystem = {
 
     // Spawn box generator freeze anomaly
     spawnBoxGeneratorFreezeAnomaly: function() {
-        console.log('Spawning box generator freeze anomaly...');
-        
+
         // Check Soap's friendship level - if 10+, automatically fix any existing anomalies and prevent new ones
         const soapLevel = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                          (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
         
         if (soapLevel >= 10) {
-            console.log(`Soap friendship level ${soapLevel} detected - Box Generator Mk.2 protects against generator freezes!`);
-            
+
             // If there's already a box generator freeze anomaly, fix it immediately
             if (this.activeAnomalies.boxGeneratorFreezeAnomaly) {
-                console.log('Automatically fixing existing box generator freeze anomaly due to Mk.2 protection');
+
                 this.fixBoxGeneratorFreezeAnomaly();
             }
             
@@ -4516,10 +4378,10 @@ window.anomalySystem = {
         this.saveAnomalyState();
         
         if (this.frozenGeneratorId === -1) {
-            console.log('Box generator freeze anomaly spawned! Box Generator Mk.2 system has been frozen.');
+
         } else {
             const generatorNames = ['Common Box', 'Uncommon Box', 'Rare Box', 'Legendary Box', 'Mythic Box'];
-            console.log(`Box generator freeze anomaly spawned! ${generatorNames[this.frozenGeneratorId]} Generator has been frozen.`);
+
         }
     },
 
@@ -4578,16 +4440,15 @@ window.anomalySystem = {
             // Only trigger if clicking specifically on the frozen generator/system
             if (isClickingFrozenGenerator) {
                 if (this.frozenGeneratorId === -1) {
-                    console.log('Clicked on frozen Box Generator Mk.2 system - analyzing box generator freeze anomaly');
+
                 } else {
                     const generatorNames = ['Common Box', 'Uncommon Box', 'Rare Box', 'Legendary Box', 'Mythic Box'];
-                    console.log(`Clicked on frozen ${generatorNames[this.frozenGeneratorId]} Generator - analyzing box generator freeze anomaly`);
+
                 }
                 this.analyzeBoxGeneratorFreezeAnomaly(true);
             }
         }, true);
-        
-        console.log('Box generator freeze anomaly detection setup complete - detects clicks on individual generators or Mk.2 system');
+
     },
 
     // Analyze box generator freeze anomaly
@@ -4595,8 +4456,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing box generator freeze anomaly...');
-        
+
         // Add cursor animation and analyzing class
         document.body.classList.add('anomaly-analyzing');
         this.startCursorAnimation();
@@ -4619,8 +4479,7 @@ window.anomalySystem = {
 
     // Fix box generator freeze anomaly
     fixBoxGeneratorFreezeAnomaly: function() {
-        console.log('Fixing box generator freeze anomaly');
-        
+
         const wasMk2Frozen = this.frozenGeneratorId === -1;
         
         this.activeAnomalies.boxGeneratorFreezeAnomaly = false;
@@ -4636,9 +4495,9 @@ window.anomalySystem = {
         this.saveAnomalyState();
         
         if (wasMk2Frozen) {
-            console.log('Box generator freeze anomaly fixed! Box Generator Mk.2 system should work normally now.');
+
         } else {
-            console.log('Box generator freeze anomaly fixed! All generators should work normally now.');
+
         }
     },
 
@@ -4654,10 +4513,9 @@ window.anomalySystem = {
 
     // Restore box generator freeze anomaly from saved state
     restoreBoxGeneratorFreezeAnomaly: function(savedAnomaly) {
-        console.log('Restoring box generator freeze anomaly from saved state:', savedAnomaly);
-        
+
         if (this.activeAnomalies.boxGeneratorFreezeAnomaly) {
-            console.log('Box generator freeze anomaly already active, skipping restore');
+
             return;
         }
         
@@ -4666,7 +4524,7 @@ window.anomalySystem = {
                          (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
         
         if (soapLevel >= 10) {
-            console.log(`Soap friendship level ${soapLevel} detected - Box Generator Mk.2 prevents restoration of generator freeze anomaly!`);
+
             // Don't restore the anomaly, just give the reward since it was "automatically fixed"
             this.giveAnomalyReward();
             return;
@@ -4680,10 +4538,10 @@ window.anomalySystem = {
         
         // The frozenGeneratorId should already be restored from the saved state
         if (this.frozenGeneratorId === -1) {
-            console.log('Box generator freeze anomaly restored! Box Generator Mk.2 system is frozen.');
+
         } else {
             const generatorNames = ['Common Box', 'Uncommon Box', 'Rare Box', 'Legendary Box', 'Mythic Box'];
-            console.log(`Box generator freeze anomaly restored! ${generatorNames[this.frozenGeneratorId]} Generator is frozen.`);
+
         }
     },
     
@@ -4703,8 +4561,7 @@ window.anomalySystem = {
     
     // Spawn lab darkness anomaly (silently - no popup notification)
     spawnLabDarknessAnomaly: function() {
-        console.log('Spawning dangerous lab darkness anomaly silently!');
-        
+
         if (this.activeAnomalies.labDarknessAnomaly) return; // Already active
         
         this.activeAnomalies.labDarknessAnomaly = true;
@@ -4722,13 +4579,12 @@ window.anomalySystem = {
         this.labDarknessPaused = true;
         
         // Setup lab tab monitoring to wait for player to click lab tab
-        console.log('Lab darkness anomaly spawned silently - waiting for player to click lab tab to start progression');
+
         this.setupLabTabMonitoring();
         
         // Save state
         this.saveAnomalyState();
-        
-        console.log('Dangerous lab darkness anomaly spawned silently! No notification given to player.');
+
     },
     
     // Setup monitoring for when player clicks lab tab button (to start lab darkness)
@@ -4745,42 +4601,40 @@ window.anomalySystem = {
             const labTabButton1 = document.querySelector('[onclick*="switchHomeSubTab(\'prismSubTab\')"]');
             const labTabButton2 = document.querySelector('[onclick*="switchHomeSubTab(\\"prismSubTab\\")"]');
             const labTabButton3 = document.getElementById('prismSubTabBtn');
-            
-            console.log('Click detected, checking if lab tab button was clicked...');
-            console.log('Clicked element:', event.target);
-            console.log('Clicked element onclick:', event.target.onclick);
-            console.log('Clicked element textContent:', event.target.textContent);
-            console.log('Lab tab button (single quotes):', labTabButton1);
-            console.log('Lab tab button (double quotes):', labTabButton2);
-            console.log('Lab tab button (ID):', labTabButton3);
-            
+
+
+
+
+
+
+
             // More comprehensive check for lab tab button click
             let isLabTabButtonClick = false;
             
             // Check direct element match
             if (event.target === labTabButton1 || event.target === labTabButton2 || event.target === labTabButton3) {
                 isLabTabButtonClick = true;
-                console.log('Direct lab tab button match found');
+
             }
             
             // Check onclick attribute contains lab/prism switch
             if (event.target.onclick && event.target.onclick.toString().includes("switchHomeSubTab") && 
                 (event.target.onclick.toString().includes("prismSubTab") || event.target.onclick.toString().includes("prism"))) {
                 isLabTabButtonClick = true;
-                console.log('Lab tab onclick attribute match found');
+
             }
             
             // Check if element contains "Lab" text and is a button/clickable
             if ((event.target.textContent && event.target.textContent.includes('Lab')) &&
                 (event.target.tagName === 'BUTTON' || event.target.onclick || event.target.style.cursor === 'pointer')) {
                 isLabTabButtonClick = true;
-                console.log('Lab text content match found');
+
             }
             
             // Check if element has the prismSubTabBtn ID
             if (event.target.id === 'prismSubTabBtn') {
                 isLabTabButtonClick = true;
-                console.log('Lab button ID match found');
+
             }
             
             // Check closest parent for lab tab functionality
@@ -4790,42 +4644,39 @@ window.anomalySystem = {
             );
             if (closestLabElement) {
                 isLabTabButtonClick = true;
-                console.log('Closest lab element match found');
+
             }
-            
-            console.log('Final lab tab click decision:', isLabTabButtonClick);
-            
+
             if (isLabTabButtonClick) {
-                console.log('Lab tab button clicked - starting lab darkness anomaly progression!');
-                
+
                 // Small delay to ensure tab switch has completed
                 setTimeout(() => {
                     if (this.labDarknessPaused && this.activeAnomalies.labDarknessAnomaly) {
-                        console.log('Starting lab darkness progression after lab tab click...');
+
                         this.labDarknessPaused = false;
                         // Set start time to now since we're starting fresh
                         this.labDarknessStartTime = Date.now();
                         // Create the darkness overlay now that player clicked lab tab
                         this.createLabDarknessOverlay();
-                        console.log('Lab darkness overlay created');
+
                         this.startLabDarknessProgression();
-                        console.log('Lab darkness progression started');
+
                         // Start Vi's panic dialogue
                         this.startViPanicDialogue();
-                        console.log('Vi panic dialogue started');
+
                         // Remove this monitor since we're no longer paused
                         document.removeEventListener('click', this.labTabMonitor);
                         this.labTabMonitor = null;
-                        console.log('Lab tab monitoring removed - anomaly is now active');
+
                     } else {
-                        console.log('Lab darkness anomaly not started - paused:', this.labDarknessPaused, 'active:', this.activeAnomalies.labDarknessAnomaly);
+
                     }
                 }, 100); // Small delay to ensure tab switch has completed
             }
         };
         
         document.addEventListener('click', this.labTabMonitor);
-        console.log('Lab tab monitoring set up - lab darkness will start when player clicks lab tab button');
+
     },
     
     // Create the lab darkness overlay element
@@ -4902,8 +4753,7 @@ window.anomalySystem = {
     
     // Start the lab darkness progression (gradually consuming screen from corners)
     startLabDarknessProgression: function() {
-        console.log('Starting lab darkness progression timer...');
-        
+
         // Clear any existing timer
         if (this.labDarknessProgressTimer) {
             clearInterval(this.labDarknessProgressTimer);
@@ -4953,7 +4803,7 @@ window.anomalySystem = {
             
             // Check if time is up
             if (this.labDarknessProgress >= 100) {
-                console.log('Lab darkness anomaly time is up! Applying consequences...');
+
                 this.labDarknessTimeUp();
             }
         }, 25); // Update every 25ms to maintain same animation speed with 5-second duration
@@ -4987,8 +4837,7 @@ window.anomalySystem = {
                 window.showViResponse(this.viPanicMessages[currentMessageIndex], false);
             }
         }, 300);
-        
-        console.log('Vi panic dialogue started - rotating every 300ms');
+
     },
     
     // Stop Vi's panic dialogue
@@ -5000,14 +4849,12 @@ window.anomalySystem = {
         
         // Re-enable normal Vi dialogue
         window.viPanicMode = false;
-        
-        console.log('Vi panic dialogue stopped');
+
     },
     
     // Time is up for lab darkness anomaly
     labDarknessTimeUp: function() {
-        console.log('Lab darkness anomaly failed! Applying 25% inventory token loss...');
-        
+
         // Stop progression timer
         if (this.labDarknessProgressTimer) {
             clearInterval(this.labDarknessProgressTimer);
@@ -5045,8 +4892,7 @@ window.anomalySystem = {
         document.addEventListener('click', (event) => {
             // Only detect if find mode is active and lab darkness anomaly is active and not paused
             if (this.findModeActive && !this.analyzing && this.activeAnomalies.labDarknessAnomaly && !this.labDarknessPaused) {
-                console.log('Click detected during lab darkness anomaly in find mode');
-                
+
                 // For lab darkness, any click anywhere on the screen fixes it
                 this.analyzeLabDarknessAnomaly(true);
                 
@@ -5054,8 +4900,7 @@ window.anomalySystem = {
                 event.stopPropagation();
             }
         });
-        
-        console.log('Lab darkness anomaly detection setup complete');
+
     },
     
     // Analyze lab darkness anomaly (always succeeds if clicked during find mode)
@@ -5063,8 +4908,7 @@ window.anomalySystem = {
         if (this.analyzing) return;
         
         this.analyzing = true;
-        console.log('Analyzing lab darkness anomaly...');
-        
+
         // Show analyzing feedback
         this.showAnalyzing();
         
@@ -5087,8 +4931,7 @@ window.anomalySystem = {
     
     // Fix lab darkness anomaly
     fixLabDarknessAnomaly: function(wasManuallyFixed = true) {
-        console.log('Fixing lab darkness anomaly...');
-        
+
         // Stop progression timer
         if (this.labDarknessProgressTimer) {
             clearInterval(this.labDarknessProgressTimer);
@@ -5142,18 +4985,17 @@ window.anomalySystem = {
             
             // Show only black popup notification (no green popup)
             this.showPopup("Lab Darkness Anomaly Fixed", '#000000');
-            console.log('Lab darkness anomaly manually fixed by player!');
+
         } else {
-            console.log('Lab darkness anomaly removed due to failure/timeout');
+
         }
     },
     
     // Restore lab darkness anomaly from saved state
     restoreLabDarknessAnomaly: function(savedAnomaly) {
-        console.log('Restoring lab darkness anomaly from saved state:', savedAnomaly);
-        
+
         if (this.activeAnomalies.labDarknessAnomaly) {
-            console.log('Lab darkness anomaly already active, skipping restore');
+
             return;
         }
         
@@ -5169,16 +5011,14 @@ window.anomalySystem = {
         
         // Setup lab tab monitoring again (anomaly spawned but not triggered yet)
         this.setupLabTabMonitoring();
-        
-        console.log('Lab darkness anomaly restored! Waiting for player to click lab tab to trigger.');
+
     },
 
     // Restore notation scramble anomaly from saved state
     restoreNotationScrambleAnomaly: function(savedAnomaly) {
-        console.log('Restoring notation scramble anomaly from saved state:', savedAnomaly);
-        
+
         if (this.activeAnomalies.notationScrambleAnomaly) {
-            console.log('Notation scramble anomaly already active, skipping restore');
+
             return;
         }
         
@@ -5190,8 +5030,7 @@ window.anomalySystem = {
         
         // Restart the anomaly effect
         this.startNotationScrambleAnomaly();
-        
-        console.log('Notation scramble anomaly restored! Notation is locked and scrambled.');
+
     }
 };
 
@@ -5349,7 +5188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check if OMEGA box anomaly is active but OMEGA box is missing
             if (window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly && !document.getElementById('omegaBox')) {
-                console.log('OMEGA box anomaly is active but OMEGA box element is missing - restoring...');
+
                 window.anomalySystem.addOmegaBoxToCargo();
             }
             
@@ -5373,7 +5212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // If we found "Blue Light:" text while the anomaly is active, re-apply the replacement
                 if (foundBlueLightText) {
-                    console.log('Blurple light anomaly is active but text has reverted - re-applying replacement...');
+
                     window.anomalySystem.replaceBluelightText();
                 }
             }
@@ -5400,15 +5239,13 @@ window.toggleAnomalyDetectorModal = toggleAnomalyDetectorModal;
 
 // Test functions
 function testAnomalySystem() {
-    console.log('Testing anomaly system...');
-    console.log('Current stats:', window.anomalySystem.getStats());
-    
+
+
     // Check if player has infinity
     const totalInfinity = window.infinitySystem ? window.infinitySystem.totalInfinityEarned : 0;
-    console.log('Total infinity earned:', totalInfinity);
-    
+
     if (totalInfinity < 1) {
-        console.log('Anomaly detector requires at least 1 total infinity');
+
         return;
     }
     
@@ -5416,18 +5253,17 @@ function testAnomalySystem() {
     const detectorContainer = document.getElementById('anomalyDetectorContainer');
     if (detectorContainer) {
         detectorContainer.style.display = 'block';
-        console.log('Anomaly detector button is visible');
+
     }
     
     // Spawn some test anomalies manually
     window.anomalySystem.spawnAnomaly();
     window.anomalySystem.spawnAnomaly();
-    console.log('Spawned 2 test anomalies manually');
-    
+
     // Open the detector modal
     setTimeout(() => {
         window.anomalySystem.openDetectorModal();
-        console.log('Opened detector modal - click the Anomaly Detector button again to close');
+
     }, 1000);
 }
 
@@ -5435,7 +5271,7 @@ function forceShowAnomalyDetector() {
     const detectorContainer = document.getElementById('anomalyDetectorContainer');
     if (detectorContainer) {
         detectorContainer.style.display = 'block';
-        console.log('Anomaly detector button is now visible (forced)');
+
     }
 }
 
@@ -5443,7 +5279,7 @@ function simulateInfinityEarned() {
     if (window.infinitySystem) {
         window.infinitySystem.totalInfinityEarned = 1;
         window.anomalySystem.updateDetectorVisibility();
-        console.log('Simulated 1 total infinity earned - detector should now be visible');
+
     }
 }
 
@@ -5460,7 +5296,7 @@ window.clearAllAnomalies = clearAllAnomalies;
 window.testClockAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnClockAnomaly();
@@ -5469,7 +5305,7 @@ window.testClockAnomaly = function() {
 window.testBackwardClockAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnBackwardClockAnomaly();
@@ -5478,7 +5314,7 @@ window.testBackwardClockAnomaly = function() {
 window.testBoxOrderAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnBoxOrderAnomaly();
@@ -5487,7 +5323,7 @@ window.testBoxOrderAnomaly = function() {
 window.testSoapGeneratorAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnSoapGeneratorAnomaly();
@@ -5496,59 +5332,58 @@ window.testSoapGeneratorAnomaly = function() {
 window.testShopPriceAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnShopPriceAnomaly();
 };
 
 window.forceTestShopPriceAnomaly = function() {
-    console.log('Force testing shop price anomaly (bypassing infinity requirement)...');
+
     if (!window.anomalySystem) {
-        console.log('ERROR: Anomaly system not found!');
+
         return;
     }
     if (!window.boutique) {
-        console.log('ERROR: Boutique system not found!');
+
         return;
     }
     window.anomalySystem.spawnShopPriceAnomaly();
 };
 
 window.clearShopPriceAnomaly = function() {
-    console.log('Clearing shop price anomaly...');
+
     if (window.anomalySystem && window.anomalySystem.activeAnomalies.shopPriceAnomaly) {
         window.anomalySystem.fixShopPriceAnomaly();
-        console.log('Shop price anomaly cleared');
+
     } else {
-        console.log('No shop price anomaly active');
+
     }
 };
 
 window.checkShopPriceAnomalyStatus = function() {
-    console.log('Shop price anomaly status:');
-    console.log('Active:', window.anomalySystem?.activeAnomalies?.shopPriceAnomaly);
-    console.log('Affected item:', window.anomalySystem?.anomalyAffectedItem);
-    console.log('All active anomalies:', window.anomalySystem?.activeAnomalies);
-    console.log('Anomaly list:', window.anomalySystem?.anomalies);
-    
+
+
+
+
+
     // Test price override
     if (window.boutique && window.anomalySystem?.anomalyAffectedItem) {
         const affectedItem = window.anomalySystem.anomalyAffectedItem;
         const testPrice = window.boutique.getCurrentPrice(affectedItem);
-        console.log(`Price test for ${affectedItem}:`, testPrice);
-        console.log('Expected price: 727');
-        console.log('Price override working:', testPrice === 727);
+
+
+
     }
     
     // Check if original function exists
-    console.log('Original getCurrentPrice function saved:', !!window.boutique?.originalGetCurrentPrice);
+
 };
 
 window.forceSoapGeneratorAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     // Clear existing soap generator anomaly first
@@ -5562,7 +5397,7 @@ window.forceSoapGeneratorAnomaly = function() {
 window.forceAnomalySpawn = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnRandomAnomaly();
@@ -5585,7 +5420,7 @@ window.debugPowerGenerator = function() {
     const powerHeadings = document.querySelectorAll('.power-generator h3');
     
     powerHeadings.forEach((heading, i) => {
-        console.log(`Heading ${i}:`, heading.textContent);
+
     });
     
     return {
@@ -5597,47 +5432,47 @@ window.debugPowerGenerator = function() {
 window.testDarkVoidAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnDarkVoidAnomaly();
 };
 
 window.forceTestDarkVoidAnomaly = function() {
-    console.log('Force testing dangerous dark void anomaly (bypassing infinity requirement)...');
+
     if (!window.anomalySystem) {
-        console.log('ERROR: Anomaly system not found!');
+
         return;
     }
     window.anomalySystem.spawnDarkVoidAnomaly();
 };
 
 window.clearDarkVoidAnomaly = function() {
-    console.log('Clearing dark void anomaly...');
+
     if (window.anomalySystem && window.anomalySystem.activeAnomalies.darkVoidAnomaly) {
         window.anomalySystem.fixDarkVoidAnomaly();
-        console.log('Dark void anomaly cleared');
+
     } else {
-        console.log('No dark void anomaly active');
+
     }
 };
 
 window.checkDarkVoidAnomalyStatus = function() {
-    console.log('Dark void anomaly status:');
-    console.log('Active:', window.anomalySystem?.activeAnomalies?.darkVoidAnomaly);
-    console.log('Progress:', window.anomalySystem?.darkVoidProgress + '%');
-    console.log('Timer active:', !!window.anomalySystem?.darkVoidProgressTimer);
-    console.log('All active anomalies:', window.anomalySystem?.activeAnomalies);
-    console.log('Anomaly list:', window.anomalySystem?.anomalies);
+
+
+
+
+
+
 };
 
 window.triggerDarkVoidConsequencesTest = function() {
-    console.log('Testing dark void consequences (25% token loss)...');
+
     if (window.anomalySystem && window.anomalySystem.activeAnomalies.darkVoidAnomaly) {
         window.anomalySystem.triggerDarkVoidConsequences();
-        console.log('Dark void consequences triggered');
+
     } else {
-        console.log('No dark void anomaly active - spawning one and triggering consequences immediately');
+
         window.anomalySystem.spawnDarkVoidAnomaly();
         setTimeout(() => {
             window.anomalySystem.triggerDarkVoidConsequences();
@@ -5646,87 +5481,80 @@ window.triggerDarkVoidConsequencesTest = function() {
 };
 
 window.debugCargoTabButtons = function() {
-    console.log('=== DEBUGGING CARGO TAB BUTTONS ===');
-    
+
     // Find all possible cargo-related elements
     const buttons = document.querySelectorAll('button');
     const clickableElements = document.querySelectorAll('[onclick]');
     const cargoTextElements = document.querySelectorAll('*');
-    
-    console.log('All buttons on page:');
+
     buttons.forEach((btn, i) => {
-        console.log(`Button ${i}:`, btn.textContent, btn.onclick?.toString(), btn);
+
     });
-    
-    console.log('\nAll elements with onclick:');
+
     clickableElements.forEach((el, i) => {
-        console.log(`Clickable ${i}:`, el.textContent, el.onclick?.toString(), el);
+
     });
-    
-    console.log('\nElements containing "Cargo" text:');
+
     Array.from(cargoTextElements).filter(el => el.textContent && el.textContent.includes('Cargo')).forEach((el, i) => {
-        console.log(`Cargo element ${i}:`, el.textContent, el.onclick?.toString(), el.tagName, el);
+
     });
-    
-    console.log('\nSpecific cargo tab selectors:');
-    console.log('Single quotes:', document.querySelector('[onclick*="switchHomeSubTab(\'cargo\')"]'));
-    console.log('Double quotes:', document.querySelector('[onclick*="switchHomeSubTab(\\"cargo\\")"]'));
-    console.log('Any cargo:', document.querySelector('[onclick*="cargo"]'));
-    console.log('Case insensitive cargo:', document.querySelector('[onclick*="Cargo"]'));
+
+
+
+
+
 };
 
 window.testPrismMirrorAnomaly = function() {
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
     if (!hasInfinity) {
-        console.log('Anomalies require at least 1 total infinity to be unlocked');
+
         return;
     }
     window.anomalySystem.spawnPrismMirrorAnomaly();
 };
 
 window.forceTestPrismMirrorAnomaly = function() {
-    console.log('Force testing prism mirror anomaly (bypassing infinity requirement)...');
+
     if (!window.anomalySystem) {
-        console.log('ERROR: Anomaly system not found!');
+
         return;
     }
     window.anomalySystem.spawnPrismMirrorAnomaly();
 };
 
 window.clearPrismMirrorAnomaly = function() {
-    console.log('Clearing prism mirror anomaly...');
+
     if (window.anomalySystem && window.anomalySystem.activeAnomalies.prismMirrorAnomaly) {
         window.anomalySystem.fixPrismMirrorAnomaly();
-        console.log('Prism mirror anomaly cleared');
+
     } else {
-        console.log('No prism mirror anomaly active');
+
     }
 };
 
 window.checkPrismMirrorAnomalyStatus = function() {
-    console.log('Prism mirror anomaly status:');
-    console.log('Active:', window.anomalySystem?.activeAnomalies?.prismMirrorAnomaly);
-    console.log('All active anomalies:', window.anomalySystem?.activeAnomalies);
-    console.log('Anomaly list:', window.anomalySystem?.anomalies);
-    
+
+
+
+
     // Check for mirrored elements
     const mirroredElements = document.querySelectorAll('.prism-mirror-anomaly-affected');
-    console.log('Mirrored elements found:', mirroredElements.length);
-    
+
     const anomalyStyles = document.getElementById('prismMirrorAnomalyStyles');
-    console.log('Mirror styles active:', !!anomalyStyles);
+
 };
 
 // Cargo OMEGA Box Anomaly Test Functions
 window.testCargoOmegaBoxAnomaly = function() {
-    console.log('Testing cargo OMEGA box anomaly (with infinity requirement)...');
+
     if (window.anomalySystem) {
         window.anomalySystem.spawnCargoOmegaBoxAnomaly();
     }
 };
 
 window.forceTestCargoOmegaBoxAnomaly = function() {
-    console.log('Force testing cargo OMEGA box anomaly (bypassing infinity requirement)...');
+
     if (window.anomalySystem) {
         // Temporarily bypass infinity requirement for testing
         const originalCheck = window.anomalySystem.canSpawnAnomalies;
@@ -5737,29 +5565,26 @@ window.forceTestCargoOmegaBoxAnomaly = function() {
 };
 
 window.clearCargoOmegaBoxAnomaly = function() {
-    console.log('Clearing cargo OMEGA box anomaly...');
+
     if (window.anomalySystem && window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly) {
         window.anomalySystem.fixCargoOmegaBoxAnomaly();
-        console.log('Cargo OMEGA box anomaly cleared');
+
     } else {
-        console.log('No cargo OMEGA box anomaly active');
+
     }
 };
 
 window.checkCargoOmegaBoxAnomalyStatus = function() {
-    console.log('Cargo OMEGA box anomaly status:');
-    console.log('Active:', window.anomalySystem?.activeAnomalies?.cargoOmegaBoxAnomaly);
-    console.log('All active anomalies:', window.anomalySystem?.activeAnomalies);
-    console.log('Anomaly list:', window.anomalySystem?.anomalies);
-    
+
+
+
+
     // Check for OMEGA box element
     const omegaBox = document.getElementById('omegaBox');
-    console.log('OMEGA box element found:', !!omegaBox);
-    
+
     // Check for rainbow styles
     const rainbowStyles = document.querySelectorAll('style[data-omega-box]');
-    console.log('Rainbow styles active:', rainbowStyles.length);
-    
+
     // Check cargo container
     const boxesCards = document.querySelectorAll('.card');
     let boxesContainer = null;
@@ -5771,31 +5596,29 @@ window.checkCargoOmegaBoxAnomalyStatus = function() {
             break;
         }
     }
-    console.log('Boxes container found:', !!boxesContainer);
+
 };
 
 // Test OMEGA box restoration process
 window.testOmegaBoxRestoration = function() {
-    console.log('Testing OMEGA box restoration process...');
-    
+
     // Check if anomaly is active but box is missing
     if (window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly) {
         const omegaBox = document.getElementById('omegaBox');
         if (!omegaBox) {
-            console.log('OMEGA box anomaly is active but element is missing - forcing restoration...');
+
             window.anomalySystem.addOmegaBoxToCargo();
         } else {
-            console.log('OMEGA box element is present');
+
         }
     } else {
-        console.log('OMEGA box anomaly is not active');
+
     }
 };
 
 // Force restoration by simulating saved state load
 window.simulateOmegaBoxRestoration = function() {
-    console.log('Simulating OMEGA box restoration from saved state...');
-    
+
     const fakeAnomaly = {
         id: 999,
         type: 'cargoOmegaBox',
@@ -5818,50 +5641,43 @@ window.simulateOmegaBoxRestoration = function() {
 
 // Test mutual exclusion between box order and OMEGA box anomalies
 window.testBoxAnomalyMutualExclusion = function() {
-    console.log('Testing mutual exclusion between box order and OMEGA box anomalies...');
-    
+
     // Clear any existing anomalies first
     window.anomalySystem.activeAnomalies.boxOrderAnomaly = false;
     window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly = false;
     window.anomalySystem.anomalies = window.anomalySystem.anomalies.filter(a => 
         a.type !== 'boxOrder' && a.type !== 'cargoOmegaBox'
     );
-    
-    console.log('Test 1: Spawn box order anomaly first');
+
     window.anomalySystem.spawnBoxOrderAnomaly();
-    console.log('Box order active:', window.anomalySystem.activeAnomalies.boxOrderAnomaly);
-    
-    console.log('Test 2: Try to spawn OMEGA box anomaly (should fail)');
+
+
     window.anomalySystem.spawnCargoOmegaBoxAnomaly();
-    console.log('OMEGA box active:', window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly);
-    
-    console.log('Test 3: Fix box order anomaly');
+
+
     window.anomalySystem.fixBoxOrderAnomaly();
-    console.log('Box order active after fix:', window.anomalySystem.activeAnomalies.boxOrderAnomaly);
-    
-    console.log('Test 4: Spawn OMEGA box anomaly (should succeed now)');
+
+
     window.anomalySystem.spawnCargoOmegaBoxAnomaly();
-    console.log('OMEGA box active:', window.anomalySystem.activeAnomalies.cargoOmegaBoxAnomaly);
-    
-    console.log('Test 5: Try to spawn box order anomaly again (should fail)');
+
+
     window.anomalySystem.spawnBoxOrderAnomaly();
-    console.log('Box order active:', window.anomalySystem.activeAnomalies.boxOrderAnomaly);
-    
-    console.log('Mutual exclusion test complete!');
+
+
 };
 
 // Test function for Swaria dark void failure speech
 window.testSwariaDarkVoidSpeech = function() {
-    console.log('Testing Swaria dark void failure speech...');
+
     window.anomalySystem.showSwariaDarkVoidFailureSpeech();
-    console.log('Swaria speech triggered! Should see speech for 6 seconds.');
+
 };
 
 // Test function for blurple light anomaly
 window.testBlurpleLightAnomaly = function() {
-    console.log('Testing blurple light anomaly...');
+
     if (window.anomalySystem.activeAnomalies.blurpleLightAnomaly) {
-        console.log('Blurple light anomaly already active! Clearing first...');
+
         window.clearBlurpleLightAnomaly();
         setTimeout(() => {
             window.anomalySystem.spawnBlurpleLightAnomaly();
@@ -5873,108 +5689,108 @@ window.testBlurpleLightAnomaly = function() {
 
 // Force test blurple light anomaly (for debugging)
 window.forceTestBlurpleLightAnomaly = function() {
-    console.log('Force testing blurple light anomaly...');
+
     // Clear any existing first
     window.clearBlurpleLightAnomaly();
     // Force spawn new one
     setTimeout(() => {
         window.anomalySystem.spawnBlurpleLightAnomaly();
-        console.log('Blurple light anomaly force spawned! All Blue Light text should now show as Blurple Light.');
+
     }, 100);
 };
 
 // Clear blurple light anomaly
 window.clearBlurpleLightAnomaly = function() {
-    console.log('Clearing blurple light anomaly...');
+
     window.anomalySystem.fixBlurpleLightAnomaly();
-    console.log('Blurple light anomaly cleared! Blue Light text should be restored.');
+
 };
 
 // Check blurple light anomaly status
 window.checkBlurpleLightAnomalyStatus = function() {
-    console.log('Blurple light anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.blurpleLightAnomaly);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'blurpleLight'));
-    console.log('Original texts stored:', window.anomalySystem.originalBluelightTexts ? window.anomalySystem.originalBluelightTexts.length : 0);
+
+
+
+
 };
 
 // === BOX GENERATOR FREEZE ANOMALY FUNCTIONS ===
 
 // Test box generator freeze anomaly
 window.testBoxGeneratorFreezeAnomaly = function() {
-    console.log('Testing box generator freeze anomaly...');
+
     window.anomalySystem.spawnBoxGeneratorFreezeAnomaly();
-    console.log('Box generator freeze anomaly spawned! One generator should be frozen.');
+
 };
 
 // Force test box generator freeze anomaly  
 window.forceTestBoxGeneratorFreezeAnomaly = function() {
-    console.log('Force testing box generator freeze anomaly...');
+
     // Clear any existing first
     window.clearBoxGeneratorFreezeAnomaly();
     // Force spawn new one
     setTimeout(() => {
         window.anomalySystem.spawnBoxGeneratorFreezeAnomaly();
-        console.log('Box generator freeze anomaly force spawned! One generator should be frozen.');
+
     }, 100);
 };
 
 // Clear box generator freeze anomaly
 window.clearBoxGeneratorFreezeAnomaly = function() {
-    console.log('Clearing box generator freeze anomaly...');
+
     window.anomalySystem.fixBoxGeneratorFreezeAnomaly();
-    console.log('Box generator freeze anomaly cleared! All generators should work normally.');
+
 };
 
 // Check box generator freeze anomaly status
 window.checkBoxGeneratorFreezeAnomalyStatus = function() {
-    console.log('Box generator freeze anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.boxGeneratorFreezeAnomaly);
-    console.log('Frozen generator ID:', window.anomalySystem.frozenGeneratorId);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'boxGeneratorFreeze'));
+
+
+
+
 };
 
 // === LAB DARKNESS ANOMALY TEST FUNCTIONS ===
 
 // Test lab darkness anomaly
 window.testLabDarknessAnomaly = function() {
-    console.log('Testing lab darkness anomaly...');
+
     window.anomalySystem.spawnLabDarknessAnomaly();
-    console.log('Lab darkness anomaly spawned silently! Click the Lab tab to trigger the darkness.');
+
 };
 
 // Force test lab darkness anomaly  
 window.forceTestLabDarknessAnomaly = function() {
-    console.log('Force testing lab darkness anomaly...');
+
     // Clear any existing first
     window.clearLabDarknessAnomaly();
     // Force spawn new one
     setTimeout(() => {
         window.anomalySystem.spawnLabDarknessAnomaly();
-        console.log('Lab darkness anomaly force spawned silently! Click the Lab tab to trigger the darkness.');
+
     }, 100);
 };
 
 // Clear lab darkness anomaly
 window.clearLabDarknessAnomaly = function() {
-    console.log('Clearing lab darkness anomaly...');
+
     window.anomalySystem.fixLabDarknessAnomaly(true);
-    console.log('Lab darkness anomaly cleared! Darkness should be gone and Vi should be calm.');
+
 };
 
 // Check lab darkness anomaly status
 window.checkLabDarknessAnomalyStatus = function() {
-    console.log('Lab darkness anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.labDarknessAnomaly);
-    console.log('Paused (waiting for lab tab click):', window.anomalySystem.labDarknessPaused);
-    console.log('Progress:', window.anomalySystem.labDarknessProgress + '%');
-    console.log('Vi panic mode:', window.viPanicMode);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'labDarkness'));
+
+
+
+
+
+
 };
 
 // Force trigger lab darkness progression (for testing)
 window.forceLabDarknessProgression = function() {
-    console.log('Force triggering lab darkness progression...');
+
     if (window.anomalySystem.activeAnomalies.labDarknessAnomaly && window.anomalySystem.labDarknessPaused) {
         // Simulate lab tab click
         window.anomalySystem.labDarknessPaused = false;
@@ -5982,9 +5798,9 @@ window.forceLabDarknessProgression = function() {
         window.anomalySystem.createLabDarknessOverlay();
         window.anomalySystem.startLabDarknessProgression();
         window.anomalySystem.startViPanicDialogue();
-        console.log('Lab darkness progression force started! You have 5 seconds to click anywhere in find mode.');
+
     } else {
-        console.log('No lab darkness anomaly active or already in progress!');
+
     }
 };
 
@@ -5992,8 +5808,7 @@ window.forceLabDarknessProgression = function() {
 
 // Prism Grey Anomaly - makes prism grid only spawn grey tiles that do nothing
 window.anomalySystem.spawnPrismGreyAnomaly = function() {
-    console.log('Spawning prism grey anomaly...');
-    
+
     if (this.activeAnomalies.prismGreyAnomaly) return; // Already active
     
     this.activeAnomalies.prismGreyAnomaly = true;
@@ -6008,8 +5823,7 @@ window.anomalySystem.spawnPrismGreyAnomaly = function() {
     
     // Save state to persist across refreshes
     this.saveAnomalyState();
-    
-    console.log('Prism grey anomaly spawned! Prism grid will only spawn grey tiles.');
+
 };
 
 window.anomalySystem.startPrismGreyAnomaly = function() {
@@ -6093,8 +5907,7 @@ window.anomalySystem.analyzePrismGreyAnomaly = function(isTargetedClick = false)
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing prism for grey anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -6121,7 +5934,7 @@ window.anomalySystem.analyzePrismGreyAnomaly = function(isTargetedClick = false)
 };
 
 window.anomalySystem.fixPrismGreyAnomaly = function() {
-    console.log('Fixing prism grey anomaly...');
+
     this.activeAnomalies.prismGreyAnomaly = false;
     
     // Remove the anomaly from tracking array
@@ -6149,51 +5962,47 @@ window.anomalySystem.fixPrismGreyAnomaly = function() {
     setTimeout(() => {
         if (typeof switchHomeSubTab === 'function') {
             switchHomeSubTab('prismSubTab');
-            console.log('Automatically switched to Lab tab to show restored prism functionality.');
+
         }
     }, 1000); // Small delay to let the fixed notification show first
-    
-    console.log('Prism grey anomaly fixed! Normal light tiles will spawn again.');
+
 };
 
 window.anomalySystem.restorePrismGreyAnomaly = function(savedAnomaly) {
-    console.log('Restoring prism grey anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.prismGreyAnomaly = true;
     this.anomalies.push(savedAnomaly);
     
     // Restart the anomaly effect
     this.startPrismGreyAnomaly();
-    
-    console.log('Prism grey anomaly restored!');
+
 };
 
 // Test functions for prism grey anomaly
 window.testPrismGreyAnomaly = function() {
-    console.log('Testing prism grey anomaly...');
+
     window.anomalySystem.spawnPrismGreyAnomaly();
-    console.log('Prism grey anomaly spawned! Go to the Lab tab and see only grey tiles spawn.');
+
 };
 
 window.clearPrismGreyAnomaly = function() {
-    console.log('Clearing prism grey anomaly...');
+
     window.anomalySystem.fixPrismGreyAnomaly();
-    console.log('Prism grey anomaly cleared! Normal light tiles should spawn again.');
+
 };
 
 window.checkPrismGreyAnomalyStatus = function() {
-    console.log('Prism grey anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.prismGreyAnomaly);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'prismGrey'));
+
+
+
 };
 
 // === NOTATION SCRAMBLE ANOMALY FUNCTIONS ===
 
 // Notation Scramble Anomaly - changes the game's notation to a random one and disables manual changes
 window.anomalySystem.spawnNotationScrambleAnomaly = function() {
-    console.log('Spawning notation scramble anomaly...');
-    
+
     if (this.activeAnomalies.notationScrambleAnomaly) return; // Already active
     
     this.activeAnomalies.notationScrambleAnomaly = true;
@@ -6208,8 +6017,7 @@ window.anomalySystem.spawnNotationScrambleAnomaly = function() {
     
     // Save state to persist across refreshes
     this.saveAnomalyState();
-    
-    console.log('Notation scramble anomaly spawned! Notation has been changed and locked.');
+
 };
 
 window.anomalySystem.startNotationScrambleAnomaly = function() {
@@ -6263,8 +6071,7 @@ window.anomalySystem.analyzeNotationScrambleAnomaly = function(isTargetedClick =
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing notation scramble anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -6281,17 +6088,17 @@ window.anomalySystem.analyzeNotationScrambleAnomaly = function(isTargetedClick =
         const detectionChance = isTargetedClick ? 0.9 : 0.7;
         
         if (Math.random() < detectionChance) {
-            console.log('Notation scramble anomaly detected!');
+
             this.fixNotationScrambleAnomaly();
         } else {
-            console.log('Notation scramble anomaly analysis failed.');
+
             this.showNoAnomaly();
         }
     }, 3000);
 };
 
 window.anomalySystem.fixNotationScrambleAnomaly = function() {
-    console.log('Fixing notation scramble anomaly...');
+
     this.activeAnomalies.notationScrambleAnomaly = false;
     
     // Remove the anomaly from tracking array
@@ -6342,53 +6149,49 @@ window.anomalySystem.fixNotationScrambleAnomaly = function() {
             window.updateUI();
         }, 100);
     }
-    
-    console.log('Notation scramble anomaly fixed! Notation restored to original setting.');
+
 };
 
 window.anomalySystem.restoreNotationScrambleAnomaly = function(savedAnomaly) {
-    console.log('Restoring notation scramble anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.notationScrambleAnomaly = true;
     this.anomalies.push(savedAnomaly);
     
     // Restart the anomaly effect
     this.startNotationScrambleAnomaly();
-    
-    console.log('Notation scramble anomaly restored!');
+
 };
 
 // Test functions for notation scramble anomaly
 window.testNotationScrambleAnomaly = function() {
-    console.log('Testing notation scramble anomaly...');
+
     window.anomalySystem.spawnNotationScrambleAnomaly();
-    console.log('Notation scramble anomaly spawned! Numbers will show in different notation. Click any number with find mode active to detect it, or click the locked notation dropdown.');
+
 };
 
 window.clearNotationScrambleAnomaly = function() {
-    console.log('Clearing notation scramble anomaly...');
+
     window.anomalySystem.fixNotationScrambleAnomaly();
-    console.log('Notation scramble anomaly cleared! Notation should be restored to original setting.');
+
 };
 
 window.checkNotationScrambleAnomalyStatus = function() {
-    console.log('Notation scramble anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.notationScrambleAnomaly);
-    console.log('Original notation:', window.anomalySystem.originalNotation);
-    console.log('Scrambled notation:', window.anomalySystem.scrambledNotation);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'notationScramble'));
+
+
+
+
+
 };
 
 // === CRAB BUCKS ANOMALY FUNCTIONS ===
 
 // Crab Bucks Anomaly - changes Swa Bucks icon to crab emoji in boutique
 window.anomalySystem.spawnCrabBucksAnomaly = function() {
-    console.log('Spawning crab bucks anomaly...');
-    
+
     // Check if another crab bucks anomaly is already active
     if (this.activeAnomalies.crabBucksAnomaly) {
-        console.log('Crab bucks anomaly already active, not spawning');
+
         return;
     }
     
@@ -6408,13 +6211,11 @@ window.anomalySystem.spawnCrabBucksAnomaly = function() {
     
     // Save state
     this.saveAnomalyState();
-    
-    console.log('Crab bucks anomaly spawned! Swa Bucks icons are now crab emojis in the boutique.');
+
 };
 
 window.anomalySystem.startCrabBucksAnomaly = function() {
-    console.log('Starting crab bucks anomaly effect...');
-    
+
     // Store original icon source if not already stored
     if (!this.originalSwaBucksIcon) {
         this.originalSwaBucksIcon = 'assets/icons/swa buck.png';
@@ -6425,8 +6226,7 @@ window.anomalySystem.startCrabBucksAnomaly = function() {
     
     // Set up detection for boutique UI updates
     this.setupCrabBucksDetection();
-    
-    console.log('Crab bucks anomaly effect started! Swa Bucks icons replaced with crab emoji.');
+
 };
 
 window.anomalySystem.replaceSwaIconsWithCrab = function() {
@@ -6455,8 +6255,7 @@ window.anomalySystem.replaceSwaIconsWithCrab = function() {
         icon.src = canvas.toDataURL();
         icon.setAttribute('data-crab-anomaly-active', 'true');
     });
-    
-    console.log(`Replaced ${swaBucksIcons.length} Swa Bucks icons with crab emoji`);
+
 };
 
 window.anomalySystem.setupCrabBucksDetection = function() {
@@ -6508,18 +6307,10 @@ window.anomalySystem.setupCrabBucksDetection = function() {
         if (!this.activeAnomalies.crabBucksAnomaly || !this.findModeActive) return;
         
         const target = event.target;
-        
-        console.log('Crab bucks click detected:', {
-            findModeActive: this.findModeActive,
-            analyzing: this.analyzing,
-            searching: this.searching,
-            target: target.tagName,
-            targetText: target.textContent?.substring(0, 20)
-        });
-        
+
         // Check if clicked element is a crab emoji (our anomaly indicator)
         if (target.textContent === '🦀' || target.dataset.crabAnomalyActive === 'true') {
-            console.log('Crab emoji clicked - analyzing anomaly');
+
             event.preventDefault();
             event.stopPropagation();
             this.analyzeCrabBucksAnomaly(true);
@@ -6529,11 +6320,11 @@ window.anomalySystem.setupCrabBucksDetection = function() {
         // Check if clicked on a shop card (token card in boutique)
         const shopCard = target.closest('.shop-item-card, .token-card, .boutique-item');
         if (shopCard) {
-            console.log('Shop card detected:', shopCard);
+
             // Verify we're in the boutique by checking for boutique-specific elements
             const boutiqueContainer = target.closest('#boutiqueContent, .boutique-container, [data-tab="boutique"]');
             if (boutiqueContainer) {
-                console.log('Boutique container found - analyzing anomaly');
+
                 event.preventDefault();
                 event.stopPropagation();
                 this.analyzeCrabBucksAnomaly(true);
@@ -6544,7 +6335,7 @@ window.anomalySystem.setupCrabBucksDetection = function() {
         // Also check for cards with cyan background (based on the image showing shop cards)
         const cardElement = target.closest('div[style*="background"], .card, [class*="card"]');
         if (cardElement) {
-            console.log('Card element detected:', cardElement);
+
             const computedStyle = window.getComputedStyle(cardElement);
             const backgroundColor = computedStyle.backgroundColor;
             
@@ -6553,14 +6344,13 @@ window.anomalySystem.setupCrabBucksDetection = function() {
                 backgroundColor.includes('cyan') || 
                 backgroundColor.includes('turquoise') ||
                 cardElement.style.backgroundColor.includes('rgb(0, 191, 243)')) {
-                
-                console.log('Cyan card detected:', backgroundColor);
+
                 // Double-check we're in boutique context
                 const boutiqueContext = target.closest('#boutiqueContent, .boutique-container, [data-tab="boutique"]') ||
                                       document.querySelector('#boutiqueContent:not([style*="display: none"])');
                 
                 if (boutiqueContext) {
-                    console.log('Boutique context confirmed - analyzing anomaly');
+
                     event.preventDefault();
                     event.stopPropagation();
                     this.analyzeCrabBucksAnomaly(true);
@@ -6572,23 +6362,21 @@ window.anomalySystem.setupCrabBucksDetection = function() {
         // Check if we clicked anywhere in the boutique area
         const boutiqueArea = target.closest('#boutiqueContent, .boutique-container, [data-tab="boutique"]');
         if (boutiqueArea) {
-            console.log('Boutique area clicked - analyzing anomaly');
+
             event.preventDefault();
             event.stopPropagation();
             this.analyzeCrabBucksAnomaly(true);
             return;
         }
     }, true);
-    
-    console.log('Crab bucks detection setup complete');
+
 };
 
 window.anomalySystem.analyzeCrabBucksAnomaly = function(isTargetedClick = false) {
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing crab bucks anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -6614,8 +6402,7 @@ window.anomalySystem.analyzeCrabBucksAnomaly = function(isTargetedClick = false)
 };
 
 window.anomalySystem.fixCrabBucksAnomaly = function() {
-    console.log('Fixing crab bucks anomaly...');
-    
+
     // Restore original Swa Bucks icons
     this.restoreOriginalSwaIcons();
     
@@ -6645,8 +6432,7 @@ window.anomalySystem.fixCrabBucksAnomaly = function() {
     
     // Show proper anomaly fixed notification
     this.showAnomalyFixedNotification();
-    
-    console.log('Crab bucks anomaly fixed! Swa Bucks icons restored.');
+
 };
 
 window.anomalySystem.restoreOriginalSwaIcons = function() {
@@ -6666,38 +6452,34 @@ window.anomalySystem.restoreOriginalSwaIcons = function() {
         icon.removeAttribute('data-crab-anomaly-active');
         icon.removeAttribute('data-crab-anomaly-original');
     });
-    
-    console.log(`Restored ${crabIcons.length} Swa Bucks icons from crab emoji`);
+
 };
 
 window.anomalySystem.restoreCrabBucksAnomaly = function(savedAnomaly) {
-    console.log('Restoring crab bucks anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.crabBucksAnomaly = true;
     this.anomalies.push(savedAnomaly);
     
     // Restart the anomaly effect
     this.startCrabBucksAnomaly();
-    
-    console.log('Crab bucks anomaly restored!');
+
 };
 
 // === RUSTLING FLOWERS ANOMALY FUNCTIONS ===
 
 // Rustling Flowers Anomaly - makes all flower cells become rustling flowers that give no tokens
 window.anomalySystem.spawnRustlingFlowersAnomaly = function() {
-    console.log('Spawning rustling flowers anomaly...');
-    
+
     // Check if another rustling flowers anomaly is already active
     if (this.activeAnomalies.rustlingFlowersAnomaly) {
-        console.log('Rustling flowers anomaly already active');
+
         return;
     }
     
     // Mutual exclusion: Clear fluzzer flip anomaly if active
     if (this.activeAnomalies.fluzzerFlipAnomaly) {
-        console.log('Fluzzer flip anomaly is active, clearing it for mutual exclusion...');
+
         this.fixFluzzerFlipAnomaly();
     }
     
@@ -6717,13 +6499,11 @@ window.anomalySystem.spawnRustlingFlowersAnomaly = function() {
     
     // Save state
     this.saveAnomalyState();
-    
-    console.log('Rustling flowers anomaly spawned! All flower cells are now rustling flowers.');
+
 };
 
 window.anomalySystem.startRustlingFlowersAnomaly = function() {
-    console.log('Starting rustling flowers anomaly effect...');
-    
+
     // Store original flower grid state if not already stored
     this.storeOriginalFlowerGrid();
     
@@ -6738,8 +6518,7 @@ window.anomalySystem.startRustlingFlowersAnomaly = function() {
     
     // Hook the fluzzerSay function for special rustling flowers dialogue
     this.hookFluzzerSayFunction();
-    
-    console.log('Rustling flowers anomaly effect started! All flowers are now rustling.');
+
 };
 
 window.anomalySystem.storeOriginalFlowerGrid = function() {
@@ -6748,25 +6527,24 @@ window.anomalySystem.storeOriginalFlowerGrid = function() {
     // Store the current flower grid state
     if (window.terrariumFlowerGrid && Array.isArray(window.terrariumFlowerGrid)) {
         this.originalFlowerGrid = [...window.terrariumFlowerGrid];
-        console.log('Original flower grid state stored');
+
     }
     
     // Also store the original rustling flower indices
     if (window.rustlingFlowerIndices && Array.isArray(window.rustlingFlowerIndices)) {
         this.originalRustlingFlowerIndices = [...window.rustlingFlowerIndices];
-        console.log('Original rustling flower indices stored');
+
     }
 };
 
 window.anomalySystem.disableNormalRustlingSystem = function() {
-    console.log('Disabling normal rustling flower system...');
-    
+
     // Store the original rustling timer and clear it
     if (window.rustlingFlowerTimer) {
         this.originalRustlingFlowerTimer = window.rustlingFlowerTimer;
         clearInterval(window.rustlingFlowerTimer);
         window.rustlingFlowerTimer = null;
-        console.log('Normal rustling flower timer disabled');
+
     }
     
     // Store original startRustlingFlowerTimer function and replace it with a no-op during anomaly
@@ -6774,15 +6552,14 @@ window.anomalySystem.disableNormalRustlingSystem = function() {
         this.originalStartRustlingFlowerTimer = window.startRustlingFlowerTimer;
         window.startRustlingFlowerTimer = function() {
             // Do nothing during rustling flowers anomaly
-            console.log('startRustlingFlowerTimer blocked during rustling flowers anomaly');
+
         };
-        console.log('startRustlingFlowerTimer function overridden');
+
     }
 };
 
 window.anomalySystem.startContinuousRustlingAnimation = function() {
-    console.log('Starting continuous rustling animation for anomaly...');
-    
+
     // Clear any existing anomaly rustling timer
     if (this.anomalyRustlingTimer) {
         clearInterval(this.anomalyRustlingTimer);
@@ -6818,20 +6595,18 @@ window.anomalySystem.startContinuousRustlingAnimation = function() {
             });
             
             if (reappliedCount > 0) {
-                console.log(`Reapplied rustling CSS to ${reappliedCount} flower cells`);
+
             }
         }
     }, 500); // Check every 500ms to maintain animation
-    
-    console.log('Continuous rustling animation timer started');
+
 };
 
 window.anomalySystem.convertAllFlowersToRustling = function() {
-    console.log('Converting all flowers to rustling...');
-    
+
     // Ensure the required arrays exist and are accessible
     if (!window.terrariumFlowerGrid) {
-        console.log('terrariumFlowerGrid is null, trying to initialize...');
+
         // Initialize with a basic grid if it doesn't exist
         const gridSize = 100; // Default size
         window.terrariumFlowerGrid = new Array(gridSize).fill(null);
@@ -6842,22 +6617,20 @@ window.anomalySystem.convertAllFlowersToRustling = function() {
                 window.terrariumFlowerGrid[i] = { health: 100 }; // Basic flower object
             }
         }
-        console.log('Initialized terrariumFlowerGrid with', window.terrariumFlowerGrid.filter(f => f !== null).length, 'flowers');
+
     }
     
     if (!window.rustlingFlowerIndices) {
-        console.log('rustlingFlowerIndices not found, creating...');
+
         window.rustlingFlowerIndices = [];
     }
     
     // Make all flower cells rustling by using the rustlingFlowerIndices system
     if (window.terrariumFlowerGrid && Array.isArray(window.terrariumFlowerGrid) && 
         window.rustlingFlowerIndices && Array.isArray(window.rustlingFlowerIndices)) {
-        
-        console.log('Found terrarium flower grid and rustling indices arrays');
-        console.log('Current flower grid:', window.terrariumFlowerGrid);
-        console.log('Current rustling indices before clearing:', window.rustlingFlowerIndices);
-        
+
+
+
         // Clear existing rustling flowers first
         window.rustlingFlowerIndices.length = 0;
         
@@ -6867,21 +6640,19 @@ window.anomalySystem.convertAllFlowersToRustling = function() {
                 window.rustlingFlowerIndices.push(i);
             }
         }
-        
-        console.log('New rustling indices after conversion:', window.rustlingFlowerIndices);
-        
+
         // Force update the terrarium UI to show the rustling flowers
         if (typeof window.updateFlowerGridOnly === 'function') {
-            console.log('Calling updateFlowerGridOnly');
+
             window.updateFlowerGridOnly();
         } else if (typeof window.renderTerrariumUI === 'function') {
-            console.log('Calling renderTerrariumUI');
+
             window.renderTerrariumUI();
         }
         
         // Also manually apply the rustling CSS classes to ensure they show up
         setTimeout(() => {
-            console.log('Applying rustling CSS classes manually...');
+
             let appliedCount = 0;
             window.rustlingFlowerIndices.forEach(idx => {
                 const cell = document.querySelector(`.terrarium-flower-cell[data-idx='${idx}']`);
@@ -6889,33 +6660,30 @@ window.anomalySystem.convertAllFlowersToRustling = function() {
                     cell.classList.add('terrarium-flower-rustle');
                     appliedCount++;
                 } else {
-                    console.log(`Could not find flower cell with data-idx='${idx}'`);
+
                 }
             });
-            console.log(`Applied rustling CSS class to ${appliedCount} flower cells out of ${window.rustlingFlowerIndices.length} indices`);
-            
+
             // Also check for any flower cells without the data-idx attribute
             const allFlowerCells = document.querySelectorAll('.terrarium-flower-cell');
-            console.log(`Total flower cells found in DOM: ${allFlowerCells.length}`);
-            
+
             // If no flower cells with data-idx, try a more general approach
             if (appliedCount === 0 && allFlowerCells.length > 0) {
-                console.log('No data-idx cells found, applying rustling to all flower cells');
+
                 allFlowerCells.forEach(cell => {
                     cell.classList.add('terrarium-flower-rustle');
                 });
-                console.log(`Applied rustling CSS class to all ${allFlowerCells.length} flower cells`);
+
             }
         }, 100); // Small delay to ensure DOM is updated
         
         // Set up continuous rustling animation management for anomaly
         this.startContinuousRustlingAnimation();
-        
-        console.log(`Converted ${window.rustlingFlowerIndices.length} flower cells to rustling flowers`);
+
     } else {
-        console.log('Missing required arrays:');
-        console.log('terrariumFlowerGrid exists:', !!window.terrariumFlowerGrid);
-        console.log('rustlingFlowerIndices exists:', !!window.rustlingFlowerIndices);
+
+
+
     }
 };
 
@@ -6938,20 +6706,18 @@ window.anomalySystem.setupRustlingFlowersDetection = function() {
                            target.closest('#terrariumFlowerGrid');
         
         if (isFlowerCell) {
-            console.log('Flower cell clicked with find mode active - triggering rustling flowers anomaly analysis');
+
             self.analyzeRustlingFlowersAnomaly(true);
         }
     }, true);
-    
-    console.log('Rustling flowers detection setup complete');
+
 };
 
 window.anomalySystem.analyzeRustlingFlowersAnomaly = function(isTargetedClick = false) {
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing rustling flowers anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -6967,22 +6733,21 @@ window.anomalySystem.analyzeRustlingFlowersAnomaly = function(isTargetedClick = 
         document.body.classList.remove('anomaly-analyzing');
         
         if (this.activeAnomalies.rustlingFlowersAnomaly && isTargetedClick) {
-            console.log('Rustling flowers anomaly detected! Attempting to fix...');
+
             this.fixRustlingFlowersAnomaly();
         } else {
-            console.log('No rustling flowers anomaly detected or analysis not from targeted click');
+
         }
     }, 3000);
 };
 
 window.anomalySystem.fixRustlingFlowersAnomaly = function() {
-    console.log('Fixing rustling flowers anomaly...');
-    
+
     // Stop the continuous rustling animation timer
     if (this.anomalyRustlingTimer) {
         clearInterval(this.anomalyRustlingTimer);
         this.anomalyRustlingTimer = null;
-        console.log('Continuous rustling animation timer stopped');
+
     }
     
     // Restore the original flower grid
@@ -7018,8 +6783,7 @@ window.anomalySystem.fixRustlingFlowersAnomaly = function() {
     
     // Trigger special "anomaly fixed" dialogue from Fluzzer
     this.triggerRustlingFlowersAnomalyFixedDialogue();
-    
-    console.log('Rustling flowers anomaly fixed! Flower grid restored to normal state.');
+
 };
 
 window.anomalySystem.restoreOriginalFlowerGrid = function() {
@@ -7044,12 +6808,11 @@ window.anomalySystem.restoreOriginalFlowerGrid = function() {
                     cell.classList.add('terrarium-flower-rustle');
                 }
             });
-            
-            console.log('Original rustling flower indices restored');
+
         } else {
             // If no original rustling indices were stored, clear all rustling flowers
             window.rustlingFlowerIndices.length = 0;
-            console.log('Rustling flower indices cleared');
+
         }
         
         // Force update the terrarium UI to show the restored flowers
@@ -7058,55 +6821,50 @@ window.anomalySystem.restoreOriginalFlowerGrid = function() {
         } else if (typeof window.renderTerrariumUI === 'function') {
             window.renderTerrariumUI();
         }
-        
-        console.log('Original flower grid state restored');
+
     }
 };
 
 window.anomalySystem.restoreNormalRustlingSystem = function() {
-    console.log('Restoring normal rustling flower system...');
-    
+
     // Restore the original startRustlingFlowerTimer function
     if (this.originalStartRustlingFlowerTimer) {
         window.startRustlingFlowerTimer = this.originalStartRustlingFlowerTimer;
-        console.log('startRustlingFlowerTimer function restored');
+
     }
     
     // Restart the normal rustling flower timer
     if (typeof window.startRustlingFlowerTimer === 'function') {
         window.startRustlingFlowerTimer();
-        console.log('Normal rustling flower timer restarted');
+
     }
 };
 
 window.anomalySystem.restoreRustlingFlowersAnomaly = function(savedAnomaly) {
-    console.log('Restoring rustling flowers anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.rustlingFlowersAnomaly = true;
     this.anomalies.push(savedAnomaly);
     
     // Restart the anomaly effect
     this.startRustlingFlowersAnomaly();
-    
-    console.log('Rustling flowers anomaly restored!');
+
 };
 
 // === FLUZZER FLIP ANOMALY FUNCTIONS ===
 
 // Fluzzer Flip Anomaly - flips Fluzzer character and cursor images upside down
 window.anomalySystem.spawnFluzzerFlipAnomaly = function() {
-    console.log('Spawning fluzzer flip anomaly...');
-    
+
     // Check if another fluzzer flip anomaly is already active
     if (this.activeAnomalies.fluzzerFlipAnomaly) {
-        console.log('Fluzzer flip anomaly already active, not spawning');
+
         return;
     }
     
     // Mutual exclusion: Clear rustling flowers anomaly if active
     if (this.activeAnomalies.rustlingFlowersAnomaly) {
-        console.log('Rustling flowers anomaly is active, clearing it for mutual exclusion...');
+
         this.fixRustlingFlowersAnomaly();
     }
     
@@ -7126,13 +6884,11 @@ window.anomalySystem.spawnFluzzerFlipAnomaly = function() {
     
     // Save state
     this.saveAnomalyState();
-    
-    console.log('Fluzzer flip anomaly spawned! Fluzzer images are now upside down.');
+
 };
 
 window.anomalySystem.startFluzzerFlipAnomaly = function() {
-    console.log('Starting fluzzer flip anomaly effect...');
-    
+
     // Add CSS to flip all Fluzzer-related images
     this.addFluzzerFlipStyles();
     
@@ -7144,8 +6900,7 @@ window.anomalySystem.startFluzzerFlipAnomaly = function() {
     
     // Hook the fluzzerSay function to flip dialogue text
     this.hookFluzzerSayFunction();
-    
-    console.log('Fluzzer flip anomaly effect started! All Fluzzer images and dialogue flipped upside down.');
+
 };
 
 window.anomalySystem.addFluzzerFlipStyles = function() {
@@ -7228,10 +6983,9 @@ window.anomalySystem.flipExistingFluzzerImages = function() {
     const fluzzerCursor = document.getElementById('fluzzerAICursor');
     if (fluzzerCursor) {
         fluzzerCursor.setAttribute('data-fluzzer-flip-anomaly', 'true');
-        console.log('Fluzzer AI cursor found and marked for flipping');
+
     }
-    
-    console.log(`Flipped ${fluzzerImages.length} existing Fluzzer images + AI cursor`);
+
 };
 
 window.anomalySystem.setupFluzzerFlipDetection = function() {
@@ -7249,7 +7003,7 @@ window.anomalySystem.setupFluzzerFlipDetection = function() {
                     // Check if the new node is the Fluzzer AI cursor
                     if (node.id === 'fluzzerAICursor') {
                         node.setAttribute('data-fluzzer-flip-anomaly', 'true');
-                        console.log('Fluzzer AI cursor created and marked for flipping');
+
                     }
                     
                     // Check if the new node is a Fluzzer image
@@ -7280,7 +7034,7 @@ window.anomalySystem.setupFluzzerFlipDetection = function() {
                     const cursor = node.querySelector ? node.querySelector('#fluzzerAICursor') : null;
                     if (cursor) {
                         cursor.setAttribute('data-fluzzer-flip-anomaly', 'true');
-                        console.log('Fluzzer AI cursor found in new node and marked for flipping');
+
                     }
                 }
             });
@@ -7301,7 +7055,7 @@ window.anomalySystem.setupFluzzerFlipDetection = function() {
         
         // Check if clicked on the Fluzzer AI cursor
         if (target.id === 'fluzzerAICursor' || target.closest('#fluzzerAICursor')) {
-            console.log('Fluzzer AI cursor clicked - analyzing anomaly');
+
             event.preventDefault();
             event.stopPropagation();
             this.analyzeFluzzerFlipAnomaly(true);
@@ -7312,7 +7066,7 @@ window.anomalySystem.setupFluzzerFlipDetection = function() {
         if (target.tagName === 'IMG' && 
             (target.src.includes('fluzzer') || target.alt.includes('Fluzzer') || target.alt.includes('fluzzer')) &&
             target.hasAttribute('data-fluzzer-flip-anomaly')) {
-            console.log('Flipped Fluzzer image clicked - analyzing anomaly');
+
             event.preventDefault();
             event.stopPropagation();
             this.analyzeFluzzerFlipAnomaly(true);
@@ -7322,31 +7076,28 @@ window.anomalySystem.setupFluzzerFlipDetection = function() {
         // Check if clicked on any element with Fluzzer-related classes
         const fluzzerElement = target.closest('[class*="fluzzer"], [data-character="fluzzer"]');
         if (fluzzerElement) {
-            console.log('Fluzzer element clicked - analyzing anomaly');
+
             event.preventDefault();
             event.stopPropagation();
             this.analyzeFluzzerFlipAnomaly(true);
             return;
         }
     }, true);
-    
-    console.log('Fluzzer flip detection setup complete');
+
 };
 
 window.anomalySystem.hookAllCharacterDialogue = function() {
-    console.log('Hooking all character dialogue functions for dramatic wind anomaly...');
-    
+
     // Store original fluzzerSay function
     if (!this.originalFluzzerSay && typeof window.fluzzerSay === 'function') {
         this.originalFluzzerSay = window.fluzzerSay;
-        console.log('Original fluzzerSay function stored');
+
     }
     
     // Store original getRandomFluzzerSpeech function
     if (!this.originalGetRandomFluzzerSpeech && typeof window.getRandomFluzzerSpeech === 'function') {
         this.originalGetRandomFluzzerSpeech = window.getRandomFluzzerSpeech;
-        console.log('Original getRandomFluzzerSpeech function stored');
-        
+
         // Override getRandomFluzzerSpeech for anomaly dialogue
         window.getRandomFluzzerSpeech = () => {
             if (this.activeAnomalies.fluzzerFlipAnomaly) {
@@ -7364,8 +7115,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Store original showSwariaSpeech function
     if (!this.originalShowSwariaSpeech && typeof window.showSwariaSpeech === 'function') {
         this.originalShowSwariaSpeech = window.showSwariaSpeech;
-        console.log('Original showSwariaSpeech function stored');
-        
+
         window.showSwariaSpeech = () => {
             if (this.activeAnomalies.dramaticWindAnomaly) {
                 const windDialogue = this.getDramaticWindAnomalyDialogue();
@@ -7406,8 +7156,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Store original showSoapSpeech function
     if (!this.originalShowSoapSpeech && typeof window.showSoapSpeech === 'function') {
         this.originalShowSoapSpeech = window.showSoapSpeech;
-        console.log('Original showSoapSpeech function stored');
-        
+
         window.showSoapSpeech = () => {
             if (this.activeAnomalies.dramaticWindAnomaly) {
                 const windDialogue = this.getDramaticWindAnomalyDialogue();
@@ -7431,8 +7180,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Store original showCharacterSpeech function
     if (!this.originalShowCharacterSpeech && typeof window.showCharacterSpeech === 'function') {
         this.originalShowCharacterSpeech = window.showCharacterSpeech;
-        console.log('Original showCharacterSpeech function stored');
-        
+
         window.showCharacterSpeech = (characterName, tokenType) => {
             if (this.activeAnomalies.dramaticWindAnomaly) {
                 let windDialogue;
@@ -7518,8 +7266,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Hook Boutique Lepre speech if available
     if (window.boutique && typeof window.boutique.showLepreSpeechBubble === 'function' && !this.originalShowLepreSpeechBubble) {
         this.originalShowLepreSpeechBubble = window.boutique.showLepreSpeechBubble;
-        console.log('Original showLepreSpeechBubble function stored');
-        
+
         window.boutique.showLepreSpeechBubble = (message) => {
             if (this.activeAnomalies.dramaticWindAnomaly && !message.includes('wind') && !message.includes('Wind')) {
                 const lepreWindDialogue = this.getLepreWindAnomalyDialogue();
@@ -7533,8 +7280,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Hook Front Desk Tico speech if available
     if (window.frontDesk && typeof window.frontDesk.showTicoSpeech === 'function' && !this.originalShowTicoSpeech) {
         this.originalShowTicoSpeech = window.frontDesk.showTicoSpeech;
-        console.log('Original showTicoSpeech function stored');
-        
+
         window.frontDesk.showTicoSpeech = (message, duration = 3500) => {
             if (this.activeAnomalies.dramaticWindAnomaly && !message.includes('wind') && !message.includes('Wind')) {
                 const ticoWindDialogue = this.getTicoWindAnomalyDialogue();
@@ -7565,7 +7311,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
                 const speechBubble = document.getElementById('fluzzerSpeech');
                 if (speechBubble && !speechBubble.classList.contains('fluzzer-flip-dialogue')) {
                     speechBubble.classList.add('fluzzer-flip-dialogue');
-                    console.log('Applied upside-down text to Fluzzer speech bubble');
+
                 }
             }, 100);
         }
@@ -7574,8 +7320,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
     // Hook Vi speech function if available
     if (typeof window.showViSpeech === 'function' && !this.originalShowViSpeech) {
         this.originalShowViSpeech = window.showViSpeech;
-        console.log('Original showViSpeech function stored');
-        
+
         window.showViSpeech = (message, duration = 8000) => {
             if (this.activeAnomalies.dramaticWindAnomaly && !message.includes('wind') && !message.includes('Wind')) {
                 const viWindDialogue = this.getViWindAnomalyDialogue();
@@ -7585,8 +7330,7 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
             }
         };
     }
-    
-    console.log('All character dialogue functions hooked for dramatic wind anomaly');
+
 };
 
 // Keep the old function name for backward compatibility but make it call the new comprehensive function
@@ -7684,8 +7428,7 @@ window.anomalySystem.analyzeFluzzerFlipAnomaly = function(isTargetedClick = fals
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing fluzzer flip anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -7711,8 +7454,7 @@ window.anomalySystem.analyzeFluzzerFlipAnomaly = function(isTargetedClick = fals
 };
 
 window.anomalySystem.fixFluzzerFlipAnomaly = function() {
-    console.log('Fixing fluzzer flip anomaly...');
-    
+
     // Remove the flip styles
     const anomalyStyles = document.getElementById('fluzzerFlipAnomalyStyles');
     if (anomalyStyles) {
@@ -7737,14 +7479,14 @@ window.anomalySystem.fixFluzzerFlipAnomaly = function() {
     if (this.originalFluzzerSay) {
         window.fluzzerSay = this.originalFluzzerSay;
         this.originalFluzzerSay = null;
-        console.log('Original fluzzerSay function restored');
+
     }
     
     // Restore the original getRandomFluzzerSpeech function
     if (this.originalGetRandomFluzzerSpeech) {
         window.getRandomFluzzerSpeech = this.originalGetRandomFluzzerSpeech;
         this.originalGetRandomFluzzerSpeech = null;
-        console.log('Original getRandomFluzzerSpeech function restored');
+
     }
     
     // Remove flip class from any existing speech bubbles
@@ -7768,8 +7510,7 @@ window.anomalySystem.fixFluzzerFlipAnomaly = function() {
     
     // Trigger special "anomaly fixed" dialogue from Fluzzer
     this.triggerFluzzerAnomalyFixedDialogue();
-    
-    console.log('Fluzzer flip anomaly fixed! Fluzzer images restored to normal orientation.');
+
 };
 
 window.anomalySystem.triggerFluzzerAnomalyFixedDialogue = function() {
@@ -7778,7 +7519,7 @@ window.anomalySystem.triggerFluzzerAnomalyFixedDialogue = function() {
         if (typeof window.fluzzerSay === 'function') {
             const reliefDialogue = this.getFluzzerAnomalyFixedDialogue();
             window.fluzzerSay(reliefDialogue, false, 6000); // Longer duration for the special message
-            console.log('Fluzzer anomaly fixed dialogue triggered');
+
         }
     }, 2000); // 2 second delay to let the notification show first
 };
@@ -7822,39 +7563,35 @@ window.anomalySystem.restoreFluzzerImages = function() {
         fluzzerCursor.removeAttribute('data-fluzzer-flip-anomaly');
         // Remove any inline transform styles
         fluzzerCursor.style.transform = '';
-        console.log('Fluzzer AI cursor restored to normal orientation');
+
     }
-    
-    console.log(`Restored ${fluzzerImages.length} Fluzzer images to normal orientation`);
+
 };
 
 window.anomalySystem.restoreFluzzerFlipAnomaly = function(savedAnomaly) {
-    console.log('Restoring fluzzer flip anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.fluzzerFlipAnomaly = true;
     this.anomalies.push(savedAnomaly);
     
     // Restart the anomaly effect
     this.startFluzzerFlipAnomaly();
-    
-    console.log('Fluzzer flip anomaly restored!');
+
 };
 
 // === DRAMATIC WIND ANOMALY FUNCTIONS ===
 
 // Dramatic Wind Anomaly - creates strong wind effects that shake UI cards and add wind animations
 window.anomalySystem.spawnDramaticWindAnomaly = function() {
-    console.log('Attempting to spawn dramatic wind anomaly...');
-    
+
     // Check if any conflicting anomalies are active
     if (this.activeAnomalies.rustlingFlowersAnomaly) {
-        console.log('Clearing conflicting rustling flowers anomaly...');
+
         this.fixRustlingFlowersAnomaly();
     }
     
     if (this.activeAnomalies.fluzzerFlipAnomaly) {
-        console.log('Clearing conflicting fluzzer flip anomaly...');
+
         this.fixFluzzerFlipAnomaly();
     }
     
@@ -7878,14 +7615,12 @@ window.anomalySystem.spawnDramaticWindAnomaly = function() {
     
     // Save state
     this.saveAnomalyState();
-    
-    console.log('Dramatic wind anomaly spawned! Strong winds are now affecting the terrarium UI.');
+
     return anomaly;
 };
 
 window.anomalySystem.startDramaticWindAnomaly = function(anomaly) {
-    console.log('Starting dramatic wind anomaly effects...');
-    
+
     // Add wind styles to the page
     this.addDramaticWindStyles(anomaly);
     
@@ -7897,8 +7632,7 @@ window.anomalySystem.startDramaticWindAnomaly = function(anomaly) {
     
     // Hook into ALL character speech for wind-related dialogue
     this.hookAllCharacterDialogue();
-    
-    console.log('Dramatic wind anomaly effects started!');
+
 };
 
 window.anomalySystem.addDramaticWindStyles = function(anomaly) {
@@ -8118,7 +7852,7 @@ window.anomalySystem.addDramaticWindStyles = function(anomaly) {
     `;
     
     document.head.appendChild(windStyles);
-    console.log('Wind styles added to document');
+
 };
 
 window.anomalySystem.applyWindEffectsToUI = function() {
@@ -8165,8 +7899,7 @@ window.anomalySystem.applyWindEffectsToUI = function() {
         fluzzerContainer.classList.add('wind-affected');
         fluzzerContainer.setAttribute('data-wind-anomaly', 'true');
     }
-    
-    console.log('Wind effects applied to UI elements');
+
 };
 
 window.anomalySystem.startWindBackgroundAnimation = function() {
@@ -8259,8 +7992,7 @@ window.anomalySystem.createWindLeaf = function() {
 };
 
 window.anomalySystem.setupDramaticWindDetection = function() {
-    console.log('Setting up dramatic wind anomaly detection...');
-    
+
     // Create mutation observer to handle new elements
     this.windMutationObserver = new MutationObserver((mutations) => {
         if (this.activeAnomalies.dramaticWindAnomaly) {
@@ -8320,14 +8052,14 @@ window.anomalySystem.setupDramaticWindDetection = function() {
     };
     
     document.addEventListener('click', this.windClickHandler, true);
-    console.log('Dramatic wind detection set up successfully');
+
 };
 
 // Test functions for rustling flowers anomaly
 window.testRustlingFlowersAnomaly = function() {
-    console.log('Testing rustling flowers anomaly...');
+
     window.anomalySystem.spawnRustlingFlowersAnomaly();
-    console.log('Rustling flowers anomaly spawned! All flower cells should now be rustling flowers. Click any flower cell with find mode active to detect it.');
+
 };
 
 window.anomalySystem.getDramaticWindAnomalyDialogue = function() {
@@ -8422,8 +8154,7 @@ window.anomalySystem.analyzeDramaticWindAnomaly = function(isTargetedClick = fal
     if (this.analyzing || this.searching) return;
     
     this.analyzing = true;
-    console.log('Analyzing dramatic wind anomaly...');
-    
+
     // Add cursor animation and analyzing class
     document.body.classList.add('anomaly-analyzing');
     this.startCursorAnimation();
@@ -8449,8 +8180,7 @@ window.anomalySystem.analyzeDramaticWindAnomaly = function(isTargetedClick = fal
 };
 
 window.anomalySystem.fixDramaticWindAnomaly = function() {
-    console.log('Fixing dramatic wind anomaly...');
-    
+
     // Remove wind styles
     const windStyles = document.getElementById('dramaticWindAnomalyStyles');
     if (windStyles) {
@@ -8484,49 +8214,49 @@ window.anomalySystem.fixDramaticWindAnomaly = function() {
     if (this.originalFluzzerSay) {
         window.fluzzerSay = this.originalFluzzerSay;
         this.originalFluzzerSay = null;
-        console.log('Original fluzzerSay function restored');
+
     }
     
     if (this.originalGetRandomFluzzerSpeech) {
         window.getRandomFluzzerSpeech = this.originalGetRandomFluzzerSpeech;
         this.originalGetRandomFluzzerSpeech = null;
-        console.log('Original getRandomFluzzerSpeech function restored');
+
     }
     
     if (this.originalShowSwariaSpeech) {
         window.showSwariaSpeech = this.originalShowSwariaSpeech;
         this.originalShowSwariaSpeech = null;
-        console.log('Original showSwariaSpeech function restored');
+
     }
     
     if (this.originalShowSoapSpeech) {
         window.showSoapSpeech = this.originalShowSoapSpeech;
         this.originalShowSoapSpeech = null;
-        console.log('Original showSoapSpeech function restored');
+
     }
     
     if (this.originalShowCharacterSpeech) {
         window.showCharacterSpeech = this.originalShowCharacterSpeech;
         this.originalShowCharacterSpeech = null;
-        console.log('Original showCharacterSpeech function restored');
+
     }
     
     if (this.originalShowLepreSpeechBubble && window.boutique) {
         window.boutique.showLepreSpeechBubble = this.originalShowLepreSpeechBubble;
         this.originalShowLepreSpeechBubble = null;
-        console.log('Original showLepreSpeechBubble function restored');
+
     }
     
     if (this.originalShowTicoSpeech && window.frontDesk) {
         window.frontDesk.showTicoSpeech = this.originalShowTicoSpeech;
         this.originalShowTicoSpeech = null;
-        console.log('Original showTicoSpeech function restored');
+
     }
     
     if (this.originalShowViSpeech) {
         window.showViSpeech = this.originalShowViSpeech;
         this.originalShowViSpeech = null;
-        console.log('Original showViSpeech function restored');
+
     }
     
     // Remove from anomalies list
@@ -8544,8 +8274,7 @@ window.anomalySystem.fixDramaticWindAnomaly = function() {
     
     // Trigger special "anomaly fixed" dialogue from Fluzzer
     this.triggerDramaticWindAnomalyFixedDialogue();
-    
-    console.log('Dramatic wind anomaly fixed! The terrarium is calm again.');
+
 };
 
 window.anomalySystem.removeWindEffectsFromUI = function() {
@@ -8577,8 +8306,7 @@ window.anomalySystem.removeWindEffectsFromUI = function() {
             leaf.parentNode.removeChild(leaf);
         }
     });
-    
-    console.log('Wind effects removed from all UI elements');
+
 };
 
 window.anomalySystem.stopWindBackgroundAnimation = function() {
@@ -8592,8 +8320,7 @@ window.anomalySystem.stopWindBackgroundAnimation = function() {
         clearInterval(this.windParticleInterval);
         this.windParticleInterval = null;
     }
-    
-    console.log('Wind background animations stopped');
+
 };
 
 window.anomalySystem.triggerDramaticWindAnomalyFixedDialogue = function() {
@@ -8629,8 +8356,7 @@ window.anomalySystem.getDramaticWindAnomalyFixedDialogue = function() {
 };
 
 window.anomalySystem.restoreDramaticWindAnomaly = function(savedAnomaly) {
-    console.log('Restoring dramatic wind anomaly from save...');
-    
+
     // Restore the anomaly state
     this.activeAnomalies.dramaticWindAnomaly = true;
     this.anomalies.push(savedAnomaly);
@@ -8640,26 +8366,24 @@ window.anomalySystem.restoreDramaticWindAnomaly = function(savedAnomaly) {
     
     // Set up detection (this might not be called in startDramaticWindAnomaly for restored anomalies)
     this.setupDramaticWindDetection();
-    
-    console.log('Dramatic wind anomaly restored with comprehensive character dialogue changes!');
+
 };
 
 // Test functions for dramatic wind anomaly
 window.testDramaticWindAnomaly = function() {
-    console.log('Testing dramatic wind anomaly...');
+
     window.anomalySystem.spawnDramaticWindAnomaly();
-    console.log('Dramatic wind anomaly spawned! Strong winds should now be affecting all UI elements with dramatic animations. ALL character dialogue should now be wind-themed. Click ANYWHERE on the screen with find mode active to detect and fix it.');
+
 };
 
 // Debug function to check dramatic wind anomaly state
 window.debugDramaticWindAnomaly = function() {
-    console.log('=== DRAMATIC WIND ANOMALY DEBUG ===');
-    console.log('Find mode active:', window.anomalySystem.findModeActive);
-    console.log('Dramatic wind anomaly active:', window.anomalySystem.activeAnomalies.dramaticWindAnomaly);
-    console.log('Analyzing state:', window.anomalySystem.analyzing);
-    console.log('Click handler exists:', !!window.anomalySystem.windClickHandler);
-    console.log('Wind mutation observer exists:', !!window.anomalySystem.windMutationObserver);
-    
+
+
+
+
+
+
     // Check if wind elements exist
     const windBackground = document.getElementById('windBackground');
     const windStyles = document.getElementById('dramaticWindAnomalyStyles');
@@ -8667,56 +8391,52 @@ window.debugDramaticWindAnomaly = function() {
     const windParticles = document.querySelectorAll('.wind-particle');
     const windFeathers = document.querySelectorAll('.wind-feather');
     const windLeaves = document.querySelectorAll('.wind-leaf');
-    
-    console.log('Wind background element exists:', !!windBackground);
-    console.log('Wind styles element exists:', !!windStyles);
-    console.log('Wind-affected elements count:', windElements.length);
-    console.log('Active wind particles count:', windParticles.length);
-    console.log('Active wind feathers count:', windFeathers.length);
-    console.log('Active wind leaves count:', windLeaves.length);
-    console.log('Total flying objects:', windParticles.length + windFeathers.length + windLeaves.length);
-    
+
+
+
+
+
+
+
     // Check anomalies array
     const windAnomalies = window.anomalySystem.anomalies.filter(a => a.type === 'dramaticWind');
-    console.log('Wind anomalies in array:', windAnomalies.length);
+
     if (windAnomalies.length > 0) {
-        console.log('Wind anomaly details:', windAnomalies[0]);
+
     }
-    
-    console.log('=== END DEBUG ===');
+
 };
 
 // Test function to verify restoration works
 window.testDramaticWindAnomalyRestore = function() {
-    console.log('Testing dramatic wind anomaly restoration...');
-    
+
     // First spawn the anomaly
-    console.log('1. Spawning dramatic wind anomaly...');
+
     window.anomalySystem.spawnDramaticWindAnomaly();
     
     // Wait a moment, then save state
     setTimeout(() => {
-        console.log('2. Saving anomaly state...');
+
         window.anomalySystem.saveAnomalyState();
         
         // Clear the anomaly (but don't fix it - just remove it temporarily)
-        console.log('3. Temporarily clearing anomaly effects...');
+
         window.anomalySystem.fixDramaticWindAnomaly();
         
         // Wait a moment, then restore from save
         setTimeout(() => {
-            console.log('4. Restoring anomaly state...');
+
             window.anomalySystem.loadAnomalyState();
             
             // Check if restoration worked
             setTimeout(() => {
-                console.log('5. Checking restoration results...');
+
                 window.debugDramaticWindAnomaly();
                 
                 if (window.anomalySystem.activeAnomalies.dramaticWindAnomaly) {
-                    console.log('✅ SUCCESS: Dramatic wind anomaly restoration test passed!');
+
                 } else {
-                    console.log('❌ FAILED: Dramatic wind anomaly restoration test failed!');
+
                 }
             }, 1000);
         }, 1000);
@@ -8724,256 +8444,216 @@ window.testDramaticWindAnomalyRestore = function() {
 };
 
 window.clearDramaticWindAnomaly = function() {
-    console.log('Clearing dramatic wind anomaly...');
+
     window.anomalySystem.fixDramaticWindAnomaly();
-    console.log('Dramatic wind anomaly cleared! The terrarium should be calm again.');
+
 };
 
 window.checkDramaticWindAnomalyStatus = function() {
-    console.log('Dramatic wind anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.dramaticWindAnomaly);
-    console.log('Wind styles present:', !!document.getElementById('dramaticWindAnomalyStyles'));
-    console.log('Wind background present:', !!document.getElementById('windBackground'));
-    console.log('Click handler active:', !!window.anomalySystem.windClickHandler);
-    console.log('Mutation observer active:', !!window.anomalySystem.windMutationObserver);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'dramaticWind'));
-    
+
+
+
+
+
+
+
     // Show wind-affected elements count
     const windElements = document.querySelectorAll('[data-wind-anomaly="true"]');
-    console.log('Wind-affected elements:', windElements.length);
-    
+
     // Show all wind particle counts
     const windParticles = document.querySelectorAll('.wind-particle');
     const windFeathers = document.querySelectorAll('.wind-feather');
     const windLeaves = document.querySelectorAll('.wind-leaf');
-    console.log('Active wind particles:', windParticles.length);
-    console.log('Active wind feathers:', windFeathers.length);
-    console.log('Active wind leaves:', windLeaves.length);
-    console.log('Total dramatic wind objects flying:', windParticles.length + windFeathers.length + windLeaves.length);
+
+
+
+
 };
 
 // Test mutual exclusion with other anomalies
 window.testWindMutualExclusion = function() {
-    console.log('Testing wind anomaly mutual exclusion...');
-    
+
     // Test with rustling flowers
-    console.log('1. Spawning rustling flowers anomaly...');
+
     window.anomalySystem.spawnRustlingFlowersAnomaly();
-    console.log('Rustling flowers active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-    
-    console.log('2. Spawning dramatic wind anomaly (should clear rustling flowers)...');
+
+
     window.anomalySystem.spawnDramaticWindAnomaly();
-    console.log('Rustling flowers active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-    console.log('Dramatic wind active:', window.anomalySystem.activeAnomalies.dramaticWindAnomaly);
-    
+
+
     // Clear for second test
     window.anomalySystem.fixDramaticWindAnomaly();
     
     // Test with fluzzer flip
-    console.log('3. Spawning fluzzer flip anomaly...');
+
     window.anomalySystem.spawnFluzzerFlipAnomaly();
-    console.log('Fluzzer flip active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-    
-    console.log('4. Spawning dramatic wind anomaly (should clear fluzzer flip)...');
+
+
     window.anomalySystem.spawnDramaticWindAnomaly();
-    console.log('Fluzzer flip active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-    console.log('Dramatic wind active:', window.anomalySystem.activeAnomalies.dramaticWindAnomaly);
-    
-    console.log('Mutual exclusion test complete!');
+
+
+
 };
 
 window.clearRustlingFlowersAnomaly = function() {
-    console.log('Clearing rustling flowers anomaly...');
+
     window.anomalySystem.fixRustlingFlowersAnomaly();
-    console.log('Rustling flowers anomaly cleared! Flower grid should be restored to normal state.');
+
 };
 
 window.checkRustlingFlowersAnomalyStatus = function() {
-    console.log('Rustling flowers anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-    console.log('Original grid stored:', !!window.anomalySystem.originalFlowerGrid);
-    console.log('Original rustling indices stored:', !!window.anomalySystem.originalRustlingFlowerIndices);
-    console.log('Click handler active:', !!window.anomalySystem.rustlingFlowersClickHandler);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'rustlingFlowers'));
-    
+
+
+
+
+
+
     // Show current rustling flower indices
     if (window.rustlingFlowerIndices) {
-        console.log(`Current rustling flower indices:`, window.rustlingFlowerIndices);
-        console.log(`Total rustling flowers: ${window.rustlingFlowerIndices.length}`);
-        
+
+
         // Count how many flower cells actually have the rustling CSS class
         const rustlingCells = document.querySelectorAll('.terrarium-flower-cell.terrarium-flower-rustle');
-        console.log(`Flower cells with rustling CSS class: ${rustlingCells.length}`);
+
     }
     
     // Show total flower grid info
     if (window.terrariumFlowerGrid) {
         const nonNullCells = window.terrariumFlowerGrid.filter(cell => cell !== null).length;
         const totalCells = window.terrariumFlowerGrid.length;
-        console.log(`Total flowers in grid: ${nonNullCells}/${totalCells} cells`);
+
     }
 };
 
 // Test functions for fluzzer flip anomaly
 window.testFluzzerFlipAnomaly = function() {
-    console.log('Testing fluzzer flip anomaly...');
+
     window.anomalySystem.spawnFluzzerFlipAnomaly();
-    console.log('Fluzzer flip anomaly spawned! All Fluzzer images and dialogue should now be upside down. Click any Fluzzer image with find mode active to detect it.');
+
 };
 
 window.clearFluzzerFlipAnomaly = function() {
-    console.log('Clearing fluzzer flip anomaly...');
+
     window.anomalySystem.fixFluzzerFlipAnomaly();
-    console.log('Fluzzer flip anomaly cleared! Fluzzer images and dialogue should be restored to normal orientation.');
+
 };
 
 window.checkFluzzerFlipAnomalyStatus = function() {
-    console.log('Fluzzer flip anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-    console.log('Mutation observer active:', !!window.anomalySystem.fluzzerFlipMutationObserver);
-    console.log('Click handler active:', !!window.anomalySystem.fluzzerFlipClickHandler);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'fluzzerFlip'));
-    
+
+
+
+
+
     // Count current flipped Fluzzer images
     const flippedImages = document.querySelectorAll('img[data-fluzzer-flip-anomaly="true"]');
-    console.log('Current flipped Fluzzer images on page:', flippedImages.length);
-    
+
     // List all Fluzzer images found
     const allFluzzerImages = document.querySelectorAll('img[src*="fluzzer"], img[alt*="Fluzzer"], img[alt*="fluzzer"]');
-    console.log('Total Fluzzer images found:', allFluzzerImages.length);
+
     allFluzzerImages.forEach((img, i) => {
-        console.log(`  ${i + 1}: ${img.src || img.alt} - Flipped: ${img.hasAttribute('data-fluzzer-flip-anomaly')}`);
+
     });
 };
 
 // Test functions for crab bucks anomaly
 window.testCrabBucksAnomaly = function() {
-    console.log('Testing crab bucks anomaly...');
+
     window.anomalySystem.spawnCrabBucksAnomaly();
-    console.log('Crab bucks anomaly spawned! Check the boutique - Swa Bucks icons should now be crab emojis. Click any shop card or a crab emoji with find mode active to detect it.');
+
 };
 
 window.clearCrabBucksAnomaly = function() {
-    console.log('Clearing crab bucks anomaly...');
+
     window.anomalySystem.fixCrabBucksAnomaly();
-    console.log('Crab bucks anomaly cleared! Swa Bucks icons should be restored.');
+
 };
 
 window.checkCrabBucksAnomalyStatus = function() {
-    console.log('Crab bucks anomaly status:');
-    console.log('Active:', window.anomalySystem.activeAnomalies.crabBucksAnomaly);
-    console.log('Original icon stored:', window.anomalySystem.originalSwaBucksIcon);
-    console.log('Mutation observer active:', !!window.anomalySystem.crabBucksMutationObserver);
-    console.log('Click handler active:', !!window.anomalySystem.crabBucksClickHandler);
-    console.log('Anomalies array:', window.anomalySystem.anomalies.filter(a => a.type === 'crabBucks'));
-    
+
+
+
+
+
+
     // Count current crab icons
     const crabIcons = document.querySelectorAll('img[data-crab-anomaly-active="true"]');
-    console.log('Current crab icons on page:', crabIcons.length);
+
 };
 
 // Test mutual exclusion between rustling flowers and fluzzer flip anomalies
 window.testFlowerFluzzerMutualExclusion = function() {
-    console.log('Testing mutual exclusion between rustling flowers and fluzzer flip anomalies...');
-    
+
     // First spawn rustling flowers anomaly
-    console.log('1. Spawning rustling flowers anomaly...');
+
     window.anomalySystem.spawnRustlingFlowersAnomaly();
-    console.log('Rustling flowers active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-    console.log('Fluzzer flip active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-    
+
+
     setTimeout(() => {
         // Then spawn fluzzer flip anomaly (should clear rustling flowers)
-        console.log('2. Spawning fluzzer flip anomaly (should clear rustling flowers)...');
+
         window.anomalySystem.spawnFluzzerFlipAnomaly();
-        console.log('Rustling flowers active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-        console.log('Fluzzer flip active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-        
+
+
         setTimeout(() => {
             // Then spawn rustling flowers again (should clear fluzzer flip)
-            console.log('3. Spawning rustling flowers anomaly again (should clear fluzzer flip)...');
+
             window.anomalySystem.spawnRustlingFlowersAnomaly();
-            console.log('Rustling flowers active:', window.anomalySystem.activeAnomalies.rustlingFlowersAnomaly);
-            console.log('Fluzzer flip active:', window.anomalySystem.activeAnomalies.fluzzerFlipAnomaly);
-            
-            console.log('Mutual exclusion test complete! Only one anomaly should be active at a time.');
+
+
+
         }, 2000);
     }, 2000);
 };
 
 // Test function for Soap's search mode functionality
 window.testSoapSearchMode = function() {
-    console.log('Testing Soap\'s search mode functionality...');
-    
+
     // Check current friendship level
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    console.log(`Current Soap friendship level: ${level}`);
-    
+
     // Check if search mode is unlocked
     const isUnlocked = window.anomalySystem.isSearchModeUnlocked();
-    console.log(`Search mode unlocked: ${isUnlocked}`);
-    
+
     // Test the buff description
     if (typeof getFriendshipBuffs === 'function') {
         const buffs = getFriendshipBuffs('Generator', level);
-        console.log('Current Generator buffs:', buffs);
+
     }
     
     // Test anomaly system visibility
     const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
-    console.log(`Anomaly system unlocked: ${hasInfinity}`);
-    
+
     if (hasInfinity) {
-        console.log('Anomaly detector should be visible and search mode should work if friendship level >= 7');
+
     } else {
-        console.log('Anomaly system is locked - need to unlock infinity system first');
+
     }
     
     // Enable find mode to test search functionality
     if (window.anomalySystem.isDetectorVisible) {
-        console.log('Enabling find mode to test search...');
+
         window.anomalySystem.enableFindMode();
-        console.log('Find mode enabled - you can now test right-click search');
+
     }
 };
 
 // Force set Soap friendship level for testing
 window.forceSoapFriendshipLevel = function(targetLevel) {
     if (!window.friendship) {
-        console.log('Friendship system not initialized');
+
         return;
     }
     
     const oldLevel = window.friendship.Generator.level || 0;
     window.friendship.Generator.level = targetLevel;
-    console.log(`Soap friendship level changed from ${oldLevel} to ${targetLevel}`);
-    
+
     // Test the search mode unlock status
     const isUnlocked = window.anomalySystem.isSearchModeUnlocked();
-    console.log(`Search mode now unlocked: ${isUnlocked}`);
-    
+
     // Test buff description
     if (typeof getFriendshipBuffs === 'function') {
         const buffs = getFriendshipBuffs('Generator', targetLevel);
-        console.log('Updated Generator buffs:', buffs);
+
     }
 };
-
-console.log('Anomaly system test functions loaded: testClockAnomaly(), testBackwardClockAnomaly(), testBoxOrderAnomaly(), ' +
-'testSoapGeneratorAnomaly(), testShopPriceAnomaly(), forceTestShopPriceAnomaly(), clearShopPriceAnomaly(), ' +
-'checkShopPriceAnomalyStatus(), testDarkVoidAnomaly(), forceTestDarkVoidAnomaly(), clearDarkVoidAnomaly(), ' +
-'checkDarkVoidAnomalyStatus(), triggerDarkVoidConsequencesTest(), debugCargoTabButtons(), forceSoapGeneratorAnomaly(), ' +
-'forceAnomalySpawn(), getAnomalyStatus(), debugPowerGenerator(), testPrismMirrorAnomaly(), forceTestPrismMirrorAnomaly(), ' +
-'clearPrismMirrorAnomaly(), checkPrismMirrorAnomalyStatus(), testCargoOmegaBoxAnomaly(), forceTestCargoOmegaBoxAnomaly(), ' +
-'clearCargoOmegaBoxAnomaly(), checkCargoOmegaBoxAnomalyStatus(), testOmegaBoxRestoration(), simulateOmegaBoxRestoration(), ' +
-'testBoxAnomalyMutualExclusion(), testSwariaDarkVoidSpeech(), testBlurpleLightAnomaly(), forceTestBlurpleLightAnomaly(), ' +
-'clearBlurpleLightAnomaly(), checkBlurpleLightAnomalyStatus(), testBoxGeneratorFreezeAnomaly(), forceTestBoxGeneratorFreezeAnomaly(), ' +
-'clearBoxGeneratorFreezeAnomaly(), checkBoxGeneratorFreezeAnomalyStatus(), testLabDarknessAnomaly(), forceTestLabDarknessAnomaly(), ' +
-'clearLabDarknessAnomaly(), checkLabDarknessAnomalyStatus(), forceLabDarknessProgression(), ' +
-'testNotationScrambleAnomaly(), clearNotationScrambleAnomaly(), checkNotationScrambleAnomalyStatus(), ' +
-'testFluzzerFlipAnomaly(), clearFluzzerFlipAnomaly(), checkFluzzerFlipAnomalyStatus(), ' +
-'testCrabBucksAnomaly(), clearCrabBucksAnomaly(), checkCrabBucksAnomalyStatus(), ' +
-'testRustlingFlowersAnomaly(), clearRustlingFlowersAnomaly(), checkRustlingFlowersAnomalyStatus(), ' +
-'testFlowerFluzzerMutualExclusion(), testDramaticWindAnomaly(), clearDramaticWindAnomaly(), ' +
-'checkDramaticWindAnomalyStatus(), testWindMutualExclusion(), testSoapSearchMode(), forceSoapFriendshipLevel()');

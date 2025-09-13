@@ -398,13 +398,10 @@ window.updateFlowerGridButtonState = updateFlowerGridButtonState;
 
 // Initialize troll mechanic after DOM is loaded
 function initializeFlowerGridTroll() {
-  console.log('initializeFlowerGridTroll called, terrariumLevel:', terrariumLevel);
   if (terrariumLevel >= 96) {
-    console.log('Initializing flower grid troll for level', terrariumLevel);
     // Set initial troll level before calling handleFlowerGridTroll
     flowerGridTrollLevel = terrariumLevel + 4;
     window.flowerGridTrollLevel = flowerGridTrollLevel;
-    console.log('Set flowerGridTrollLevel to:', flowerGridTrollLevel);
     handleFlowerGridTroll(terrariumLevel);
   }
 }
@@ -438,38 +435,27 @@ window.checkTrollStatus = function() {
 
 // Debug function to reset flower grid troll level
 window.resetFlowerGridTrollLevel = function() {
-  console.log('Resetting flower grid troll level from', flowerGridTrollLevel, 'to 100');
   flowerGridTrollLevel = 100;
   window.flowerGridTrollLevel = 100;
   localStorage.setItem('flowerGridTrollLevel', '100');
   updateFlowerGridButtonState();
-  console.log('Flower grid troll level reset to 100');
 };
 
 // Debug function to manually activate the troll
 window.activateFlowerGridTroll = function() {
-  console.log('Manually activating flower grid troll for current level:', terrariumLevel);
   handleFlowerGridTroll(terrariumLevel);
-  console.log('Troll activated! flowerGridTrollLevel is now:', flowerGridTrollLevel);
 };
 
 // Debug function to check troll status
 window.checkFlowerGridTrollStatus = function() {
-  console.log('Current terrarium level:', terrariumLevel);
-  console.log('Current flowerGridTrollLevel:', flowerGridTrollLevel);
-  console.log('Expected level (current + 4):', terrariumLevel + 4);
-  console.log('Troll should be active:', terrariumLevel >= 96);
 };
 
 // Debug function to force button update
 window.forceUpdateFlowerGridButton = function() {
-  console.log('Forcing button update...');
   updateFlowerGridButtonState();
   const btn = document.getElementById('terrariumFlowerGridBtn');
   if (btn) {
-    console.log('Button text is now:', btn.textContent);
   } else {
-    console.log('Button not found!');
   }
 };
 
@@ -573,10 +559,8 @@ function syncTerrariumVarsFromWindow() {
   
   // Initialize troll after all variables are synced
   if (terrariumLevel >= 96 && flowerGridTrollLevel <= 100) {
-    console.log('Post-sync troll initialization for level', terrariumLevel);
     flowerGridTrollLevel = terrariumLevel + 4;
     window.flowerGridTrollLevel = flowerGridTrollLevel;
-    console.log('Set flowerGridTrollLevel to:', flowerGridTrollLevel);
     setTimeout(updateFlowerGridButtonState, 100); // Update button after a short delay
   }
 }
@@ -1049,13 +1033,11 @@ function getWateringCanAreaSize() {
   
   // At level 15, watering can affects 6x6 area (offset of 3)
   if (level >= 15) {
-    console.log(`Watering can upgraded to 6x6 area (Fluzzer friendship level ${level})`);
     return 3; // 6x6 area
   }
   
   // At level 10+, watering can affects 5x5 area (offset of 2)
   if (level >= 10) {
-    console.log(`Watering can upgraded to 5x5 area (Fluzzer friendship level ${level})`);
     return 2; // 5x5 area
   }
   
@@ -1254,7 +1236,6 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   
   // Check for flower wipe chance (Fluzzer AI only)
   if (shouldTriggerFlowerWipe()) {
-    console.log('Fluzzer triggered flower wipe!');
     triggerFlowerWipe();
   }
   
@@ -1387,7 +1368,6 @@ function autoCollectNewestToken(sourceElement) {
   
   // Auto-collect the closest token
   if (closestToken && closestToken.onclick) {
-    console.log('Fluzzer automatically collecting ingredient token!');
     closestToken.onclick();
   }
 }
@@ -1411,7 +1391,6 @@ function fluzzerAIAction(onComplete) {
       // Pick a random rustling flower to target
       const randomIndex = Math.floor(Math.random() * rustlingFlowers.length);
       const targetIndex = rustlingFlowers[randomIndex];
-      console.log(`Fluzzer detected rustling flower at index ${targetIndex} - auto-collecting!`);
       
       // Occasionally say something when detecting rustling flowers
       if (Math.random() < 0.3 && typeof fluzzerSay === 'function') {
@@ -2739,7 +2718,6 @@ function triggerPetalSlice(clickIndex, cols, rows) {
 }
 
 function triggerFlowerWipe() {
-  console.log('Flower wipe triggered - damaging all flowers!');
   
   // Create a dramatic visual effect that covers the entire grid
   createFlowerWipeVisual();
@@ -2906,7 +2884,6 @@ function restorePetalSlices() {
         if (flowerGrid) {
           flowerGrid.style.position = 'relative';
           flowerGrid.appendChild(petalData.element);
-          console.log('Restored petal slice after UI update');
         }
       }
     }
@@ -2966,7 +2943,6 @@ function createFlowerWipeVisual() {
     }, 100);
   }, 200);
   
-  console.log('Flower wipe visual effect created');
 }
 
 (function() {

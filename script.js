@@ -376,27 +376,24 @@ window.addCurrency = addCurrency;
 function addSwaBucks(amount) {
   amount = new Decimal(amount);
   if (amount.lte(0)) return;
-  
-  console.log('addSwaBucks called with amount:', amount.toString());
-  console.log('Current state.swabucks before:', state.swabucks ? state.swabucks.toString() : 'undefined');
-  
+
+
   // SwaBucks are premium tokens and are NOT affected by infinity nerfs
   
   if (!DecimalUtils.isDecimal(state.swabucks)) {
     state.swabucks = new Decimal(0);
-    console.log('Initialized swabucks to 0');
+
   }
   
   state.swabucks = state.swabucks.add(amount);
-  console.log('New state.swabucks after adding:', state.swabucks.toString());
-  
+
   // Update inventory display if it exists and is visible
   const swabucksElement = document.getElementById('inventoryCount-swabucks');
   if (swabucksElement) {
     swabucksElement.textContent = DecimalUtils.formatDecimal(state.swabucks);
-    console.log('Updated display element to:', swabucksElement.textContent);
+
   } else {
-    console.log('Display element not found (modal probably closed)');
+
   }
   // Note: Element may not exist if inventory modal is closed, but it will be updated when modal opens
   
@@ -411,41 +408,37 @@ window.addSwaBucks = addSwaBucks;
 
 // Debug function to test Swa Bucks
 window.testSwaBucks = function() {
-  console.log('Testing Swa Bucks system...');
-  console.log('Current Swa Bucks:', state.swabucks ? state.swabucks.toString() : 'undefined');
-  console.log('State object check:', typeof state, state ? 'exists' : 'missing');
-  
+
+
+
   // Check if element exists
   const element = document.getElementById('inventoryCount-swabucks');
-  console.log('Display element found:', element);
-  
+
   if (!element) {
-    console.log('Element not found! Inventory modal might be closed.');
+
     // Try to open inventory
     const inventoryBtn = document.getElementById('inventoryBtn');
     if (inventoryBtn) {
-      console.log('Clicking inventory button...');
+
       inventoryBtn.click();
       setTimeout(() => {
         const elementAfterOpen = document.getElementById('inventoryCount-swabucks');
-        console.log('Element after opening inventory:', elementAfterOpen);
+
       }, 100);
     }
   } else {
-    console.log('Element current text:', element.textContent);
+
   }
-  
-  console.log('About to add 100 Swa Bucks...');
+
   addSwaBucks(100);
-  console.log('After adding 100:', state.swabucks.toString());
-  
+
   // Check again after adding
   setTimeout(() => {
     const elementAfter = document.getElementById('inventoryCount-swabucks');
     if (elementAfter) {
-      console.log('Element text after update:', elementAfter.textContent);
+
     } else {
-      console.log('Element still not found after update');
+
     }
   }, 200);
 };
@@ -455,51 +448,47 @@ window.updateSwaBucksDisplay = function() {
   const element = document.getElementById('inventoryCount-swabucks');
   if (element && window.state.swabucks) {
     element.textContent = DecimalUtils.formatDecimal(window.state.swabucks);
-    console.log('Manually updated display to:', element.textContent);
+
   } else {
-    console.log('Could not update display. Element exists:', !!element, 'SwaBucks exists:', !!window.state.swabucks);
+
   }
 };
 
 // Debug function to test Element 1 effect
 window.testElement1 = function() {
-  console.log('Testing Element 1 (Fluffium) effect...');
-  console.log('Element 1 purchased:', !!boughtElements[1]);
+
+
   const baseRate = new Decimal(1);
   const currentRate = getFluffRate();
-  console.log('Base rate:', baseRate.toString());
-  console.log('Current fluff rate:', currentRate.toString());
-  console.log('Expected rate with Element 1:', baseRate.mul(1.25).toString());
-  console.log('Current tick speed multiplier:', tickSpeedMultiplier);
-  
+
+
+
+
   // Force UI update
   updateUI();
-  console.log('UI updated - check the fluff rate display');
+
 };
 
 // Debug function to check artifact multipliers
 window.checkArtifactMultiplier = function() {
-  console.log('=== Artifact Gain Analysis ===');
-  console.log('Current grade:', state.grade ? state.grade.toString() : 'undefined');
-  
+
+
   if (state.grade && state.grade.gte(5)) {
     const gradeMultiplier = new Decimal(2).pow(state.grade.sub(4));
-    console.log('Grade artifact multiplier:', gradeMultiplier.toString() + 'x');
+
   } else {
-    console.log('Grade artifact multiplier: 1x (grade < 5)');
+
   }
   
   if (boughtElements[6]) {
     const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
     const kpBonus = kpDecimal.mul(0.1).floor();
-    console.log('Element 6 KP bonus: +' + kpBonus.toString() + ' artifacts');
+
   } else {
-    console.log('Element 6 KP bonus: Not purchased');
+
   }
-  
-  console.log('Base legendary artifacts: 0-1');
-  console.log('Base mythic artifacts: 3-5');
-  
+
+
   // Calculate what you'd get from a mythic box
   const baseArtifacts = 4; // Average of 3-5
   let totalArtifacts = baseArtifacts;
@@ -513,22 +502,21 @@ window.checkArtifactMultiplier = function() {
     const gradeMultiplier = new Decimal(2).pow(state.grade.sub(4));
     totalArtifacts *= gradeMultiplier.toNumber();
   }
-  
-  console.log('Expected artifacts from mythic box:', totalArtifacts);
+
 };
 
 // Debug function to check kitchen ingredients
 window.checkKitchenIngredients = function() {
-  console.log('=== Kitchen Ingredients Status ===');
-  console.log('kitchenIngredients exists:', !!window.kitchenIngredients);
+
+
   if (window.kitchenIngredients) {
-    console.log('kitchenIngredients:', window.kitchenIngredients);
+
     for (let key in window.kitchenIngredients) {
       const value = window.kitchenIngredients[key];
-      console.log(`${key}:`, DecimalUtils.isDecimal(value) ? value.toString() : value, '(type: ' + (DecimalUtils.isDecimal(value) ? 'Decimal' : typeof value) + ')');
+
     }
   } else {
-    console.log('kitchenIngredients is not initialized!');
+
   }
 };
 
@@ -586,7 +574,7 @@ function gameTick() {
   if (Math.random() < 1 / 10000000) {
     if (typeof window.unlockSecretAchievement === 'function') {
       window.unlockSecretAchievement('secret17');
-      console.log('🎉 ULTRA RARE! Secret achievement 17 "Just keep waiting" unlocked! (1 in 10 million chance)');
+
     }
   }
   
@@ -1414,8 +1402,7 @@ function resetGame() {
       // Permanently unlock control center after first delivery reset
       const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
       localStorage.setItem(unlockKey, 'true');
-      console.log('Control Center permanently unlocked after first delivery reset!');
-      
+
       if (typeof showFirstDeliveryStoryModal === 'function') {
         showFirstDeliveryStoryModal();
         window._reloadAfterStoryModal = true;
@@ -1881,7 +1868,9 @@ function updateUI() {
     artifactsEl.style.display = "";
     artifactsEl.textContent = formatNumber(state.artifacts);
   }
-  updateSwariaHungerUI();
+  if (typeof updateSwariaHungerUI === 'function') {
+    updateSwariaHungerUI();
+  }
   {
   const kpPreview = document.getElementById("kpPreview");
   if (kpPreview) {
@@ -1995,7 +1984,7 @@ function clearUnlockStatesForFreshSave() {
     // This appears to be a truly fresh save - clear unlock states
     localStorage.removeItem(infinityUnlockKey);
     localStorage.removeItem(controlCenterUnlockKey);
-    console.log('Cleared unlock states for fresh save slot');
+
   }
 }
 
@@ -2007,19 +1996,16 @@ window.debugUnlockStates = function() {
   const currentSlot = localStorage.getItem('currentSaveSlot') || 'default';
   const infinityKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
   const controlKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-  
-  console.log('=== Unlock States Debug ===');
-  console.log('Current save slot:', currentSlot);
-  console.log('Infinity research key:', infinityKey);
-  console.log('Control center key:', controlKey);
-  console.log('Infinity research unlocked:', localStorage.getItem(infinityKey));
-  console.log('Control center unlocked:', localStorage.getItem(controlKey));
-  
-  console.log('=== Game State ===');
-  console.log('KP:', swariaKnowledge ? swariaKnowledge.kp : 'undefined');
-  console.log('Elements bought:', Object.keys(boughtElements || {}).length);
-  console.log('Seen first delivery story:', state ? state.seenFirstDeliveryStory : 'undefined');
-  
+
+
+
+
+
+
+
+
+
+
   // Check infinity system in detail
   let totalInfinityCount = 0;
   let individualInfinities = {};
@@ -2038,12 +2024,10 @@ window.debugUnlockStates = function() {
       everReachedInfinities = {...window.infinitySystem.everReached};
     }
   }
-  
-  console.log('=== Infinity System Debug ===');
-  console.log('Total infinity count (getTotalInfinityCurrency):', totalInfinityCount);
-  console.log('Individual infinity counts:', individualInfinities);
-  console.log('Ever reached infinity:', everReachedInfinities);
-  
+
+
+
+
   // Check if any currency has infinity
   let hasAnyIndividualInfinity = false;
   let hasAnyEverReached = false;
@@ -2051,26 +2035,23 @@ window.debugUnlockStates = function() {
   for (const [currency, count] of Object.entries(individualInfinities)) {
     if (count && count > 0) {
       hasAnyIndividualInfinity = true;
-      console.log(`${currency} has ${count} infinity count(s)`);
+
     }
   }
   
   for (const [currency, reached] of Object.entries(everReachedInfinities)) {
     if (reached) {
       hasAnyEverReached = true;
-      console.log(`${currency} has ever reached infinity`);
+
     }
   }
-  
-  console.log('Has any individual infinity:', hasAnyIndividualInfinity);
-  console.log('Has any ever reached infinity:', hasAnyEverReached);
-  
-  console.log('=== Tab Visibility ===');
+
+
+
   const knowledgeTab = document.getElementById('knowledgeTab');
   const infinityBtn = document.getElementById('infinityResearchSubTabBtn');
-  console.log('Knowledge tab display:', knowledgeTab ? knowledgeTab.style.display : 'not found');
-  console.log('Infinity research btn display:', infinityBtn ? infinityBtn.style.display : 'not found');
-  
+
+
   return {
     currentSlot,
     infinityUnlocked: localStorage.getItem(infinityKey),
@@ -2087,7 +2068,7 @@ window.debugUnlockStates = function() {
 
 // Debug function to manually clear unlock states and recheck
 window.forceUnlockCheck = function() {
-  console.log('=== Forcing unlock state check ===');
+
   clearUnlockStatesForFreshSave();
   checkControlCenterUnlock();
   checkInfinityResearchUnlock();
@@ -2101,8 +2082,7 @@ window.forceUnlockCheck = function() {
   if (typeof updateInfinityResetInfo === 'function') {
     updateInfinityResetInfo();
   }
-  
-  console.log('=== Recheck complete ===');
+
   return debugUnlockStates();
 };
 
@@ -2110,8 +2090,7 @@ window.forceUnlockCheck = function() {
 window.debugClearUnlockStates = function() {
   const infinityKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
   const controlKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-  
-  console.log('WARNING: Manually clearing unlock states for current save slot');
+
   localStorage.removeItem(infinityKey);
   localStorage.removeItem(controlKey);
   
@@ -2120,15 +2099,14 @@ window.debugClearUnlockStates = function() {
   const infinityBtn = document.getElementById('infinityResearchSubTabBtn');
   if (knowledgeTab) knowledgeTab.style.display = 'none';
   if (infinityBtn) infinityBtn.style.display = 'none';
-  
-  console.log('Unlock states cleared. Run checkControlCenterUnlock() and checkInfinityResearchUnlock() to re-evaluate.');
+
   return debugUnlockStates();
 };
 
 // Debug function to check infinity reset availability
 window.debugInfinityReset = function() {
   if (!window.infinitySystem) {
-    console.log('Infinity system not found');
+
     return { error: 'Infinity system not found' };
   }
   
@@ -2137,20 +2115,17 @@ window.debugInfinityReset = function() {
   const infinityGain = window.infinitySystem.calculateInfinityGain();
   const totalEarned = window.infinitySystem.totalInfinityEarned;
   const totalFromFunction = window.infinitySystem.getTotalInfinityCurrency();
-  
-  console.log('=== Infinity Reset Debug ===');
-  console.log('Currencies with infinity:', currenciesWithInfinity);
-  console.log('Can infinity reset:', canReset);
-  console.log('Infinity gain from reset:', infinityGain);
-  console.log('Total infinity earned (property):', totalEarned);
-  console.log('Total from getTotalInfinityCurrency():', totalFromFunction);
-  console.log('Individual infinity counts:', window.infinitySystem.counts);
-  
+
+
+
+
+
+
+
   // Check reset button state
   const resetButton = document.getElementById('performInfinityReset');
-  console.log('Reset button disabled:', resetButton ? resetButton.disabled : 'button not found');
-  console.log('Reset button text:', resetButton ? resetButton.textContent : 'button not found');
-  
+
+
   return {
     currenciesWithInfinity,
     canReset,
@@ -2164,22 +2139,20 @@ window.debugInfinityReset = function() {
 
 // Test function to check current infinity state
 window.testInfinityState = function() {
-  console.log('=== Current Infinity State ===');
-  console.log('Infinity System:', window.infinitySystem);
-  console.log('Infinity Counts:', window.infinitySystem ? window.infinitySystem.counts : 'not found');
-  console.log('Ever Reached:', window.infinitySystem ? window.infinitySystem.everReached : 'not found');
-  
+
+
+
+
   if (window.infinitySystem) {
     const currenciesWithInfinity = window.infinitySystem.getCurrenciesWithInfinity();
     const canReset = window.infinitySystem.canInfinityReset();
-    console.log('Currencies with infinity:', currenciesWithInfinity);
-    console.log('Can reset:', canReset);
+
+
   }
   
   // Check current currency values
-  console.log('Current fluff:', window.state ? window.state.fluff : 'not found');
-  console.log('Current display fluff:', document.getElementById('fluff') ? document.getElementById('fluff').textContent : 'not found');
-  
+
+
   // Force an update of the infinity reset info
   updateInfinityResetInfo();
   
@@ -2189,7 +2162,7 @@ window.testInfinityState = function() {
 // Test function to set fluff to infinity for testing
 window.setFluffToInfinity = function() {
   if (window.infinitySystem && window.state) {
-    console.log('Setting fluff to infinity...');
+
     window.infinitySystem.counts.fluff = 1;
     window.infinitySystem.everReached.fluff = true;
     window.state.fluff = new Decimal('1.79e308'); // Just under infinity threshold
@@ -2199,8 +2172,7 @@ window.setFluffToInfinity = function() {
     if (typeof updateInfinityDisplay === 'function') updateInfinityDisplay();
     updateInfinityResetInfo();
     updateInfinitySubTabVisibility();
-    
-    console.log('Fluff set to infinity. Check reset button and sub-tabs.');
+
     return 'Fluff set to infinity';
   }
   return 'Failed to set fluff to infinity';
@@ -2209,7 +2181,7 @@ window.setFluffToInfinity = function() {
 // Debug function to perform infinity reset without confirmation (for testing only)
 window.forceInfinityReset = function() {
   if (window.infinitySystem && window.infinitySystem.canInfinityReset()) {
-    console.log('WARNING: Performing infinity reset without confirmation (debug only)');
+
     window.infinitySystem.performInfinityReset();
     
     // Update displays
@@ -2228,14 +2200,13 @@ window.forceInfinityReset = function() {
 // Test function to simulate having performed infinity resets
 window.simulateInfinityResets = function(totalResets = 4) {
   if (window.infinitySystem) {
-    console.log(`Simulating ${totalResets} infinity resets...`);
+
     window.infinitySystem.totalInfinityEarned = totalResets;
     
     // Update displays and tab visibility
     updateInfinitySubTabVisibility();
     if (typeof updateInfinityBenefits === 'function') updateInfinityBenefits();
-    
-    console.log(`Simulated ${totalResets} total infinity. Check sub-tab visibility.`);
+
     return `Simulated ${totalResets} total infinity`;
   }
   return 'Failed to simulate infinity resets';
@@ -2244,7 +2215,7 @@ window.simulateInfinityResets = function(totalResets = 4) {
 // Debug function to check sub-tab visibility state
 window.debugSubTabVisibility = function() {
   if (!window.infinitySystem) {
-    console.log('Infinity system not found');
+
     return { error: 'Infinity system not found' };
   }
   
@@ -2264,40 +2235,36 @@ window.debugSubTabVisibility = function() {
     treeBtnVisible: treeBtn ? treeBtn.style.display !== 'none' : 'not found',
     challengeBtnVisible: challengeBtn ? challengeBtn.style.display !== 'none' : 'not found'
   };
-  
-  console.log('=== Sub-Tab Visibility Debug ===');
-  console.log('Total Infinity:', totalInfinity);
-  console.log('Has Performed Reset:', hasPerformedReset);
-  console.log('Reset Tab Visible:', visibility.resetBtnVisible);
-  console.log('Research Tab Visible:', visibility.researchBtnVisible);
-  console.log('Tree Tab Visible:', visibility.treeBtnVisible);
-  console.log('Challenge Tab Visible:', visibility.challengeBtnVisible);
-  
+
+
+
+
+
+
+
   return visibility;
 };
 
 // Debug function to test save slot isolation for infinity data
 window.debugInfinitySaveSlots = function() {
   if (!window.infinitySystem) {
-    console.log('Infinity system not found');
+
     return { error: 'Infinity system not found' };
   }
   
   const currentSlot = localStorage.getItem('currentSaveSlot') || 'unknown';
   const saveKey = getSaveSlotSpecificKey('infinitySystemData');
   const savedData = localStorage.getItem(saveKey);
-  
-  console.log('=== Infinity Save Slot Debug ===');
-  console.log('Current Save Slot:', currentSlot);
-  console.log('Infinity Save Key:', saveKey);
-  console.log('Current totalInfinityEarned:', window.infinitySystem.totalInfinityEarned);
-  console.log('Saved Data in localStorage:', savedData ? JSON.parse(savedData) : 'none');
-  
+
+
+
+
+
   // Check all save slots for infinity data
   for (let i = 1; i <= 5; i++) {
     const tempKey = `saveSlot${i}_infinitySystemData`;
     const tempData = localStorage.getItem(tempKey);
-    console.log(`Slot ${i} infinity data:`, tempData ? JSON.parse(tempData) : 'none');
+
   }
   
   return {
@@ -2315,7 +2282,7 @@ window.debugClearInfinityData = function() {
     // Update displays
     if (typeof updateInfinityBenefits === 'function') updateInfinityBenefits();
     if (typeof updateInfinitySubTabVisibility === 'function') updateInfinitySubTabVisibility();
-    console.log('Infinity data cleared for current save slot');
+
     return 'Infinity data cleared';
   }
   return 'Failed to clear infinity data';
@@ -2324,31 +2291,26 @@ window.debugClearInfinityData = function() {
 // Comprehensive test function for save slot isolation
 window.testSaveSlotIsolation = function() {
   if (!window.infinitySystem) {
-    console.log('Infinity system not found');
+
     return { error: 'Infinity system not found' };
   }
-  
-  console.log('=== Testing Save Slot Isolation ===');
-  
+
   // Test 1: Check current state
   const currentSlot = localStorage.getItem('currentSaveSlot') || 'unknown';
   const currentInfinity = window.infinitySystem.totalInfinityEarned;
-  console.log(`Current slot: ${currentSlot}, Current infinity: ${currentInfinity}`);
-  
+
   // Test 2: Set some infinity (no saving needed)
   const oldInfinity = window.infinitySystem.totalInfinityEarned;
   window.infinitySystem.totalInfinityEarned = 10;
-  console.log('Set infinity to 10 (now handled by unified save system)');
-  
+
   // Test 3: Values persist through unified save system
-  console.log('Current infinity value:', window.infinitySystem.totalInfinityEarned);
-  
+
   // Test 4: Check if other slots are isolated
-  console.log('Checking other save slots for isolation...');
+
   for (let i = 1; i <= 5; i++) {
     const slotKey = `saveSlot${i}_infinitySystemData`;
     const slotData = localStorage.getItem(slotKey);
-    console.log(`Slot ${i}:`, slotData ? JSON.parse(slotData) : 'empty');
+
   }
   
   // Restore original value
@@ -2364,45 +2326,39 @@ window.testSaveSlotIsolation = function() {
 
 // Debug function to check infinity reset completeness
 window.debugInfinityResetState = function() {
-  console.log('=== Infinity Reset State Debug ===');
-  
+
   // Check infinity counts
   if (window.infinitySystem && window.infinitySystem.counts) {
-    console.log('Infinity counts:', window.infinitySystem.counts);
+
     const hasAnyCounts = Object.values(window.infinitySystem.counts).some(count => count > 0);
-    console.log('Has any infinity counts:', hasAnyCounts);
+
   }
   
   // Check box generators
   if (window.generators) {
-    console.log('Box generators state:');
+
     window.generators.forEach((gen, index) => {
-      console.log(`Generator ${index} (${gen.name}):`, {
-        unlocked: gen.unlocked,
-        upgrades: gen.upgrades,
-        speedUpgrades: gen.speedUpgrades,
-        progress: gen.progress
-      });
+
     });
   }
   
   // Check generator upgrades
   if (window.generatorUpgrades) {
-    console.log('Generator upgrades:', window.generatorUpgrades);
+
   }
   
   // Check elements
   if (window.boughtElements || typeof boughtElements !== 'undefined') {
     const elements = window.boughtElements || boughtElements;
-    console.log('Bought elements:', elements);
+
     const elementCount = Object.keys(elements).length;
-    console.log('Total elements unlocked:', elementCount);
+
   }
   
   // Check prism state
   if (window.prismState) {
-    console.log('Prism generator upgrades:', window.prismState.generatorUpgrades);
-    console.log('Prism generator unlocked:', window.prismState.generatorUnlocked);
+
+
   }
   
   return {
@@ -2416,49 +2372,40 @@ window.debugInfinityResetState = function() {
 // Debug function to test infinity total calculation logic
 window.testInfinityTotalLogic = function() {
   if (!window.infinitySystem) {
-    console.log('Infinity system not found');
+
     return { error: 'Infinity system not found' };
   }
-  
-  console.log('=== Testing Infinity Total Logic ===');
-  
+
   // Save current state
   const originalTotal = window.infinitySystem.totalInfinityEarned;
   const originalCounts = { ...window.infinitySystem.counts };
-  
-  console.log('Original total infinity:', originalTotal);
-  console.log('Original infinity counts:', originalCounts);
-  
+
+
   // Test scenario 1: 1 total, reset with 1 current -> should stay 1
-  console.log('\n--- Test 1: 1 total, 1 current infinity ---');
+
   window.infinitySystem.totalInfinityEarned = 1;
   window.infinitySystem.counts.fluff = 1;
   const gain1 = window.infinitySystem.calculateInfinityGain();
   const newTotal1 = Math.max(window.infinitySystem.totalInfinityEarned, gain1);
-  console.log(`Current total: 1, Gain: ${gain1}, New total should be: ${newTotal1}`);
-  
+
   // Test scenario 2: 1 total, reset with 2 current -> should become 2  
-  console.log('\n--- Test 2: 1 total, 2 current infinity ---');
+
   window.infinitySystem.totalInfinityEarned = 1;
   window.infinitySystem.counts.fluff = 2;
   const gain2 = window.infinitySystem.calculateInfinityGain();
   const newTotal2 = Math.max(window.infinitySystem.totalInfinityEarned, gain2);
-  console.log(`Current total: 1, Gain: ${gain2}, New total should be: ${newTotal2}`);
-  
+
   // Test scenario 3: 7 total, reset with 3 current -> should stay 7
-  console.log('\n--- Test 3: 7 total, 3 current infinity ---');
+
   window.infinitySystem.totalInfinityEarned = 7;
   window.infinitySystem.counts.fluff = 3;
   const gain3 = window.infinitySystem.calculateInfinityGain();
   const newTotal3 = Math.max(window.infinitySystem.totalInfinityEarned, gain3);
-  console.log(`Current total: 7, Gain: ${gain3}, New total should be: ${newTotal3}`);
-  
+
   // Restore original state
   window.infinitySystem.totalInfinityEarned = originalTotal;
   window.infinitySystem.counts = originalCounts;
-  
-  console.log('\n--- Tests Complete - Original state restored ---');
-  
+
   return {
     test1: { total: 1, gain: gain1, newTotal: newTotal1, expected: 1 },
     test2: { total: 1, gain: gain2, newTotal: newTotal2, expected: 2 },
@@ -2492,9 +2439,9 @@ function initializeInfinityCountsForSlot() {
       charge: 0
     };
     window.infinitySystem.counts = { ...defaultCounts };
-    console.log('Initialized infinity counts with defaults (no saved data)');
+
   } else {
-    console.log('Infinity counts loaded from save data:', window.infinitySystem.counts);
+
   }
 }
 
@@ -2525,13 +2472,13 @@ function clearInfinityCountsForSlot() {
   window.infinitySystem.counts = { ...defaultCounts };
   
   // No saving - counts are always reset to 0
-  console.log('Cleared infinity counts for save slot (no saving)');
+
 }
 
 // Debug function to force reset infinity counts (for testing)
 window.debugResetInfinityCounts = function() {
   if (!window.infinitySystem) {
-    console.log('infinitySystem not available');
+
     return;
   }
   
@@ -2551,13 +2498,11 @@ window.debugResetInfinityCounts = function() {
     terrariumNectar: 0,
     charge: 0
   };
-  
-  console.log('Before reset:', JSON.stringify(window.infinitySystem.counts));
+
   window.infinitySystem.counts = { ...defaultCounts };
-  console.log('After reset:', JSON.stringify(window.infinitySystem.counts));
-  
+
   // No saving - counts are always reset
-  console.log('Reset counts (no saving)');
+
 };
 
 // Debug function to clean up any existing infinity count localStorage keys
@@ -2577,10 +2522,9 @@ window.cleanupInfinityCountsStorage = function() {
   keysToRemove.forEach(key => {
     localStorage.removeItem(key);
     keysRemoved++;
-    console.log('Removed localStorage key:', key);
+
   });
-  
-  console.log(`Cleaned up ${keysRemoved} infinity count storage keys`);
+
 };
 
 function checkInfinityResearchUnlock() {
@@ -2634,8 +2578,7 @@ function checkInfinityResearchUnlock() {
     // If conditions are met, unlock permanently
     if (hasAnyInfinity) {
       localStorage.setItem(unlockKey, 'true');
-      console.log(`Infinity Research permanently unlocked! Has infinity currencies: ${hasAnyInfinity}`);
-      
+
       // Show notification
       if (typeof showNotification === 'function') {
         showNotification('Infinity Research Unlocked!', 'You can now access the Infinity Research tab in Knowledge.', 'success');
@@ -2657,7 +2600,7 @@ function checkInfinityResearchUnlock() {
       }
     }
   } catch (error) {
-    console.warn('Error in checkInfinityResearchUnlock:', error);
+
   }
 }
 
@@ -2687,8 +2630,7 @@ function checkControlCenterUnlock() {
     // If conditions are met, unlock permanently
     if (shouldBeUnlocked) {
       localStorage.setItem(unlockKey, 'true');
-      console.log('Control Center permanently unlocked!');
-      
+
       // Show the tab
       const knowledgeTab = document.getElementById("knowledgeTab");
       if (knowledgeTab) {
@@ -2702,7 +2644,7 @@ function checkControlCenterUnlock() {
       }
     }
   } catch (error) {
-    console.warn('Error in checkControlCenterUnlock:', error);
+
   }
 }
 
@@ -3073,18 +3015,17 @@ function loadGame() {
       save = DecimalUtils.deserializeGameState(JSON.parse(saveData));
     }
   } catch (error) {
-    console.error('Error loading save:', error);
-    
+
     // Try backup if current slot failed
     if (loadGameSaveSlot) {
       const backupKey = `swariaSaveSlot${loadGameSaveSlot}_backup`;
       const backupData = localStorage.getItem(backupKey);
       if (backupData) {
-        console.log('Attempting to load from backup...');
+
         try {
           save = DecimalUtils.deserializeGameState(JSON.parse(backupData));
         } catch (backupError) {
-          console.error('Backup also corrupted:', backupError);
+
           save = {};
         }
       } else {
@@ -3602,9 +3543,7 @@ else window.state.swabucks = new Decimal(0);
     window.frontDeskState.unlockedSlots = save.frontDeskState.unlockedSlots || 1;
     window.frontDeskState.nextArrivalTime = save.frontDeskState.nextArrivalTime || 0;
     window.frontDeskState.isUnlocked = save.frontDeskState.isUnlocked || false;
-    
-    console.log('Main save system loaded front desk nextArrivalTime:', window.frontDeskState.nextArrivalTime);
-    
+
     // Ensure all employees have state entries
     if (window.frontDeskEmployees) {
       window.frontDeskEmployees.forEach(employee => {
@@ -3621,7 +3560,7 @@ else window.state.swabucks = new Decimal(0);
   // Trigger front desk to reload data after main save system loads
   if (window.frontDesk && typeof window.frontDesk.loadData === 'function') {
     window.frontDesk.loadData();
-    console.log('Triggered front desk data reload after main save load');
+
   }
   
   // Backwards compatibility: Grant infinity research unlock to players who already have infinity count >= 1
@@ -3635,11 +3574,11 @@ else window.state.swabucks = new Decimal(0);
       
       if (totalInfinityCount >= 1) {
         localStorage.setItem(infinityUnlockKey, 'true');
-        console.log(`Infinity Research unlocked (backwards compatibility - infinity count: ∞X${totalInfinityCount})`);
+
       }
     }
   } catch (error) {
-    console.warn('Error in infinity research backwards compatibility:', error);
+
   }
   
   // Backwards compatibility: Grant control center unlock to players who already have KP or elements
@@ -3650,10 +3589,10 @@ else window.state.swabucks = new Decimal(0);
          (swariaKnowledge && swariaKnowledge.kp > 0) || 
          (boughtElements && Object.keys(boughtElements).length > 0))) {
       localStorage.setItem(controlCenterUnlockKey, 'true');
-      console.log('Control Center unlocked (backwards compatibility for existing players)');
+
     }
   } catch (error) {
-    console.warn('Error in control center backwards compatibility:', error);
+
   }
   
   // Load infinity system data from main save
@@ -3693,23 +3632,22 @@ else window.state.swabucks = new Decimal(0);
       if (typeof save.infinityData.lastInfinityPointsUpdate === 'number') {
         window.infinitySystem.lastInfinityPointsUpdate = save.infinityData.lastInfinityPointsUpdate;
       }
-      
-      console.log('Loaded infinity system data from main save');
+
     } catch (error) {
-      console.warn('Error loading infinity system data:', error);
+
     }
   }
   
   // Load infinity upgrades from main save
   if (save.infinityUpgrades) {
     window.infinityUpgrades = { ...window.infinityUpgrades, ...save.infinityUpgrades };
-    console.log('Loaded infinity upgrades from main save');
+
   }
   
   // Load infinity caps from main save
   if (save.infinityCaps) {
     window.infinityCaps = { ...window.infinityCaps, ...save.infinityCaps };
-    console.log('Loaded infinity caps from main save');
+
   }
   
   // Load infinity caps from save slot specific key (for backward compatibility)
@@ -3720,10 +3658,10 @@ else window.state.swabucks = new Decimal(0);
       if (savedCaps) {
         const parsedCaps = JSON.parse(savedCaps);
         window.infinityCaps = { ...window.infinityCaps, ...parsedCaps };
-        console.log('Loaded infinity caps for save slot:', parsedCaps);
+
       }
     } catch (error) {
-      console.warn('Error loading infinity caps:', error);
+
     }
   }
   
@@ -3765,10 +3703,9 @@ else window.state.swabucks = new Decimal(0);
           }
         });
       }
-      
-      console.log('Loaded advanced prism calibration state from save');
+
     } catch (error) {
-      console.warn('Error loading advanced prism calibration state:', error);
+
     }
   }
   
@@ -3790,15 +3727,9 @@ else window.state.swabucks = new Decimal(0);
       if (save.advancedPrismState.hasShownLabDialogue !== undefined) {
         window.advancedPrismState.hasShownLabDialogue = save.advancedPrismState.hasShownLabDialogue;
       }
-      
-      console.log('Loaded advanced prism state from save:', {
-        labTabClicks: window.advancedPrismState.labTabClicks,
-        hasCompletedLabClicks: window.advancedPrismState.hasCompletedLabClicks,
-        imagesSwapped: window.advancedPrismState.imagesSwapped,
-        hasShownLabDialogue: window.advancedPrismState.hasShownLabDialogue
-      });
+
     } catch (error) {
-      console.warn('Error loading advanced prism state:', error);
+
     }
   }
   
@@ -4509,9 +4440,7 @@ function importSave() {
     window.frontDeskState.unlockedSlots = save.frontDeskState.unlockedSlots || 1;
     window.frontDeskState.nextArrivalTime = save.frontDeskState.nextArrivalTime || 0;
     window.frontDeskState.isUnlocked = save.frontDeskState.isUnlocked || false;
-    
-    console.log('Main save system loaded front desk nextArrivalTime (duplicate section):', window.frontDeskState.nextArrivalTime);
-    
+
     // Ensure all employees have state entries
     if (window.frontDeskEmployees) {
       window.frontDeskEmployees.forEach(employee => {
@@ -4562,23 +4491,22 @@ function importSave() {
       if (typeof save.infinityData.lastInfinityPointsUpdate === 'number') {
         window.infinitySystem.lastInfinityPointsUpdate = save.infinityData.lastInfinityPointsUpdate;
       }
-      
-      console.log('Loaded infinity system data from imported save');
+
     } catch (error) {
-      console.warn('Error loading infinity system data from import:', error);
+
     }
   }
   
   // Load infinity upgrades from imported save
   if (save.infinityUpgrades) {
     window.infinityUpgrades = { ...window.infinityUpgrades, ...save.infinityUpgrades };
-    console.log('Loaded infinity upgrades from imported save');
+
   }
   
   // Load infinity caps from imported save
   if (save.infinityCaps) {
     window.infinityCaps = { ...window.infinityCaps, ...save.infinityCaps };
-    console.log('Loaded infinity caps from imported save');
+
   }
   
   // Load advanced prism calibration state from imported save
@@ -4619,10 +4547,9 @@ function importSave() {
           }
         });
       }
-      
-      console.log('Loaded advanced prism calibration state from imported save');
+
     } catch (error) {
-      console.warn('Error loading advanced prism calibration state from import:', error);
+
     }
   }
   
@@ -4644,15 +4571,9 @@ function importSave() {
       if (save.advancedPrismState.hasShownLabDialogue !== undefined) {
         window.advancedPrismState.hasShownLabDialogue = save.advancedPrismState.hasShownLabDialogue;
       }
-      
-      console.log('Loaded advanced prism state from imported save:', {
-        labTabClicks: window.advancedPrismState.labTabClicks,
-        hasCompletedLabClicks: window.advancedPrismState.hasCompletedLabClicks,
-        imagesSwapped: window.advancedPrismState.imagesSwapped,
-        hasShownLabDialogue: window.advancedPrismState.hasShownLabDialogue
-      });
+
     } catch (error) {
-      console.warn('Error loading advanced prism state from import:', error);
+
     }
   }
   
@@ -5190,30 +5111,27 @@ function setupPrismShineEffect() {
 // Function to update the visibility of the Advanced Lab button based on element 25
 function updatePrismAdvancedButtonVisibility() {
   const advancedBtn = document.getElementById('prismAdvancedBtn');
-  console.log('[PRISM DEBUG] updatePrismAdvancedButtonVisibility called');
-  console.log('[PRISM DEBUG] advancedBtn element:', advancedBtn);
-  console.log('[PRISM DEBUG] prismAdvancedLabUnlocked flag:', window.prismAdvancedLabUnlocked);
-  console.log('[PRISM DEBUG] window.boughtElements:', window.boughtElements);
-  console.log('[PRISM DEBUG] boughtElements[25]:', window.boughtElements ? window.boughtElements[25] : 'window.boughtElements is undefined');
-  console.log('[PRISM DEBUG] boughtElements["25"]:', window.boughtElements ? window.boughtElements["25"] : 'window.boughtElements is undefined');
-  
+
+
+
+
+
+
   if (advancedBtn) {
     // Check permanent unlock flag first, then element 25 status, then story modal unlock
     const element25Bought = window.boughtElements && (window.boughtElements[25] || window.boughtElements["25"]);
     const storyModalSeen = window.state && window.state.seenElement25StoryModal;
     const shouldShow = window.prismAdvancedLabUnlocked || element25Bought || storyModalSeen;
-    
-    console.log('[PRISM DEBUG] element25Bought:', element25Bought);
-    console.log('[PRISM DEBUG] storyModalSeen:', storyModalSeen);
-    console.log('[PRISM DEBUG] shouldShow:', shouldShow);
-    
+
+
+
     if (shouldShow) {
-      console.log('[PRISM DEBUG] Showing advanced button');
+
       advancedBtn.style.display = 'inline-block';
       
       // If element 25 was just bought and permanent flag isn't set, set it now
       if (element25Bought && !window.prismAdvancedLabUnlocked) {
-        console.log('[PRISM DEBUG] Setting permanent unlock flag');
+
         window.prismAdvancedLabUnlocked = true;
         // Auto-save to preserve the permanent unlock
         if (typeof saveGame === 'function') {
@@ -5221,7 +5139,7 @@ function updatePrismAdvancedButtonVisibility() {
         }
       }
     } else {
-      console.log('[PRISM DEBUG] Hiding advanced button');
+
       advancedBtn.style.display = 'none';
       // If advanced tab was active and it's not unlocked, switch to main
       if (currentPrismSubTab === 'advanced') {
@@ -5232,7 +5150,7 @@ function updatePrismAdvancedButtonVisibility() {
       }
     }
   } else {
-    console.log('[PRISM DEBUG] advancedBtn element not found!');
+
   }
 }
 
@@ -5265,22 +5183,22 @@ window.updatePrismAdvancedButtonVisibility = updatePrismAdvancedButtonVisibility
 
 // Debug function to check the current prism tab state
 window.debugPrismTabState = function() {
-  console.log('Local currentPrismSubTab:', currentPrismSubTab);
-  console.log('Window currentPrismSubTab:', window.currentPrismSubTab);
+
+
   const advancedBtn = document.getElementById('prismAdvancedBtn');
   const mainBtn = document.getElementById('prismMainBtn');
-  console.log('Advanced button active:', advancedBtn && advancedBtn.classList.contains('active'));
-  console.log('Main button active:', mainBtn && mainBtn.classList.contains('active'));
+
+
 };
 
 // Debug function to manually test prism button
 window.debugPrismButton = function() {
-  console.log('=== PRISM BUTTON DEBUG ===');
-  console.log('boughtElements:', window.boughtElements);
-  console.log('element 25 bought:', window.boughtElements ? window.boughtElements[25] : 'undefined');
-  console.log('prismAdvancedBtn element:', document.getElementById('prismAdvancedBtn'));
+
+
+
+
   updatePrismAdvancedButtonVisibility();
-  console.log('=== END DEBUG ===');
+
 };
 
 // Force show function for testing
@@ -5288,45 +5206,45 @@ window.forceShowPrismAdvanced = function() {
   const btn = document.getElementById('prismAdvancedBtn');
   if (btn) {
     btn.style.display = 'inline-block';
-    console.log('Forced prism advanced button to show');
+
   } else {
-    console.log('prismAdvancedBtn element not found!');
+
   }
 };
 
 // Debug function to manually set element 25 as bought
 window.forceElement25Bought = function() {
-  console.log('Before:', window.boughtElements);
+
   if (!window.boughtElements) {
     window.boughtElements = {};
     boughtElements = window.boughtElements;
   }
   window.boughtElements[25] = true;
   boughtElements[25] = true;
-  console.log('After:', window.boughtElements);
-  console.log('Element 25 set to bought, calling updatePrismAdvancedButtonVisibility');
+
+
   updatePrismAdvancedButtonVisibility();
   // Also save the game to persist this change
   if (typeof saveGame === 'function') {
     saveGame();
-    console.log('Game saved');
+
   }
 };
 
 // Force unlock advanced lab permanently
 window.forceAdvancedLabUnlock = function() {
-  console.log('Permanently unlocking advanced lab...');
+
   window.prismAdvancedLabUnlocked = true;
   updatePrismAdvancedButtonVisibility();
   if (typeof saveGame === 'function') {
     saveGame();
-    console.log('Advanced lab permanently unlocked and saved!');
+
   }
 };
 
 // Reset element 25 to not bought state
 window.resetElement25 = function() {
-  console.log('Resetting element 25 to not bought state...');
+
   if (window.boughtElements) {
     delete window.boughtElements[25];
     delete window.boughtElements["25"];
@@ -5342,27 +5260,27 @@ window.resetElement25 = function() {
   updatePrismAdvancedButtonVisibility();
   if (typeof saveGame === 'function') {
     saveGame();
-    console.log('Element 25 reset to not bought state and saved!');
+
   }
-  console.log('Updated boughtElements:', window.boughtElements);
+
 };
 
 // Debug function to check IP and element 25 status
 window.checkElement25Status = function() {
-  console.log('=== ELEMENT 25 STATUS CHECK ===');
-  console.log('Current IP:', window.infinitySystem ? window.infinitySystem.infinityPoints.toString() : 'undefined');
-  console.log('Element 25 cost:', 2000);
-  console.log('Element 25 bought (boughtElements[25]):', window.boughtElements ? window.boughtElements[25] : 'undefined');
-  console.log('Element 25 bought (boughtElements["25"]):', window.boughtElements ? window.boughtElements["25"] : 'undefined');
-  console.log('Prism Advanced Lab Permanently Unlocked:', window.prismAdvancedLabUnlocked);
-  console.log('Can buy element 25:', elementCostsInfinityPoints(25));
-  console.log('All bought elements:', window.boughtElements);
-  console.log('=== END STATUS CHECK ===');
+
+
+
+
+
+
+
+
+
 };
 
 // Debug function to check save data
 window.checkSaveData = function() {
-  console.log('=== SAVE DATA CHECK ===');
+
   const currentSaveSlot = localStorage.getItem('currentSaveSlot');
   let saveKey = 'swariaSave';
   if (currentSaveSlot) {
@@ -5371,15 +5289,15 @@ window.checkSaveData = function() {
   const saveData = localStorage.getItem(saveKey);
   if (saveData) {
     const parsed = JSON.parse(saveData);
-    console.log('Save slot being used:', currentSaveSlot || 'default');
-    console.log('boughtElements in save data:', parsed.boughtElements);
-    console.log('Element 25 in save (key 25):', parsed.boughtElements && parsed.boughtElements[25]);
-    console.log('Element 25 in save (key "25"):', parsed.boughtElements && parsed.boughtElements["25"]);
-    console.log('prismAdvancedLabUnlocked in save:', parsed.prismAdvancedLabUnlocked);
+
+
+
+
+
   } else {
-    console.log('No save data found for key:', saveKey);
+
   }
-  console.log('=======================');
+
 };
 
 // Add a function to check power and enable/disable the prism grid
@@ -5490,7 +5408,6 @@ function switchInfinityResearchSubTab(tabId) {
     updateInfinityShopInfo();
   }
 
-  console.log(`[INFINITY] Switched to infinity research sub-tab: ${tabId}`);
 }
 
 // Enhanced confirmation dialog for infinity reset
@@ -5878,7 +5795,7 @@ window.testInfinityResearch = function() {
 window.testInfinityUnlock = function() {
   const unlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
   localStorage.setItem(unlockKey, 'true');
-  console.log('Infinity Research unlocked via debug function!');
+
   checkInfinityResearchUnlock();
   return 'Infinity Research tab should now be visible!';
 };
@@ -5900,8 +5817,7 @@ window.simulateInfinityCount = function(count = 1) {
   
   // Set fluff infinity count to desired value
   window.infinitySystem.counts.fluff = count;
-  console.log(`Simulated infinity count: ∞X${count}`);
-  
+
   // Trigger infinity research unlock check
   checkInfinityResearchUnlock();
   
@@ -5916,7 +5832,7 @@ window.resetInfinityUnlock = function() {
   if (btn) {
     btn.style.display = 'none';
   }
-  console.log('Infinity Research unlock status reset!');
+
   return 'Infinity Research tab should now be hidden until currency reaches infinity again!';
 };
 
@@ -5924,7 +5840,7 @@ window.resetInfinityUnlock = function() {
 window.testControlCenterUnlock = function() {
   const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
   localStorage.setItem(unlockKey, 'true');
-  console.log('Control Center unlocked via debug function!');
+
   checkControlCenterUnlock();
   return 'Control Center tab should now be visible!';
 };
@@ -5937,7 +5853,7 @@ window.resetControlCenterUnlock = function() {
   if (tab) {
     tab.style.display = 'none';
   }
-  console.log('Control Center unlock status reset!');
+
   return 'Control Center tab should now be hidden until first delivery reset again!';
 };
 
@@ -5946,10 +5862,10 @@ window.forceShowControlCenter = function() {
   const tab = document.getElementById('knowledgeTab');
   if (tab) {
     tab.style.display = 'inline-block';
-    console.log('Control Center tab forced to show!');
+
     return 'Control Center tab is now visible!';
   } else {
-    console.error('Could not find knowledgeTab element!');
+
     return 'Error: knowledgeTab element not found!';
   }
 };
@@ -5965,38 +5881,32 @@ window.checkUnlockStatus = function() {
   const controlCenterUnlocked = localStorage.getItem(controlCenterUnlockKey);
   const highestGradeReached = localStorage.getItem(nectarizeUnlockKey) || '1';
   const nectarizeUnlocked = parseInt(highestGradeReached) >= 7;
-  
-  console.log('=== SAVE SLOT INFO ===');
-  console.log('Current Save Slot:', currentSaveSlot);
-  console.log('Infinity Unlock Key:', infinityUnlockKey);
-  console.log('Control Center Unlock Key:', controlCenterUnlockKey);
-  console.log('Nectarize Unlock Key:', nectarizeUnlockKey);
-  
-  console.log('=== UNLOCK STATUS ===');
-  console.log('Infinity Research Unlocked:', infinityUnlocked ? 'YES' : 'NO');
-  console.log('Control Center Unlocked:', controlCenterUnlocked ? 'YES' : 'NO');
-  console.log('Nectarize Unlocked:', nectarizeUnlocked ? 'YES' : 'NO', `(highest grade: ${highestGradeReached})`);
-  
-  console.log('=== GAME STATE ===');
-  console.log('seenFirstDeliveryStory:', window.state?.seenFirstDeliveryStory || 'undefined');
-  console.log('swariaKnowledge.kp:', window.swariaKnowledge?.kp || 'undefined');
-  console.log('boughtElements keys:', window.boughtElements ? Object.keys(window.boughtElements).length : 'undefined');
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
   // Check infinity count
   let totalInfinityCount = 0;
   if (window.infinitySystem && typeof window.infinitySystem.getTotalInfinityCurrency === 'function') {
     totalInfinityCount = window.infinitySystem.getTotalInfinityCurrency();
   }
-  console.log('Total Infinity Count:', totalInfinityCount, `(∞X${totalInfinityCount})`);
-  
-  console.log('=== TAB VISIBILITY ===');
+
+
   const knowledgeTab = document.getElementById('knowledgeTab');
   const infinityBtn = document.getElementById('infinityResearchSubTabBtn');
   const nectarizeBtn = document.getElementById('terrariumNectarizeBtn');
-  console.log('Knowledge Tab display:', knowledgeTab?.style.display || 'not found');
-  console.log('Infinity Research Btn display:', infinityBtn?.style.display || 'not found');
-  console.log('Nectarize Btn display:', nectarizeBtn?.style.display || 'not found');
-  
+
+
+
   return {
     infinityUnlocked: !!infinityUnlocked,
     controlCenterUnlocked: !!controlCenterUnlocked,
@@ -6018,11 +5928,10 @@ window.cleanupOldUnlockKeys = function() {
     if (localStorage.getItem(key)) {
       localStorage.removeItem(key);
       cleaned++;
-      console.log(`Removed old global key: ${key}`);
+
     }
   });
-  
-  console.log(`Cleaned up ${cleaned} old global unlock keys`);
+
   return `Removed ${cleaned} old global keys. All unlocks are now save-slot-specific.`;
 };
 
@@ -6031,8 +5940,7 @@ window.testNectarizeUnlock = function() {
   const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
   const highestGradeKey = `highestGradeReached_${currentSaveSlot}`;
   localStorage.setItem(highestGradeKey, '7');
-  console.log(`Set highest grade to 7 for save slot ${currentSaveSlot}`);
-  
+
   if (typeof window.updateNectarizeButtonVisibility === 'function') {
     window.updateNectarizeButtonVisibility();
   }
@@ -6045,8 +5953,7 @@ window.resetNectarizeUnlock = function() {
   const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
   const highestGradeKey = `highestGradeReached_${currentSaveSlot}`;
   localStorage.setItem(highestGradeKey, '1');
-  console.log(`Reset highest grade to 1 for save slot ${currentSaveSlot}`);
-  
+
   if (typeof window.updateNectarizeButtonVisibility === 'function') {
     window.updateNectarizeButtonVisibility();
   }
@@ -6059,10 +5966,10 @@ window.forceShowControlCenter = function() {
   const tab = document.getElementById('knowledgeTab');
   if (tab) {
     tab.style.display = 'inline-block';
-    console.log('Control Center tab forced to show');
+
     return 'Control Center tab is now visible!';
   } else {
-    console.log('Control Center tab element not found!');
+
     return 'Error: Control Center tab element not found!';
   }
 };
@@ -6074,15 +5981,13 @@ window.checkControlCenterStatus = function() {
   const hasKP = swariaKnowledge && swariaKnowledge.kp > 0;
   const hasElements = Object.keys(boughtElements).length > 0;
   const seenStory = state && state.seenFirstDeliveryStory;
-  
-  console.log('Control Center Status:');
-  console.log('- Tab element exists:', !!tab);
-  console.log('- Current display style:', tab ? tab.style.display : 'N/A');
-  console.log('- Unlock flag in localStorage:', unlocked);
-  console.log('- Has KP:', hasKP, swariaKnowledge ? swariaKnowledge.kp : 'N/A');
-  console.log('- Has elements:', hasElements, Object.keys(boughtElements).length);
-  console.log('- Seen first delivery story:', seenStory);
-  
+
+
+
+
+
+
+
   return {
     tabExists: !!tab,
     displayStyle: tab ? tab.style.display : null,
@@ -6489,12 +6394,12 @@ function renderGenerators() {
       unlockedGenerators.forEach(gen => {
         if (generatorUpgrades[gen.reward] && !generatorUpgrades[gen.reward].eq(0)) {
           hasAnyUpgrades = true;
-          console.log(`Resetting ${gen.reward} generator upgrades from ${generatorUpgrades[gen.reward]} to 0 for Mk.2 mode`);
+
           generatorUpgrades[gen.reward] = new Decimal(0);
         }
       });
       if (hasAnyUpgrades) {
-        console.log('Box Generator Mk.2 activated: Reset all individual box doubler upgrades to 0');
+
       }
       state.mk2UpgradesReset = true;
     }
@@ -7209,7 +7114,7 @@ function tickGenerators(diff) {
         }
       });
       if (hasAnyUpgrades) {
-        console.log('Box Generator Mk.2 activated: Reset all individual box doubler upgrades to 0');
+
       }
       state.mk2UpgradesReset = true;
     }
@@ -7239,16 +7144,13 @@ function tickGenerators(diff) {
         slowestGen.progress = 0;
         
         // Generate all box types from unlocked generators using Mk.2 unified upgrade system
-        console.log('🎁 Box Generator Mk.2 Progress Bar Completed - Generating all box types!');
-        
+
         // Use the unified "Double All Box Types" upgrade level for Mk.2
         const doubleAllUpgradeLevel = state.doubleAllBoxUpgrades || 0;
         const doubleAllUpgradeDecimal = new Decimal(doubleAllUpgradeLevel);
         const boxCountFromUpgrades = new Decimal(2).pow(doubleAllUpgradeDecimal);
         const rewardMultiplier = new Decimal(2).pow(doubleAllUpgradeDecimal);
-        
-        console.log(`📊 Mk.2 Double All Box Types upgrade level: ${doubleAllUpgradeLevel} (${boxCountFromUpgrades}x boxes, ${rewardMultiplier}x rewards)`);
-        
+
         // Box Generator Mk.2 produces ALL box types, regardless of individual generator unlock status
         const allBoxTypes = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
         
@@ -7273,9 +7175,7 @@ function tickGenerators(diff) {
           }
           
           const actualRewardMultiplier = DecimalUtils.max(new Decimal(1), rewardMultiplier);
-          
-          console.log(`📦 Generating ${actualBoxCount} ${boxType} boxes with ${actualRewardMultiplier}x reward multiplier`);
-          
+
           // Use earnBox to properly apply all boosts and penalties
           const gains = earnBox(boxType, actualRewardMultiplier, true, actualBoxCount) || { swariaGain: new Decimal(0), featherGain: new Decimal(0), artifactGain: new Decimal(0) };
           
@@ -7779,121 +7679,107 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Debug function to test wing artifact boost
 window.testWingArtifactBoost = function() {
-  console.log('=== Wing Artifact Boost Test ===');
-  console.log('Current artifacts:', state.artifacts.toString());
-  console.log('Current fluff rate:', getFluffRate().toString());
-  
+
+
+
   // Test with no artifacts
   const originalArtifacts = state.artifacts;
   state.artifacts = new Decimal(0);
   const baseRate = getFluffRate();
-  console.log('Fluff rate with 0 artifacts:', baseRate.toString());
-  
+
   // Test with 1 artifact
   state.artifacts = new Decimal(1);
   const rateWith1 = getFluffRate();
-  console.log('Fluff rate with 1 artifact:', rateWith1.toString());
-  console.log('Expected multiplier: 50 × 1 = 50x');
-  console.log('Actual multiplier:', rateWith1.div(baseRate).toString());
-  
+
+
+
   // Test with 2 artifacts
   state.artifacts = new Decimal(2);
   const rateWith2 = getFluffRate();
-  console.log('Fluff rate with 2 artifacts:', rateWith2.toString());
-  console.log('Expected multiplier: 50 × 2 = 100x');
-  console.log('Actual multiplier:', rateWith2.div(baseRate).toString());
-  
+
+
+
   // Test with 10 artifacts
   state.artifacts = new Decimal(10);
   const rateWith10 = getFluffRate();
-  console.log('Fluff rate with 10 artifacts:', rateWith10.toString());
-  console.log('Expected multiplier: 50 × 10 = 500x');
-  console.log('Actual multiplier:', rateWith10.div(baseRate).toString());
-  
+
+
+
   // Restore original value
   state.artifacts = originalArtifacts;
-  console.log('Restored artifacts to:', state.artifacts.toString());
-  console.log('Final fluff rate:', getFluffRate().toString());
+
+
 };
 
 // Test functions for Elements 21, 22, 23
 window.testElement21 = function() {
-  console.log('Testing Element 21 (X10 Pollen)...');
-  console.log('Element 21 purchased:', !!boughtElements[21]);
-  
+
+
   const basePollen = 100;
   let actualPollen = basePollen;
   
   if (boughtElements[21]) {
     actualPollen = basePollen * 10;
-    console.log('Element 21 boost applied: X10 multiplier');
+
   } else {
-    console.log('Element 21 not purchased - no boost');
+
   }
-  
-  console.log('Base pollen would be:', basePollen);
-  console.log('Actual pollen would be:', actualPollen);
-  
+
+
   // Test actual terrarium pollen gain if terrarium is available
   if (typeof window.terrariumPollen !== 'undefined') {
-    console.log('Current terrarium pollen:', window.terrariumPollen.toString());
+
   }
 };
 
 window.testElement22 = function() {
-  console.log('Testing Element 22 (X5 Flowers)...');
-  console.log('Element 22 purchased:', !!boughtElements[22]);
-  
+
+
   const baseFlowers = 50;
   let actualFlowers = baseFlowers;
   
   if (boughtElements[22]) {
     actualFlowers = baseFlowers * 5;
-    console.log('Element 22 boost applied: X5 multiplier');
+
   } else {
-    console.log('Element 22 not purchased - no boost');
+
   }
-  
-  console.log('Base flowers would be:', baseFlowers);
-  console.log('Actual flowers would be:', actualFlowers);
-  
+
+
   // Test actual terrarium flowers if available
   if (typeof window.terrariumFlowers !== 'undefined') {
-    console.log('Current terrarium flowers:', window.terrariumFlowers.toString());
+
   }
 };
 
 window.testElement23 = function() {
-  console.log('Testing Element 23 (X3 Terrarium XP)...');
-  console.log('Element 23 purchased:', !!boughtElements[23]);
-  
+
+
   const baseXP = 10;
   let actualXP = baseXP;
   
   if (boughtElements[23]) {
     actualXP = baseXP * 3;
-    console.log('Element 23 boost applied: X3 multiplier');
+
   } else {
-    console.log('Element 23 not purchased - no boost');
+
   }
-  
-  console.log('Base XP would be:', baseXP);
-  console.log('Actual XP would be:', actualXP);
-  
+
+
   // Test actual terrarium XP if available
   if (typeof window.terrariumXP !== 'undefined') {
-    console.log('Current terrarium XP:', window.terrariumXP.toString());
+
   }
 };
 
 window.testAllTerrariumElements = function() {
-  console.log('=== Testing All Terrarium Elements (21-23) ===');
+
   window.testElement21();
-  console.log('');
+
   window.testElement22();
-  console.log('');
+
   window.testElement23();
-  console.log('=== Test Complete ===');
+
 };
 
 // Grant elements for testing (WARNING: Cheating function!)
@@ -7910,9 +7796,9 @@ window.grantElement = function(index) {
     if (typeof updateTerrariumUI === 'function') {
       updateTerrariumUI();
     }
-    console.log(`Granted Element ${index}`);
+
   } else {
-    console.log(`Element ${index} already owned`);
+
   }
 };
 
@@ -7923,87 +7809,80 @@ window.grantElements = function(...indices) {
 
 // Grant all terrarium elements for testing
 window.grantTerrariumElements = function() {
-  console.log('Granting elements 21, 22, and 23...');
+
   window.grantElements(21, 22, 23);
-  console.log('All terrarium elements granted!');
+
 };
 
 // Test function specifically for Fluzzer pollen/flower gain
 window.testFluzzerGain = function() {
-  console.log('=== Testing Fluzzer Pollen/Flower Gain ===');
-  
+
   // Check elements
   const elementsRef = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
-  console.log('Elements reference found:', !!elementsRef);
-  console.log('Element 21 (X10 Pollen):', !!elementsRef[21]);
-  console.log('Element 22 (X5 Flowers):', !!elementsRef[22]);
-  console.log('Element 23 (X3 XP):', !!elementsRef[23]);
-  
+
+
+
+
   // Check terrarium state
   if (typeof window.terrariumPollen !== 'undefined') {
-    console.log('Current terrarium pollen:', window.terrariumPollen.toString());
+
   } else {
-    console.log('Terrarium pollen not found');
+
   }
   
   if (typeof window.terrariumFlowers !== 'undefined') {
-    console.log('Current terrarium flowers:', window.terrariumFlowers.toString());
+
   } else {
-    console.log('Terrarium flowers not found');
+
   }
   
   if (typeof window.terrariumXP !== 'undefined') {
-    console.log('Current terrarium XP:', window.terrariumXP.toString());
+
   } else {
-    console.log('Terrarium XP not found');
+
   }
   
   // Check charger terrarium boost
-  console.log('Charger terrarium boost:', window._chargerTerrariumBoost || 'Not active');
-  
+
   // Check if charger boost function exists
-  console.log('Charger boost function exists:', typeof window.applyChargerTerrariumBoost === 'function');
-  
-  console.log('=== Try using Fluzzer to collect pollen/flowers now ===');
+
+
 };
 
 // Test charger boost application directly
 window.testChargerBoost = function() {
-  console.log('=== Testing Charger Boost Function ===');
-  console.log('Charger terrarium boost multiplier:', window._chargerTerrariumBoost || 1);
-  
+
+
   if (typeof window.applyChargerTerrariumBoost === 'function') {
     const testPollen = 100;
     const testFlowers = 50;
-    console.log('Testing with base pollen:', testPollen, 'base flowers:', testFlowers);
-    
+
     const result = window.applyChargerTerrariumBoost(testPollen, testFlowers);
-    console.log('Boost result:', result);
-    console.log('Expected pollen boost:', Math.floor(testPollen * (window._chargerTerrariumBoost - 1)));
-    console.log('Expected flower boost:', Math.floor(testFlowers * (window._chargerTerrariumBoost - 1)));
+
+
+
   } else {
-    console.log('Charger boost function not found');
+
   }
 };
 
 // Debug function to check boughtElements state
 window.debugBoughtElements = function() {
-  console.log('=== Debugging boughtElements ===');
-  console.log('boughtElements object:', boughtElements);
-  console.log('window.boughtElements object:', window.boughtElements);
-  console.log('Element 21 in boughtElements:', !!boughtElements[21]);
-  console.log('Element 21 in window.boughtElements:', !!(window.boughtElements && window.boughtElements[21]));
-  console.log('Element 22 in boughtElements:', !!boughtElements[22]);
-  console.log('Element 22 in window.boughtElements:', !!(window.boughtElements && window.boughtElements[22]));
-  console.log('Element 23 in boughtElements:', !!boughtElements[23]);
-  console.log('Element 23 in window.boughtElements:', !!(window.boughtElements && window.boughtElements[23]));
-  console.log('Are they the same object?', boughtElements === window.boughtElements);
+
+
+
+
+
+
+
+
+
+
 };
 
 // Testing functions for infinity export/import
 function testInfinityExportImport() {
-    console.log('=== Testing Infinity Export/Import ===');
-    
+
     // Store original values
     const originalInfinityPoints = window.infinitySystem ? window.infinitySystem.infinityPoints.toString() : "0";
     const originalTheorems = window.infinitySystem ? window.infinitySystem.infinityTheorems : 0;
@@ -8013,18 +7892,15 @@ function testInfinityExportImport() {
     const originalCaps = window.infinityCaps ? {...window.infinityCaps} : {};
     const originalActiveChallenge = window.activeChallenge || 0;
     const originalActiveDifficulty = window.activeDifficulty || 0;
-    
-    console.log('Original Values:');
-    console.log('  Infinity Points:', originalInfinityPoints);
-    console.log('  Theorems:', originalTheorems);
-    console.log('  Total Earned:', originalTotalEarned);
-    console.log('  Active Challenge:', originalActiveChallenge);
-    console.log('  Active Difficulty:', originalActiveDifficulty);
-    
+
+
+
+
+
+
     // Test if infinity data is included in export
     if (typeof exportSave === 'function') {
-        console.log('✓ exportSave function exists');
-        
+
         // Simulate the export process
         const save = {
             infinityTreeData: window.infinitySystem ? {
@@ -8044,117 +7920,109 @@ function testInfinityExportImport() {
         };
         
         if (save.infinityTreeData) {
-            console.log('✓ infinityTreeData would be exported');
-            console.log('  - Infinity Points:', save.infinityTreeData.infinityPoints);
-            console.log('  - Theorems:', save.infinityTreeData.infinityTheorems);
-            console.log('  - Total Earned:', save.infinityTreeData.totalInfinityEarned);
+
+
+
+
         } else {
-            console.log('✗ infinityTreeData would NOT be exported (infinitySystem not found)');
+
         }
         
         if (save.infinityChallengeData) {
-            console.log('✓ infinityChallengeData would be exported');
-            console.log('  - Active Challenge:', save.infinityChallengeData.activeChallenge);
-            console.log('  - Active Difficulty:', save.infinityChallengeData.activeDifficulty);
+
+
+
         } else {
-            console.log('✗ infinityChallengeData would NOT be exported (challenge system not found)');
+
         }
     } else {
-        console.log('✗ exportSave function not found');
+
     }
     
     if (typeof importSave === 'function') {
-        console.log('✓ importSave function exists');
+
     } else {
-        console.log('✗ importSave function not found');
+
     }
-    
-    console.log('=== Export/Import Test Complete ===');
+
 }
 
 // Test function to verify save slot isolation for infinity data
 function testInfinitySaveSlotIsolation() {
-    console.log('=== Testing Infinity Save Slot Isolation ===');
-    
+
     // Check current save slot
     const currentSlot = localStorage.getItem('currentSaveSlot');
-    console.log('Current save slot:', currentSlot || 'default (no slots)');
-    
+
     // Check if infinity system exists
     if (!window.infinitySystem) {
-        console.log('❌ Infinity system not found');
+
         return;
     }
-    
-    console.log('Current infinity data:');
-    console.log('  - Infinity Points:', window.infinitySystem.infinityPoints.toString());
-    console.log('  - Theorems:', window.infinitySystem.infinityTheorems);
-    console.log('  - Total Earned:', window.infinitySystem.totalInfinityEarned);
-    
+
+
+
+
     // Check what's in the main save vs slot-specific save
     const mainSave = localStorage.getItem('swariaSave');
     const slotSave = currentSlot ? localStorage.getItem(`swariaSaveSlot${currentSlot}`) : null;
     const infinitySlotData = currentSlot ? localStorage.getItem(`infinitySystemData_${currentSlot}`) : localStorage.getItem('infinitySystemData_default');
-    
-    console.log('Save storage analysis:');
-    
+
     if (mainSave) {
         try {
             const mainData = JSON.parse(mainSave);
-            console.log('  - Main save has infinityTreeData:', !!mainData.infinityTreeData);
+
             if (mainData.infinityTreeData) {
-                console.log('    - Main save infinity points:', mainData.infinityTreeData.infinityPoints);
-                console.log('    - Main save theorems:', mainData.infinityTreeData.infinityTheorems);
+
+
             }
         } catch (e) {
-            console.log('  - Main save parsing error:', e.message);
+
         }
     } else {
-        console.log('  - No main save found');
+
     }
     
     if (slotSave) {
         try {
             const slotData = JSON.parse(slotSave);
-            console.log('  - Slot save has infinityTreeData:', !!slotData.infinityTreeData);
+
             if (slotData.infinityTreeData) {
-                console.log('    - Slot save infinity points:', slotData.infinityTreeData.infinityPoints);
-                console.log('    - Slot save theorems:', slotData.infinityTreeData.infinityTheorems);
+
+
             }
         } catch (e) {
-            console.log('  - Slot save parsing error:', e.message);
+
         }
     } else {
-        console.log('  - No slot save found');
+
     }
     
     if (infinitySlotData) {
         try {
             const infinityData = JSON.parse(infinitySlotData);
-            console.log('  - Infinity slot-specific data found');
-            console.log('    - Total infinity earned:', infinityData.totalInfinityEarned);
-            console.log('    - Has challenges:', !!infinityData.challenges);
+
+
+
         } catch (e) {
-            console.log('  - Infinity slot data parsing error:', e.message);
+
         }
     } else {
-        console.log('  - No infinity slot-specific data found');
+
     }
     
     // Recommendations
-    console.log('Expected behavior:');
+
     if (currentSlot) {
-        console.log('  ✓ Using save slots: infinity data should be in slot-specific system only');
-        console.log('  ✓ Main save should NOT contain infinityTreeData');
-        console.log('  ✓ Slot save should NOT contain infinityTreeData');
-        console.log('  ✓ Infinity data should be in infinitySystemData_' + currentSlot);
+
+
+
+
     } else {
-        console.log('  ✓ Not using save slots: infinity data should be in main save');
-        console.log('  ✓ Main save should contain infinityTreeData');
-        console.log('  ✓ No slot-specific infinity data should exist');
+
+
+
     }
-    
-    console.log('=== Save Slot Isolation Test Complete ===');
+
 }
 
 // Function to check for pending story modals that should be shown after page reload
@@ -8179,23 +8047,20 @@ window.testInfinitySaveSlotIsolation = testInfinitySaveSlotIsolation;
 
 // Test function for infinity reset story modal
 function testInfinityResetStoryModal() {
-    console.log('Testing Infinity Reset Story Modal...');
-    
+
     // Check current state
-    console.log('Current state:');
-    console.log('  - seenInfinityResetStory:', window.state?.seenInfinityResetStory);
-    console.log('  - pendingInfinityResetStory:', window.state?.pendingInfinityResetStory);
-    console.log('  - totalInfinityEarned:', window.infinitySystem?.totalInfinityEarned);
-    
+
+
+
+
     // Simulate first infinity reset
     if (window.state) {
         window.state.seenInfinityResetStory = false;
         window.state.pendingInfinityResetStory = true;
-        console.log('Set pendingInfinityResetStory = true');
-        
+
         // Test the check function
         setTimeout(() => {
-            console.log('Testing checkForPendingStoryModals...');
+
             checkForPendingStoryModals();
         }, 100);
     }
@@ -8213,8 +8078,7 @@ window.testInfinitySaveSlotIsolation = testInfinitySaveSlotIsolation;
 // ===== GLOBAL ACCESSIBILITY VERIFICATION =====
 // Function to verify all critical variables and functions are globally accessible
 window.verifyGlobalAccessibility = function() {
-    console.log('=== VERIFYING GLOBAL ACCESSIBILITY ===');
-    
+
     const criticalItems = [
         // Core game state
         'state', 'settings', 'swariaKnowledge', 'boughtElements', 'elementData',
@@ -8266,12 +8130,11 @@ window.verifyGlobalAccessibility = function() {
             missing.push(item);
         }
     });
-    
-    console.log(`✅ Available globally (${available.length}):`, available);
+
     if (missing.length > 0) {
-        console.log(`❌ Missing globally (${missing.length}):`, missing);
+
     } else {
-        console.log('🎉 All critical items are globally accessible!');
+
     }
     
     return { available, missing, total: criticalItems.length };
@@ -8324,8 +8187,7 @@ let terrariumRAFPaused = false;
 let originalRequestAnimationFrame = null;
 
 function setupOfflineProgressPrevention() {
-  console.log('Setting up offline progress prevention...');
-  
+
   // Add window focus/blur event listeners
   window.addEventListener('focus', handleWindowFocus);
   window.addEventListener('blur', handleWindowBlur);
@@ -8335,17 +8197,16 @@ function setupOfflineProgressPrevention() {
   
   // Check if window is already not focused and pause if needed
   if (document.hidden) {
-    console.log('Window is currently hidden - pausing game');
+
     pauseGame();
   } else if (!document.hasFocus()) {
-    console.log('Window does not have focus - pausing game');
+
     pauseGame();
   }
 }
 
 function removeOfflineProgressPrevention() {
-  console.log('Removing offline progress prevention...');
-  
+
   // Remove event listeners
   window.removeEventListener('focus', handleWindowFocus);
   window.removeEventListener('blur', handleWindowBlur);
@@ -8362,7 +8223,7 @@ function removeOfflineProgressPrevention() {
 
 function handleWindowFocus() {
   if (settings.disableOfflineProgress && isGamePaused) {
-    console.log('Window focused - game remains paused, waiting for user interaction');
+
     // Don't auto-resume on focus, wait for user to click or press key
     showPauseIndicator();
   }
@@ -8370,7 +8231,7 @@ function handleWindowFocus() {
 
 function handleWindowBlur() {
   if (settings.disableOfflineProgress && !isGamePaused) {
-    console.log('Window blurred - pausing game');
+
     pauseGame();
   }
 }
@@ -8379,14 +8240,14 @@ function handleVisibilityChange() {
   if (document.hidden) {
     // Page is hidden - pause the game
     if (settings.disableOfflineProgress && !isGamePaused) {
-      console.log('Page became hidden - pausing game');
+
       pauseGame();
     }
   } else {
     // Page is visible again - but don't auto-resume!
     // Let the user manually resume by clicking or pressing a key
     if (settings.disableOfflineProgress && isGamePaused) {
-      console.log('Page became visible - game remains paused, waiting for user interaction');
+
       // Just ensure the pause indicator is showing, but don't auto-resume
       showPauseIndicator();
     }
@@ -8398,32 +8259,30 @@ function pauseGame() {
   
   isGamePaused = true;
   window.isGamePaused = true; // Update global variable
-  
-  console.log('=== PAUSING GAME - DEBUGGING INFO ===');
-  console.log('window.tickInterval:', window.tickInterval);
-  console.log('window._gameTickInterval:', window._gameTickInterval);
-  console.log('window.secondaryTickInterval:', window.secondaryTickInterval);
-  console.log('window._mainGameTickInterval:', window._mainGameTickInterval);
-  
+
+
+
+
+
   // Store current intervals before clearing them
   originalIntervals.tickInterval = window.tickInterval;
   originalIntervals.gameTickInterval = window._gameTickInterval;
   
   // Clear main game intervals - this is the most critical part!
   if (window.tickInterval) {
-    console.log('Clearing window.tickInterval:', window.tickInterval);
+
     clearInterval(window.tickInterval);
     window.tickInterval = null;
   }
   if (window._gameTickInterval) {
-    console.log('Clearing window._gameTickInterval:', window._gameTickInterval);
+
     clearInterval(window._gameTickInterval);
     window._gameTickInterval = null;
   }
   
   // Pause secondary tick interval (script2.js) - this is crucial!
   if (window.secondaryTickInterval) {
-    console.log('Clearing window.secondaryTickInterval:', window.secondaryTickInterval);
+
     originalIntervals.secondaryTickInterval = window.secondaryTickInterval;
     clearInterval(window.secondaryTickInterval);
     window.secondaryTickInterval = null;
@@ -8431,7 +8290,7 @@ function pauseGame() {
   
   // Pause additional main game tick intervals from script2.js
   if (window._mainGameTickInterval) {
-    console.log('Clearing window._mainGameTickInterval:', window._mainGameTickInterval);
+
     originalIntervals.mainGameTickInterval = window._mainGameTickInterval;
     clearInterval(window._mainGameTickInterval);
     window._mainGameTickInterval = null;
@@ -8623,18 +8482,15 @@ function pauseGame() {
     };
     terrariumRAFPaused = true;
   }
-  
-  console.log('=== GAME PAUSE COMPLETE ===');
-  console.log('All critical intervals cleared');
-  
+
+
   // Show pause indicator
   showPauseIndicator();
   
   // Add global click blocker to prevent all interactions except resume
   document.addEventListener('click', globalClickBlocker, true);
   document.addEventListener('keydown', globalKeyBlocker, true);
-  
-  console.log('Game fully paused - all intervals and animations stopped');
+
 }
 
 function resumeGame() {
@@ -8865,8 +8721,7 @@ function resumeGame() {
       }
     }
   }
-  
-  console.log('Game fully resumed - all intervals and animations restored');
+
 }
 
 function showResumeAnimation() {
@@ -9028,7 +8883,7 @@ function handleResumeClick(event) {
     // Check if click is on the pause indicator (always resume)
     const indicator = document.getElementById('gamePausedIndicator');
     if (indicator && (target === indicator || indicator.contains(target))) {
-      console.log('Player clicked on pause indicator to resume game');
+
       event.preventDefault();
       event.stopPropagation();
       resumeGame();
@@ -9061,12 +8916,12 @@ function handleResumeClick(event) {
     
     // If clicking on game UI elements, don't resume
     if (shouldNotResume) {
-      console.log('Player clicked on game UI element, not resuming');
+
       return;
     }
     
     // If clicking on empty space/background, resume
-    console.log('Player clicked on empty space to resume game');
+
     event.preventDefault();
     event.stopPropagation();
     resumeGame();
@@ -9075,7 +8930,7 @@ function handleResumeClick(event) {
 
 function handlePauseIndicatorClick(event) {
   if (isGamePaused && settings.disableOfflineProgress) {
-    console.log('Player clicked directly on pause indicator');
+
     event.preventDefault();
     event.stopPropagation();
     resumeGame();
@@ -9085,7 +8940,7 @@ function handlePauseIndicatorClick(event) {
 function handleResumeKeydown(event) {
   if (isGamePaused && settings.disableOfflineProgress) {
     // Resume on any key press (space, enter, escape, etc.)
-    console.log('Player pressed key to resume game');
+
     event.preventDefault();
     event.stopPropagation();
     resumeGame();

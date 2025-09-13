@@ -700,7 +700,7 @@ function chargerTick(diff) {
 
 function getChargerGain() {
   let gain = new Decimal(charger.chargePerSecond);
-  if (window.terrariumExtraChargeUpgradeLevel > 0) {
+  if (window.terrariumExtraChargeUpgradeLevel > 0 && typeof window.getExtraChargeUpgradeEffect === 'function') {
     gain = gain.mul(window.getExtraChargeUpgradeEffect(window.terrariumExtraChargeUpgradeLevel));
   }
   if (boughtElements && boughtElements[17]) gain = gain.mul(2);
@@ -765,7 +765,7 @@ function checkChargerMilestones() {
             if (currentQuest) {
               currentQuest.completed = true;
             }
-            console.log(`Auto-unlocked milestone ${idx} because milestone ${laterIdx} is already complete`);
+
             break; // Only need to find one later completed milestone
           }
         }
@@ -957,7 +957,7 @@ if (!window._chargerGainPatched) {
 
 function logChargeGainRate() {
   let multiplier = new Decimal(1);
-  if (window.terrariumExtraChargeUpgradeLevel > 0) {
+  if (window.terrariumExtraChargeUpgradeLevel > 0 && typeof window.getExtraChargeUpgradeEffect === 'function') {
     const extraChargeBonus = window.getExtraChargeUpgradeEffect(window.terrariumExtraChargeUpgradeLevel);
     multiplier = multiplier.mul(extraChargeBonus);
   }
@@ -1163,13 +1163,13 @@ function giveSparksToSoap(amount) {
       return;
     }
     // DEBUG LOGGING
-    console.log('[giveSparksToSoap] stage:', state.soapChargeQuest.stage, 'milestone:', currentMilestoneIndex, 'before given:', quest.given ? quest.given.toString() : quest.given);
+
     // Ensure quest.given is a Decimal and add the amount
     if (!DecimalUtils.isDecimal(quest.given)) {
       quest.given = new Decimal(quest.given || 0);
     }
     quest.given = quest.given.plus(amount);
-    console.log('[giveSparksToSoap] after given:', quest.given.toString());
+
     saveChargerState();
     // Check if quest requirement is met (convert to numbers for simple comparison)
     const givenAmount = quest.given.toNumber();

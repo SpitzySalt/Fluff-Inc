@@ -211,8 +211,7 @@ function spawnIngredientToken(context, sourceElement) {
   
   // Show burst message if burst occurs
   if (shouldBurst) {
-    console.log(`Lepre token burst! Spawning ${tokenCount} tokens instead of 1!`);
-    
+
     // Show visual notification
     showTokenBurstNotification(sourceElement);
   }
@@ -289,16 +288,16 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
     }
   }, 1000);
   token.onclick = function() {
-    console.log(`Debug - Token clicked, type: ${type}, collected: ${token.dataset.collected}`);
+
     if (token.dataset.collected === 'true') return;
     const spawnTime = parseInt(token.dataset.spawnTime);
     const now = Date.now();
     if (now - spawnTime < 1000) {
-      console.log(`Debug - Token clicked too soon after spawn`);
+
       return;
     }
     token.dataset.collected = 'true';
-    console.log(`Debug - About to call collectIngredientToken with type: ${type}`);
+
     collectIngredientToken(type, token);
   };
   
@@ -318,13 +317,12 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
 }
 
 function collectIngredientToken(type, token) {
-  console.log(`Debug - collectIngredientToken called with type: ${type}`);
+
   token.style.transform += ' scale(0.2)';
   token.style.opacity = '0';
   setTimeout(() => token.remove(), 400);
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
-  console.log(`Debug - kitchenIngredients before:`, window.kitchenIngredients[type]);
-  
+
   // Calculate token gain amount with green stable light buff
   let tokenGainAmount = new Decimal(1);
   if (typeof window.applyGreenStableLightBuff === 'function') {
@@ -335,8 +333,7 @@ function collectIngredientToken(type, token) {
     if (!window.state) window.state = {};
     if (!DecimalUtils.isDecimal(window.state.swabucks)) window.state.swabucks = new Decimal(0);
     window.state.swabucks = window.state.swabucks.add(tokenGainAmount);
-    console.log(`Debug - swabucks after add:`, window.state.swabucks.toString());
-    
+
     // Track token collection for front desk automator unlock progress
     if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
       window.frontDesk.onTokenCollected();
@@ -348,10 +345,10 @@ function collectIngredientToken(type, token) {
   }
   if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
     window.kitchenIngredients[type] = new Decimal(0);
-    console.log(`Debug - initialized ${type} to:`, window.kitchenIngredients[type].toString());
+
   }
   window.kitchenIngredients[type] = window.kitchenIngredients[type].add(tokenGainAmount);
-  console.log(`Debug - ${type} after add:`, window.kitchenIngredients[type].toString());
+
   showIngredientGainPopup(token, tokenGainAmount);
   
   // Track token collection for front desk automator unlock progress
@@ -1096,7 +1093,7 @@ window.addEventListener('load', function() {
             if (adjustedAmount.lt(1)) {
               adjustedAmount = new Decimal(1);
             }
-            console.log(`Applied Mystic's friendship buff to ${ingredient}: ${amount.toString()} → ${adjustedAmount.toString()} (-${reduction})`);
+
           }
         }
         
@@ -1115,7 +1112,7 @@ window.addEventListener('load', function() {
         const speedBoostPercent = window.friendship.Kitchen.level * 2; // 2% per level
         const speedMultiplier = 1 + (speedBoostPercent / 100); // Convert to multiplier
         time = time.div(speedMultiplier);
-        console.log(`Applied Mystic's friendship cooking speed buff: ${speedBoostPercent}% faster (${speedMultiplier}x speed)`);
+
       }
       if (mixCookTime) mixCookTime.textContent = DecimalUtils.formatDecimal(time, 2);
       if (mixRecipeIngredients) {
@@ -1504,18 +1501,15 @@ window.addEventListener('load', function() {
 
 // Debug function to test Lepre token burst
 window.testLepreTokenBurst = function() {
-  console.log('=== TESTING LEPRE TOKEN BURST ===');
-  
+
   // Check current friendship level
   const lepreLevel = window.friendship?.Boutique?.level || 0;
   const burstChance = getLepreTokenBurstChance();
-  
-  console.log(`Current Lepre friendship level: ${lepreLevel}`);
-  console.log(`Current token burst chance: ${burstChance}%`);
-  
+
+
   if (lepreLevel < 4) {
-    console.log('⚠️ Lepre needs to be at least level 4 for token burst!');
-    console.log('Use window.testLepreFriendship(50) to increase friendship level');
+
+
     return;
   }
   
@@ -1526,24 +1520,21 @@ window.testLepreTokenBurst = function() {
       burstCount++;
     }
   }
-  
-  console.log(`In 100 simulated spawns, ${burstCount} would have been bursts`);
-  console.log(`Expected: ~${burstChance} bursts`);
-  
+
+
   // Show burst chance progression
-  console.log('\n📈 Burst Chance Progression:');
+
   for (let level = 4; level <= 15; level++) {
     const chance = 10 + (2 * Math.max(0, level - 4));
-    console.log(`Level ${level}: ${chance}%`);
+
   }
   
   // Test actual token spawn (if in kitchen area)
-  console.log('\n🧪 To test actual token burst:');
-  console.log('1. Go to an area where tokens spawn (Cargo, Generator, Terrarium, or Prism)');
-  console.log('2. Perform actions that spawn tokens');
-  console.log('3. Watch for golden glowing tokens when burst occurs!');
-  console.log('4. Use window.forceTokenBurst() to see a guaranteed burst');
-  
+
+
+
+
+
   return {
     lepreLevel,
     burstChance,
@@ -1553,8 +1544,7 @@ window.testLepreTokenBurst = function() {
 
 // Debug function to force a token burst for testing
 window.forceTokenBurst = function() {
-  console.log('🎉 Forcing a token burst for testing...');
-  
+
   // Find a suitable source element for spawning
   const cargoSection = document.querySelector('#pages') || document.body;
   const rect = cargoSection.getBoundingClientRect();
@@ -1568,9 +1558,7 @@ window.forceTokenBurst = function() {
       height: 50
     })
   };
-  
-  console.log('Spawning 5 tokens at screen center...');
-  
+
   // Show burst notification
   showTokenBurstNotification(mockSource);
   
@@ -1580,17 +1568,15 @@ window.forceTokenBurst = function() {
       spawnSingleIngredientToken('cargo', mockSource, i > 0);
     }, i * 100);
   }
-  
-  console.log('✅ Token burst spawned! Look for the golden glowing tokens!');
+
 };
 
 // Debug function to test Mystic's friendship buff for recipe costs
 window.testMysticRecipeBuff = function(friendshipLevel = 4) {
-  console.log(`🧪 Testing Mystic's recipe buff at friendship level ${friendshipLevel}...`);
-  
+
   // Set Mystic's friendship level
   if (!window.friendship) {
-    console.log('📝 Initializing friendship system...');
+
     window.friendship = {
       Kitchen: { level: 0, points: new Decimal(0) }
     };
@@ -1600,18 +1586,14 @@ window.testMysticRecipeBuff = function(friendshipLevel = 4) {
   }
   
   window.friendship.Kitchen.level = friendshipLevel;
-  console.log(`✅ Set Mystic's friendship level to ${friendshipLevel}`);
-  
+
   // Calculate expected reduction
   const expectedReduction = Math.max(0, (friendshipLevel - 3) * 2);
-  console.log(`🎯 Expected main ingredient reduction: -${expectedReduction}`);
-  
-  console.log(`📊 Recipe cost analysis:`);
-  
+
+
   // Analyze each recipe
   window.recipes.forEach(recipe => {
-    console.log(`\n🍳 ${recipe.name}:`);
-    
+
     Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
       let adjustedAmount = amount;
       let wasMainIngredient = false;
@@ -1630,15 +1612,13 @@ window.testMysticRecipeBuff = function(friendshipLevel = 4) {
       
       const status = wasMainIngredient ? '🔥' : '🔹';
       const changeText = wasMainIngredient ? ` → ${adjustedAmount.toString()}` : '';
-      console.log(`  ${status} ${ingredient}: ${amount.toString()}${changeText}`);
+
     });
   });
-  
-  console.log(`\n💡 To see this buff in action:`);
-  console.log(`1. Go to the Kitchen tab`);
-  console.log(`2. Click on any recipe (Berry Plate, Mushroom Soup, etc.)`);
-  console.log(`3. Check the ingredient requirements - main ingredients should be reduced!`);
-  
+
+
+
+
   return {
     friendshipLevel,
     expectedReduction,
@@ -1652,22 +1632,20 @@ window.testMysticRecipeBuff = function(friendshipLevel = 4) {
 
 // Debug function to test multiple friendship levels
 window.testAllMysticRecipeBuffs = function() {
-  console.log('🧪 Testing Mystic\'s recipe buff at different friendship levels...');
-  
+
   const testLevels = [1, 3, 4, 5, 6, 8, 10, 15];
   const results = [];
   
   testLevels.forEach(level => {
-    console.log(`\n--- Testing Level ${level} ---`);
+
     const result = window.testMysticRecipeBuff(level);
     results.push(result);
   });
-  
-  console.log('\n📊 Summary:');
+
   results.forEach(result => {
     const hasReduction = result.expectedReduction > 0;
     const status = hasReduction ? '✅' : '⭕';
-    console.log(`${status} Level ${result.friendshipLevel}: -${result.expectedReduction} main ingredient cost`);
+
   });
   
   return results;
@@ -1675,17 +1653,13 @@ window.testAllMysticRecipeBuffs = function() {
 
 // Debug function to show current recipe costs with friendship buff applied
 window.showCurrentRecipeCosts = function() {
-  console.log('📋 Current Recipe Costs (with friendship buff applied):');
-  
+
   const mysticLevel = window.friendship?.Kitchen?.level || 0;
   const reduction = Math.max(0, (mysticLevel - 3) * 2);
-  
-  console.log(`Mystic friendship level: ${mysticLevel}`);
-  console.log(`Main ingredient reduction: -${reduction}\n`);
-  
+
+
   window.recipes.forEach(recipe => {
-    console.log(`🍳 ${recipe.name}:`);
-    
+
     Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
       let finalAmount = amount;
       let isMainIngredient = false;
@@ -1700,17 +1674,16 @@ window.showCurrentRecipeCosts = function() {
       
       const prefix = isMainIngredient ? '🔥' : '  ';
       const suffix = isMainIngredient ? ` (reduced from ${amount.toString()})` : '';
-      console.log(`${prefix} ${ingredient}: ${finalAmount.toString()}${suffix}`);
+
     });
     
-    console.log(''); // Empty line for spacing
+    // Empty line for spacing
   });
 };
 
 // Debug function to force update a recipe modal to see the buff in action
 window.testMysticBuffInModal = function(recipeId = 'mushroomSoup', friendshipLevel = 5) {
-  console.log(`🧪 Testing Mystic's buff in recipe modal for ${recipeId} at level ${friendshipLevel}...`);
-  
+
   // Set friendship level
   if (!window.friendship) window.friendship = {};
   if (!window.friendship.Kitchen) window.friendship.Kitchen = { level: 0, points: new Decimal(0) };
@@ -1719,36 +1692,30 @@ window.testMysticBuffInModal = function(recipeId = 'mushroomSoup', friendshipLev
   // Find the recipe
   const recipe = window.recipes.find(r => r.id === recipeId);
   if (!recipe) {
-    console.error(`❌ Recipe ${recipeId} not found!`);
-    console.log('Available recipes:', window.recipes.map(r => r.id));
+
     return;
   }
-  
-  console.log(`✅ Set Mystic level to ${friendshipLevel} and found recipe: ${recipe.name}`);
-  console.log(`💡 Original costs:`, recipe.cost);
-  
+
+
   // Calculate what the costs should be with the buff
   const expectedReduction = Math.max(0, (friendshipLevel - 3) * 2);
-  console.log(`🎯 Expected main ingredient reduction: -${expectedReduction}`);
-  
+
   // Show expected costs
-  console.log(`📊 Expected costs with buff:`);
+
   Object.entries(recipe.cost).forEach(([ingredient, amount]) => {
     let expectedAmount = amount;
     if (friendshipLevel >= 4 && amount.eq && amount.eq(50)) {
       expectedAmount = amount.sub(expectedReduction);
       if (expectedAmount.lt(1)) expectedAmount = new Decimal(1);
-      console.log(`  🔥 ${ingredient}: ${expectedAmount.toString()} (reduced from ${amount.toString()})`);
+
     } else {
-      console.log(`  🔹 ${ingredient}: ${amount.toString()} (no change)`);
+
     }
   });
-  
-  console.log(`\n💡 To verify:`);
-  console.log(`1. Go to Kitchen tab`);
-  console.log(`2. Click on "${recipe.name}" recipe`);
-  console.log(`3. Check if the ingredient costs match the expected values above!`);
-  
+
+
+
+
   return {
     recipeId,
     recipeName: recipe.name,
@@ -1760,11 +1727,10 @@ window.testMysticBuffInModal = function(recipeId = 'mushroomSoup', friendshipLev
 
 // Debug function to test Mystic's cooking speed friendship buff
 window.testMysticCookingSpeed = function(friendshipLevel = 3) {
-  console.log(`🧪 Testing Mystic's cooking speed buff at friendship level ${friendshipLevel}...`);
-  
+
   // Set Mystic's friendship level
   if (!window.friendship) {
-    console.log('📝 Initializing friendship system...');
+
     if (typeof window.initFriendshipFunctions === 'function') {
       window.initFriendshipFunctions();
     }
@@ -1775,35 +1741,30 @@ window.testMysticCookingSpeed = function(friendshipLevel = 3) {
   }
   
   window.friendship.Kitchen.level = friendshipLevel;
-  console.log(`✅ Set Mystic's friendship level to ${friendshipLevel}`);
-  
+
   // Calculate expected speed boost
   if (friendshipLevel >= 1) {
     const speedBoostPercent = friendshipLevel * 2;
     const speedMultiplier = 1 + (speedBoostPercent / 100);
     const originalTime = 5; // All recipes take 5 minutes base time
     const newTime = originalTime / speedMultiplier;
-    
-    console.log(`📊 Cooking Speed Analysis:`);
-    console.log(`  Base cooking time: ${originalTime} minutes`);
-    console.log(`  Speed boost: ${speedBoostPercent}% (${speedMultiplier}x speed)`);
-    console.log(`  New cooking time: ${newTime.toFixed(2)} minutes`);
-    console.log(`  Time saved: ${(originalTime - newTime).toFixed(2)} minutes per recipe`);
-    
+
+
+
+
+
     // Test formatting with DecimalUtils
     const timeDecimal = new Decimal(newTime);
     const formattedTime = DecimalUtils.formatDecimal(timeDecimal, 2);
-    console.log(`  Formatted cooking time: ${formattedTime} minutes`);
+
   } else {
-    console.log(`❌ Level ${friendshipLevel} is too low for cooking speed buff (requires level 1+)`);
+
   }
-  
-  console.log(`\n💡 To verify:`);
-  console.log(`1. Go to Kitchen tab`);
-  console.log(`2. Click on any recipe (e.g., "Glittering Petals")`);
-  console.log(`3. Check if the cooking time is properly formatted (should be like "3.85" not "3.8461538461538461")`);
-  console.log(`4. Watch console for "Applied Mystic's friendship cooking speed buff" message`);
-  
+
+
+
+
+
   return {
     friendshipLevel,
     speedBoostPercent: friendshipLevel >= 1 ? friendshipLevel * 2 : 0,
@@ -1813,20 +1774,16 @@ window.testMysticCookingSpeed = function(friendshipLevel = 3) {
 
 // Debug function to test cooking time formatting
 window.testCookingTimeFormatting = function() {
-  console.log(`🧪 Testing cooking time number formatting...`);
-  
+
   // Test various time values
   const testTimes = [5, 3.8461538461538461, 2.5, 1.23456789, 0.666666666];
-  
-  console.log(`📊 Formatting Tests:`);
+
   testTimes.forEach(time => {
     const timeDecimal = new Decimal(time);
     const formatted = DecimalUtils.formatDecimal(timeDecimal, 2);
-    console.log(`  ${time} → "${formatted}"`);
+
   });
-  
-  console.log(`\n💡 The cooking time should now show clean formatted numbers instead of long decimals!`);
-  
+
   return testTimes.map(time => ({
     original: time,
     formatted: DecimalUtils.formatDecimal(new Decimal(time), 2)

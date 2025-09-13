@@ -73,7 +73,7 @@ function initPremiumSystem() {
           Object.assign(window.premiumState, save.premiumState);
         }
       } catch (e) {
-        console.error('Error loading premium state from save slot:', e);
+
       }
     }
   } else {
@@ -83,7 +83,7 @@ function initPremiumSystem() {
         const parsed = JSON.parse(savedPremiumState);
         Object.assign(window.premiumState, parsed);
       } catch (e) {
-        console.error('Error loading premium state:', e);
+
       }
     }
   }
@@ -135,7 +135,7 @@ function savePremiumState() {
         save.premiumState = window.premiumState;
         localStorage.setItem(`swariaSaveSlot${currentSaveSlot}`, JSON.stringify(save));
       } catch (e) {
-        console.error('Error updating save slot with premium state:', e);
+
       }
     } else {
     }
@@ -375,7 +375,7 @@ function refreshPremiumState() {
           };
         }
       } catch (e) {
-        console.error('Error loading premium state from save slot:', e);
+
         window.premiumState = {
           bijouUnlocked: false,
           bijouEnabled: false,
@@ -396,7 +396,7 @@ function refreshPremiumState() {
         const parsed = JSON.parse(savedPremiumState);
         Object.assign(window.premiumState, parsed);
       } catch (e) {
-        console.error('Error loading premium state from global localStorage:', e);
+
       }
     }
   }
@@ -833,14 +833,14 @@ window.premiumSystem = {
 
 
 window.debugPremium = function() {
-  console.log('Premium State:', window.premiumState);
-  console.log('Swa Bucks:', window.state?.swabucks || 0);
+
+
   if (typeof initPremiumSystem === 'function') {
     initPremiumSystem();
-    console.log('Premium system reinitialized');
+
   }
   if (typeof updatePremiumUI === 'function') {
     updatePremiumUI();
-    console.log('Premium UI updated');
+
   }
 };

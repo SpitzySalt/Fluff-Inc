@@ -1,4 +1,4 @@
-ï»¿// welcome to the Fluff Inc. game script
+// welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
@@ -113,19 +113,18 @@ function initFriendshipFunctions() {
       needed = getFriendshipPointsForLevel(lvl);
     }
     window.friendship[dept].level = lvl;
-    console.log(`[DEBUG] Friendship updated for ${dept}: level ${lvl}, points:`, window.friendship[dept].points.toString());
-    
+
     if (typeof window.renderDepartmentStatsButtons === 'function') {
       window.renderDepartmentStatsButtons();
       const statsModal = document.getElementById('departmentStatsModal');
       if (statsModal && statsModal.style.display === 'flex') {
-        console.log(`[DEBUG] Stats modal is open, updating for department: ${dept}`);
+
         showDepartmentStatsModal(dept);
       } else {
-        console.log(`[DEBUG] Stats modal not open or not found`);
+
       }
     } else {
-      console.log(`[DEBUG] renderDepartmentStatsButtons function not found`);
+
     }
   };
   
@@ -203,8 +202,8 @@ function getFriendshipBuffs(department, level) {
       1: (lvl) => `Decreases Fluzzer's action interval by ${new Decimal(500).mul(lvl).toNumber()}ms and improves cursor speed by ${new Decimal(8).mul(lvl).toNumber()}%`,
       4: (lvl) => `The pollen collector has a ${10 + Math.max(0, (lvl - 4) * 2)}% chance to perform a petal slice that damages flowers in its path`,
       7: (lvl) => `The pollen collector has a ${1 + Math.max(0, (lvl - 7) * 0.5)}% chance to perform a flower wipe that damages every flower`,
-      10: (lvl) => `The watering can tool will now affect an area of 5Ã—5`,
-      15: (lvl) => `Fluzzer will detect any rustling flowers and go click on it and collect the token + The watering can tool will now affect an area of 6Ã—6`
+      10: (lvl) => `The watering can tool will now affect an area of 5×5`,
+      15: (lvl) => `Fluzzer will detect any rustling flowers and go click on it and collect the token + The watering can tool will now affect an area of 6×6`
     },
     'FrontDesk': {
       1: (lvl) => `Increases chances for higher star Rikkor workers by ${new Decimal(10).mul(lvl).toNumber()}%`,
@@ -296,19 +295,19 @@ function showDepartmentStatsModal(department) {
     bar.parentElement.parentElement.style.display = 'none';
   } else {
     const f = friendship[department] || { level: 0, points: new Decimal(0) };
-    console.log(`[DEBUG] showDepartmentStatsModal for ${department}:`, f);
-    console.log(`[DEBUG] Friendship data for ${department}:`, friendship[department]);
+
+
     let level = new Decimal(f.level).min(MAX_FRIENDSHIP_LEVEL).toNumber();
     let points = f.points || new Decimal(0);
     let pointsNeeded = getFriendshipPointsForLevel(level);
     let percent = new Decimal(100).min(points.div(pointsNeeded).mul(100).round()).toNumber();
-    console.log(`[DEBUG] Progress calculation - Level: ${level}, Points: ${points.toString()}, PointsNeeded: ${pointsNeeded.toString()}, Percent: ${percent}`);
+
     let isMax = (level >= MAX_FRIENDSHIP_LEVEL);
     bar.style.width = isMax ? '100%' : percent + '%';
     text.textContent = isMax
       ? `Level ${level} (MAX)`
       : `Level ${level} (${DecimalUtils.formatDecimal(points)} / ${DecimalUtils.formatDecimal(pointsNeeded)})`;
-    console.log(`[DEBUG] Progress bar updated - Width: ${bar.style.width}, Text: ${text.textContent}`);
+
     const labelDiv = bar.parentElement.parentElement.querySelector('.friendship-label');
     if (labelDiv) {
       labelDiv.innerHTML = `<span style='font-weight:bold;'>Friendship Level</span> <span style='color:#888;font-size:0.98em;margin-left:0.7em;'>${characterNames[department]}</span>`;
@@ -372,7 +371,7 @@ window.testFriendshipLevel = function(department, level) {
   }
   window.friendship[department].level = level;
   window.friendship[department].points = new Decimal(0);
-  console.log(`Set ${department} friendship level to ${level}`);
+
   if (typeof window.renderDepartmentStatsButtons === 'function') {
     window.renderDepartmentStatsButtons();
   }

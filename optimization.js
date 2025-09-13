@@ -56,7 +56,7 @@ function optimizedGameTick(deltaTime) {
        
         scheduleUIUpdate();
     } catch (error) {
-        console.error('Error in optimized game tick:', error);
+
     }
 }
 
@@ -87,13 +87,13 @@ function processBatchedDOMUpdates() {
             try {
                 updateFn();
             } catch (error) {
-                console.error('Error in batched DOM update:', error);
+
             }
         });
         updates.clear();
         const endTime = performance.now();
         if (endTime - startTime > 16) { 
-            console.warn(`DOM update took ${endTime - startTime}ms`);
+
         }
     }
 }
@@ -130,7 +130,7 @@ function optimizedSetInterval(callback, interval, options = {}) {
             try {
                 callback();
             } catch (error) {
-                console.error('Error in optimized interval:', error);
+
             }
         }
     }
@@ -217,7 +217,7 @@ function loadOptimizationState() {
             window.gameOptimization.targetFPS = data.targetFPS || 60;
             window.gameOptimization.gameTickRate = data.gameTickRate || 10;
         } catch (error) {
-            console.error('Failed to load optimization settings:', error);
+
         }
     }
 }
@@ -255,7 +255,7 @@ function importOptimizationSettings(fileInput) {
                 saveOptimizationState();
             }
         } catch (error) {
-            console.error('Failed to import optimization settings:', error);
+
         }
     };
     reader.readAsText(file);

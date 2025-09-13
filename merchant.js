@@ -95,9 +95,7 @@ class Boutique {
     if (window.daynight && typeof window.daynight.getTime === 'function') {
       const gameMinutes = window.daynight.getTime();
       const currentHour = Math.floor(gameMinutes / 60) % 24;
-      
-      console.log(`Checking initial boutique state - Current hour: ${currentHour}`);
-      
+
       if (currentHour >= 0 && currentHour < 6) {
         // It's 0:00-6:00 - Lepre is gone during these hours
         this.isBoutiqueClosed = true;
@@ -108,8 +106,7 @@ class Boutique {
         if (characterCard) {
           characterCard.style.display = 'none';
         }
-        
-        console.log('Boutique initialized as CLOSED (night time 0:00-6:00, Lepre gone)');
+
       } else if (currentHour >= this.boutiqueOpenHour && currentHour < this.boutiqueCloseHour) {
         // It's daytime (6:00-22:00) - boutique should be open and Lepre present
         this.isBoutiqueClosed = false;
@@ -120,8 +117,7 @@ class Boutique {
         if (characterCard) {
           characterCard.style.display = 'block';
         }
-        
-        console.log('Boutique initialized as OPEN for daytime');
+
       } else if (currentHour >= this.boutiqueCloseHour && currentHour < 24) {
         // It's after 22:00 but before midnight - boutique closed but Lepre still there
         this.isBoutiqueClosed = true;
@@ -132,14 +128,13 @@ class Boutique {
         if (characterCard) {
           characterCard.style.display = 'block';
         }
-        
-        console.log('Boutique initialized as CLOSED (night time 22:00-24:00, Lepre present)');
+
       }
       
       // Update UI accessibility based on current state
       this.updateBoutiqueAccessibility();
     } else {
-      console.log('Day/night system not available, defaulting to boutique open');
+
       // Default to open if day/night system isn't available
       this.isBoutiqueClosed = false;
       this.isLepreGone = false;
@@ -667,9 +662,7 @@ class Boutique {
   clickChestZipper(event) {
     // Prevent the click from triggering the regular pokeLepre function
     event.stopPropagation();
-    
-    console.log('Player clicked on Lepre\'s chest zipper!');
-    
+
     // Unlock secret achievement 18
     if (typeof window.unlockSecretAchievement === 'function') {
       window.unlockSecretAchievement('secret18');
@@ -711,13 +704,12 @@ class Boutique {
     if (typeof saveGame === 'function') {
       saveGame();
     }
-    
-    console.log('Lepre is now MAD! Prices x10, restock delayed to 24 hours');
+
   }
 
   // Lepre gets VERY mad and raises prices even more + kicks player out
   lepreGetsVeryMad() {
-    console.log('lepreGetsVeryMad() called - entering very mad state');
+
     this.lepreIsVeryMad = true;
     this.lepreVeryMadUntil = Date.now() + (48 * 60 * 60 * 1000); // Very mad for 48 hours
     this.priceMultiplier = 1000; // Prices x1000
@@ -735,7 +727,7 @@ class Boutique {
     this.forceSpeech("I'VE COMPLETELY LOST IT! PRICES ARE NOW 1000X HIGHER! YOU HAVE 10 SECONDS TO LEAVE MY SHOP BEFORE I KICK YOU OUT!", 10000);
     
     // Start kick timer
-    console.log('About to start kick timer...');
+
     this.startKickTimer();
     
     // Update UI to reflect new prices
@@ -745,46 +737,43 @@ class Boutique {
     if (typeof saveGame === 'function') {
       saveGame();
     }
-    
-    console.log('Lepre is now VERY MAD! Prices x1000, kick timer started');
+
   }
 
   // Start the 10-second kick timer
   startKickTimer() {
-    console.log('Starting kick timer...');
+
     // Clear any existing timer
     if (this.kickTimer) {
-      console.log('Clearing existing kick timer');
+
       clearTimeout(this.kickTimer);
     }
     
     // Set 10-second timer to kick player out of boutique
     this.kickTimer = setTimeout(() => {
-      console.log('Kick timer expired, calling kickPlayerFromBoutique()');
+
       this.kickPlayerFromBoutique();
     }, 10000);
-    console.log('Kick timer set for 10 seconds');
+
   }
 
   // Debug function to test kicking manually
   testKick() {
-    console.log('Testing kick function manually...');
+
     this.kickPlayerFromBoutique();
   }
 
   // Kick player out of boutique
   // Add this method to check when boutique is opened
   onBoutiqueOpened() {
-    console.log('onBoutiqueOpened() called');
-    console.log('Current Lepre state - isVeryMad:', this.lepreIsVeryMad);
-    
+
+
     // If Lepre is very mad, always restart kick timer when boutique is opened
     if (this.lepreIsVeryMad) {
-      console.log('Lepre is very mad - starting/restarting kick timer');
-      
+
       // Clear any existing timer first
       if (this.kickTimer) {
-        console.log('Clearing existing kick timer');
+
         clearTimeout(this.kickTimer);
         this.kickTimer = null;
       }
@@ -798,31 +787,27 @@ class Boutique {
   }
 
   kickPlayerFromBoutique() {
-    console.log('kickPlayerFromBoutique() called');
-    
+
     // Check if player is still in boutique using better detection
     const boutiqueTab = document.getElementById('boutiqueSubTab');
     const computedStyle = boutiqueTab ? window.getComputedStyle(boutiqueTab) : null;
     const isInBoutique = boutiqueTab && computedStyle && 
                         (computedStyle.display === 'block' || boutiqueTab.style.display === 'block');
-    
-    console.log('Boutique tab element:', boutiqueTab);
-    console.log('Boutique tab style.display:', boutiqueTab ? boutiqueTab.style.display : 'null');
-    console.log('Boutique tab computed display:', computedStyle ? computedStyle.display : 'null');
-    console.log('Is in boutique?', isInBoutique);
-    
+
+
+
+
     if (isInBoutique) {
       // Force switch to generators sub-tab (most likely to be available)
-      console.log('Attempting to kick player out of boutique...');
-      
+
       // Use the proper switching function
       if (typeof switchHomeSubTab === 'function') {
-        console.log('Using switchHomeSubTab function');
+
         switchHomeSubTab('generatorMainTab');
-        console.log('Switched to generators tab');
+
       } else {
         // Fallback manual switching
-        console.log('Using fallback manual tab switching');
+
         const generatorBtn = document.getElementById('generatorSubTabBtn');
         const generatorTab = document.getElementById('generatorSubTab');
         
@@ -841,10 +826,9 @@ class Boutique {
       
       // Show notification
       this.showMessage('Lepre has kicked you out of the boutique!', 'error');
-      
-      console.log('Player kicked out of boutique by very angry Lepre');
+
     } else {
-      console.log('Player not in boutique, kick timer cancelled');
+
     }
     
     // Clear the timer
@@ -860,8 +844,7 @@ class Boutique {
     }
     
     this.apologizeCount++;
-    console.log(`Player apologized ${this.apologizeCount}/1000 times`);
-    
+
     // Update the UI immediately
     this.updateLepreAngryWarning();
     
@@ -924,8 +907,7 @@ class Boutique {
 
   // Calm Lepre down after enough apologies
   calmLepreDown() {
-    console.log('Lepre has been calmed down by apologies!');
-    
+
     // Reset all mad states
     this.lepreIsMad = false;
     this.lepreIsVeryMad = false;
@@ -969,8 +951,7 @@ class Boutique {
         clearTimeout(this.kickTimer);
         this.kickTimer = null;
       }
-      console.log('Lepre is no longer VERY mad, but still mad.');
-      
+
       // Fall back to regular mad state with original timer
       this.priceMultiplier = 10;
       
@@ -992,8 +973,7 @@ class Boutique {
       this.priceMultiplier = 1;
       this.leprePokeCount = 0;
       this.lepreVeryMadPokeCount = 0;
-      console.log('Lepre has calmed down. Prices back to normal.');
-      
+
       // Update character display to show normal state
       this.updateLepreCharacterDisplay();
       
@@ -1022,7 +1002,7 @@ class Boutique {
     if (shouldLepreBeGone && !this.isLepreGone) {
       // Lepre should be gone but is currently present - make him leave
       this.lepreLeaves();
-      console.log(`Lepre is leaving during night hours (${currentHour}:00)`);
+
     } else if (!shouldLepreBeGone && this.isLepreGone) {
       // Lepre should be present but is currently gone - bring him back
       this.openBoutique();
@@ -1033,7 +1013,7 @@ class Boutique {
           this.queueSpeech("I'm back! Though it's past closing time, so no trading until tomorrow!", 5000);
         }
       }
-      console.log(`Lepre has returned and is now present at hour ${currentHour}`);
+
     }
     
     // Handle boutique opening/closing separately from Lepre presence
@@ -1041,7 +1021,7 @@ class Boutique {
       // Boutique should be open and Lepre is present
       this.isBoutiqueClosed = false;
       this.wasPlayerInBoutiqueBeforeClose = false;
-      console.log('Boutique is now open for business');
+
     } else if ((currentHour >= this.boutiqueCloseHour || currentHour < this.boutiqueOpenHour) && !this.isBoutiqueClosed && !this.isLepreGone) {
       // Boutique should be closed but Lepre is still present (22:00-24:00)
       this.isBoutiqueClosed = true;
@@ -1049,7 +1029,7 @@ class Boutique {
         this.wasPlayerInBoutiqueBeforeClose = true;
         this.queueSpeech("It's closing time! You can stay, but I can't sell anything after 22:00. Shop rules!", 6000);
       }
-      console.log('Boutique is now closed for the night');
+
     }
     
     // Update UI if needed
@@ -1063,7 +1043,7 @@ class Boutique {
   
   closeBoutique() {
     this.isBoutiqueClosed = true;
-    console.log('Boutique closed for the night');
+
   }
   
   lepreLeaves() {
@@ -1074,12 +1054,12 @@ class Boutique {
       if (characterCard) {
         characterCard.style.display = 'none';
       }
-      console.log('Lepre character card hidden');
+
     });
     
     this.isLepreGone = true;
     this.isBoutiqueClosed = true;
-    console.log('Lepre has left the boutique');
+
   }
   
   openBoutique() {
@@ -1095,8 +1075,7 @@ class Boutique {
     
     // Update Lepre character display to show the image
     this.updateLepreCharacterDisplay();
-    
-    console.log('Boutique opened - Lepre has returned');
+
   }
   
   updateBoutiqueAccessibility() {
@@ -1335,25 +1314,24 @@ class Boutique {
   }
 
   debugRestock() {
-    console.log('=== BOUTIQUE RESTOCK DEBUG ===');
+
     const now = Date.now();
   const RESTOCK_INTERVAL = 60 * 60 * 1000; // 1 hour
     const timeSinceLastRestock = this.lastRestockTime ? now - this.lastRestockTime : 0;
     const timeUntilNextRestock = RESTOCK_INTERVAL - timeSinceLastRestock;
-    
-    console.log('Current time:', new Date(now).toLocaleTimeString());
-    console.log('Last restock time:', this.lastRestockTime ? new Date(this.lastRestockTime).toLocaleTimeString() : 'Never');
-    console.log('Minutes since last restock:', Math.round(timeSinceLastRestock / 1000 / 60 * 100) / 100);
-    console.log('Minutes until next restock:', Math.round(timeUntilNextRestock / 1000 / 60 * 100) / 100);
-    console.log('Should restock now?', !this.lastRestockTime || timeSinceLastRestock >= RESTOCK_INTERVAL);
-    console.log('============================');
+
+
+
+
+
+
   }
 
   forceRestock() {
-    console.log('Forcing boutique restock...');
+
     this.restockShop();
     this.updateUIIfBoutiqueIsOpen();
-    console.log('Restock complete!');
+
   }
 
   // Check if it's time to restock (every 24 real minutes)
@@ -1363,7 +1341,7 @@ class Boutique {
     
     // If no previous restock time, or 24 minutes have passed, restock
     if (!this.lastRestockTime || (now - this.lastRestockTime) >= RESTOCK_INTERVAL) {
-      console.log(`Restocking shop - ${(now - this.lastRestockTime) / 1000 / 60} minutes since last restock`);
+
       this.restockShop();
       return true;
     }
@@ -1387,15 +1365,13 @@ class Boutique {
   }
 
   restockShop() {
-    console.log('Restocking boutique shop...');
-    
+
     // Reset daily stock
     this.dailyStock = {};
     
     // Reset free daily Swa Bucks availability
     this.hasUsedFreeBucksToday = false;
-    console.log('Free Swa Bucks button reset - available to claim again!');
-    
+
     // Reset Lepre's anger if he was mad
     const wasMAd = this.lepreIsMad;
     this.lepreIsMad = false;
@@ -1418,7 +1394,7 @@ class Boutique {
         selectedPremium = this.getRandomItems(availablePremiumItems, 1)[0];
         // Replace the second better item with premium item
         selectedBetter = selectedBetter.slice(0, 1); // Keep only first better item
-        console.log('Premium item selected for slot 6:', selectedPremium.name);
+
       }
     }
     
@@ -1443,7 +1419,7 @@ class Boutique {
         this.dailyStock[item.id] = baseStock + bonusStock;
         
         if (bonusStock > 0) {
-          console.log(`Applied friendship buff to ${item.name}: ${baseStock} base + ${bonusStock} bonus = ${this.dailyStock[item.id]} total stock`);
+
         }
       } else if (item.category === 'premium') {
         // Always 1 for premium items (unlockable items)
@@ -1455,7 +1431,7 @@ class Boutique {
         // Apply Lepre's level 15 friendship buff for premium token stock (+4)
         if (item.category === 'better' && window.friendship && window.friendship.Boutique && window.friendship.Boutique.level >= 15) {
           baseStock += 4;
-          console.log(`Applied level 15 friendship buff to premium token ${item.name}: 1 base + 4 bonus = ${baseStock} total stock`);
+
         }
         
         this.dailyStock[item.id] = baseStock;
@@ -1464,11 +1440,9 @@ class Boutique {
     
     // Update restock time to current real time
     this.lastRestockTime = Date.now();
-    
-    console.log('Shop restocked with items:', this.currentShopItems.map(i => i.name));
-    console.log('Stock levels:', this.dailyStock);
-    console.log('Free daily Swa Bucks available again!');
-    
+
+
+
     // Show Lepre speech if he was mad
     if (wasMAd) {
       this.queueSpeech("Ah, the shop restocked! I've cooled down and my prices are back to normal. Let's start fresh!", 5000);
@@ -1489,8 +1463,7 @@ class Boutique {
         this.queueSpeech(randomSpeech, 5000);
       }
     }
-    
-    console.log('Next restock in 1 hour');
+
   }
 
   getRandomItems(array, count) {
@@ -1511,7 +1484,7 @@ class Boutique {
     if (isBoutiqueActive) {
       // Boutique is currently open, update the UI
       this.updateBoutiqueUI();
-      console.log('Boutique UI updated after restock (player was in boutique)');
+
     }
   }
 
@@ -1548,7 +1521,7 @@ class Boutique {
     // Apply Lepre's level 15 friendship buff for premium token price reduction (50% off)
     if (item.category === 'better' && window.friendship && window.friendship.Boutique && window.friendship.Boutique.level >= 15) {
       basePrice = Math.floor(basePrice * 0.5); // 50% price reduction
-      console.log(`Applied level 15 friendship buff to premium token ${item.name}: 50% price reduction`);
+
     }
     
     return Math.floor(basePrice * this.priceMultiplier);
@@ -2286,8 +2259,7 @@ class Boutique {
       
       // Check if current time is between 6:00-23:59 (Lepre should be available)
       if (currentHour >= 6 && currentHour <= 23) {
-        console.log('Forcing Lepre to appear during boutique hours');
-        
+
         // Force Lepre to be present
         this.isLepreGone = false;
         this.isBoutiqueClosed = false;
@@ -2297,10 +2269,9 @@ class Boutique {
         
         // Update boutique accessibility
         this.updateBoutiqueAccessibility();
-        
-        console.log('Lepre forced to appear successfully');
+
       } else {
-        console.log('Not forcing Lepre appearance - outside boutique hours (6:00-23:59)');
+
       }
     }
   }
@@ -2324,7 +2295,7 @@ function hookBoutiqueSubTabButton() {
       }
     };
     boutiqueBtn.setAttribute('data-lepre-hook', 'true');
-    console.log('Boutique sub tab button hooked for Lepre appearance');
+
   }
 }
 
@@ -2366,8 +2337,7 @@ window.addSwaBucksForTesting = function(amount = 1000) {
   if (typeof window.updateInventoryModal === 'function') {
     window.updateInventoryModal();
   }
-  
-  console.log(`Added ${amount} Swa Bucks. Total: ${window.state.swabucks.toString()}`);
+
   return window.state.swabucks.toString();
 };
 
@@ -2377,31 +2347,28 @@ window.forceRestockBoutique = function() {
     window.boutique.restockShop();
     // Update UI if boutique is currently open
     window.boutique.updateUIIfBoutiqueIsOpen();
-    console.log('Boutique shop has been restocked!');
-    console.log('Current items:', window.boutique.currentShopItems.map(i => i.name));
-    console.log('Stock levels:', window.boutique.dailyStock);
+
+
+
   } else {
-    console.log('Boutique not initialized yet');
+
   }
 };
 
 // Debug function to test daily free bucks
 window.testDailyFreeBucks = function() {
   if (!window.boutique) {
-    console.log('Boutique not initialized yet');
+
     return;
   }
-  
-  console.log('Testing daily free bucks functionality...');
-  console.log('Can claim:', window.boutique.canClaimFreeBucks());
-  console.log('Free bucks amount:', window.boutique.getFreeBucksAmount());
-  console.log('Current Lepre friendship level:', window.friendship?.Boutique?.level || 0);
-  console.log('Has used today:', window.boutique.hasUsedFreeBucksToday);
-  
+
+
+
+
+
   // Try to claim
   const result = window.boutique.claimFreeBucks();
-  console.log('Claim result:', result);
-  
+
   return {
     canClaim: window.boutique.canClaimFreeBucks(),
     amount: window.boutique.getFreeBucksAmount(),
@@ -2417,88 +2384,85 @@ window.resetDailyFreeBucks = function() {
     window.boutique.lastFreeBucksTime = null;
     window.boutique.lastFreeBucksGameTime = null;
     window.boutique.updateFreeBucksButton();
-    console.log('Daily free bucks reset - you can claim again!');
+
   }
 };
 
 // Debug function to test Lepre token giving
 window.testLepreTokens = function() {
-  console.log('Testing Lepre token preferences...');
-  
+
   // Check if Lepre is in character preferences
   if (window.characterTokenPreferences && window.characterTokenPreferences.Lepre) {
-    console.log('Lepre preferences found:', window.characterTokenPreferences.Lepre);
+
   } else {
-    console.log('ERROR: Lepre not found in characterTokenPreferences');
+
   }
   
   // Check if Lepre is in charToDept mapping
   if (window.charToDept && window.charToDept.Lepre) {
-    console.log('Lepre department mapping found:', window.charToDept.Lepre);
+
   } else {
-    console.log('ERROR: Lepre not found in charToDept mapping');
+
   }
   
   // Check current Lepre friendship
   if (window.friendship && window.friendship.Boutique) {
-    console.log('Current Lepre friendship:', window.friendship.Boutique);
+
   } else {
-    console.log('No Lepre friendship data found (this is normal for new players)');
+
   }
   
   // Test if token drop targets include Lepre
-  console.log('Please try dropping a berry token on Lepre to test!');
-  console.log('Lepre should like: berries, stardust');
-  console.log('Lepre should be neutral with: sparks, prisma, mushroom, petals');
-  console.log('Lepre should dislike: water');
+
+
+
+
 };
 
 // Debug function to test Lepre speech and stats modal
 window.testLepreFeatures = function() {
-  console.log('Testing Lepre features...');
-  
+
   // Test speech system
   if (window.characterTokenSpeech && window.characterTokenSpeech.Lepre) {
-    console.log('✅ Lepre speech lines found:', window.characterTokenSpeech.Lepre);
+
   } else {
-    console.log('❌ Lepre speech lines not found');
+
   }
   
   // Test if showCharacterSpeech function exists
   if (typeof window.showCharacterSpeech === 'function') {
-    console.log('✅ showCharacterSpeech function found');
+
   } else {
-    console.log('❌ showCharacterSpeech function not found');
+
   }
   
   // Test current friendship status
   if (window.friendship && window.friendship.Boutique) {
-    console.log('✅ Current Lepre friendship:', window.friendship.Boutique);
+
   } else {
-    console.log('ℹ️ No Lepre friendship data yet (normal for new players)');
+
   }
   
   // Test friendship system
   if (window.friendship && typeof window.friendship.addPoints === 'function') {
-    console.log('✅ Friendship addPoints function found');
+
   } else {
-    console.log('❌ Friendship addPoints function not found');
+
   }
   
   // Test character to department mapping
   if (window.charToDept && window.charToDept.lepre) {
-    console.log('✅ Lepre charToDept mapping found:', window.charToDept.lepre);
+
   } else {
-    console.log('❌ Lepre charToDept mapping not found');
+
   }
   
   // Provide testing instructions
-  console.log('\n🧪 Testing Instructions:');
-  console.log('1. Try dropping tokens on Lepre to see funny responses');
-  console.log('2. Click "Boutique" button in stats tab to see friendship progress');
-  console.log('3. Give Lepre some berries to see friendship points increase');
-  console.log('4. Test the daily free Swa Bucks button in the boutique');
-  
+
+
+
+
+
   return {
     speechSystemReady: !!(window.characterTokenSpeech && window.characterTokenSpeech.Lepre),
     functionExists: typeof window.showCharacterSpeech === 'function',
@@ -2510,36 +2474,33 @@ window.testLepreFeatures = function() {
 
 // Debug function to manually test Lepre friendship
 window.testLepreFriendship = function(amount = 20) {
-  console.log('Testing Lepre friendship points...');
-  
+
   // Initialize friendship system if not ready
   if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
-    console.log('⚠️ Friendship system not initialized. Calling initFriendshipFunctions()...');
+
     if (typeof initFriendshipFunctions === 'function') {
       initFriendshipFunctions();
     } else {
-      console.log('❌ initFriendshipFunctions not found');
+
       return false;
     }
   }
   
   // Get current friendship before
   const before = window.friendship.Boutique ? JSON.parse(JSON.stringify(window.friendship.Boutique)) : null;
-  console.log('Before:', before);
-  
+
   // Add points
   try {
     window.friendship.addPoints('Lepre', new Decimal(amount));
-    console.log('✅ Successfully called addPoints()');
+
   } catch (error) {
-    console.log('❌ Error calling addPoints():', error);
+
     return false;
   }
   
   // Get current friendship after
   const after = window.friendship.Boutique ? JSON.parse(JSON.stringify(window.friendship.Boutique)) : null;
-  console.log('After:', after);
-  
+
   // Update the stats modal if it's open
   const statsModal = document.getElementById('departmentStatsModal');
   if (statsModal && statsModal.style.display === 'flex') {
@@ -2547,7 +2508,7 @@ window.testLepreFriendship = function(amount = 20) {
     if (title && title.textContent && title.textContent.includes('Boutique')) {
       if (typeof showDepartmentStatsModal === 'function') {
         showDepartmentStatsModal('Boutique');
-        console.log('✅ Updated stats modal');
+
       }
     }
   }
@@ -2555,49 +2516,47 @@ window.testLepreFriendship = function(amount = 20) {
   // Test free bucks amount
   if (window.boutique) {
     const freeBucksAmount = window.boutique.getFreeBucksAmount();
-    console.log('✅ Free Swa Bucks amount would be:', freeBucksAmount);
+
   }
-  
-  console.log(`✅ Added ${amount} friendship points to Lepre!`);
+
   return true;
 }
 
 // Debug functions for testing Lepre interactions
 window.debugLepre = function() {
-  console.log('=== LEPRE DEBUG INFO ===');
-  console.log('Poke count:', window.boutique.leprePokeCount);
-  console.log('Poke start time:', new Date(window.boutique.leprePokeStartTime).toLocaleTimeString());
-  console.log('Is mad:', window.boutique.lepreIsMad);
-  console.log('Mad until:', window.boutique.lepreMadUntil ? new Date(window.boutique.lepreMadUntil).toLocaleTimeString() : 'N/A');
-  console.log('Is VERY mad:', window.boutique.lepreIsVeryMad);
-  console.log('Very mad until:', window.boutique.lepreVeryMadUntil ? new Date(window.boutique.lepreVeryMadUntil).toLocaleTimeString() : 'N/A');
-  console.log('Very mad poke count:', window.boutique.lepreVeryMadPokeCount);
-  console.log('Price multiplier:', window.boutique.priceMultiplier);
-  console.log('Kick timer active:', !!window.boutique.kickTimer);
-  console.log('========================');
+
+
+
+
+
+
+
+
+
+
+
 };
 
 window.testPokeSpam = function() {
-  console.log('Simulating 50 rapid pokes...');
+
   for (let i = 0; i < 50; i++) {
     window.boutique.pokeLepre();
   }
 };
 
 window.testVeryMadSpam = function() {
-  console.log('Making Lepre mad first...');
+
   window.boutique.lepreIsMad = true;
   window.boutique.lepreMadUntil = Date.now() + (24 * 60 * 60 * 1000);
   window.boutique.priceMultiplier = 10;
-  
-  console.log('Now simulating 50 more pokes to make him VERY mad...');
+
   for (let i = 0; i < 50; i++) {
     window.boutique.pokeLepre();
   }
 };
 
 window.calmLepre = function() {
-  console.log('Forcing Lepre to calm down completely...');
+
   window.boutique.lepreIsMad = false;
   window.boutique.lepreIsVeryMad = false;
   window.boutique.priceMultiplier = 1;
@@ -2611,78 +2570,70 @@ window.calmLepre = function() {
   }
   
   window.boutique.updateUIIfBoutiqueIsOpen();
-  console.log('Lepre has been completely calmed down.');
+
 };
 
 window.forceVeryMad = function() {
-  console.log('Forcing Lepre to become VERY mad...');
+
   window.boutique.lepreIsVeryMad = true;
   window.boutique.lepreVeryMadUntil = Date.now() + (48 * 60 * 60 * 1000);
   window.boutique.priceMultiplier = 1000;
   window.boutique.startKickTimer();
   window.boutique.updateUIIfBoutiqueIsOpen();
-  console.log('Lepre is now VERY mad! You have 10 seconds to leave!');
+
 };
 
 window.testSpeechQueue = function() {
-  console.log('Testing speech queue system...');
+
   window.boutique.queueSpeech("First speech in queue!", 3000);
   window.boutique.queueSpeech("Second speech should wait!", 3000);
   window.boutique.queueSpeech("Third speech comes last!", 3000);
-  console.log('Queued 3 speeches - they should play one after another without interruption');
+
 };;
 
 // Test function to verify the restock UI update works while inside boutique
 window.testBoutiqueRestock = function() {
-  console.log('Testing boutique restock while inside boutique...');
-  
+
   // Check if boutique is currently open
   const boutiqueTab = document.getElementById('boutiqueSubTab');
   if (!boutiqueTab || boutiqueTab.style.display === 'none') {
-    console.log('Please open the boutique tab first, then run this test');
+
     return;
   }
-  
-  console.log('Boutique is open. Forcing restock...');
+
   window.forceRestockBoutique();
-  console.log('Test complete! Check if the boutique UI updated automatically.');
+
 };
 
 // Debug function to test Lepre's crab anomaly dialogue
 window.testLepreCrabDialogue = function() {
-    console.log('Testing Lepre crab anomaly dialogue...');
-    
+
     if (!window.boutique) {
-        console.log('Boutique not found!');
+
         return;
     }
     
     // Test normal speeches
-    console.log('Normal speeches:', window.boutique.getLepreRandomSpeeches().slice(0, 3));
-    
+
     // Spawn crab anomaly
     if (window.anomalySystem) {
         window.anomalySystem.spawnCrabBucksAnomaly();
-        console.log('Crab anomaly spawned!');
-        
+
         // Test crab speeches
-        console.log('Crab speeches:', window.boutique.getLepreRandomSpeeches().slice(0, 3));
-        
+
         // Test crab poke speeches
-        console.log('Crab poke speeches:', window.boutique.getLeprePokeSpeeches()[0].speeches.slice(0, 2));
+
     } else {
-        console.log('Anomaly system not found!');
+
     }
-    
-    console.log('Lepre should now be talking about crabs! Visit the boutique to see the dialogue.');
+
 };
 
 // Debug function to test all Lepre crab dialogues
 window.testAllLepreCrabDialogues = function() {
-    console.log('Testing all Lepre crab dialogues...');
-    
+
     if (!window.boutique) {
-        console.log('Boutique not found!');
+
         return;
     }
     
@@ -2690,19 +2641,17 @@ window.testAllLepreCrabDialogues = function() {
     if (window.anomalySystem) {
         window.anomalySystem.spawnCrabBucksAnomaly();
     }
-    
-    console.log('=== CRAB RANDOM SPEECHES ===');
+
     const crabSpeeches = window.boutique.getLepreCrabAnomalySpeeches();
     crabSpeeches.forEach((speech, i) => {
-        console.log(`${i + 1}: ${speech}`);
+
     });
-    
-    console.log('\n=== CRAB POKE SPEECHES ===');
+
     const crabPokeSpeeches = window.boutique.getLepreCrabPokeSpeeches();
     crabPokeSpeeches.forEach((tier, i) => {
-        console.log(`Tier ${i + 1} (${tier.min}-${tier.max} pokes):`);
+
         tier.speeches.forEach((speech, j) => {
-            console.log(`  ${j + 1}: ${speech}`);
+
         });
     });
 };
@@ -2710,28 +2659,24 @@ window.testAllLepreCrabDialogues = function() {
 
 // Debug function to test Lepre's friendship buff for token stock
 window.testLepreStockBuff = function(friendshipLevel = 4) {
-  console.log(`🧪 Testing Lepre's stock buff at friendship level ${friendshipLevel}...`);
-  
+
   if (!window.boutique) {
-    console.log('❌ Boutique not found!');
+
     return;
   }
   
   // Set friendship level
   window.boutique.lepreFriendshipLevel = friendshipLevel;
-  console.log(`✅ Set friendship level to ${friendshipLevel}`);
-  
+
   // Clear current stock first
   window.boutique.clearCurrentStock();
-  console.log('🧹 Cleared current stock');
-  
+
   // Count normal tokens before buff
   const normalTokenTypes = ['stardustTokens', 'petalTokens', 'mushroomTokens', 'berryTokens'];
   
   // Generate new stock
   const newStock = window.boutique.generateRandomStock();
-  console.log('📦 Generated new stock:', newStock);
-  
+
   // Count normal tokens
   let foundNormalTokens = 0;
   normalTokenTypes.forEach(tokenType => {
@@ -2745,11 +2690,9 @@ window.testLepreStockBuff = function(friendshipLevel = 4) {
   if (friendshipLevel >= 8) expectedBonus = 3;
   else if (friendshipLevel >= 6) expectedBonus = 2;
   else if (friendshipLevel >= 4) expectedBonus = 1;
-  
-  console.log(`📊 Normal tokens found: ${foundNormalTokens}`);
-  console.log(`💝 Expected bonus from friendship: +${expectedBonus}`);
-  console.log(`🎯 Total expected: ${foundNormalTokens + expectedBonus}`);
-  
+
+
+
   // Apply the stock to boutique
   window.boutique.currentStock = newStock;
   window.boutique.lastRestockTime = Date.now();
@@ -2759,12 +2702,10 @@ window.testLepreStockBuff = function(friendshipLevel = 4) {
   normalTokenTypes.forEach(tokenType => {
     if (newStock[tokenType] && newStock[tokenType].stock > 0) {
       afterStock += newStock[tokenType].stock;
-      console.log(`  ${tokenType}: ${newStock[tokenType].stock} units`);
+
     }
   });
-  
-  console.log(`📈 Total stock after friendship buff: ${afterStock}`);
-  
+
   return {
     friendshipLevel,
     expectedBonus,
@@ -2775,22 +2716,20 @@ window.testLepreStockBuff = function(friendshipLevel = 4) {
 
 // Debug function to test multiple friendship levels
 window.testAllLepreStockBuffs = function() {
-  console.log('🧪 Testing Lepre\'s stock buff at different friendship levels...');
-  
+
   const testLevels = [1, 3, 4, 5, 6, 8, 10];
   const results = [];
   
   testLevels.forEach(level => {
-    console.log(`\n--- Testing Level ${level} ---`);
+
     const result = window.testLepreStockBuff(level);
     results.push(result);
   });
-  
-  console.log('\n📊 Summary:');
+
   results.forEach(result => {
     const hasBonus = result.expectedBonus > 0;
     const status = hasBonus ? '✅' : '⭕';
-    console.log(`${status} Level ${result.friendshipLevel}: +${result.expectedBonus} bonus stock (${result.normalTokensFound} normal tokens found)`);
+
   });
   
   return results;

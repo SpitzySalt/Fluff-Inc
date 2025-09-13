@@ -703,8 +703,7 @@ window.infinitySystem = {
             // Stop any active minigame
             window.advancedPrismState.calibration.activeMinigame = null;
             window.advancedPrismState.calibration.minigameStartTime = 0;
-            
-            console.log('Infinity reset: Stable light calibration progress reset - prism core level preserved');
+
         }
         
         // Reset terrarium currencies
@@ -2131,14 +2130,12 @@ function giveInfinityTheorems(amount = 1000) {
 
 // Force infinity reset for testing (bypasses all requirements)
 function forceInfinityReset() {
-    console.log("=== FORCING INFINITY RESET FOR TESTING ===");
-    console.log("WARNING: This bypasses all normal requirements!");
-    
+
+
     // Debug window.state
-    console.log("Current window.state:", window.state);
-    console.log("window.state.seenInfinityResetStory:", window.state?.seenInfinityResetStory);
-    console.log("window.state.pendingInfinityResetStory:", window.state?.pendingInfinityResetStory);
-    
+
+
+
     // Calculate what the gain would be if we had proper infinities
     let mockInfinityGain = 1; // Minimum gain for testing
     
@@ -2147,10 +2144,8 @@ function forceInfinityReset() {
     if (totalInfinities > 0) {
         mockInfinityGain = window.infinitySystem.calculateInfinityGain();
     }
-    
-    console.log("Mock infinity gain:", mockInfinityGain);
-    console.log("Current total infinity earned:", window.infinitySystem.totalInfinityEarned);
-    
+
+
     // Store the gain
     const currentTotal = window.infinitySystem.totalInfinityEarned;
     const newTotal = Math.max(currentTotal, mockInfinityGain);
@@ -2158,22 +2153,21 @@ function forceInfinityReset() {
     
     // Check if this is the first infinity reset and show story modal
     if (!window.state) {
-        console.error("ERROR: window.state is not defined!");
+
         return false;
     }
     
     const isFirstInfinityReset = !window.state.seenInfinityResetStory;
-    console.log("Is first infinity reset:", isFirstInfinityReset);
-    
+
     if (isFirstInfinityReset) {
         window.state.pendingInfinityResetStory = true;
-        console.log("Set pendingInfinityResetStory = true");
-        console.log("Checking if saveGame function exists:", typeof saveGame);
+
+
         if (typeof saveGame === 'function') {
             saveGame();
-            console.log("Game saved");
+
         }
-        console.log("After setting - pendingInfinityResetStory:", window.state.pendingInfinityResetStory);
+
     }
     
     // Reset challenge state if any
@@ -2196,11 +2190,9 @@ function forceInfinityReset() {
     
     // Show notification
     window.infinitySystem.showInfinityResetNotification(mockInfinityGain, newTotal);
-    
-    console.log("✅ FORCED infinity reset completed!");
-    console.log("New total infinity earned:", window.infinitySystem.totalInfinityEarned);
-    console.log("The page will reload in 4 seconds...");
-    
+
+
+
     // Reload page after 4 seconds like normal reset
     setTimeout(() => {
         location.reload();
@@ -2211,8 +2203,7 @@ function forceInfinityReset() {
 
 // Quick force reset with custom infinity gain
 function forceInfinityResetWithGain(infinityGain = 1) {
-    console.log(`=== FORCING INFINITY RESET WITH ${infinityGain} INFINITY GAIN ===`);
-    
+
     // Store the gain
     const currentTotal = window.infinitySystem.totalInfinityEarned;
     const newTotal = currentTotal + infinityGain;
@@ -2223,7 +2214,7 @@ function forceInfinityResetWithGain(infinityGain = 1) {
     if (isFirstInfinityReset) {
         window.state.pendingInfinityResetStory = true;
         if (typeof saveGame === 'function') saveGame();
-        console.log("First infinity reset detected - story modal will show after reload");
+
     }
     
     // Reset everything
@@ -2236,12 +2227,10 @@ function forceInfinityResetWithGain(infinityGain = 1) {
     
     // Show notification
     window.infinitySystem.showInfinityResetNotification(infinityGain, newTotal);
-    
-    console.log("✅ FORCED infinity reset completed with custom gain!");
-    console.log("Infinity gained:", infinityGain);
-    console.log("New total infinity earned:", newTotal);
-    console.log("The page will reload in 4 seconds...");
-    
+
+
+
+
     setTimeout(() => {
         location.reload();
     }, 4000);
@@ -2251,56 +2240,53 @@ function forceInfinityResetWithGain(infinityGain = 1) {
 
 // Debug function to check infinity reset story status
 function debugInfinityResetStory() {
-    console.log("=== INFINITY RESET STORY DEBUG ===");
-    console.log("window.state exists:", !!window.state);
-    console.log("window.state.seenInfinityResetStory:", window.state?.seenInfinityResetStory);
-    console.log("window.state.pendingInfinityResetStory:", window.state?.pendingInfinityResetStory);
-    console.log("showInfinityResetStoryModal exists:", typeof window.showInfinityResetStoryModal);
-    console.log("checkForPendingStoryModals exists:", typeof window.checkForPendingStoryModals || typeof checkForPendingStoryModals);
-    
+
+
+
+
+
+
     // Test the story modal function directly
     if (typeof window.showInfinityResetStoryModal === 'function') {
-        console.log("Testing story modal function...");
+
         window.showInfinityResetStoryModal();
     } else {
-        console.log("Story modal function not found!");
+
     }
 }
 
 // Force set pending story for testing
 function forceSetPendingInfinityStory() {
     if (!window.state) {
-        console.error("window.state not found!");
+
         return;
     }
     
     window.state.seenInfinityResetStory = false;
     window.state.pendingInfinityResetStory = true;
-    console.log("Set pendingInfinityResetStory = true for testing");
-    
+
     if (typeof saveGame === 'function') {
         saveGame();
-        console.log("Game saved");
+
     }
     
     // Try to trigger the check manually
     if (typeof checkForPendingStoryModals === 'function') {
-        console.log("Calling checkForPendingStoryModals manually...");
+
         checkForPendingStoryModals();
     } else {
-        console.log("checkForPendingStoryModals function not found");
+
     }
 }
 
 // Reset infinity story flags for testing first infinity reset
 function resetInfinityStoryFlags() {
-    console.log("=== RESETTING INFINITY STORY FLAGS ===");
-    console.log("Before reset:");
-    console.log("  seenInfinityResetStory:", window.state?.seenInfinityResetStory);
-    console.log("  pendingInfinityResetStory:", window.state?.pendingInfinityResetStory);
-    
+
+
+
+
     if (!window.state) {
-        console.error("window.state not found!");
+
         return;
     }
     
@@ -2312,76 +2298,66 @@ function resetInfinityStoryFlags() {
     if (window.infinitySystem) {
         window.infinitySystem.totalInfinityEarned = 0;
     }
-    
-    console.log("After reset:");
-    console.log("  seenInfinityResetStory:", window.state.seenInfinityResetStory);
-    console.log("  pendingInfinityResetStory:", window.state.pendingInfinityResetStory);
-    console.log("  totalInfinityEarned:", window.infinitySystem?.totalInfinityEarned);
-    
+
+
+
+
     if (typeof saveGame === 'function') {
         saveGame();
-        console.log("Game saved with reset flags");
+
     }
-    
-    console.log("✅ Infinity story flags reset! Now try forceInfinityReset()");
+
 }
 
 // Debug what happens during page load and story modal checking
 function debugPageLoadStoryCheck() {
-    console.log("=== DEBUGGING PAGE LOAD STORY CHECK ===");
-    console.log("Current state:");
-    console.log("  seenInfinityResetStory:", window.state?.seenInfinityResetStory);
-    console.log("  pendingInfinityResetStory:", window.state?.pendingInfinityResetStory);
-    
+
+
+
+
     // Check if the function exists and manually call it
     if (typeof checkForPendingStoryModals === 'function') {
-        console.log("checkForPendingStoryModals function found - calling it manually...");
+
         checkForPendingStoryModals();
     } else {
-        console.log("checkForPendingStoryModals function NOT found!");
+
     }
     
     // Also check the story modal function
     if (typeof window.showInfinityResetStoryModal === 'function') {
-        console.log("showInfinityResetStoryModal function exists");
+
     } else {
-        console.log("showInfinityResetStoryModal function NOT found!");
+
     }
 }
 
 // Force trigger the story modal check (simulate what should happen after reload)
 function forceTriggerStoryModalCheck() {
-    console.log("=== FORCE TRIGGERING STORY MODAL CHECK ===");
-    
+
     // First set up the conditions manually
     if (window.state) {
         window.state.pendingInfinityResetStory = true;
         window.state.seenInfinityResetStory = false;
     }
-    
-    console.log("Set flags manually:");
-    console.log("  pendingInfinityResetStory:", window.state?.pendingInfinityResetStory);
-    console.log("  seenInfinityResetStory:", window.state?.seenInfinityResetStory);
-    
+
+
+
     // Now manually call the check function
     if (typeof checkForPendingStoryModals === 'function') {
-        console.log("Calling checkForPendingStoryModals manually...");
+
         checkForPendingStoryModals();
     } else if (window.state && window.state.pendingInfinityResetStory) {
-        console.log("checkForPendingStoryModals not found, doing manual check...");
-        
+
         // Manual implementation of what checkForPendingStoryModals should do
         window.state.pendingInfinityResetStory = false;
         window.state.seenInfinityResetStory = true;
-        
-        console.log("Updated flags manually");
-        
+
         setTimeout(() => {
             if (typeof window.showInfinityResetStoryModal === 'function') {
-                console.log("Showing story modal manually...");
+
                 window.showInfinityResetStoryModal();
             } else {
-                console.log("showInfinityResetStoryModal function not found!");
+
             }
         }, 1000);
     }
@@ -2653,7 +2629,7 @@ window.respecInfinityTheorems = function() {
     // Refund all spent IT to the available infinity theorems
     if (window.infinitySystem && totalSpent > 0) {
         window.infinitySystem.infinityTheorems += totalSpent;
-        console.log(`Refunded ${totalSpent} infinity theorems`);
+
     }
     
     // Reset all infinity upgrade levels to 0

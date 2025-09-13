@@ -49,7 +49,7 @@ function detectMemoryLeaks() {
     const memoryGrowth = memoryStats.currentHeapSize - memoryStats.startHeapSize;
     const memoryGrowthMB = memoryGrowth / 1048576;
     if (memoryGrowthMB > 100) { 
-        console.warn(`🚨 Potential memory leak detected: ${memoryGrowthMB.toFixed(1)}MB growth`);
+
         forceGarbageCollection();
         if (window.clearDOMCache) window.clearDOMCache();
         if (window.gameOptimization) {

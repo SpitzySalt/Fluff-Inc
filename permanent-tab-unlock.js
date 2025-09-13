@@ -1,4 +1,4 @@
-﻿// Permanent Tab Unlock System
+// Permanent Tab Unlock System
 // Keeps department tab buttons visible permanently after first unlock
 
 // Track which department tabs have been permanently unlocked
@@ -38,7 +38,7 @@ function loadPermanentTabUnlocks() {
       };
     }
   } catch (error) {
-    console.error('Error loading permanent tab unlocks:', error);
+
   }
 }
 
@@ -55,31 +55,31 @@ function checkPermanentTabUnlocks() {
   if (currentGrade >= 2 && !window.permanentTabUnlocks.prism) {
     window.permanentTabUnlocks.prism = true;
     hasNewUnlock = true;
-    console.log('[PERMANENT TAB] Prism Lab tab permanently unlocked!');
+
   }
   
   if (currentGrade >= 2 && !window.permanentTabUnlocks.frontDesk) {
     window.permanentTabUnlocks.frontDesk = true;
     hasNewUnlock = true;
-    console.log('[PERMANENT TAB] Front Desk tab permanently unlocked!');
+
   }
   
   if (currentGrade >= 3 && !window.permanentTabUnlocks.kitchen) {
     window.permanentTabUnlocks.kitchen = true;
     hasNewUnlock = true;
-    console.log('[PERMANENT TAB] Kitchen tab permanently unlocked!');
+
   }
   
   if (currentGrade >= 4 && !window.permanentTabUnlocks.boutique) {
     window.permanentTabUnlocks.boutique = true;
     hasNewUnlock = true;
-    console.log('[PERMANENT TAB] Boutique tab permanently unlocked!');
+
   }
   
   if (currentGrade >= 6 && !window.permanentTabUnlocks.terrarium) {
     window.permanentTabUnlocks.terrarium = true;
     hasNewUnlock = true;
-    console.log('[PERMANENT TAB] Terrarium tab permanently unlocked!');
+
   }
   
   if (hasNewUnlock) {
@@ -97,7 +97,7 @@ function updateAllTabVisibility() {
     if (window.currentFloor === 2) {
       prismBtn.style.setProperty('display', 'none', 'important');
       prismBtn.textContent = 'Observatory';
-      console.log('updateAllTabVisibility: Observatory forced HIDDEN on floor 2 (per user request)');
+
     } else if (window.permanentTabUnlocks.prism || (window.state && window.state.grade >= 2)) {
       prismBtn.style.display = 'inline-block';
     }
@@ -182,8 +182,7 @@ function enhanceKitchenUnlockFunction() {
         // Otherwise use original logic
         originalUpdateKitchenUnlock.apply(this, arguments);
       };
-      
-      console.log('[PERMANENT TAB] Kitchen unlock function enhanced');
+
     } else {
       // Wait longer if function not ready yet
       setTimeout(waitForKitchenFunction, 500);
@@ -240,8 +239,7 @@ function enhanceBoutiqueVisibilityFunction() {
         // Otherwise use original logic
         originalUpdateBoutiqueButtonVisibility.apply(this, arguments);
       };
-      
-      console.log('[PERMANENT TAB] Boutique visibility function enhanced');
+
     } else {
       // Wait longer if function not ready yet
       setTimeout(waitForBoutiqueFunction, 500);
@@ -270,8 +268,7 @@ function enhanceFrontDeskUnlockFunction() {
         // Otherwise use original logic
         originalUpdateUIVisibility.apply(this, arguments);
       };
-      
-      console.log('[PERMANENT TAB] Front desk unlock function enhanced');
+
     } else {
       // Wait longer if function not ready yet
       setTimeout(waitForFrontDeskFunction, 500);
@@ -300,8 +297,7 @@ function enhanceStairsCardVisibility() {
         // Otherwise use original logic
         originalUpdateStairsCardVisibility.apply(this, arguments);
       };
-      
-      console.log('[PERMANENT TAB] Stairs card visibility function enhanced');
+
     } else {
       // Wait longer if function not ready yet
       setTimeout(waitForStairsFunction, 500);
@@ -389,9 +385,8 @@ function initializePermanentTabUnlocks() {
   hookIntoGradeUp();
   hookIntoLoadGame();
   hookIntoSaveSlotLoading();
-  
-  console.log('[PERMANENT TAB] System initialized');
-  console.log('[PERMANENT TAB] Current unlocks:', window.permanentTabUnlocks);
+
+
 }
 
 // Initialize when DOM is ready
@@ -432,7 +427,7 @@ window.debugUnlockAllTabsPermanently = function() {
   };
   savePermanentTabUnlocks();
   updateAllTabVisibility();
-  console.log('[PERMANENT TAB] All tabs manually unlocked!');
+
 };
 
 // Debug function to reset all permanent unlocks
@@ -445,5 +440,5 @@ window.debugResetPermanentTabUnlocks = function() {
     terrarium: false
   };
   savePermanentTabUnlocks();
-  console.log('[PERMANENT TAB] All permanent unlocks reset!');
+
 };

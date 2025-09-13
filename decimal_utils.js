@@ -890,5 +890,3 @@ window.DecimalUtils = {
 // Backward compatibility - replace global formatNumber function
 window.formatNumber = window.DecimalUtils.formatDecimal;
 window.formatNumberSci = window.DecimalUtils.formatDecimal;
-
-console.log('Decimal utilities loaded successfully');

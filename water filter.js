@@ -33,7 +33,7 @@ class WaterFiltration {
         this.repairProgress = data.repairProgress || 0;
       }
     } catch (error) {
-      console.error('Error loading water filtration state:', error);
+
     }
   }
 

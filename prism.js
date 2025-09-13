@@ -147,23 +147,21 @@ let currentActiveTile = null;
 function getVivienBonusLightCount() {
   // Check if friendship system exists and get Lab friendship level
   if (!window.friendship || !window.friendship.Lab) {
-    console.log('Debug - getVivienBonusLightCount: No friendship system or Lab department');
+
     return 0;
   }
   
   const labFriendship = window.friendship.Lab;
   const level = labFriendship.level || 0;
-  
-  console.log(`Debug - getVivienBonusLightCount: Lab level ${level}`);
-  
+
   // Bonus lights unlock at level 4, +1 every 2 levels
   if (level < 4) {
-    console.log('Debug - getVivienBonusLightCount: Level < 4, no bonus lights');
+
     return 0;
   }
   
   const bonusCount = 1 + Math.floor((level - 4) / 2);
-  console.log(`Debug - getVivienBonusLightCount: Calculated ${bonusCount} bonus lights`);
+
   return bonusCount;
 }
 
@@ -182,16 +180,14 @@ function spawnMultipleLightTiles() {
   // Calculate total tiles to spawn (1 main + bonus)
   const bonusCount = getVivienBonusLightCount();
   const totalTilesToSpawn = 1 + bonusCount;
-  
-  console.log(`Debug - spawnMultipleLightTiles: Spawning ${totalTilesToSpawn} tiles (1 main + ${bonusCount} bonus)`);
-  
+
   // Spawn all tiles without clearing between them
   for (let i = 0; i < totalTilesToSpawn; i++) {
     spawnSingleLightTile();
   }
   
   if (bonusCount > 0) {
-    console.log(`Vivien's friendship bonus: spawned ${bonusCount} additional light tile${bonusCount === 1 ? '' : 's'}!`);
+
   }
 }
 
@@ -202,7 +198,7 @@ function spawnSingleLightTile() {
   const availableTiles = eligible.filter(tile => !tile.classList.contains("active-tile"));
   
   if (availableTiles.length === 0) {
-    console.log('Debug - spawnSingleLightTile: No available tiles to spawn on');
+
     return;
   }
   
@@ -256,16 +252,14 @@ function spawnNewLightTilesWithoutClearing() {
   // Count current active tiles
   const currentActiveTiles = document.querySelectorAll(".light-tile.active-tile").length;
   const tilesToSpawn = Math.max(0, targetTotalTiles - currentActiveTiles);
-  
-  console.log(`Debug - spawnNewLightTilesWithoutClearing: Target ${targetTotalTiles} tiles, currently have ${currentActiveTiles}, spawning ${tilesToSpawn}`);
-  
+
   // Only spawn tiles if we're below the target
   for (let i = 0; i < tilesToSpawn; i++) {
     spawnSingleLightTile();
   }
   
   if (tilesToSpawn > 0 && bonusCount > 0) {
-    console.log(`Vivien's friendship bonus: maintaining ${bonusCount} additional light tile${bonusCount === 1 ? '' : 's'}!`);
+
   }
 }
 
@@ -273,9 +267,7 @@ function spawnNewLightTilesWithoutClearing() {
 function collectAllActiveLightTiles(friendshipMultiplier) {
   const allActiveTiles = document.querySelectorAll('.light-tile.active-tile');
   let totalCollected = 0;
-  
-  console.log(`🌟 Multi-collection activated! Found ${allActiveTiles.length} active tiles to collect`);
-  
+
   allActiveTiles.forEach((tile, tileIndex) => {
     // Determine color from tile's CSS classes
     let tileColor = 'light';
@@ -294,9 +286,7 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
     } else if (tile.classList.contains('white-tile')) {
       tileColor = 'light';
     }
-    
-    console.log(`  Collecting tile ${tileIndex + 1}: ${tileColor}`);
-    
+
     // Calculate gain for this tile (simplified version of the main logic)
     let tileGain = calculateLightTileGain(tileColor, friendshipMultiplier);
     
@@ -364,9 +354,7 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
     tile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
     totalCollected++;
   });
-  
-  console.log(`🎉 Multi-collection complete! Collected ${totalCollected} tiles`);
-  
+
   // Update counters after collecting all
   if (typeof forceUpdateAllLightCounters === 'function') {
     forceUpdateAllLightCounters();
@@ -409,8 +397,7 @@ function calculateLightTileGain(color, friendshipMultiplier) {
 
 // Debug function to test Vivien's multi-collection buff
 window.testVivienMultiCollection = function(level = 7) {
-  console.log(`🧪 Testing Vivien's multi-collection buff at level ${level}...`);
-  
+
   if (!window.friendship) {
     window.friendship = {};
   }
@@ -421,14 +408,11 @@ window.testVivienMultiCollection = function(level = 7) {
   // Set level for testing
   window.friendship.Lab.level = level;
   const expectedChance = 5 + Math.max(0, (level - 7) * 5);
-  
-  console.log(`📊 Lab friendship level set to: ${level}`);
-  console.log(`📊 Multi-collection chance: ${expectedChance}%`);
-  console.log(`📊 Current active tiles: ${document.querySelectorAll('.light-tile.active-tile').length}`);
-  
-  console.log('🎯 Click any light tile to test the multi-collection buff!');
-  console.log(`💡 Expected behavior: ${expectedChance}% chance to collect ALL active tiles at once`);
-  
+
+
+
+
+
   return {
     level: level,
     chance: expectedChance,
@@ -438,44 +422,39 @@ window.testVivienMultiCollection = function(level = 7) {
 
 // Debug function to test Vivien's bonus light spawning
 window.testVivienBonusLights = function() {
-  console.log('🧪 Testing Vivien\'s bonus light spawning...');
-  
+
   if (!window.friendship || !window.friendship.Lab) {
-    console.log('❌ Friendship system or Lab department not found');
+
     return false;
   }
   
   const level = window.friendship.Lab.level;
   const expectedBonus = getVivienBonusLightCount();
-  
-  console.log(`📊 Current Lab friendship level: ${level}`);
-  console.log(`📊 Expected bonus lights: ${expectedBonus}`);
-  console.log(`📊 Total lights per spawn: ${1 + expectedBonus} (1 main + ${expectedBonus} bonus)`);
-  
+
+
+
   if (level < 4) {
-    console.log('⚠️ Level 4+ required for bonus lights');
+
     return false;
   }
   
   // Count current light tiles
   const currentLights = document.querySelectorAll('.light-tile').length;
-  console.log(`📊 Current light tiles on grid: ${currentLights}`);
-  
+
   // Test spawning
-  console.log('🚀 Spawning lights...');
+
   spawnMultipleLightTiles();
   
   // Count after spawning
   setTimeout(() => {
     const newLights = document.querySelectorAll('.light-tile').length;
     const spawned = newLights - currentLights;
-    console.log(`📊 Light tiles after spawn: ${newLights}`);
-    console.log(`📊 Actually spawned: ${spawned} lights`);
-    
+
+
     if (spawned === 1 + expectedBonus) {
-      console.log('✅ Bonus light spawning working correctly!');
+
     } else {
-      console.log(`❌ Expected ${1 + expectedBonus} lights, but spawned ${spawned}`);
+
     }
   }, 100);
   
@@ -663,9 +642,7 @@ function clickLightTile(index) {
     } else if (clickedTile.classList.contains('white-tile')) {
       color = 'light';
     }
-    
-    console.log(`Debug - clickLightTile: Clicked tile ${index}, detected color: ${color}`);
-    
+
     // Ensure prismState properties are Decimals
     if (!DecimalUtils.isDecimal(window.prismState[color])) {
       window.prismState[color] = new Decimal(window.prismState[color] || 0);
@@ -697,10 +674,10 @@ function clickLightTile(index) {
       const viLevel = window.friendship.Lab.level;
       const multiCollectionChance = 5 + Math.max(0, (viLevel - 7) * 5);
       const multiRandom = Math.random() * 100;
-      console.log(`Debug - Multi-collection buff: ${multiCollectionChance}% chance, rolled ${multiRandom.toFixed(2)}%`);
+
       if (multiRandom < multiCollectionChance) {
         shouldCollectAllTiles = true;
-        console.log(`🌟 Vivien's multi-collection buff activated! Collecting all light tiles!`);
+
       }
     }
     
@@ -847,8 +824,7 @@ function clickLightTile(index) {
       } else {
         // Normal behavior: remove only the clicked tile
         clickedTile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
-        console.log(`Debug - clickLightTile: Removed clicked tile ${index}`);
-        
+
         // Spawn new tiles without clearing remaining active tiles
         spawnNewLightTilesWithoutClearing();
       }
@@ -1896,7 +1872,7 @@ function showViResponse(responseText, isQuestDialogue = false) {
   }
   let viSpeechBubble = document.getElementById('viSpeechBubble');
   if (!viSpeechBubble) {
-    console.error("Vi speech bubble not found!");
+
     return;
   }
   if (isQuestDialogue) {
@@ -2540,7 +2516,7 @@ window.testViDialogueUpdate = function() {
 // Test function to verify Vi's friendship light gain buff
 window.testViFriendshipBuff = function(level = 1) {
     if (!window.friendship) {
-        console.log("Friendship system not initialized");
+
         return;
     }
     
@@ -2550,10 +2526,9 @@ window.testViFriendshipBuff = function(level = 1) {
     window.friendship.Lab.points = new Decimal(0);
     
     const buffChance = new Decimal(25).add(new Decimal(5).mul(Math.max(0, level - 1))).toNumber();
-    console.log(`Vi friendship level set to: ${level}`);
-    console.log(`Light gain X5 buff chance: ${buffChance}%`);
-    console.log("Click a light tile to test the buff!");
-    
+
+
+
     // Update the stats modal if it's open
     if (typeof window.renderDepartmentStatsButtons === 'function') {
         window.renderDepartmentStatsButtons();

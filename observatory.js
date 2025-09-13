@@ -37,7 +37,7 @@ class Observatory {
         this.discoveries = data.discoveries || [];
       }
     } catch (error) {
-      console.error('Error loading observatory state:', error);
+
     }
   }
 

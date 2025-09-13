@@ -316,7 +316,7 @@ function unlockInfinityResearchForTesting() {
   }
   
   document.getElementById("knowledgeSubTabNav").style.display = "flex";
-  console.log('[INFINITY] Infinity Research tab unlocked for testing');
+
 }
 
 window.testRegalBackground = testRegalBackground;
@@ -457,7 +457,7 @@ function updatePowerGeneratorUI() {
  
   
   if (shouldHaveAutoRecharge && !existingAutoRecharge) {
-    console.log('🔄 Auto recharge UI missing, re-rendering power generator...');
+
     renderPowerGenerator();
     return; // renderPowerGenerator calls updatePowerGeneratorUI at the end
   }
@@ -546,7 +546,7 @@ function tickAutoRechargeSystem(deltaTime) {
   if (state.soapAutoRecharge.timer <= 0) {
     if (state.soapAutoRecharge.storage < config.maxStorage) {
       state.soapAutoRecharge.storage++;
-      console.log(`🔋 Soap generated auto recharge! Storage: ${state.soapAutoRecharge.storage}/${config.maxStorage}`);
+
     }
     // Reset timer
     state.soapAutoRecharge.timer = config.timerMs;
@@ -807,18 +807,15 @@ if (typeof document !== 'undefined') {
 }
 
 function renderPowerGenerator() {
-  console.log('🎯 RENDER DEBUG: Starting renderPowerGenerator...');
-  console.log('🎯 RENDER DEBUG: Function is deprecated - delegating to main renderGenerators...');
-  
+
+
   // Instead of creating a duplicate, just call the main renderGenerators function
   // which now handles both the base generator and the Mk.2 upgrade
   if (typeof renderGenerators === 'function') {
     renderGenerators();
     return;
   }
-  
-  console.log('🎯 RENDER DEBUG: Main renderGenerators not available, skipping duplicate creation...');
-  
+
   // The main renderGenerators function now handles all power generator rendering
   // including the Mk.2 upgrade when Soap's friendship level reaches 4+
   updatePowerGeneratorUI();
@@ -826,36 +823,32 @@ function renderPowerGenerator() {
 
 // Debug functions for Soap's auto recharge system
 window.testSoapAutoRecharge = function() {
-  console.log('=== SOAP AUTO RECHARGE SYSTEM TEST ===');
-  console.log('Friendship Generator Level:', window.friendship?.Generator?.level || 'Not found');
-  
+
+
   const config = getSoapAutoRechargeConfig();
   if (!config) {
-    console.log('❌ Auto recharge system not unlocked (requires Soap friendship level 4+)');
+
     return;
   }
-  
-  console.log('✅ Auto recharge system config:', config);
-  console.log('Current state:', state.soapAutoRecharge);
-  console.log('Current power energy:', state.powerEnergy.toString());
-  
+
+
+
   // Simulate low power to test auto recharge
   if (state.soapAutoRecharge.storage > 0) {
-    console.log('🔋 Simulating low power (setting to 15)...');
+
     state.powerEnergy = new Decimal(15);
-    console.log('Auto recharge should trigger automatically!');
+
   } else {
-    console.log('📦 No auto recharge stored. Adding one for testing...');
+
     state.soapAutoRecharge.storage = 1;
-    console.log('Now run the test again to see auto recharge in action!');
+
   }
-  console.log('=== END TEST ===');
+
 };
 
 // Test function for Power Generator Mk.2 upgrade system
 window.testPowerGeneratorMk2 = function() {
-  console.log('=== POWER GENERATOR MK.2 UPGRADE TEST ===');
-  
+
   // Check current friendship level
   let soapLevel = 0;
   if (window.friendship && window.friendship.Generator) {
@@ -863,84 +856,77 @@ window.testPowerGeneratorMk2 = function() {
   } else if (typeof friendship !== 'undefined' && friendship.Generator) {
     soapLevel = friendship.Generator.level || 0;
   }
-  
-  console.log(`Current Soap friendship level: ${soapLevel}`);
-  
+
   const isMk2 = soapLevel >= 4;
-  console.log(`Mk.2 upgrade ${isMk2 ? 'ACTIVE' : 'INACTIVE'} (requires level 4+)`);
-  
+
   // Check if there are duplicate power generators
   const powerGenerators = document.querySelectorAll('.power-generator');
-  console.log(`Number of power generator elements: ${powerGenerators.length}`);
-  
+
   if (powerGenerators.length > 1) {
-    console.log('⚠️ WARNING: Multiple power generators detected!');
+
     powerGenerators.forEach((gen, index) => {
-      console.log(`Generator ${index + 1}:`, gen.className, gen.parentElement?.className);
+
     });
   } else if (powerGenerators.length === 1) {
-    console.log('✅ Only one power generator found - good!');
+
     const generator = powerGenerators[0];
     const title = generator.querySelector('h3')?.textContent;
-    console.log(`Generator title: "${title}"`);
+
     // Check for Mk.2 styling (background color and border)
     const hasMk2Background = generator.style.cssText.includes('#181D36');
     const hasBlueBorder = generator.style.cssText.includes('rgba(33, 150, 243');
     const hasMk2Styling = hasMk2Background && hasBlueBorder;
-    console.log(`Has Mk.2 background (#181D36): ${hasMk2Background}`);
-    console.log(`Has blue border: ${hasBlueBorder}`);
-    console.log(`Has complete Mk.2 styling: ${hasMk2Styling}`);
-    
+
+
+
     if (isMk2 && !hasMk2Styling) {
-      console.log('❌ Expected Mk.2 styling but not found');
+
     } else if (!isMk2 && hasMk2Styling) {
-      console.log('❌ Found Mk.2 styling but level too low');
+
     } else {
-      console.log('✅ Generator styling matches friendship level');
+
     }
     
     // Check that auto recharge is green (not blue)
     const autoRechargeSection = generator.querySelector('.auto-recharge-system');
     if (autoRechargeSection) {
       const isGreenAutoRecharge = autoRechargeSection.style.background.includes('76, 175, 80');
-      console.log(`Auto recharge section is green: ${isGreenAutoRecharge}`);
+
       if (!isGreenAutoRecharge) {
-        console.log('❌ Auto recharge should be green');
+
       } else {
-        console.log('✅ Auto recharge correctly uses green theme');
+
       }
     }
   } else {
-    console.log('❌ No power generator found');
+
   }
   
   // Test buff description
   if (typeof getFriendshipBuffs === 'function') {
     const buffs = getFriendshipBuffs('Generator', soapLevel);
-    console.log('Current Generator buffs:');
+
     Object.keys(buffs).forEach(level => {
-      console.log(`  Level ${level}: ${buffs[level]}`);
+
     });
   }
-  
-  console.log('=== END TEST ===');
+
 };
 
 // Force set Soap friendship level for testing Mk.2 upgrade
 window.forceSoapLevelForMk2Test = function(targetLevel) {
   if (!window.friendship) {
-    console.log('Friendship system not initialized');
+
     return;
   }
   
   const oldLevel = window.friendship.Generator.level || 0;
   window.friendship.Generator.level = targetLevel;
-  console.log(`Soap friendship level changed from ${oldLevel} to ${targetLevel}`);
-  
+
   // Re-render generators to see the change
   if (typeof renderGenerators === 'function') {
     renderGenerators();
-    console.log('Generators re-rendered');
+
   }
   
   // Run the test
@@ -948,18 +934,17 @@ window.forceSoapLevelForMk2Test = function(targetLevel) {
 };
 
 window.debugSoapAutoRecharge = function() {
-  console.log('=== SOAP AUTO RECHARGE DEBUG ===');
-  console.log('System state:', state.soapAutoRecharge);
-  console.log('Config:', getSoapAutoRechargeConfig());
-  console.log('Timer remaining (minutes):', (state.soapAutoRecharge?.timer || 0) / 60000);
-  console.log('Current power:', state.powerEnergy.toString());
-  console.log('=== END DEBUG ===');
+
+
+
+
+
+
 };
 
 // Test function for ENHANCED Box Generator Mk.2 system
 window.testBoxGeneratorMk2 = function() {
-  console.log('=== ENHANCED BOX GENERATOR MK.2 TEST ===');
-  
+
   // Check friendship level
   let soapLevel = 0;
   if (window.friendship && window.friendship.Generator) {
@@ -967,14 +952,12 @@ window.testBoxGeneratorMk2 = function() {
   } else if (typeof friendship !== 'undefined' && friendship.Generator) {
     soapLevel = friendship.Generator.level || 0;
   }
-  
-  console.log('Current Soap friendship level:', soapLevel);
-  console.log('Box Generator Mk.2 active:', soapLevel >= 10);
-  
+
+
   // Check generators state
-  console.log('Box generators state:');
+
   generators.forEach((gen, i) => {
-    console.log(`  ${gen.name}: unlocked=${gen.unlocked}, progress=${gen.progress.toFixed(2)}%, speed=${gen.speed.toFixed(2)}, upgrades=${gen.upgrades}`);
+
   });
   
   // Check if Mk.2 elements exist in DOM
@@ -984,15 +967,13 @@ window.testBoxGeneratorMk2 = function() {
   const rainbowIcon = document.querySelector('.rainbow-effect');
   const megaRow = document.querySelector('.mk2-mega-row');
   const upgradeButtons = document.querySelectorAll('.mk2-box-generator button');
-  
-  console.log('DOM elements:');
-  console.log('  Mk.2 generator wrapper:', mk2Generator ? 'Found' : 'Not found');
-  console.log('  Mk.2 mega row:', megaRow ? 'Found' : 'Not found');
-  console.log('  Upgrade buttons count:', upgradeButtons.length);
-  console.log('  Mk.2 tracker:', mk2Tracker ? 'Found' : 'Not found');
-  console.log('  Mk.2 progress bar:', mk2ProgressBar ? 'Found' : 'Not found');
-  console.log('  Rainbow effect icon:', rainbowIcon ? 'Found' : 'Not found');
-  
+
+
+
+
+
+
+
   // Check total boxes produced
   let totalBoxes = new Decimal(0);
   generators.forEach(gen => {
@@ -1001,90 +982,73 @@ window.testBoxGeneratorMk2 = function() {
         ? state.boxesProducedByType[gen.reward] 
         : new Decimal(state.boxesProducedByType[gen.reward] || 0);
       totalBoxes = totalBoxes.add(boxCount);
-      console.log(`  ${gen.reward} boxes:`, boxCount.toString());
+
     }
   });
-  console.log('Total boxes produced:', totalBoxes.toString());
-  
+
   // Test buff description
   if (typeof getFriendshipBuffs === 'function') {
     const buffs = getFriendshipBuffs('Generator', soapLevel);
-    console.log('Current Generator buffs:');
+
     buffs.forEach(buff => {
-      console.log(`  Level ${buff.unlockLevel}: ${buff.text} (${buff.unlocked ? 'unlocked' : 'locked'})`);
+
     });
   }
   
   // Check enhanced features
   if (soapLevel >= 10) {
-    console.log('Enhanced Mk.2 features:');
-    console.log('  Rainbow effect active:', !!rainbowIcon);
-    console.log('  Generator wrapper size:', mk2Generator ? `${mk2Generator.style.minWidth}` : 'N/A');
-    console.log('  Upgrade buttons working:', upgradeButtons.length > 0);
-    console.log('  Element 9 unlocked (double upgrades):', !!boughtElements[9]);
-    console.log('  Element 11 unlocked (boost display):', !!boughtElements[11]);
-    
+
+
+
+
+
+
     // Check CSS animations
     if (rainbowIcon) {
       const computedStyle = window.getComputedStyle(rainbowIcon);
-      console.log('  Rainbow animation duration:', computedStyle.animationDuration);
-      console.log('  Rainbow filter effect:', computedStyle.filter);
+
+
     }
   }
-  
-  console.log('=== END ENHANCED TEST ===');
+
 };
 
 // Test Enhanced Mk.2 Visual Features
 window.testMk2VisualFeatures = function() {
-  console.log('=== MK.2 VISUAL FEATURES TEST ===');
-  
+
   const rainbowElements = document.querySelectorAll('.rainbow-effect');
   const megaRow = document.querySelector('.mk2-mega-row');
   const mk2Generator = document.querySelector('.mk2-box-generator');
-  
-  console.log('Visual elements found:');
-  console.log('  Rainbow effect elements:', rainbowElements.length);
-  console.log('  Mega row container:', !!megaRow);
-  console.log('  Enhanced generator:', !!mk2Generator);
-  
+
+
+
+
   rainbowElements.forEach((el, i) => {
     const style = window.getComputedStyle(el);
-    console.log(`  Rainbow element ${i + 1}:`, {
-      animation: style.animation,
-      backgroundSize: style.backgroundSize,
-      filter: style.filter
-    });
+
   });
   
   if (mk2Generator) {
     const style = window.getComputedStyle(mk2Generator);
-    console.log('Generator styling:', {
-      minWidth: style.minWidth,
-      background: style.background,
-      border: style.border,
-      boxShadow: style.boxShadow
-    });
+
   }
-  
-  console.log('=== END VISUAL TEST ===');
+
 };
 
 // Force set Soap friendship level for testing Box Generator Mk.2
 window.forceSoapLevelForBoxMk2Test = function(targetLevel) {
   if (!window.friendship) {
-    console.log('Friendship system not initialized');
+
     return;
   }
   
   const oldLevel = window.friendship.Generator.level || 0;
   window.friendship.Generator.level = targetLevel;
-  console.log(`Soap friendship level changed from ${oldLevel} to ${targetLevel}`);
-  
+
   // Re-render generators to see the change
   if (typeof renderGenerators === 'function') {
     renderGenerators();
-    console.log('Generators re-rendered');
+
   }
   
   // Run the test
@@ -1093,14 +1057,14 @@ window.forceSoapLevelForBoxMk2Test = function(targetLevel) {
 
 // Quick function to unlock Soap level 10 for testing
 window.unlockBoxGeneratorMk2ForTesting = function() {
-  console.log('Unlocking Box Generator Mk.2 for testing...');
+
   window.forceSoapLevelForBoxMk2Test(10);
   
   // Also unlock a few generators for better testing
   generators.forEach((gen, i) => {
     if (i < 3) { // Unlock first 3 generators
       gen.unlocked = true;
-      console.log(`Unlocked ${gen.name}`);
+
     }
   });
   
@@ -1108,14 +1072,13 @@ window.unlockBoxGeneratorMk2ForTesting = function() {
   if (typeof renderGenerators === 'function') {
     renderGenerators();
   }
-  
-  console.log('Box Generator Mk.2 testing setup complete!');
+
 };
 
 window.forceSoapAutoRecharge = function() {
   const config = getSoapAutoRechargeConfig();
   if (!config) {
-    console.log('Auto recharge system not unlocked');
+
     return;
   }
   
@@ -1124,38 +1087,38 @@ window.forceSoapAutoRecharge = function() {
   }
   
   state.soapAutoRecharge.storage = Math.min(state.soapAutoRecharge.storage + 1, config.maxStorage);
-  console.log(`Added 1 auto recharge. Storage: ${state.soapAutoRecharge.storage}/${config.maxStorage}`);
+
   updatePowerGeneratorUI();
 };
 
 window.refreshPowerGeneratorUI = function() {
-  console.log('🔄 Refreshing power generator UI...');
-  console.log('window.friendship exists:', !!window.friendship);
-  console.log('window.friendship.Generator exists:', !!(window.friendship && window.friendship.Generator));
-  console.log('Friendship Generator Level:', window.friendship?.Generator?.level || 'Not found');
-  console.log('Global friendship exists:', typeof friendship !== 'undefined');
+
+
+
+
+
   if (typeof friendship !== 'undefined') {
-    console.log('Global friendship.Generator level:', friendship.Generator?.level || 'Not found');
+
   }
-  console.log('Auto recharge config:', getSoapAutoRechargeConfig());
+
   renderPowerGenerator();
-  console.log('✅ Power generator UI refreshed!');
+
 };
 
 window.debugFriendshipAccess = function() {
-  console.log('=== FRIENDSHIP SYSTEM DEBUG ===');
-  console.log('window.friendship:', window.friendship);
-  console.log('global friendship:', typeof friendship !== 'undefined' ? friendship : 'undefined');
-  console.log('Generator department in window.friendship:', window.friendship?.Generator);
-  console.log('Generator department in global friendship:', typeof friendship !== 'undefined' ? friendship.Generator : 'undefined');
-  console.log('=== END DEBUG ===');
+
+
+
+
+
+
 };
 
 window.forceAutoRechargeUI = function() {
-  console.log('🔨 Force adding auto recharge UI...');
+
   const powerCard = document.querySelector('.power-generator');
   if (!powerCard) {
-    console.log('❌ Power generator card not found');
+
     return;
   }
   
@@ -1188,10 +1151,10 @@ window.forceAutoRechargeUI = function() {
   const powerInfo = powerCard.querySelector('.power-info');
   if (powerInfo) {
     powerCard.insertBefore(autoRechargeDiv, powerInfo);
-    console.log('✅ Auto recharge UI force-added successfully!');
+
   } else {
     powerCard.appendChild(autoRechargeDiv);
-    console.log('✅ Auto recharge UI force-added at end!');
+
   }
 };
 
@@ -1316,7 +1279,7 @@ tryBuyElement = function(index) {
     
     // If KP was deducted but element wasn't purchased, fix it
     if (kpChanged && !afterPurchase && !beforePurchase) {
-      console.warn(`Element ${index} purchase bug detected - applying fix`);
+
       boughtElements[index] = true;
       window.boughtElements = boughtElements;
       
@@ -1498,13 +1461,12 @@ const _origSwitchHomeSubTab4 = switchHomeSubTab;
 // Initialize currentFloor if not set
 if (typeof window.currentFloor === 'undefined') {
   window.currentFloor = 1; // Default to Floor 1
-  console.log('Initialized currentFloor to 1');
+
 }
 
 switchHomeSubTab = function(subTabId) {
   // Debug current floor state
-  console.log('switchHomeSubTab called with:', subTabId, 'currentFloor:', window.currentFloor);
-  
+
   // Check multiple indicators to determine if we're on Floor 2
   const isFloor2 = (window.currentFloor === 2) || 
                    (document.body.classList.contains('floor-2')) ||
@@ -1513,7 +1475,7 @@ switchHomeSubTab = function(subTabId) {
   
   // Handle Floor 2 special cases to prevent flicker
   if (isFloor2) {
-    console.log('Detected Floor 2 - applying special tab switching');
+
     // On Floor 2, handle all tab switches specially to prevent flicker
     window.currentHomeSubTab = subTabId;
     showPage('home');
@@ -1543,8 +1505,7 @@ switchHomeSubTab = function(subTabId) {
       const gamblingMainTab = document.getElementById('gamblingMain');
       if (terrariumTab) terrariumTab.style.display = 'block';
       if (gamblingMainTab) gamblingMainTab.style.display = 'none';
-      console.log('Floor 2: Showing terrarium instead of cargo');
-      
+
       // Apply terrarium background with time-of-day awareness
       document.body.classList.add('terrarium-bg');
       document.documentElement.classList.add('terrarium-bg');
@@ -1564,11 +1525,11 @@ switchHomeSubTab = function(subTabId) {
       if (generatorMainTab) {
         // Immediately render Water Filtration content to prevent any flicker
         if (window.waterFiltration && typeof window.waterFiltration.renderWaterFiltrationUI === 'function') {
-          console.log('Floor 2: Immediately rendering Water Filtration UI');
+
           window.waterFiltration.renderWaterFiltrationUI();
         }
         generatorMainTab.style.display = 'block'; // Show after content is ready
-        console.log('Floor 2: generatorMainTab container is now visible with Water Filtration content');
+
       }
       
       // Apply water filtration background with time-of-day awareness
@@ -1590,11 +1551,11 @@ switchHomeSubTab = function(subTabId) {
       if (prismSubTab) {
         // Immediately render Observatory content to prevent any flicker
         if (window.observatory && typeof window.observatory.renderObservatoryUI === 'function') {
-          console.log('Floor 2: Immediately rendering Observatory UI');
+
           window.observatory.renderObservatoryUI();
         }
         prismSubTab.style.display = 'block'; // Show after content is ready
-        console.log('Floor 2: prismSubTab container is now visible with Observatory content');
+
       }
       
       // Apply observatory background with time-of-day awareness
@@ -1610,8 +1571,7 @@ switchHomeSubTab = function(subTabId) {
     return; // Don't call original function on Floor 2
   } else {
     // For Floor 1, use original function and clean up Floor 2 backgrounds
-    console.log('Detected Floor 1 - cleaning up Floor 2 backgrounds and using original tab switching');
-    
+
     // Remove all Floor 2 department backgrounds and time-of-day classes when on Floor 1
     document.body.classList.remove('water-filtration-bg', 'observatory-bg', 'terrarium-bg');
     document.documentElement.classList.remove('water-filtration-bg', 'observatory-bg', 'terrarium-bg');
@@ -1623,24 +1583,16 @@ switchHomeSubTab = function(subTabId) {
     
     // Add verification and only restore if actually broken
     setTimeout(() => {
-      console.log('Verifying Floor 1 tab functionality for:', subTabId);
-      
+
       if (subTabId === 'generatorMainTab') {
         const genTab = document.getElementById('generatorMainTab');
         const hasFloor2Content = genTab && genTab.innerHTML.includes('water-filtration-container');
         const hasBoxGenBtn = document.getElementById('generatorBoxGenBtn');
         const hasChargerBtn = document.getElementById('generatorChargerBtn');
-        
-        console.log('Generator tab status:', {
-          hasFloor2Content,
-          hasBoxGenBtn: !!hasBoxGenBtn,
-          hasChargerBtn: !!hasChargerBtn
-        });
-        
+
         // Only restore if we have Floor 2 content or missing buttons
         if (hasFloor2Content || !hasBoxGenBtn || !hasChargerBtn) {
-          console.log('Generator tab needs restoration');
-          
+
           // Completely rebuild the generator tab structure
           genTab.innerHTML = `
             <div id="generatorTopButtons" style="display:flex; justify-content:center; gap:1.5em; margin-top:2em;">
@@ -1696,18 +1648,18 @@ switchHomeSubTab = function(subTabId) {
             // Initialize generators first
             if (typeof renderGenerators === 'function') {
               renderGenerators();
-              console.log('Restored: renderGenerators()');
+
             }
             
             // Set up generator sub-tab buttons
             if (typeof setupGeneratorSubTabButtons === 'function') {
               setupGeneratorSubTabButtons();
-              console.log('Restored: setupGeneratorSubTabButtons()');
+
             }
             
             // Ensure charger object exists with proper structure BEFORE loading state
             if (typeof window.charger === 'undefined') {
-              console.log('Creating charger object...');
+
               window.charger = {
                 isOn: false,
                 charge: new Decimal(0),
@@ -1730,7 +1682,7 @@ switchHomeSubTab = function(subTabId) {
             // Load charger state first
             if (typeof window.loadChargerState === 'function') {
               window.loadChargerState();
-              console.log('Restored: loadChargerState()');
+
             }
             
             // Ensure charge is a Decimal
@@ -1743,13 +1695,13 @@ switchHomeSubTab = function(subTabId) {
             // Initialize charger UI
             if (typeof updateChargerUI === 'function') {
               updateChargerUI();
-              console.log('Restored: updateChargerUI()');
+
             }
             
             // Initialize charger milestone table
             if (typeof initializeChargerMilestoneTable === 'function') {
               initializeChargerMilestoneTable();
-              console.log('Restored: initializeChargerMilestoneTable()');
+
             }
             
             // Manually update charger display if updateChargerUI didn't work
@@ -1763,7 +1715,7 @@ switchHomeSubTab = function(subTabId) {
               } else {
                 chargerChargeEl.textContent = window.charger.charge.toString();
               }
-              console.log('Restored: Manual charger charge display update with proper formatting');
+
             }
             
             // Setup initial gain rate display
@@ -1797,7 +1749,7 @@ switchHomeSubTab = function(subTabId) {
                 }
                 chargerGainRateEl.style.opacity = '0.6'; // Make it dimmer when off
               }
-              console.log('Restored: Initial gain rate display setup');
+
             }
             
             // Set up charger toggle button
@@ -1837,10 +1789,9 @@ switchHomeSubTab = function(subTabId) {
                 if (typeof updateChargerUI === 'function') {
                   updateChargerUI();
                 }
-                console.log('Charger toggled via restoration:', window.charger.isOn ? 'ON' : 'OFF');
+
               };
-              console.log('Restored: charger toggle button functionality');
-              
+
               // Update button text immediately
               chargerToggleBtn.textContent = window.charger.isOn ? 'Turn OFF' : 'Turn ON';
             }
@@ -1898,14 +1849,14 @@ switchHomeSubTab = function(subTabId) {
                   }
                 }
               }, 100); // Update every 100ms for smooth display
-              console.log('Restored: Real-time charger update interval started');
+
             }
             
             // Force a final UI update
             setTimeout(() => {
               if (typeof updateChargerUI === 'function') {
                 updateChargerUI();
-                console.log('Restored: Final charger UI update');
+
               }
               
               // Force update charger display one more time
@@ -1923,11 +1874,11 @@ switchHomeSubTab = function(subTabId) {
               if (chargerToggleBtn && window.charger) {
                 chargerToggleBtn.textContent = window.charger.isOn ? 'Turn OFF' : 'Turn ON';
               }
-              console.log('Restored: Final manual charger updates');
+
             }, 200);
           }, 100);
         } else {
-          console.log('Generator tab appears to be working correctly');
+
         }
       }
       
@@ -1936,23 +1887,16 @@ switchHomeSubTab = function(subTabId) {
         const hasFloor2Content = prismTab && prismTab.innerHTML.includes('observatory-container');
         const hasLightGrid = document.getElementById('lightGrid');
         const hasPrismButtons = document.getElementById('prismTopButtons');
-        
-        console.log('Prism tab status:', {
-          hasFloor2Content,
-          hasLightGrid: !!hasLightGrid,
-          hasPrismButtons: !!hasPrismButtons
-        });
-        
+
         // Only restore if we have Floor 2 content or missing elements
         if (hasFloor2Content || !hasLightGrid || !hasPrismButtons) {
-          console.log('Prism tab needs restoration');
-          
+
           // Clear the tab completely
           prismTab.innerHTML = '';
           
           // Ensure prismState exists
           if (typeof window.prismState === 'undefined') {
-            console.log('Creating prismState...');
+
             window.prismState = {
               light: new Decimal(0),
               redlight: new Decimal(0),
@@ -1973,7 +1917,7 @@ switchHomeSubTab = function(subTabId) {
           
           // Load prism state from save if it exists
           if (typeof loadGame === 'function') {
-            console.log('Attempting to load prism state from save...');
+
             // This will restore prism state from localStorage
           }
           
@@ -1996,9 +1940,9 @@ switchHomeSubTab = function(subTabId) {
           if (typeof window.initPrism === 'function') {
             try {
               window.initPrism();
-              console.log('Restored: initPrism()');
+
             } catch (error) {
-              console.error('Error calling initPrism:', error);
+
             }
           }
           
@@ -2010,33 +1954,33 @@ switchHomeSubTab = function(subTabId) {
             // Set up all prism functions
             if (typeof setupPrismShineEffect === 'function') {
               setupPrismShineEffect();
-              console.log('Restored: setupPrismShineEffect()');
+
             }
             
             if (typeof setupPrismSubTabButtons === 'function') {
               setupPrismSubTabButtons();
-              console.log('Restored: setupPrismSubTabButtons()');
+
             }
             
             if (typeof updateAllLightCounters === 'function') {
               updateAllLightCounters();
-              console.log('Restored: updateAllLightCounters()');
+
             }
             
             if (typeof updateLightGeneratorButtons === 'function') {
               updateLightGeneratorButtons();
-              console.log('Restored: updateLightGeneratorButtons()');
+
             }
             
             // Force multiple light counter updates
             if (typeof updateAllLightCounters === 'function') {
               updateAllLightCounters();
-              console.log('Restored: updateAllLightCounters() - first call');
+
             }
             
             if (typeof forceUpdateAllLightCounters === 'function') {
               forceUpdateAllLightCounters();
-              console.log('Restored: forceUpdateAllLightCounters()');
+
             }
             
             // Ensure light generators card is visible and updated
@@ -2046,8 +1990,7 @@ switchHomeSubTab = function(subTabId) {
               lightUpgradesCard.style.display = 'block';
               lightUpgradesCard.style.visibility = 'visible';
               lightUpgradesCard.style.opacity = '1';
-              console.log('Restored: Made lightUpgradesCard visible');
-              
+
               // Ensure all generator buttons are visible
               const generatorButtons = ['lightGenBtn', 'redlightGenBtn', 'orangelightGenBtn', 'yellowlightGenBtn', 'greenlightGenBtn', 'bluelightGenBtn'];
               generatorButtons.forEach(btnId => {
@@ -2055,35 +1998,35 @@ switchHomeSubTab = function(subTabId) {
                 if (btn) {
                   btn.style.display = 'block';
                   btn.style.visibility = 'visible';
-                  console.log(`Restored: Made ${btnId} visible`);
+
                 } else {
-                  console.log(`Restored: ${btnId} not found in DOM`);
+
                 }
               });
               
               // Initialize prism system properly
               if (typeof window.initPrism === 'function') {
-                console.log('Restored: Initializing prism system');
+
                 window.initPrism();
               }
               
               // Update light generator buttons using the original function
               if (typeof window.updateLightGeneratorButtons === 'function') {
-                console.log('Restored: Updating original light generator buttons');
+
                 window.updateLightGeneratorButtons();
               } else {
-                console.log('Restored: updateLightGeneratorButtons not available yet, will be called later');
+
                 // Set up a retry mechanism
                 let retryCount = 0;
                 const retryUpdate = () => {
                   if (typeof window.updateLightGeneratorButtons === 'function') {
-                    console.log('Restored: updateLightGeneratorButtons now available, updating');
+
                     window.updateLightGeneratorButtons();
                     
                     // Also ensure light counters are updated
                     if (typeof window.updateAllLightCounters === 'function') {
                       window.updateAllLightCounters();
-                      console.log('Restored: Updated all light counters');
+
                     }
                   } else if (retryCount < 10) {
                     retryCount++;
@@ -2093,15 +2036,14 @@ switchHomeSubTab = function(subTabId) {
                 setTimeout(retryUpdate, 500);
               }
             } else {
-              console.log('Restored: lightUpgradesCard not found in DOM');
+
             }
 
             
             // Load advanced prism content if available
             const advancedPrismContent = document.getElementById('advancedPrismContent');
             if (advancedPrismContent && (!advancedPrismContent.innerHTML || advancedPrismContent.innerHTML.trim() === '' || advancedPrismContent.innerHTML.includes('coming soon'))) {
-              console.log('Restored: Loading advanced prism content');
-              
+
               // Create a temporary element with ID 'prismAdvancedArea' that the advanced prism system expects
               const prismAdvancedAreaWrapper = document.getElementById('prismAdvancedArea');
               if (prismAdvancedAreaWrapper) {
@@ -2113,36 +2055,34 @@ switchHomeSubTab = function(subTabId) {
               // Try to initialize advanced prism system from advanced prism.js
               if (typeof initAdvancedPrism === 'function') {
                 try {
-                  console.log('Restored: Attempting to call initAdvancedPrism()');
-                  
+
                   // First, ensure advanced prism state is unlocked
                   if (window.advancedPrismState) {
                     window.advancedPrismState.unlocked = true;
-                    console.log('Restored: Set advanced prism as unlocked');
+
                   }
                   
                   initAdvancedPrism();
-                  console.log('Restored: initAdvancedPrism() called successfully');
-                  
+
                   // Also try calling renderAdvancedPrismUI directly if available
                   setTimeout(() => {
                     if (typeof renderAdvancedPrismUI === 'function') {
                       try {
                         renderAdvancedPrismUI();
-                        console.log('Restored: renderAdvancedPrismUI() called successfully');
+
                       } catch (error) {
-                        console.log('Restored: renderAdvancedPrismUI() error:', error);
+
                       }
                     }
                     
                     // Ensure prism core state exists
                     if (window.prismCoreState) {
-                      console.log('Restored: Prism core state available:', window.prismCoreState);
+
                     }
                   }, 100);
                   
                 } catch (error) {
-                  console.log('Restored: initAdvancedPrism() error:', error);
+
                   // Fallback to basic content
                   if (prismAdvancedAreaWrapper) {
                     prismAdvancedAreaWrapper.innerHTML = `
@@ -2155,7 +2095,7 @@ switchHomeSubTab = function(subTabId) {
                   }
                 }
               } else {
-                console.log('Restored: initAdvancedPrism function not found, loading basic content');
+
                 if (prismAdvancedAreaWrapper) {
                   prismAdvancedAreaWrapper.innerHTML = `
                     <div class="card">
@@ -2253,8 +2193,7 @@ switchHomeSubTab = function(subTabId) {
                   // Update UI
                   updateLightGeneratorDisplay(type);
                   updateLightCounter(type);
-                  
-                  console.log(`Bought ${type} generator, now level ${window.prismState.generatorUpgrades[type].toNumber()}`);
+
                 } else {
                   // Use proper formatting for error message
                   let costDisplay, haveDisplay;
@@ -2268,7 +2207,7 @@ switchHomeSubTab = function(subTabId) {
                     costDisplay = cost.toString();
                     haveDisplay = window.prismState[type].toString();
                   }
-                  console.log(`Cannot afford ${type} generator. Need ${costDisplay}, have ${haveDisplay}`);
+
                 }
               };
               
@@ -2334,8 +2273,7 @@ switchHomeSubTab = function(subTabId) {
                   countEl.textContent = DecimalUtils.formatDecimal(window.prismState[type]);
                 }
               };
-              
-              console.log('Restored: buyLightGenerator function and helpers added');
+
             }
             
             // Update all light generator displays after restoration
@@ -2344,16 +2282,13 @@ switchHomeSubTab = function(subTabId) {
               lightTypes.forEach(type => {
                 window.updateLightGeneratorDisplay(type);
               });
-              console.log('Restored: All light generator displays updated');
+
             }
-            
-            console.log('Restored: Manual light counter updates');
-            
+
             // Check if prism was properly created, if not create manually
             const lightGrid = document.getElementById('lightGrid');
             if (!lightGrid || lightGrid.children.length === 0) {
-              console.log('Prism not fully initialized, creating manual structure...');
-              
+
               prismTab.innerHTML = `
                 <div id="prismTopButtons" style="display:flex; justify-content:center; gap:1.5em; margin-top:0.5em;">
                   <button id="prismMainBtn" class="prism-feature-btn active">The Prism</button>
@@ -2467,10 +2402,10 @@ switchHomeSubTab = function(subTabId) {
                     const prismTopRow = prismMainArea.querySelector('.prism-top-row.triple');
                     if (prismTopRow) {
                       prismTopRow.appendChild(originalLightUpgradesCard);
-                      console.log('Restored: Moved original lightUpgradesCard to prism top row');
+
                     } else {
                       prismMainArea.appendChild(originalLightUpgradesCard);
-                      console.log('Restored: Moved original lightUpgradesCard to prism main area');
+
                     }
                   }
                   
@@ -2489,10 +2424,9 @@ switchHomeSubTab = function(subTabId) {
                     button.style.visibility = 'visible';
                     button.style.opacity = '1';
                   });
-                  
-                  console.log('Restored: Made lightUpgradesCard fully visible with all generators');
+
                 } else {
-                  console.log('Restored: Could not find original lightUpgradesCard, creating fallback generators');
+
                   // Create fallback generator structure if original is missing
                   const prismMainArea = document.getElementById('prismMainArea');
                   if (prismMainArea) {
@@ -2547,52 +2481,50 @@ switchHomeSubTab = function(subTabId) {
                     });
                     newLightGrid.appendChild(tile);
                   }
-                  console.log('Restored: manual light grid with 49 tiles');
-                  
+
                   // Try to initialize the grid properly with prism functions
                   if (typeof initPrismGrid === 'function') {
                     initPrismGrid();
-                    console.log('Restored: initPrismGrid() after manual creation');
+
                   }
                   
                   // Use setupPrismGrid if available, otherwise fall back to manual setup
                   if (typeof window.setupPrismGrid === 'function') {
                     window.setupPrismGrid();
-                    console.log('Restored: setupPrismGrid() after manual creation');
+
                   } else if (typeof setupPrismGrid === 'function') {
                     setupPrismGrid();
-                    console.log('Restored: setupPrismGrid() after manual creation');
+
                   } else if (typeof clickLightTile === 'function' && lightGrid) {
                     // Manually setup grid clicks if setupPrismGrid doesn't exist
                     const tiles = lightGrid.querySelectorAll('.light-tile');
                     tiles.forEach((tile, index) => {
                       tile.onclick = () => {
-                        console.log('Light tile clicked:', index);
+
                         clickLightTile(index);
                         
                         // Force comprehensive updates after click
                         setTimeout(() => {
-                          console.log('Restored: Starting post-click updates, prismState:', window.prismState);
-                          
+
                           // Update light counters
                           if (typeof window.updateAllLightCounters === 'function') {
                             window.updateAllLightCounters();
-                            console.log('Restored: Called updateAllLightCounters()');
+
                           } else if (typeof window.forceUpdateAllLightCounters === 'function') {
                             window.forceUpdateAllLightCounters();
-                            console.log('Restored: Called forceUpdateAllLightCounters()');
+
                           }
                           
                           // Update generator buttons
                           if (typeof window.updateLightGeneratorButtons === 'function') {
                             window.updateLightGeneratorButtons();
-                            console.log('Restored: Called updateLightGeneratorButtons()');
+
                           }
                           
                           // Force update boost text spans
                           if (typeof window.updateBoostDisplays === 'function') {
                             window.updateBoostDisplays();
-                            console.log('Restored: Called updateBoostDisplays()');
+
                           }
                           
                           // Manual update of light currency displays with proper values
@@ -2606,22 +2538,22 @@ switchHomeSubTab = function(subTabId) {
                               } else if (typeof DecimalUtils !== 'undefined' && typeof DecimalUtils.formatDecimal === 'function') {
                                 countEl.textContent = DecimalUtils.formatDecimal(window.prismState[type]);
                               }
-                              console.log(`Restored: Updated ${type}Count from ${oldValue} to ${countEl.textContent}`);
+
                             }
                           });
                         }, 50);
                       
                       };
                     });
-                    console.log('Restored: Manual grid click setup with updateAllLightCounters');
+
                   } else {
-                    console.log('Restored: No grid setup functions found');
+
                   }
                   
                   // Update light counters again after grid setup
                   if (typeof updateAllLightCounters === 'function') {
                     updateAllLightCounters();
-                    console.log('Restored: Updated light counters after grid setup');
+
                   }
                   
                   // Setup prism tab buttons
@@ -2649,15 +2581,14 @@ switchHomeSubTab = function(subTabId) {
                         if (typeof window.renderAdvancedPrismUI === 'function') {
                           try {
                             window.renderAdvancedPrismUI();
-                            console.log('Restored: Advanced prism UI rendered on tab click');
+
                           } catch (error) {
-                            console.log('Restored: Error rendering advanced prism UI on tab click:', error);
+
                           }
                         }
                       }, 50);
                     });
-                    
-                    console.log('Restored: Prism tab button functionality');
+
                   }
                   
                   // Final comprehensive update to ensure everything is working
@@ -2683,9 +2614,9 @@ switchHomeSubTab = function(subTabId) {
                             parentCard.style.visibility = 'visible';
                             parentCard.style.opacity = '1';
                           }
-                          console.log(`Restored: ${btnId} and its parent card made visible`);
+
                         } else {
-                          console.log(`Restored: ${btnId} not found in final update`);
+
                         }
                       });
                       
@@ -2701,64 +2632,56 @@ switchHomeSubTab = function(subTabId) {
                       
                       // Initialize the full prism system
                       if (typeof window.initPrism === 'function') {
-                        console.log('Restored: Re-initializing prism system in final update');
+
                         window.initPrism();
                       }
                       
                       // Update light generator buttons using the original function
                       if (typeof window.updateLightGeneratorButtons === 'function') {
                         window.updateLightGeneratorButtons();
-                        console.log('Restored: Updated original light generator buttons in final update');
+
                       } else {
-                        console.log('Restored: updateLightGeneratorButtons still not available in final update');
+
                       }
                       
                       // Ensure light counters are properly updated
                       if (typeof window.updateAllLightCounters === 'function') {
                         window.updateAllLightCounters();
-                        console.log('Restored: Force updated all light counters in final update');
+
                       } else if (typeof window.forceUpdateAllLightCounters === 'function') {
                         window.forceUpdateAllLightCounters();
-                        console.log('Restored: Force updated all light counters (alternative) in final update');
+
                       }
                       
                       // Force a full prism system restart to ensure everything works
                       setTimeout(() => {
                         // First, re-initialize the prism system completely
-                        console.log('Restored: Starting full prism system initialization');
-                        console.log('Restored: Available window functions:', {
-                          initPrism: typeof window.initPrism,
-                          initializeDOMCache: typeof window.initializeDOMCache,
-                          setupPrismGrid: typeof window.setupPrismGrid,
-                          updateAllLightCounters: typeof window.updateAllLightCounters,
-                          updateLightGeneratorButtons: typeof window.updateLightGeneratorButtons,
-                          clickLightTile: typeof window.clickLightTile || typeof clickLightTile
-                        });
-                        
+
+
                         if (typeof window.initPrism === 'function') {
                           window.initPrism();
-                          console.log('Restored: Re-initialized prism system');
+
                         }
                         
                         if (typeof window.initializeDOMCache === 'function') {
                           window.initializeDOMCache();
-                          console.log('Restored: Re-initialized DOM cache');
+
                         }
                         
                         // Set up the prism grid properly
                         if (typeof window.setupPrismGrid === 'function') {
                           window.setupPrismGrid();
-                          console.log('Restored: Set up prism grid');
+
                         }
                         
                         if (typeof window.updateAllLightCounters === 'function') {
                           window.updateAllLightCounters();
-                          console.log('Restored: Final light counter update');
+
                         }
                         
                         if (typeof window.updateLightGeneratorButtons === 'function') {
                           window.updateLightGeneratorButtons();
-                          console.log('Restored: Final generator button update');
+
                         }
                         
                         // Final check to ensure lightUpgradesCard is visible
@@ -2772,7 +2695,7 @@ switchHomeSubTab = function(subTabId) {
                           const prismMainArea = document.getElementById('prismMainArea');
                           if (prismMainArea && !prismMainArea.contains(finalLightUpgradesCard)) {
                             prismMainArea.appendChild(finalLightUpgradesCard);
-                            console.log('Restored: Final move of lightUpgradesCard to prism area');
+
                           }
                         }
                         
@@ -2780,16 +2703,15 @@ switchHomeSubTab = function(subTabId) {
                         if (typeof window.renderAdvancedPrismUI === 'function') {
                           try {
                             window.renderAdvancedPrismUI();
-                            console.log('Restored: Final advanced prism UI render successful');
+
                           } catch (error) {
-                            console.log('Restored: Final advanced prism UI render error:', error);
+
                           }
                         }
                         
                         // Check if prismState exists and has values
-                        console.log('Restored: Current prismState:', window.prismState);
-                        
-                        console.log('Restored: Prism system fully restored!');
+
+
                       }, 500);
                     }
                     
@@ -2810,20 +2732,18 @@ switchHomeSubTab = function(subTabId) {
                         window.updateLightGeneratorDisplay(type);
                       }
                     });
-                    
-                    console.log('Restored: Final comprehensive prism update completed');
+
                   }, 200);
                 }
               }, 50);
             }
           }, 100);
         } else {
-          console.log('Prism tab appears to be working correctly');
+
         }
       }
     }, 50);
-    
-    console.log('Floor 1: Cleaned up Floor 2 department backgrounds, using original tab switching');
+
   }
 };
 
@@ -2838,7 +2758,7 @@ function handleFloor2DepartmentTabs(subTabId) {
         // On Floor 2, show terrarium instead of cargo
         if (terrariumTab) terrariumTab.style.display = 'block';
         if (gamblingMainTab) gamblingMainTab.style.display = 'none';
-        console.log('Showing Terrarium on Floor 2');
+
       } else if (subTabId === 'generatorMainTab' || subTabId === 'prismSubTab') {
         // Hide terrarium when switching to departments
         if (terrariumTab) terrariumTab.style.display = 'none';
@@ -2847,13 +2767,13 @@ function handleFloor2DepartmentTabs(subTabId) {
         if (subTabId === 'generatorMainTab') {
           // Water Filtration Department
           if (window.waterFiltration && typeof window.waterFiltration.renderWaterFiltrationUI === 'function') {
-            console.log('Rendering Water Filtration UI for Floor 2');
+
             window.waterFiltration.renderWaterFiltrationUI();
           }
         } else if (subTabId === 'prismSubTab') {
           // Observatory Department
           if (window.observatory && typeof window.observatory.renderObservatoryUI === 'function') {
-            console.log('Rendering Observatory UI for Floor 2');
+
             window.observatory.renderObservatoryUI();
           }
         }
@@ -2901,13 +2821,12 @@ function applyObservatoryTimeOfDay() {
     // Apply the time-specific class for enhanced mystical atmosphere
     document.body.classList.add(timeClass);
     document.documentElement.classList.add(timeClass);
-    
-    console.log(`Observatory: Applied ${timeClass} mystical atmosphere (${hours}:${(minutes % 60).toString().padStart(2, '0')})`);
+
   } else {
     // Fallback to night-time for maximum mystical effect
     document.body.classList.add('night-time');
     document.documentElement.classList.add('night-time');
-    console.log('Observatory: Applied default night-time mystical atmosphere');
+
   }
 }
 
@@ -2938,13 +2857,12 @@ function applyWaterFiltrationTimeOfDay() {
     // Apply the time-specific class for enhanced industrial atmosphere
     document.body.classList.add(timeClass);
     document.documentElement.classList.add(timeClass);
-    
-    console.log(`Water Filtration: Applied ${timeClass} industrial atmosphere (${hours}:${(minutes % 60).toString().padStart(2, '0')})`);
+
   } else {
     // Fallback to night-time for darker industrial effect
     document.body.classList.add('night-time');
     document.documentElement.classList.add('night-time');
-    console.log('Water Filtration: Applied default night-time industrial atmosphere');
+
   }
 }
 
@@ -2975,13 +2893,12 @@ function applyTerrariumTimeOfDay() {
     // Apply the time-specific class for enhanced natural atmosphere
     document.body.classList.add(timeClass);
     document.documentElement.classList.add(timeClass);
-    
-    console.log(`Terrarium: Applied ${timeClass} natural atmosphere (${hours}:${(minutes % 60).toString().padStart(2, '0')})`);
+
   } else {
     // Fallback to day-time for natural effect
     document.body.classList.add('day-time');
     document.documentElement.classList.add('day-time');
-    console.log('Terrarium: Applied default day-time natural atmosphere');
+
   }
 }
 
@@ -4002,13 +3919,13 @@ function updateSaveSlotModal() {
 function saveToSlot(slotNumber) {
   // Safety checks to prevent corrupted saves
   if (!window.state || !window.kitchenIngredients || !window.friendship) {
-    console.error('Save aborted: Essential game objects missing');
+
     return false;
   }
   
   // Additional safety: Don't save if values seem corrupted
   if (!window.state.fluff || window.state.fluff.lt && window.state.fluff.lt(0)) {
-    console.error('Save aborted: Game state appears corrupted');
+
     return false;
   }
   
@@ -4177,7 +4094,7 @@ function saveToSlot(slotNumber) {
   }
   return true;
   } catch (error) {
-    console.error('Error in saveToSlot:', error);
+
     alert('Save failed! Your progress was not saved to prevent corruption.');
     return false;
   }
@@ -4700,8 +4617,7 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
       }, 100);
     }
   } catch (e) {
-    console.error('Error loading save file:', e);
-    
+
     // Try to recover from backup
     const backupKey = `swariaSaveSlot${slotNumber}_backup`;
     const backupData = localStorage.getItem(backupKey);
@@ -4711,7 +4627,7 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
         loadFromSlot(slotNumber); // Try loading again
         return;
       } catch (backupError) {
-        console.error('Backup recovery also failed:', backupError);
+
       }
     }
     
@@ -4736,7 +4652,7 @@ function recoverFromBackup(slotNumber) {
       alert('Save restored from backup successfully!');
       return true;
     } catch (error) {
-      console.error('Failed to restore from backup:', error);
+
       alert('Failed to restore from backup.');
       return false;
     }
@@ -4782,8 +4698,7 @@ function deleteSlot(slotNumber) {
     // Remove achievement data for this slot
     localStorage.removeItem(`fluffIncAchievementsSlot${slotNumber}`);
     localStorage.removeItem(`fluffIncSecretAchievementsSlot${slotNumber}`);
-    
-    console.log(`[SAVE SLOT DELETE] Cleaned up all slot-specific data for slot ${slotNumber}`);
+
     updateSaveSlotModal();
   }
 }
@@ -4801,10 +4716,10 @@ setInterval(() => {
         saveToSlot(currentSaveSlot);
         showAutosaveIndicator();
       } else {
-        console.warn('Autosave skipped: Game state appears incomplete or window not focused');
+
       }
     } catch (error) {
-      console.error('Autosave error prevented save corruption:', error);
+
     }
   }
 }, 30000);
@@ -4816,10 +4731,10 @@ setInterval(() => {
       const currentSave = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
       if (currentSave) {
         localStorage.setItem(`swariaSaveSlot${currentSaveSlot}_emergency`, currentSave);
-        console.log('Emergency backup created');
+
       }
     } catch (error) {
-      console.error('Emergency backup failed:', error);
+
     }
   }
 }, 300000); // 5 minutes 
@@ -4935,7 +4850,7 @@ applySettings = function() {
 const originalSwitchHomeSubTab = switchHomeSubTab;
 
 switchHomeSubTab = function(subTabId) {
-  console.log('switchHomeSubTab called with:', subTabId);
+
   originalSwitchHomeSubTab.apply(this, arguments);
   setTimeout(updateGeneratorDarknessEffect, 10);
   
@@ -4948,7 +4863,7 @@ switchHomeSubTab = function(subTabId) {
     })();
     
     if (!isNightTime) {
-      console.log('Boutique tab opened - calling onBoutiqueOpened()');
+
       window.boutique.onBoutiqueOpened();
     }
   }
@@ -5446,7 +5361,7 @@ function showSoapChargerSpeech() {
 const _origSwitchHomeSubTab_SoapCharger = switchHomeSubTab;
 
 switchHomeSubTab = function(subTabId) {
-  console.log('switchHomeSubTab called with:', subTabId);
+
   _origSwitchHomeSubTab_SoapCharger.apply(this, arguments);
   
   // Handle charger area in the generator main tab
@@ -5474,7 +5389,7 @@ switchHomeSubTab = function(subTabId) {
     })();
     
     if (!isNightTime) {
-      console.log('Boutique tab opened - calling onBoutiqueOpened()');
+
       setTimeout(() => {
         window.boutique.onBoutiqueOpened();
       }, 100); // Small delay to ensure tab is fully loaded
@@ -5673,7 +5588,7 @@ function forceObservatoryVisibleOnFloor2() {
     if (labBtn) {
       labBtn.style.setProperty('display', 'none', 'important');
       labBtn.textContent = 'Observatory';
-      console.log('Observatory tab forced HIDDEN on floor 2 - timestamp:', Date.now());
+
     }
   }
 }
@@ -5683,8 +5598,7 @@ function renderFloor2Departments() {
   if (window.currentFloor !== 2) return;
   
   const currentTab = window.currentHomeSubTab;
-  console.log('Rendering Floor 2 departments for current tab:', currentTab);
-  
+
   const terrariumTab = document.getElementById('terrariumTab');
   const gamblingMainTab = document.getElementById('gamblingMain');
   
@@ -5692,7 +5606,7 @@ function renderFloor2Departments() {
     // Show terrarium instead of cargo on Floor 2
     if (terrariumTab) terrariumTab.style.display = 'block';
     if (gamblingMainTab) gamblingMainTab.style.display = 'none';
-    console.log('Rendering Terrarium UI on Floor 2');
+
     // Set the default tab if not set
     if (!currentTab) {
       window.currentHomeSubTab = 'gamblingMain';
@@ -5702,7 +5616,7 @@ function renderFloor2Departments() {
     if (terrariumTab) terrariumTab.style.display = 'none';
     if (gamblingMainTab) gamblingMainTab.style.display = 'none';
     if (window.waterFiltration && typeof window.waterFiltration.renderWaterFiltrationUI === 'function') {
-      console.log('Rendering Water Filtration UI on Floor 2');
+
       window.waterFiltration.renderWaterFiltrationUI();
     }
   } else if (currentTab === 'prismSubTab') {
@@ -5710,7 +5624,7 @@ function renderFloor2Departments() {
     if (terrariumTab) terrariumTab.style.display = 'none';
     if (gamblingMainTab) gamblingMainTab.style.display = 'none';
     if (window.observatory && typeof window.observatory.renderObservatoryUI === 'function') {
-      console.log('Rendering Observatory UI on Floor 2');
+
       window.observatory.renderObservatoryUI();
     }
   }
@@ -5733,7 +5647,7 @@ function updateFloor2NavLabels() {
       if (genBtn) genBtn.style.setProperty('display', 'none', 'important');
       if (labBtn) {
         labBtn.style.setProperty('display', 'none', 'important');
-        console.log('Observatory tab hidden on floor 2');
+
       }
       if (boutiqueBtn) boutiqueBtn.style.setProperty('display', 'none', 'important');
       
@@ -5779,9 +5693,9 @@ window.forceObservatoryVisible = function() {
   if (labBtn) {
     labBtn.style.setProperty('display', 'none', 'important');
     labBtn.textContent = 'Observatory';
-    console.log('Observatory tab manually forced HIDDEN (per user request)');
+
   } else {
-    console.log('Observatory tab button not found');
+
   }
 };
 
@@ -5794,7 +5708,7 @@ function observatoryTabWatchdog() {
       if (isVisible) {
         labBtn.style.setProperty('display', 'none', 'important');
         labBtn.textContent = 'Observatory';
-        console.log('Observatory tab watchdog: enforced hidden state');
+
       }
     }
   }
@@ -6770,8 +6684,7 @@ function showCharacterSpeech(characterName, tokenType) {
 }
 
   function showGiveTokenModal(tokenType, characterName) {
-    console.log(`Debug - showGiveTokenModal called with tokenType: ${tokenType}, characterName: ${characterName}`);
-    
+
     if (tokenType === 'swabucks') {
       alert('Swa bucks cannot be given to characters!');
       return;
@@ -6799,7 +6712,7 @@ function showCharacterSpeech(characterName, tokenType) {
     
     const modal = document.getElementById('giveTokenModal');
     if (!modal) {
-      console.error('Give token modal not found!');
+
       return;
     }
     
@@ -6807,7 +6720,7 @@ function showCharacterSpeech(characterName, tokenType) {
     const img = document.getElementById('giveTokenModalImg');
     
     if (!title || !img) {
-      console.error('Modal elements not found!', { title: !!title, img: !!img });
+
       return;
     }
     
@@ -6863,24 +6776,21 @@ function showCharacterSpeech(characterName, tokenType) {
     }
     
     img.alt = displayNames[tokenType] || tokenType;
-    
-    console.log(`Debug - Setting image src to: ${tokenImages[tokenType] || ''}`);
-    console.log(`Debug - Token type: ${tokenType}`);
-    console.log(`Debug - Available token images:`, Object.keys(tokenImages));
-    console.log(`Debug - Image element:`, img);
-    console.log(`Debug - Image src after setting:`, img.src);
-    
+
+
+
+
+
     // Force image to be visible and check if it loads
     img.style.display = 'block';
     img.style.visibility = 'visible';
     img.onerror = function() {
-      console.error(`Debug - Failed to load image: ${img.src}`);
+
     };
     img.onload = function() {
-      console.log(`Debug - Successfully loaded image: ${img.src}`);
+
     };
-    
-    console.log(`Debug - Setting modal display to flex`);
+
     modal.style.display = 'flex';
     
     // Store current token info for the modal buttons
@@ -6894,11 +6804,9 @@ function showCharacterSpeech(characterName, tokenType) {
     
     const counts = window.kitchenIngredients || {};
     let available = 0;
-    
-    console.log(`Debug - Checking availability for ${tokenType}`);
-    console.log(`Debug - window.kitchenIngredients:`, window.kitchenIngredients);
-    console.log(`Debug - counts:`, counts);
-    
+
+
+
     // Map token names to storage keys (some tokens have different names for display vs storage)
     const tokenToStorageKey = {
       'berry': 'berries',
@@ -6912,10 +6820,9 @@ function showCharacterSpeech(characterName, tokenType) {
     };
     
     let storageKey = tokenToStorageKey[tokenType] || tokenType;
-    console.log(`Debug - Mapped ${tokenType} to storage key: ${storageKey}`);
-    console.log(`Debug - counts[${storageKey}]:`, counts[storageKey]);
-    console.log(`Debug - window.state:`, window.state);
-    
+
+
+
     if (tokenType === 'swabucks') {
       available = (window.state && window.state.swabucks) ? 
         (typeof window.state.swabucks.toNumber === 'function' ? window.state.swabucks.toNumber() : Number(window.state.swabucks)) : 0;
@@ -6931,9 +6838,7 @@ function showCharacterSpeech(characterName, tokenType) {
       available = counts[storageKey] ? 
         (typeof counts[storageKey].toNumber === 'function' ? counts[storageKey].toNumber() : Number(counts[storageKey])) : 0;
     }
-    
-    console.log(`Debug - Available ${tokenType}: ${available}`);
-    
+
     // Update button visibility based on available amounts
     if (btn1) btn1.style.display = available >= 1 ? 'inline-block' : 'none';
     if (btn10) btn10.style.display = available >= 10 ? 'inline-block' : 'none';
@@ -6977,7 +6882,7 @@ function showCharacterSpeech(characterName, tokenType) {
     };
 
     function give(amount) {
-      console.log('[DEBUG] give() called with:', { characterName, tokenType, amount });
+
       if (amount > available) amount = available;
       if (amount === 0) {
         if (typeof window.updateSecretAchievementProgress === 'function') {
@@ -6990,27 +6895,27 @@ function showCharacterSpeech(characterName, tokenType) {
       let friendshipAmount = amount;
       // Use dedicated quest functions for Soap's sparks and batteries (accept both singular and plural)
       if (characterName === 'Soap' && (tokenType === 'spark' || tokenType === 'sparks') && typeof window.giveSparksToSoap === 'function') {
-        console.log('[DEBUG] Calling window.giveSparksToSoap from give function');
+
         // Deduct sparks from inventory (always use Decimal)
         if (window.state) {
-          console.log('[DEBUG] sparks before deduction:', window.state.sparks);
+
           if (typeof Decimal !== 'undefined') {
             window.state.sparks = DecimalUtils.toDecimal(window.state.sparks).minus(amount);
             if (window.state.sparks.lt(0)) window.state.sparks = new Decimal(0);
           } else {
             window.state.sparks = Math.max(0, Number(window.state.sparks) - amount);
           }
-          console.log('[DEBUG] sparks after deduction:', window.state.sparks);
+
         }
         if (window.kitchenIngredients && window.kitchenIngredients.sparks !== undefined) {
-          console.log('[DEBUG] kitchenIngredients.sparks before deduction:', window.kitchenIngredients.sparks);
+
           if (typeof Decimal !== 'undefined') {
             window.kitchenIngredients.sparks = DecimalUtils.toDecimal(window.kitchenIngredients.sparks).minus(amount);
             if (window.kitchenIngredients.sparks.lt(0)) window.kitchenIngredients.sparks = new Decimal(0);
           } else {
             window.kitchenIngredients.sparks = Math.max(0, Number(window.kitchenIngredients.sparks) - amount);
           }
-          console.log('[DEBUG] kitchenIngredients.sparks after deduction:', window.kitchenIngredients.sparks);
+
         }
         window.giveSparksToSoap(amount);
         if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
@@ -7020,7 +6925,7 @@ function showCharacterSpeech(characterName, tokenType) {
         return;
       }
       if (characterName === 'Soap' && (tokenType === 'battery' || tokenType === 'batteries') && typeof window.giveBatteriesToSoap === 'function') {
-        console.log('[DEBUG] Calling window.giveBatteriesToSoap from give function');
+
         // Deduct batteries from inventory
         if (window.state && window.state.batteries) {
           if (typeof window.state.batteries.minus === 'function') {
@@ -7184,7 +7089,7 @@ function showCharacterSpeech(characterName, tokenType) {
         }
       }
       if (characterName === 'Fluzzer') {
-        console.log(`Debug - In Fluzzer block, tokenType: ${tokenType}`);
+
         if (tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal') {
           const tenMinutesMs = 10 * 60 * 1000; 
           if (!window.state) window.state = {};
@@ -7222,21 +7127,19 @@ function showCharacterSpeech(characterName, tokenType) {
           }
         }
         // Always call handleNectarizeTokenGiven for Fluzzer, regardless of UI visibility
-        console.log(`Debug - About to call handleNectarizeTokenGiven`);
+
         if (typeof handleNectarizeTokenGiven === 'function') {
           handleNectarizeTokenGiven(tokenType, amount);
         } else {
-          console.log(`Debug - handleNectarizeTokenGiven is not a function`);
+
         }
-        console.log(`Debug - Finished Fluzzer block`);
+
       }
 
-      console.log(`Debug - Finished character-specific handling, about to reach friendship section`);
-      console.log(`Debug - Reached friendship section. friendshipAmount: ${friendshipAmount}, characterName: ${characterName}`);
-      
+
       // Process friendship points for all characters (except Swaria who has hunger instead)
       if (friendshipAmount > 0 && characterName !== 'Swaria') {
-        console.log(`Debug - Processing friendship for ${characterName}, amount: ${friendshipAmount}`);
+
         const charToDept = {
           'Swaria': 'Cargo',
           'Soap': 'Generator',
@@ -7248,28 +7151,28 @@ function showCharacterSpeech(characterName, tokenType) {
           'Tico': 'FrontDesk'
         };
         const dept = charToDept[characterName];
-        console.log(`Debug - Department: ${dept}`);
+
         let pointsPerToken = 5;
         if (storageKey === 'stardust') {
           pointsPerToken = characterName === 'Mystic' ? 200 : 50;
         } else if (characterTokenPreferences && characterTokenPreferences[characterName]) {
-          console.log(`Debug - Checking preferences for ${characterName}, storageKey: ${storageKey}`);
-          console.log(`Debug - Likes:`, characterTokenPreferences[characterName].likes);
-          console.log(`Debug - Dislikes:`, characterTokenPreferences[characterName].dislikes);
+
+
+
           if (characterTokenPreferences[characterName].likes.includes(storageKey)) {
             pointsPerToken = 20;
-            console.log(`Debug - ${characterName} likes ${storageKey}, giving 20 points per token`);
+
           } else if (characterTokenPreferences[characterName].dislikes.includes(storageKey)) {
             pointsPerToken = 1;
-            console.log(`Debug - ${characterName} dislikes ${storageKey}, giving 1 point per token`);
+
           } else {
-            console.log(`Debug - ${characterName} is neutral about ${storageKey}, giving 5 points per token`);
+
           }
         }
-        console.log(`Debug - Final pointsPerToken: ${pointsPerToken}`);
+
         if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
           const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
-          console.log(`Debug - Adding ${totalPoints} friendship points to ${characterName}`);
+
           window.friendship.addPoints(characterName, totalPoints);
           
           const statsModal = document.getElementById('departmentStatsModal');
@@ -7280,7 +7183,7 @@ function showCharacterSpeech(characterName, tokenType) {
             }
           }
         } else {
-          console.log(`Debug - Friendship system not available: dept=${dept}, friendship=${!!window.friendship}, addPoints=${typeof window.friendship?.addPoints}`);
+
         }
       }
 
@@ -7323,7 +7226,7 @@ function showCharacterSpeech(characterName, tokenType) {
       
       // Add friendship points for all characters (except Swaria who has hunger instead)
       if (friendshipAmount > 0 && characterName !== 'Swaria') {
-        console.log(`Debug - OLD GIVE: Processing friendship for ${characterName}, amount: ${friendshipAmount}`);
+
         const charToDept = {
           'Swaria': 'Cargo',
           'Soap': 'Generator',
@@ -7335,8 +7238,7 @@ function showCharacterSpeech(characterName, tokenType) {
           'Tico': 'FrontDesk'
         };
         const dept = charToDept[characterName];
-        console.log(`Debug - OLD GIVE: Department: ${dept}`);
-        
+
         // Define character token preferences (using storage keys)
         const characterTokenPreferences = {
           Soap: {
@@ -7393,7 +7295,7 @@ function showCharacterSpeech(characterName, tokenType) {
         };
         
         let storageKey = tokenToStorageKey[tokenType] || tokenType;
-        console.log(`Debug - OLD GIVE: Mapped ${tokenType} to storage key: ${storageKey}`);
+
         let pointsPerToken = 5; // Default neutral
         
         if (storageKey === 'stardust') {
@@ -7401,19 +7303,19 @@ function showCharacterSpeech(characterName, tokenType) {
         } else if (characterTokenPreferences && characterTokenPreferences[characterName]) {
           if (characterTokenPreferences[characterName].likes.includes(storageKey)) {
             pointsPerToken = 20;
-            console.log(`Debug - OLD GIVE: ${characterName} likes ${storageKey}, giving 20 points per token`);
+
           } else if (characterTokenPreferences[characterName].dislikes.includes(storageKey)) {
             pointsPerToken = 1;
-            console.log(`Debug - OLD GIVE: ${characterName} dislikes ${storageKey}, giving 1 point per token`);
+
           } else {
             pointsPerToken = 5;
-            console.log(`Debug - OLD GIVE: ${characterName} is neutral about ${storageKey}, giving 5 points per token`);
+
           }
         }
         
         if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
           const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
-          console.log(`Debug - OLD GIVE: Adding ${totalPoints} friendship points to ${characterName}`);
+
           window.friendship.addPoints(characterName, totalPoints);
           
           // Update stats modal if it's open for this department
@@ -7425,29 +7327,29 @@ function showCharacterSpeech(characterName, tokenType) {
             }
           }
         } else {
-          console.log(`Debug - OLD GIVE: Friendship system not available: dept=${dept}, friendship=${!!window.friendship}, addPoints=${typeof window.friendship?.addPoints}`);
+
         }
       } else {
-        console.log(`Debug - OLD GIVE: Not processing friendship - friendshipAmount: ${friendshipAmount}, characterName: ${characterName}`);
+
       }
 
       // Handle Tico tokens for front desk hunger system (OLD GIVE function)
       if (characterName === 'Tico') {
-        console.log(`Debug - OLD GIVE: In Tico block, handling token for hunger system`);
-        console.log(`Debug - OLD GIVE: window.frontDesk exists: ${!!window.frontDesk}`);
-        console.log(`Debug - OLD GIVE: handleTokenDrop function exists: ${typeof window.frontDesk?.handleTokenDrop}`);
+
+
+
         if (window.frontDesk && typeof window.frontDesk.handleTokenDrop === 'function') {
           window.frontDesk.handleTokenDrop(tokenType, amount);
-          console.log(`Debug - OLD GIVE: Called frontDesk.handleTokenDrop with ${amount} ${tokenType}`);
+
         } else {
-          console.log(`Debug - OLD GIVE: Front desk system not available`);
-          console.log(`Debug - OLD GIVE: window.frontDesk:`, window.frontDesk);
-          console.log(`Debug - OLD GIVE: handleTokenDrop type:`, typeof window.frontDesk?.handleTokenDrop);
+
+
+
         }
       }
 
       // Handle character speech for non-quest tokens
-      console.log(`Debug - OLD GIVE: About to handle speech - questSpeech: ${!!questSpeech}`);
+
       if (!questSpeech && typeof showCharacterSpeech === 'function') {
         const tokenToStorageKey = {
           'berry': 'berries',
@@ -7459,10 +7361,10 @@ function showCharacterSpeech(characterName, tokenType) {
           'prisma': 'prisma'
         };
         let storageKey = tokenToStorageKey[tokenType] || tokenType;
-        console.log(`Debug - OLD GIVE: Calling showCharacterSpeech(${characterName}, ${storageKey})`);
+
         showCharacterSpeech(characterName, storageKey);
       } else {
-        console.log(`Debug - OLD GIVE: Not calling showCharacterSpeech - questSpeech exists: ${!!questSpeech}, function exists: ${typeof showCharacterSpeech === 'function'}`);
+
       }
       
       if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
@@ -7664,8 +7566,7 @@ function showCharacterSpeech(characterName, tokenType) {
           
           // Get the original position IMMEDIATELY, before any changes
           origRect = img.getBoundingClientRect();
-          console.log('Initial origRect at mousedown:', origRect.left, origRect.top);
-          
+
           window._draggingToken = false;
           window._draggingTokenType = null;
           
@@ -7680,22 +7581,18 @@ function showCharacterSpeech(characterName, tokenType) {
             // Don't get getBoundingClientRect again here, use the one from mousedown
             offsetX = startX - origRect.left;
             offsetY = startY - origRect.top;
-            
-            console.log('Drag start debug:');
-            console.log('origRect:', origRect.left, origRect.top);
-            console.log('modalRect:', modalRect.left, modalRect.top);
-            console.log('startX/Y:', startX, startY);
-            console.log('offsetX/Y:', offsetX, offsetY);
-            
+
+
+
+
+
             origParent = img.parentNode;
             origNext = img.nextSibling;
             
             // Position relative to modal
             const modalRelativeLeft = origRect.left - modalRect.left;
             const modalRelativeTop = origRect.top - modalRect.top;
-            
-            console.log('Modal relative position:', modalRelativeLeft, modalRelativeTop);
-            
+
             img.style.position = 'absolute';
             img.style.left = modalRelativeLeft + 'px';
             img.style.top = modalRelativeTop + 'px';
@@ -7729,10 +7626,8 @@ function showCharacterSpeech(characterName, tokenType) {
             
             const newLeft = ev.clientX - modalRect.left - offsetX;
             const newTop = ev.clientY - modalRect.top - offsetY;
-            
-            console.log('Mouse move - clientX/Y:', ev.clientX, ev.clientY);
-            console.log('Calculated position:', newLeft, newTop);
-            
+
+
             img.style.left = newLeft + 'px';
             img.style.top = newTop + 'px';
           }
@@ -7805,7 +7700,7 @@ function showCharacterSpeech(characterName, tokenType) {
           countSpan.textContent = type.count;
         }
       } catch (error) {
-        console.warn('Error formatting inventory count:', error);
+
         countSpan.textContent = type.count;
       }
       div.appendChild(countSpan);
@@ -7861,7 +7756,7 @@ function showCharacterSpeech(characterName, tokenType) {
     const modal = document.getElementById('giveTokenModal');
     
     if (!modal) {
-      console.error('Give token modal not found during initialization!');
+
       return;
     }
     
@@ -7885,14 +7780,12 @@ function showCharacterSpeech(characterName, tokenType) {
   function giveTokenAmount(amount) {
     const modal = document.getElementById('giveTokenModal');
     if (!modal || !modal._currentTokenType || !modal._currentCharacterName) {
-      console.error('Modal state not found for giving tokens');
+
       return;
     }
 
     const tokenType = modal._currentTokenType;
     const characterName = modal._currentCharacterName;
-
-    console.log(`Debug - Attempting to give ${amount} ${tokenType} to ${characterName}`);
 
     // Define display names for tokens
     const displayNames = {
@@ -7986,7 +7879,7 @@ function showCharacterSpeech(characterName, tokenType) {
 
     if (amount > available) amount = available;
     if (amount === 0) {
-      console.log('Debug - No tokens available to give');
+
       if (typeof window.updateSecretAchievementProgress === 'function') {
         window.updateSecretAchievementProgress('secret9', 1);
       }
@@ -7998,8 +7891,6 @@ function showCharacterSpeech(characterName, tokenType) {
       return;
     }
 
-    console.log(`Debug - About to deduct ${amount} ${tokenType} (available: ${available})`);
-    console.log(`Debug - friendshipAmount will be: ${amount}`);
 
     // Close modal first
     closeGiveTokenModal();
@@ -8007,26 +7898,24 @@ function showCharacterSpeech(characterName, tokenType) {
     // Process the token giving with all the quest logic from the old system
     let questSpeech = null;
     let friendshipAmount = amount;
-    
-    console.log(`Debug - Starting character-specific processing for ${characterName}`);
-    console.log(`Debug - Initial friendshipAmount: ${friendshipAmount}`);
+
 
     // Always use quest logic for Soap's spark and battery tokens
     if (characterName === 'Soap' && tokenType === 'sparks' && typeof window.giveSparksToSoap === 'function') {
-      console.log('[DEBUG] Calling window.giveSparksToSoap from giveTokenAmount');
+
       window.giveSparksToSoap(amount);
       if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
       return;
     }
     if (characterName === 'Soap' && tokenType === 'batteries' && typeof window.giveBatteriesToSoap === 'function') {
-      console.log('[DEBUG] Calling window.giveBatteriesToSoap from giveTokenAmount');
+
       window.giveBatteriesToSoap(amount);
       if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
       return;
     }
 
     // Deduct tokens using decimal arithmetic
-    console.log(`Debug - Deducting tokens: ${tokenType}, amount: ${amount}`);
+
     if (tokenType === 'swabucks') {
       if (window.state && window.state.swabucks) {
         const oldAmount = window.state.swabucks;
@@ -8035,7 +7924,7 @@ function showCharacterSpeech(characterName, tokenType) {
         } else {
           window.state.swabucks = new Decimal(window.state.swabucks).minus(amount);
         }
-        console.log(`Debug - Swabucks: ${oldAmount} -> ${window.state.swabucks}`);
+
       }
     } else if (tokenType === 'berryPlate' || tokenType === 'mushroomSoup' || tokenType === 'batteries' || tokenType === 'glitteringPetals' || tokenType === 'chargedPrisma') {
       if (window.state && window.state[tokenType]) {
@@ -8045,7 +7934,7 @@ function showCharacterSpeech(characterName, tokenType) {
         } else {
           window.state[tokenType] = new Decimal(window.state[tokenType]).minus(amount);
         }
-        console.log(`Debug - ${tokenType}: ${oldAmount} -> ${window.state[tokenType]}`);
+
       }
     } else {
       if (window.kitchenIngredients[storageKey]) {
@@ -8055,16 +7944,14 @@ function showCharacterSpeech(characterName, tokenType) {
         } else {
           window.kitchenIngredients[storageKey] = new Decimal(window.kitchenIngredients[storageKey]).minus(amount);
         }
-        console.log(`Debug - ${tokenType}(${storageKey}): ${oldAmount} -> ${window.kitchenIngredients[storageKey]}`);
+
       }
     }
 
-    console.log(`Debug - Token deduction completed. Now starting character-specific handling.`);
-    console.log(`Debug - About to start character-specific blocks, characterName: ${characterName}`);
-    
+
     // Handle Swaria consumption
     if (characterName === 'Swaria') {
-      console.log(`Debug - In Swaria block`);
+
       if (tokenType === 'berryPlate') {
         if (window.state.characterHunger && window.state.characterHunger.swaria !== undefined) {
           window.state.characterHunger.swaria = 100;
@@ -8124,21 +8011,19 @@ function showCharacterSpeech(characterName, tokenType) {
       }
     }
 
-    console.log(`Debug - About to check Tico handling. characterName: "${characterName}"`);
-    console.log(`Debug - characterName === 'Tico': ${characterName === 'Tico'}`);
-    console.log(`Debug - window.frontDesk exists: ${!!window.frontDesk}`);
-    console.log(`Debug - handleTokenDrop function exists: ${typeof window.frontDesk?.handleTokenDrop}`);
+
+
 
     // Handle Tico tokens for front desk hunger system
     if (characterName === 'Tico') {
-      console.log(`Debug - In Tico block, handling token for hunger system`);
+
       if (window.frontDesk && typeof window.frontDesk.handleTokenDrop === 'function') {
         window.frontDesk.handleTokenDrop(tokenType, amount);
-        console.log(`Debug - Called frontDesk.handleTokenDrop with ${amount} ${tokenType}`);
+
       } else {
-        console.log(`Debug - Front desk system not available`);
-        console.log(`Debug - window.frontDesk:`, window.frontDesk);
-        console.log(`Debug - handleTokenDrop type:`, typeof window.frontDesk?.handleTokenDrop);
+
+
+
       }
     }
 
@@ -8208,7 +8093,7 @@ function showCharacterSpeech(characterName, tokenType) {
         
         const totalPoints = new Decimal(pointsPerToken).mul(amount);
         window.friendship.addPoints(characterName, totalPoints);
-        console.log(`Debug - Added ${totalPoints} friendship points to ${characterName}`);
+
       }
     }
 
@@ -8231,7 +8116,6 @@ function showCharacterSpeech(characterName, tokenType) {
       window.saveGame();
     }
 
-    console.log(`Debug - Successfully gave ${amount} ${tokenType} to ${characterName}`);
   }  setupCharacterDropTargets();
   initializeGiveTokenModal();
   
@@ -8465,7 +8349,7 @@ function checkGameIntegrity() {
     
     return true;
   } catch (error) {
-    console.error('Integrity check failed:', error);
+
     return false;
   }
 }
@@ -8478,12 +8362,10 @@ if (typeof window !== 'undefined') {
   window.emergencyRecovery = function(slotNumber) {
     if (!slotNumber) slotNumber = localStorage.getItem('currentSaveSlot');
     if (!slotNumber) {
-      console.log('No slot number specified and no current slot found.');
+
       return false;
     }
-    
-    console.log(`Attempting emergency recovery for slot ${slotNumber}...`);
-    
+
     // Try regular backup first
     if (recoverFromBackup(slotNumber)) {
       return true;
@@ -8499,7 +8381,7 @@ if (typeof window !== 'undefined') {
         alert('Emergency recovery successful! Some recent progress may be lost.');
         return true;
       } catch (error) {
-        console.error('Emergency recovery failed:', error);
+
         alert('Emergency recovery failed.');
       }
     }
@@ -8510,15 +8392,11 @@ if (typeof window !== 'undefined') {
   // Add console command to check save integrity
   window.checkSaveIntegrity = function() {
     const isIntact = checkGameIntegrity();
-    console.log('Game integrity check:', isIntact ? 'PASSED' : 'FAILED');
-    
+
     if (!isIntact) {
-      console.log('Issues found:');
-      if (!window.state) console.log('- Missing window.state');
-      if (!window.kitchenIngredients) console.log('- Missing window.kitchenIngredients');
-      if (!window.friendship) console.log('- Missing window.friendship');
-      if (window.state && window.state.fluff && window.state.fluff.lt && window.state.fluff.lt(0)) {
-        console.log('- Negative fluff value detected');
+
+      if (!window.state) if (!window.kitchenIngredients) if (!window.friendship) if (window.state && window.state.fluff && window.state.fluff.lt && window.state.fluff.lt(0)) {
+
       }
     }
     
@@ -8598,7 +8476,7 @@ function performEmergencyRecovery() {
     }, 500);
     
   } catch (error) {
-    console.error('Recovery failed:', error);
+
     showRecoveryStatus(
       'Recovery failed: ' + error.message + '. You may need to use an export code instead.', 
       'error'
@@ -8679,8 +8557,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to save complete game state before delivery reset
 function saveDeliveryResetBackup() {
   try {
-    console.log('[DELIVERY BACKUP] Saving complete game state before delivery reset...');
-    
+
     // Get current complete game state using the same logic as saveGame()
     const completeGameState = createCompleteGameState();
     
@@ -8700,12 +8577,11 @@ function saveDeliveryResetBackup() {
       'deliveryResetBackup';
     
     localStorage.setItem(backupKey, JSON.stringify(backupData));
-    
-    console.log('[DELIVERY BACKUP] Backup saved successfully:', backupKey);
+
     updateLastDeliveryInfo(backupData);
     
   } catch (error) {
-    console.error('[DELIVERY BACKUP] Failed to save backup:', error);
+
   }
 }
 
@@ -8975,7 +8851,7 @@ function exportLastDeliveryReset() {
     updateLastDeliveryInfo(backupData);
     
   } catch (error) {
-    console.error('[DELIVERY BACKUP] Failed to export backup:', error);
+
     showRecoveryExportStatus('Failed to export backup. Please try again.', 'error');
   }
 }
@@ -8995,8 +8871,7 @@ function fallbackCopyToClipboard(text) {
     document.execCommand('copy');
     showRecoveryExportStatus('Export code copied to clipboard! This code contains your complete game state from your last delivery reset.', 'success');
   } catch (err) {
-    showRecoveryExportStatus('Failed to copy to clipboard. Please copy the code manually from the console.', 'error');
-    console.log('Export code:', text);
+    showRecoveryExportStatus('Failed to copy to clipboard. Please copy the code manually from the text area.', 'error');
   }
   
   document.body.removeChild(textArea);
@@ -9074,7 +8949,7 @@ function checkLastDeliveryInfo() {
       const backupData = JSON.parse(backupDataString);
       updateLastDeliveryInfo(backupData);
     } catch (error) {
-      console.error('[DELIVERY BACKUP] Failed to parse backup data:', error);
+
     }
   }
 }

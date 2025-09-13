@@ -997,7 +997,7 @@ function trackElementDiscovery(boughtElements) {
   try {
     // Safety check for undefined or null boughtElements
     if (!boughtElements || typeof boughtElements !== 'object') {
-      console.warn('[ACHIEVEMENT] trackElementDiscovery called with invalid boughtElements:', boughtElements);
+
       return;
     }
     
@@ -1007,8 +1007,8 @@ function trackElementDiscovery(boughtElements) {
       updateAchievementProgress('element7', 1);
     }
   } catch (error) {
-    console.error('[ACHIEVEMENT] Error in trackElementDiscovery:', error);
-    console.error('[ACHIEVEMENT] boughtElements value:', boughtElements);
+
+
   }
 }
 

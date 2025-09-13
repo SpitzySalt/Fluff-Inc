@@ -24,7 +24,7 @@ function initializeDeliverButtonCooldown() {
         window.resetGame = function() {
             // Check if cooldown is active
             if (deliverButtonCooldown.isActive) {
-                console.log('[DELIVER DEBUG] Button is on cooldown, ignoring click');
+
                 return;
             }
             
@@ -36,9 +36,7 @@ function initializeDeliverButtonCooldown() {
             // Store cooldown start time in localStorage before page reload
             const cooldownEndTime = Date.now() + 10000; // 10 seconds from now
             localStorage.setItem('deliverCooldownEnd', cooldownEndTime.toString());
-            
-            console.log('[DELIVER DEBUG] Storing cooldown end time:', cooldownEndTime);
-            
+
             // Execute original reset game function (this will reload the page)
             originalResetGame.apply(this, arguments);
         };
@@ -57,19 +55,17 @@ function checkExistingCooldown() {
         const endTime = parseInt(cooldownEndTime);
         const currentTime = Date.now();
         const remainingTime = Math.ceil((endTime - currentTime) / 1000);
-        
-        console.log('[DELIVER DEBUG] Checking existing cooldown - End:', endTime, 'Current:', currentTime, 'Remaining:', remainingTime);
-        
+
         if (remainingTime > 0) {
             // Cooldown is still active
             deliverButtonCooldown.isActive = true;
             deliverButtonCooldown.remainingTime = remainingTime;
             startCooldownTimer();
-            console.log('[DELIVER DEBUG] Resuming cooldown with', remainingTime, 'seconds remaining');
+
         } else {
             // Cooldown has expired, clear it
             localStorage.removeItem('deliverCooldownEnd');
-            console.log('[DELIVER DEBUG] Cooldown has expired, clearing');
+
         }
     }
 }
@@ -106,8 +102,7 @@ function endDeliverCooldown() {
     
     // Clear from localStorage
     localStorage.removeItem('deliverCooldownEnd');
-    
-    console.log('[DELIVER DEBUG] Cooldown ended');
+
     updateDeliverButtonAppearance();
 }
 
@@ -772,15 +767,14 @@ function createSleepButtonIfNeeded() {
 }
 
 function startSleepSequence() {
-    console.log('[SLEEP DEBUG] Starting sleep sequence');
-    
+
     // Check if any clock anomalies are active
     const hasClockAnomaly = window.anomalySystem && 
         (window.anomalySystem.activeAnomalies.clockAnomaly || 
          window.anomalySystem.activeAnomalies.backwardClockAnomaly);
     
     if (hasClockAnomaly) {
-        console.log('[SLEEP DEBUG] Cannot sleep - clock anomaly is active');
+
         showBoostNotification('Cannot sleep while time anomalies are active!', '#ff6b6b');
         return;
     }
@@ -788,7 +782,7 @@ function startSleepSequence() {
     const blackout = document.getElementById('blackoutOverlay');
     const digitalClock = document.getElementById('digitalClock');
     if (!blackout || !digitalClock) {
-        console.log('[SLEEP DEBUG] Missing elements - blackout:', !!blackout, 'digitalClock:', !!digitalClock);
+
         return;
     }
     
@@ -797,12 +791,10 @@ function startSleepSequence() {
     const isValidSleepTime = (mins >= 22 * 60 && mins < 24 * 60) || (mins >= 0 && mins < 6 * 60);
     
     if (!isValidSleepTime) {
-        console.log('[SLEEP DEBUG] Not valid sleep time - mins:', mins);
+
         return;
     }
-    
-    console.log('[SLEEP DEBUG] Elements found and time valid, starting animation');
-    
+
     // Store original clock position
     const originalParent = digitalClock.parentNode;
     const nextSibling = digitalClock.nextSibling;
@@ -816,28 +808,27 @@ function startSleepSequence() {
     blackout.appendChild(digitalClock);
     
     setTimeout(() => {
-        console.log('[SLEEP DEBUG] Fade to black complete');
+
         blackout.style.opacity = '1';
         
         // After fade to black, move clock to center and start animation
         setTimeout(() => {
-            console.log('[SLEEP DEBUG] Moving clock to center and starting time speedup');
+
             digitalClock.classList.add('sleep-center');
             
             // Start the time speed up animation
             speedUpTimeToMorning(() => {
-                console.log('[SLEEP DEBUG] Time speedup complete');
-                
+
                 // After time skip, pause briefly then move clock back and fade out
                 setTimeout(() => {
-                    console.log('[SLEEP DEBUG] Starting fade out');
+
                     digitalClock.classList.remove('sleep-center');
                     
                     setTimeout(() => {
                         blackout.style.opacity = '0';
                         
                         setTimeout(() => {
-                            console.log('[SLEEP DEBUG] Animation complete');
+
                             // Move digitalClock back to original parent
                             if (nextSibling && nextSibling.parentNode === originalParent) {
                                 originalParent.insertBefore(digitalClock, nextSibling);
@@ -856,26 +847,25 @@ function startSleepSequence() {
 function speedUpTimeToMorning(onDone) {
     // Speed up time from current time until 6:00 AM or later
     if (!window.daynight || typeof window.daynight.getTime !== 'function' || typeof window.daynight.setTime !== 'function') {
-        console.log('[SLEEP DEBUG] daynight not available');
+
         if (onDone) onDone();
         return;
     }
     
     let mins = window.daynight.getTime();
     const startTime = mins;
-    console.log('[SLEEP DEBUG] Starting speedUpTimeToMorning - current time:', mins);
-    
+
     // Only allow speed up between 22:00 and 6:00
     const isValidTimeForSleep = (mins >= 22 * 60 && mins < 24 * 60) || (mins >= 0 && mins < 6 * 60);
     if (!isValidTimeForSleep) {
-        console.log('[SLEEP DEBUG] Not valid time for sleep - mins:', mins);
+
         if (onDone) onDone();
         return;
     }
     
     // If already at or past 6:00 during day, just finish
     if (mins >= 6 * 60 && mins < 22 * 60) {
-        console.log('[SLEEP DEBUG] Already daytime, finishing immediately');
+
         if (onDone) onDone();
         return;
     }
@@ -895,18 +885,15 @@ function speedUpTimeToMorning(onDone) {
                 clock.textContent = window.daynight.getTimeString();
             }
         }
-        
-        console.log('[SLEEP DEBUG] Time updated from', oldMins, 'to:', mins);
-        
+
         // Stop when we reach 6:00 or later (but before 22:00)
         if (mins >= 6 * 60 && mins < 22 * 60) {
-            console.log('[SLEEP DEBUG] Reached morning time, stopping sleep sequence - mins:', mins);
+
             clearInterval(interval);
             if (onDone) onDone();
             return;
         }
-        
-        console.log('[SLEEP DEBUG] Continuing sleep - mins:', mins);
+
     }, 50); // Slightly slower animation for better visibility
 }
 
@@ -1010,7 +997,7 @@ const ELEMENT_UNLOCK_CONFIG = {
 function trackElementDiscovery() {
     // Safety check - make sure window.state exists
     if (!window || !window.state) {
-        console.log('[ELEMENT DISCOVERY] State not ready, skipping tracking');
+
         return;
     }
     
@@ -1020,13 +1007,13 @@ function trackElementDiscovery() {
         try {
             baseMaxUnlocked = getMaxUnlockedElements();
         } catch (error) {
-            console.error('[ELEMENT DISCOVERY] Error getting max unlocked elements:', error);
+
             baseMaxUnlocked = 8; // Safe fallback
         }
         
         // Ensure we have a valid number
         if (typeof baseMaxUnlocked !== 'number' || isNaN(baseMaxUnlocked)) {
-            console.warn('[ELEMENT DISCOVERY] Invalid baseMaxUnlocked, using fallback');
+
             baseMaxUnlocked = 8; // Safe fallback
         }
         
@@ -1035,22 +1022,22 @@ function trackElementDiscovery() {
             try {
                 window.updateElementDiscoveryProgress(baseMaxUnlocked);
             } catch (error) {
-                console.error('[ELEMENT DISCOVERY] Error calling updateElementDiscoveryProgress:', error);
+
             }
         } else if (window.state && typeof window.state.elementDiscoveryProgress !== 'undefined') {
             // Fallback: update directly if the main function isn't available
             const currentProgress = window.state.elementDiscoveryProgress || 0;
             if (baseMaxUnlocked > currentProgress) {
                 window.state.elementDiscoveryProgress = baseMaxUnlocked;
-                console.log(`[ELEMENT DISCOVERY] Updated discovery progress to ${baseMaxUnlocked} (base expansion only)`);
+
             }
         } else if (window.state) {
             // Initialize if it doesn't exist
             window.state.elementDiscoveryProgress = baseMaxUnlocked;
-            console.log(`[ELEMENT DISCOVERY] Initialized discovery progress to ${baseMaxUnlocked}`);
+
         }
     } catch (error) {
-        console.error('[ELEMENT DISCOVERY] Error in trackElementDiscovery:', error);
+
         // Don't throw the error, just log it and continue
     }
 }
@@ -1064,13 +1051,13 @@ function initializeElementUnlockSystem() {
         
         // If discovery progress is way higher than what base expansion allows, reset it
         if (window.state.elementDiscoveryProgress > baseMaxElements + 5) {
-            console.log(`[ELEMENT DISCOVERY] Aggressively resetting discovery progress from ${window.state.elementDiscoveryProgress} to ${baseMaxElements}`);
+
             window.state.elementDiscoveryProgress = baseMaxElements;
         }
         
         // Also cap it at 30 max for safety (since the user mentions only 25 elements should be unlocked)
         if (window.state.elementDiscoveryProgress > 30) {
-            console.log(`[ELEMENT DISCOVERY] Capping discovery progress from ${window.state.elementDiscoveryProgress} to 25`);
+
             window.state.elementDiscoveryProgress = 25;
         }
     }
@@ -1087,14 +1074,13 @@ function initializeElementUnlockSystem() {
             applyElementVisibilityFilter();
         };
     }
-    
-    console.log('[ELEMENT UNLOCK] Progressive element unlocking system initialized');
+
 }
 
 function getMaxUnlockedElements() {
     try {
         if (!window || !window.state || window.state.grade === null || window.state.grade === undefined) {
-            console.warn('[ELEMENT UNLOCK] Missing window.state.grade, using default');
+
             return ELEMENT_UNLOCK_CONFIG[1].maxElements; // Default to starting elements
         }
         
@@ -1102,7 +1088,7 @@ function getMaxUnlockedElements() {
         
         // Extra defensive check before calling any methods on grade
         if (window.state.grade === null || window.state.grade === undefined) {
-            console.warn('[ELEMENT UNLOCK] Grade is null/undefined, using default');
+
             return ELEMENT_UNLOCK_CONFIG[1].maxElements;
         }
         
@@ -1113,21 +1099,21 @@ function getMaxUnlockedElements() {
                 if (typeof window.state.grade.toNumber === 'function') {
                     expansionLevel = window.state.grade.toNumber();
                 } else {
-                    console.warn('[ELEMENT UNLOCK] Decimal object missing toNumber method, falling back');
+
                     expansionLevel = parseFloat(window.state.grade.toString()) || 1;
                 }
             } else {
                 expansionLevel = window.state.grade;
             }
         } catch (decimalError) {
-            console.warn('[ELEMENT UNLOCK] Error handling Decimal object:', decimalError);
+
             // Try to extract numeric value as fallback
             expansionLevel = parseFloat(String(window.state.grade)) || 1;
         }
         
         // Ensure we have a valid number
         if (typeof expansionLevel !== 'number' || isNaN(expansionLevel)) {
-            console.warn('[ELEMENT UNLOCK] Invalid expansion level after conversion, using default');
+
             return ELEMENT_UNLOCK_CONFIG[1].maxElements;
         }
         
@@ -1141,13 +1127,12 @@ function getMaxUnlockedElements() {
                 maxElements = ELEMENT_UNLOCK_CONFIG[level].maxElements;
             }
         }
-        
-        console.log(`[ELEMENT UNLOCK] Expansion level ${expansionLevel} -> ${maxElements} elements`);
+
         return maxElements;
     } catch (error) {
-        console.error('[ELEMENT UNLOCK] Error in getMaxUnlockedElements:', error);
-        console.error('[ELEMENT UNLOCK] window.state:', window.state);
-        console.error('[ELEMENT UNLOCK] window.state.grade:', window.state?.grade);
+
+
+
         return ELEMENT_UNLOCK_CONFIG[1].maxElements; // Safe fallback
     }
 }
@@ -1161,7 +1146,7 @@ function applyElementVisibilityFilter() {
                 ? window.getMaxElementsWithInfinityBonus() 
                 : getMaxUnlockedElements();
         } catch (error) {
-            console.error('[ELEMENT VISIBILITY] Error getting current max unlocked:', error);
+
             currentMaxUnlocked = getMaxUnlockedElements(); // Fallback to base function
         }
         
@@ -1170,7 +1155,7 @@ function applyElementVisibilityFilter() {
         // Temporary fix: Cap infinity bonuses to prevent showing too many elements
         // If infinity bonuses are giving way more than base progression, limit it
         if (currentMaxUnlocked > baseMaxUnlocked + 10) {
-            console.log(`[ELEMENT VISIBILITY] Capping infinity bonus from ${currentMaxUnlocked} to ${baseMaxUnlocked + 10}`);
+
             currentMaxUnlocked = baseMaxUnlocked + 10;
         }
         
@@ -1181,15 +1166,13 @@ function applyElementVisibilityFilter() {
                 ? window.getHighestElementDiscovery() 
                 : (window.state && window.state.elementDiscoveryProgress || 0);
         } catch (error) {
-            console.error('[ELEMENT VISIBILITY] Error getting persistent discovery:', error);
+
             persistentDiscovery = 0; // Safe fallback
         }
         
         // Use the higher of current unlock level or persistent discovery to preserve visibility
         const maxUnlockedElements = Math.max(currentMaxUnlocked, persistentDiscovery);
-        
-        console.log(`[ELEMENT VISIBILITY] Base: ${baseMaxUnlocked}, Current (with bonuses): ${currentMaxUnlocked}, Persistent (base only): ${persistentDiscovery}, Final: ${maxUnlockedElements}`);
-        
+
         const grid = document.getElementById("elementGrid");
         
         if (!grid) return;
@@ -1221,7 +1204,7 @@ function applyElementVisibilityFilter() {
         }
     });
     } catch (error) {
-        console.error('[ELEMENT VISIBILITY] Error in applyElementVisibilityFilter:', error);
+
     }
 }
 
@@ -1229,15 +1212,14 @@ function applyElementVisibilityFilter() {
 window.resetElementDiscovery = function() {
     if (window.state) {
         const baseMaxElements = getMaxUnlockedElements();
-        console.log(`[MANUAL RESET] Resetting element discovery from ${window.state.elementDiscoveryProgress || 0} to ${baseMaxElements}`);
+
         window.state.elementDiscoveryProgress = baseMaxElements;
         
         // Force re-render the element grid
         if (typeof window.renderElementGrid === 'function') {
             window.renderElementGrid();
         }
-        
-        console.log(`[MANUAL RESET] Element discovery reset complete. Now showing elements 1-${baseMaxElements}`);
+
     }
 };
 
