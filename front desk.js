@@ -1,5 +1,11 @@
 ﻿class FrontDesk {
   constructor() {
+    // Performance optimization for front desk tab - prevent memory leaks
+    this.FRONT_DESK_UI_UPDATE_THROTTLE = 100; // Update UI at most every 100ms (10 FPS)
+    this.WORKER_UPDATE_THROTTLE = 250; // Update worker elements at most every 250ms (4 FPS)
+    this.lastFrontDeskUIUpdateTime = 0;
+    this.lastWorkerUpdateTime = 0;
+    
     this.availableWorkers = [];
     this.assignedWorkers = {};
     this.unlockedSlots = 1;
@@ -25,7 +31,7 @@
     this.randomSpeeches = [
       "Welcome to our front desk! Looking for some skilled workers?",
       "The Rikkor workers here are quite talented, you know.",
-      "I've been managing this place for years. It's my passion!",
+      "I've been managing this place for days. It's my passion!",
       "Each worker has their own unique skills and personality.",
       "The stars indicate their skill level - higher is better!",
       "Don't worry, I'll make sure you get the best workers available.",
@@ -2616,6 +2622,13 @@
     timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
   updateWorkerProgressBars() {
+    // Throttle worker progress bar updates to prevent performance issues
+    const now = Date.now();
+    if (now - this.lastWorkerUpdateTime < this.WORKER_UPDATE_THROTTLE) {
+      return;
+    }
+    this.lastWorkerUpdateTime = now;
+    
     for (let slotId = 1; slotId <= this.unlockedSlots; slotId++) {
       const worker = this.assignedWorkers[slotId];
       const progressFillElement = document.getElementById(`workerProgressFill_${slotId}`);
@@ -3134,7 +3147,14 @@
     }
     return new Decimal(0);
   }
-  renderUI() {
+  renderUI(forceUpdate = false) {
+    // Throttle UI updates to prevent performance issues
+    const now = Date.now();
+    if (!forceUpdate && (now - this.lastFrontDeskUIUpdateTime < this.FRONT_DESK_UI_UPDATE_THROTTLE)) {
+      return;
+    }
+    this.lastFrontDeskUIUpdateTime = now;
+    
     this.renderAvailableWorkers();
     this.renderWorkerSlots();
     this.updateWorkerHungerUI();
@@ -3206,7 +3226,7 @@
     }
     this.assignWorkerToSlotDirect(this.selectedWorker, slotId);
     this.selectedWorker = null;
-    this.renderUI();
+    this.renderUI(true); // Force immediate update for user interaction
   }
   renderAvailableWorkers() {
     for (let i = 1; i <= 3; i++) {
@@ -3824,16 +3844,20 @@
             <p><strong>Status:</strong> <span style="color: #32CD32;">Available</span></p>
           `;
         }
-        jobElement.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (jobElement.dataset.clicking === 'true') return;
-          jobElement.dataset.clicking = 'true';
-          this.assignJob(slotId, autobuyer.id);
-          setTimeout(() => {
-            jobElement.dataset.clicking = 'false';
-          }, 100);
-        }, { once: false });
+        // Prevent duplicate event listeners by checking for marker attribute
+        if (!jobElement.dataset.frontDeskListenersAttached) {
+          jobElement.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (jobElement.dataset.clicking === 'true') return;
+            jobElement.dataset.clicking = 'true';
+            this.assignJob(slotId, autobuyer.id);
+            setTimeout(() => {
+              jobElement.dataset.clicking = 'false';
+            }, 100);
+          }, { once: false });
+          jobElement.dataset.frontDeskListenersAttached = 'true';
+        }
       } else if (autobuyer.isUnlocked && isJobTaken) {
         jobElement.innerHTML = `
           <h4>${autobuyer.name}</h4>
@@ -4067,24 +4091,28 @@
           <p style="margin: 4px 0; font-size: 0.9em; color: #666;"><strong>Interval:</strong> ${intervalDisplay} (${stars} stars)</p>
           <p style="margin: 4px 0; font-size: 0.9em; color: #666;"><strong>Status:</strong> Available when prism tiles are active</p>
         `;
-        jobElement.addEventListener('mouseenter', () => {
-          jobElement.style.transform = 'translateY(-2px)';
-          jobElement.style.boxShadow = '0 6px 12px rgba(255, 255, 255, 0.4), 0 0 20px rgba(200, 255, 255, 0.3)';
-        });
-        jobElement.addEventListener('mouseleave', () => {
-          jobElement.style.transform = 'translateY(0)';
-          jobElement.style.boxShadow = '0 4px 8px rgba(255, 255, 255, 0.3), 0 0 15px rgba(200, 255, 255, 0.2)';
-        });
-        jobElement.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (jobElement.dataset.clicking === 'true') return;
-          jobElement.dataset.clicking = 'true';
-          this.assignPrismTileAutomatorJob(slotId, automator.id);
-          setTimeout(() => {
-            jobElement.dataset.clicking = 'false';
-          }, 100);
-        }, { once: false });
+        // Prevent duplicate event listeners by checking for marker attribute
+        if (!jobElement.dataset.frontDeskPrismListenersAttached) {
+          jobElement.addEventListener('mouseenter', () => {
+            jobElement.style.transform = 'translateY(-2px)';
+            jobElement.style.boxShadow = '0 6px 12px rgba(255, 255, 255, 0.4), 0 0 20px rgba(200, 255, 255, 0.3)';
+          });
+          jobElement.addEventListener('mouseleave', () => {
+            jobElement.style.transform = 'translateY(0)';
+            jobElement.style.boxShadow = '0 4px 8px rgba(255, 255, 255, 0.3), 0 0 15px rgba(200, 255, 255, 0.2)';
+          });
+          jobElement.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (jobElement.dataset.clicking === 'true') return;
+            jobElement.dataset.clicking = 'true';
+            this.assignPrismTileAutomatorJob(slotId, automator.id);
+            setTimeout(() => {
+              jobElement.dataset.clicking = 'false';
+            }, 100);
+          }, { once: false });
+          jobElement.dataset.frontDeskPrismListenersAttached = 'true';
+        }
       } else if (isCurrentWorkerJob) {
         jobElement.style.cssText = `
           background: linear-gradient(135deg, #FFFFFF, #FAFAFA, #F5F5F5);
@@ -4181,24 +4209,28 @@
           <p style="margin: 4px 0; font-size: 0.9em; color: #555;"><strong>Interval:</strong> ${intervalDisplay} (${stars} stars)</p>
           <p style="margin: 4px 0; font-size: 0.9em; color: #666;"><strong>Status:</strong> Available</p>
         `;
-        jobElement.addEventListener('mouseenter', () => {
-          jobElement.style.transform = 'translateY(-2px)';
-          jobElement.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.15), 0 0 20px ${automator.color}88`;
-        });
-        jobElement.addEventListener('mouseleave', () => {
-          jobElement.style.transform = 'translateY(0)';
-          jobElement.style.boxShadow = `0 4px 8px rgba(0, 0, 0, 0.1), 0 0 15px ${automator.color}66`;
-        });
-        jobElement.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (jobElement.dataset.clicking === 'true') return;
-          jobElement.dataset.clicking = 'true';
-          this.assignLightGeneratorAutomatorJob(slotId, automator.id);
-          setTimeout(() => {
-            jobElement.dataset.clicking = 'false';
-          }, 100);
-        }, { once: false });
+        // Prevent duplicate event listeners by checking for marker attribute
+        if (!jobElement.dataset.frontDeskLightListenersAttached) {
+          jobElement.addEventListener('mouseenter', () => {
+            jobElement.style.transform = 'translateY(-2px)';
+            jobElement.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.15), 0 0 20px ${automator.color}88`;
+          });
+          jobElement.addEventListener('mouseleave', () => {
+            jobElement.style.transform = 'translateY(0)';
+            jobElement.style.boxShadow = `0 4px 8px rgba(0, 0, 0, 0.1), 0 0 15px ${automator.color}66`;
+          });
+          jobElement.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (jobElement.dataset.clicking === 'true') return;
+            jobElement.dataset.clicking = 'true';
+            this.assignLightGeneratorAutomatorJob(slotId, automator.id);
+            setTimeout(() => {
+              jobElement.dataset.clicking = 'false';
+            }, 100);
+          }, { once: false });
+          jobElement.dataset.frontDeskLightListenersAttached = 'true';
+        }
       } else if (isCurrentWorkerJob) {
         jobElement.style.cssText = `
           background: linear-gradient(135deg, ${automator.color}, ${automator.color}CC);
@@ -4293,24 +4325,28 @@
           <p style="margin: 4px 0; font-size: 0.9em; color: #555;"><strong>Interval:</strong> ${intervalDisplay} (${stars} stars)</p>
           <p style="margin: 4px 0; font-size: 0.9em; color: #666;"><strong>Status:</strong> Available</p>
         `;
-        jobElement.addEventListener('mouseenter', () => {
-          jobElement.style.transform = 'translateY(-2px)';
-          jobElement.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.15), 0 0 20px ${automator.color}88`;
-        });
-        jobElement.addEventListener('mouseleave', () => {
-          jobElement.style.transform = 'translateY(0)';
-          jobElement.style.boxShadow = `0 4px 8px rgba(0, 0, 0, 0.1), 0 0 15px ${automator.color}66`;
-        });
-        jobElement.addEventListener('click', (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (jobElement.dataset.clicking === 'true') return;
-          jobElement.dataset.clicking = 'true';
-          this.assignTokenFinderAutomatorJob(slotId, automator.id);
-          setTimeout(() => {
-            jobElement.dataset.clicking = 'false';
-          }, 100);
-        }, { once: false });
+        // Prevent duplicate event listeners by checking for marker attribute
+        if (!jobElement.dataset.frontDeskTokenListenersAttached) {
+          jobElement.addEventListener('mouseenter', () => {
+            jobElement.style.transform = 'translateY(-2px)';
+            jobElement.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.15), 0 0 20px ${automator.color}88`;
+          });
+          jobElement.addEventListener('mouseleave', () => {
+            jobElement.style.transform = 'translateY(0)';
+            jobElement.style.boxShadow = `0 4px 8px rgba(0, 0, 0, 0.1), 0 0 15px ${automator.color}66`;
+          });
+          jobElement.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (jobElement.dataset.clicking === 'true') return;
+            jobElement.dataset.clicking = 'true';
+            this.assignTokenFinderAutomatorJob(slotId, automator.id);
+            setTimeout(() => {
+              jobElement.dataset.clicking = 'false';
+            }, 100);
+          }, { once: false });
+          jobElement.dataset.frontDeskTokenListenersAttached = 'true';
+        }
       } else if (isCurrentWorkerJob) {
         jobElement.style.cssText = `
           background: linear-gradient(135deg, ${automator.color}, ${automator.color}CC);

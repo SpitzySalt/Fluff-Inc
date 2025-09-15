@@ -7,6 +7,14 @@ window.giveBatteriesToSoap = giveBatteriesToSoap;
 
 // DecimalUtils is available globally from decimal_utils.js
 
+// Performance optimization constants
+const CHARGER_UI_UPDATE_THROTTLE = 100; // 10 FPS for UI updates
+const CHARGER_MILESTONE_CHECK_THROTTLE = 500; // 2 FPS for milestone checks
+
+// Throttling helpers
+let lastChargerUIUpdate = 0;
+let lastChargerMilestoneCheck = 0;
+
 
 
 
@@ -239,13 +247,19 @@ function ensureChargerBoostElements() {
   }
 }
 
-function updateChargerUI() {
+function updateChargerUI(forceUpdate = false) {
+  const now = Date.now();
+  if (!forceUpdate && (now - lastChargerUIUpdate) < CHARGER_UI_UPDATE_THROTTLE) {
+    return;
+  }
+  lastChargerUIUpdate = now;
+
   // Ensure charger.charge is a Decimal
   if (!DecimalUtils.isDecimal(charger.charge)) {
     charger.charge = new Decimal(charger.charge || 0);
   }
   
-  checkChargerMilestones();
+  checkChargerMilestones(forceUpdate);
   ensureChargerBoostElements();
   if (typeof state !== 'undefined') {
     if (!state.soapChargeQuest || typeof state.soapChargeQuest === 'undefined') {
@@ -538,7 +552,9 @@ function updateChargerUI() {
   }
 }
 
-if (chargerBtn) {
+// Prevent duplicate event handler attachment
+if (chargerBtn && !chargerBtn.dataset.chargerHandlerAttached) {
+  chargerBtn.dataset.chargerHandlerAttached = 'true';
   chargerBtn.onclick = function() {
     if (charger.isOn) {
       turnChargerOff();
@@ -552,12 +568,12 @@ function turnChargerOn() {
   if (state.powerStatus !== 'online' || state.powerEnergy <= 0) return;
   charger.isOn = true;
   charger.lastTick = Date.now();
-  updateChargerUI();
+  updateChargerUI(true); // Force immediate update for user interaction
 }
 
 function turnChargerOff() {
   charger.isOn = false;
-  updateChargerUI();
+  updateChargerUI(true); // Force immediate update for user interaction
 }
 
 // Helper function to check if Charger Mk.2 is active (Soap friendship level 15+)
@@ -571,6 +587,7 @@ function isChargerMk2() {
 }
 
 function chargerTick(diff) {
+  // Use throttled versions for performance - these were running at 60 FPS!
   checkChargerMilestones();
   updateChargerUI();
   if (typeof state !== 'undefined' && state.justRefilledBySoap) {
@@ -733,7 +750,13 @@ function getChargerGain() {
   return gain;
 }
 
-function checkChargerMilestones() {
+function checkChargerMilestones(forceUpdate = false) {
+  const now = Date.now();
+  if (!forceUpdate && (now - lastChargerMilestoneCheck) < CHARGER_MILESTONE_CHECK_THROTTLE) {
+    return;
+  }
+  lastChargerMilestoneCheck = now;
+
   // Ensure charger.charge is a Decimal
   if (!DecimalUtils.isDecimal(charger.charge)) {
     charger.charge = new Decimal(charger.charge || 0);
@@ -1200,7 +1223,7 @@ function giveSparksToSoap(amount) {
           showSoapQuestCompletionMessage("TRANSCENDENT! You've unlocked the ultimate charge effect - your charge will now boost your nectar gain! All charge effects are now truly complete!");
         }
         saveChargerState();
-        if (typeof updateChargerUI === 'function') updateChargerUI();
+        if (typeof updateChargerUI === 'function') updateChargerUI(true); // Force immediate update for quest completion
       } else {
         const neededCharge = charger.milestones[currentMilestoneIndex].amount;
         showSoapQuestMessage(`You have enough sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
@@ -1297,6 +1320,7 @@ function giveBatteriesToSoap(amount) {
           showSoapQuestCompletionMessage("TRANSCENDENT! Now I have everything I need! The ultimate effect is now working! All charge effects are truly complete!");
         }
         saveChargerState();
+        updateChargerUI(true); // Force immediate update for milestone unlock
       } else {
         showSoapQuestMessage(`You have enough batteries and sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
       }
@@ -1305,7 +1329,7 @@ function giveBatteriesToSoap(amount) {
     } else {
       showSoapQuestMessage(`Thanks! I still need ${quest.batteryRequired - quest.batteryGiven} more ${quest.batteryRequired - quest.batteryGiven === 1 ? 'battery' : 'batteries'} for this effect.`);
     }
-    updateChargerUI();
+    updateChargerUI(true); // Force immediate update for user interaction
   }
 }
 
@@ -1456,7 +1480,7 @@ function soapEatCharge() {
   soapSpeech.textContent = message;
   soapSpeech.style.display = "block";
   soapImg.src = "assets/icons/soap speech.png"; 
-  updateChargerUI();
+  updateChargerUI(true); // Force immediate update for user interaction
   charger.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
     soapImg.src = "assets/icons/soap.png";
@@ -1487,7 +1511,7 @@ function showSoapChargerSpeech() {
 
 function resetCharger() {
   window.charger.charge = new Decimal(0);
-  updateChargerUI();
+  updateChargerUI(true); // Force immediate update for reset action
 }
 
 window.resetCharger = resetCharger;

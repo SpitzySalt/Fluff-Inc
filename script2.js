@@ -6720,6 +6720,14 @@ window.addEventListener('DOMContentLoaded', function() {
     'viCharacterSleepTalking'
   ];
 
+  function restoreSwariaImage() {
+    const swariaImg = document.getElementById('swariaCharacter');
+    if (swariaImg && swariaImg._originalSrc) {
+      swariaImg.src = swariaImg._originalSrc;
+      delete swariaImg._originalSrc;
+    }
+  }
+
   function getCharacterNameFromId(id) {
     switch (id) {
       case 'swariaCharacter': return 'Swaria';
@@ -6760,6 +6768,15 @@ window.addEventListener('DOMContentLoaded', function() {
           const isViCharacter = id.startsWith('viCharacter') || id === 'viSpeechBubble';
           el.style.outline = isViCharacter ? '3px solid #ff9500' : '3px solid #ffe066';
           el._tokenDropActive = true;
+          
+          // Change Swaria image to talking when token is dragged over
+          if (id === 'swariaCharacter') {
+            const swariaImg = document.getElementById('swariaCharacter');
+            if (swariaImg) {
+              swariaImg._originalSrc = swariaImg.src; // Store original source
+              swariaImg.src = 'swa talking.png';
+            }
+          }
         }
       });
       
@@ -6767,6 +6784,11 @@ window.addEventListener('DOMContentLoaded', function() {
       el.addEventListener('mouseleave', function() {
         el.style.outline = '';
         el._tokenDropActive = false;
+        
+        // Restore original Swaria image when token leaves
+        if (id === 'swariaCharacter') {
+          restoreSwariaImage();
+        }
       });
       
       // Add mouseup handler for drop detection
@@ -7188,7 +7210,7 @@ function showCharacterSpeech(characterName, tokenType) {
   if (lines && lines.length > 0) {
     speech = lines[Math.floor(Math.random() * lines.length)];
   } else {
-    speech = 'Thank you!';
+    speech = 'Nom!';
   }
   if (el) {
     if (characterName === 'Vi') {
@@ -7917,7 +7939,7 @@ function showCharacterSpeech(characterName, tokenType) {
 
       }
       
-      if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
+      if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token usage
       if (characterName === 'Swaria' && typeof updateSwariaHungerUI === 'function') {
         updateSwariaHungerUI();
       }
@@ -7928,18 +7950,74 @@ function showCharacterSpeech(characterName, tokenType) {
     }
   }
 
-  function renderInventoryTokens() {
+  // Cache for smart inventory updates
+  let lastInventorySnapshot = null;
+
+  function getInventorySnapshot() {
+    const snapshot = {};
+    
+    // Add swabucks
+    if (window.state && window.state.swabucks) {
+      snapshot.swabucks = window.state.swabucks.toString();
+    }
+    
+    // Add kitchen ingredients
+    if (window.kitchenIngredients) {
+      const ingredientKeys = ['berries', 'petals', 'stardust', 'prisma', 'sparks', 'water', 'mushroom'];
+      ingredientKeys.forEach(key => {
+        const value = window.kitchenIngredients[key];
+        if (value !== undefined && value !== null) {
+          snapshot[key] = typeof value === 'object' ? value.toString() : value.toString();
+        }
+      });
+    }
+    
+    // Add special ingredients from state
+    if (window.state) {
+      const specialKeys = ['glitteringPetals', 'chargedPrisma', 'batteries', 'mushroomSoup', 'berryPlate'];
+      specialKeys.forEach(key => {
+        const value = window.state[key];
+        if (value !== undefined && value !== null) {
+          snapshot[key] = typeof value === 'object' ? value.toString() : value.toString();
+        }
+      });
+    }
+    
+    return snapshot;
+  }
+
+  function inventorySnapshotsEqual(snap1, snap2) {
+    if (!snap1 || !snap2) return false;
+    
+    const keys1 = Object.keys(snap1);
+    const keys2 = Object.keys(snap2);
+    
+    if (keys1.length !== keys2.length) return false;
+    
+    for (const key of keys1) {
+      if (snap1[key] !== snap2[key]) return false;
+    }
+    
+    return true;
+  }
+
+  function renderInventoryTokens(forceRender = false) {
     const container = document.getElementById('inventoryTokens');
     if (!container) return;
+    
+    // Smart update - only re-render if token counts changed
+    const currentSnapshot = getInventorySnapshot();
+    if (!forceRender && inventorySnapshotsEqual(currentSnapshot, lastInventorySnapshot)) {
+      return; // No changes, skip expensive DOM manipulation
+    }
+    lastInventorySnapshot = currentSnapshot;
+    
     container.innerHTML = '';
     
     // Ensure kitchenIngredients is initialized
     if (!window.kitchenIngredients) {
       window.kitchenIngredients = {};
     }
-    
-    // Debug: Log what's actually in kitchenIngredients
-
     
     const allTokens = [];
     
@@ -8191,6 +8269,10 @@ function showCharacterSpeech(characterName, tokenType) {
             isDragging = false;
             window._draggingToken = false;
             window._draggingTokenType = null;
+            
+            // Restore Swaria image when drag ends
+            restoreSwariaImage();
+            
             img.classList.remove('dragging-token');
             img.style.cursor = 'grab';
             img.style.transition = 'left 0.3s, top 0.3s';
@@ -8218,6 +8300,7 @@ function showCharacterSpeech(characterName, tokenType) {
           function cleanup() {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
+            restoreSwariaImage(); // Restore Swaria image if drag was cancelled
           }
 
           document.addEventListener('mousemove', onMove);
@@ -8270,22 +8353,38 @@ function showCharacterSpeech(characterName, tokenType) {
       container.appendChild(div);
     });
   }
-  if (inventoryBtn && inventoryModal) {
+  // Prevent duplicate event handler attachment for inventory button
+  if (inventoryBtn && inventoryModal && !inventoryBtn.dataset.inventoryHandlerAttached) {
+    inventoryBtn.dataset.inventoryHandlerAttached = 'true';
     inventoryBtn.addEventListener('click', function(e) {
       inventoryOpen = !inventoryOpen;
       if (inventoryOpen) {
-        renderInventoryTokens();
+        renderInventoryTokens(true); // Force immediate render when opening
         inventoryModal.style.display = 'flex';
+        lastInventoryUpdate = Date.now(); // Reset throttle timer for immediate update
       } else {
         inventoryModal.style.display = 'none';
+        restoreSwariaImage(); // Restore Swaria image when inventory closes
       }
     });
   }
-  window.updateInventoryModal = function() {
+  // Performance optimization constants
+  const INVENTORY_MODAL_UPDATE_THROTTLE = 250; // 4 FPS for inventory updates
+  let lastInventoryUpdate = 0;
+
+  window.updateInventoryModal = function(forceUpdate = false) {
     // Don't re-render inventory while dragging to prevent breaking drag functionality
     if (window._draggingToken) {
       return;
     }
+    
+    // Throttle inventory updates to prevent 10 FPS re-rendering madness
+    const now = Date.now();
+    if (!forceUpdate && (now - lastInventoryUpdate) < INVENTORY_MODAL_UPDATE_THROTTLE) {
+      return;
+    }
+    lastInventoryUpdate = now;
+    
     if (inventoryOpen) renderInventoryTokens();
   };
   [
@@ -9526,6 +9625,7 @@ window.saveDeliveryResetBackup = saveDeliveryResetBackup;
 window.exportLastDeliveryReset = exportLastDeliveryReset;
 window.checkLastDeliveryInfo = checkLastDeliveryInfo;
 window.showSoapDisappointedSpeech = showSoapDisappointedSpeech;
+window.restoreSwariaImage = restoreSwariaImage;
 
 // Initialize on page load
 if (document.readyState === 'loading') {

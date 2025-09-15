@@ -1808,7 +1808,7 @@ class Boutique {
 
     // Update UI
     if (typeof window.updateInventoryModal === 'function') {
-      window.updateInventoryModal();
+      window.updateInventoryModal(true); // Force update after merchant purchase
     }
     if (typeof window.updateKitchenUI === 'function') {
       window.updateKitchenUI();

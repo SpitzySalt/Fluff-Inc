@@ -1364,7 +1364,7 @@ function awardFreeGiftRewards() {
         window.updateUI();
     }
     if (typeof window.updateInventoryModal === 'function') {
-        window.updateInventoryModal();
+        window.updateInventoryModal(true); // Force update after token collection
     }
     if (typeof saveGame === 'function') {
         saveGame();

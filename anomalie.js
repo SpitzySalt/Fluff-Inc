@@ -3321,7 +3321,7 @@ window.anomalySystem = {
         
         // Update UI
         if (typeof updateKitchenUI === 'function') updateKitchenUI();
-        if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
+        if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after anomaly token loss
         if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
         
         // Save game

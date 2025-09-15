@@ -425,7 +425,7 @@ function initializeAchievementDecimals() {
 function initAchievements() {
   initializeAchievementDecimals();
   loadAchievements();
-  updateAchievementsDisplay();
+  updateAchievementsDisplay(true);
   startAchievementTracking();
   setTimeout(() => {
     if (typeof checkRedLightAchievement === 'function') {
@@ -704,7 +704,29 @@ function showNextPopup() {
   }, 5000);
 }
 
-function updateAchievementsDisplay() {
+const ACHIEVEMENT_UI_THROTTLE = 250;
+let lastAchievementUpdate = 0;
+let achievementUpdatePending = false;
+
+function updateAchievementsDisplay(force = false) {
+  const now = Date.now();
+  
+  if (!force && (now - lastAchievementUpdate < ACHIEVEMENT_UI_THROTTLE)) {
+    if (!achievementUpdatePending) {
+      achievementUpdatePending = true;
+      setTimeout(() => {
+        achievementUpdatePending = false;
+        updateAchievementsDisplayImmediate();
+      }, ACHIEVEMENT_UI_THROTTLE - (now - lastAchievementUpdate));
+    }
+    return;
+  }
+  
+  updateAchievementsDisplayImmediate();
+}
+
+function updateAchievementsDisplayImmediate() {
+  lastAchievementUpdate = Date.now();
   updateNormalAchievements();
   updateSecretAchievements();
 }
@@ -813,6 +835,11 @@ function updateSecretAchievements() {
 function createAchievementCard(achievement) {
   const card = document.createElement('div');
   card.className = `achievement-card ${achievement.unlocked ? 'unlocked' : ''}`;
+  
+  if (card.dataset.achievementListenerAdded) {
+    return card;
+  }
+  
   const progressPercent = Decimal.min(
     new Decimal(achievement.progress || 0).div(achievement.requirement || 1).mul(100), 
     100
@@ -868,7 +895,10 @@ function createAchievementCard(achievement) {
   }
   if (achievement.unlocked && !achievement.rewarded) {
     card.className = `achievement-card unlocked claimable`;
-    card.onclick = () => claimAchievementReward(achievement.id);
+    if (!card.dataset.achievementListenerAdded) {
+      card.onclick = () => claimAchievementReward(achievement.id);
+      card.dataset.achievementListenerAdded = 'true';
+    }
     const iconHtml = achievement.category === 'secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
     card.innerHTML = `
       ${iconHtml}
@@ -902,7 +932,10 @@ function createAchievementCard(achievement) {
     `;
     if (achievement.category === 'secret' && typeof window.handleSecretAchievementClick === 'function') {
       card.style.cursor = 'pointer';
-      card.onclick = () => window.handleSecretAchievementClick(achievement.id);
+      if (!card.dataset.achievementListenerAdded) {
+        card.onclick = () => window.handleSecretAchievementClick(achievement.id);
+        card.dataset.achievementListenerAdded = 'true';
+      }
     }
   }
   return card;
@@ -922,8 +955,14 @@ function switchAchievementsSubTab(tabId) {
   }
 }
 
+let achievementTrackingInterval = null;
+
 function startAchievementTracking() {
-  setInterval(() => {
+  if (achievementTrackingInterval) {
+    clearInterval(achievementTrackingInterval);
+  }
+  
+  achievementTrackingInterval = setInterval(() => {
     const now = Date.now();
     const delta = (now - achievementStats.lastSaveTime) / 1000;
     achievementStats.totalPlayTime += delta;
@@ -1184,7 +1223,15 @@ window.loadAchievements = loadAchievements;
 window.resetAchievements = resetAchievements;
 window.resetAchievementsForNewSlot = resetAchievementsForNewSlot;
 window.reloadAchievementsForSlot = reloadAchievementsForSlot;
+function stopAchievementTracking() {
+  if (achievementTrackingInterval) {
+    clearInterval(achievementTrackingInterval);
+    achievementTrackingInterval = null;
+  }
+}
+
 window.updateAchievementsDisplay = updateAchievementsDisplay;
+window.stopAchievementTracking = stopAchievementTracking;
 window.switchAchievementsSubTab = switchAchievementsSubTab;
 window.claimAchievementReward = claimAchievementReward;
 window.showNextPopup = showNextPopup;

@@ -532,6 +532,12 @@ window.pokeAdvancedPrismCharacter = pokeAdvancedPrismCharacter;
 window.pokeViWithMainSpeechBubble = pokeViWithMainSpeechBubble;
 window.pokeSwariaWithAdvancedSpeechBubble = pokeSwariaWithAdvancedSpeechBubble;
 window.respondCharacter = pokeSwariaCharacter;
+// Performance optimization for lab tab - prevent memory leaks
+const ADVANCED_PRISM_UI_UPDATE_THROTTLE = 100; // Update UI at most every 100ms (10 FPS)
+const CALIBRATION_MINIGAME_UPDATE_THROTTLE = 100; // Update minigame at most every 100ms (10 FPS)
+let lastAdvancedPrismUIUpdateTime = 0;
+let lastCalibrationMinigameUpdateTime = 0;
+
 let viRandomSpeechTimer = null;
 function startViRandomSpeechTimer() {
   if (viRandomSpeechTimer) {
@@ -916,8 +922,12 @@ function startCalibration() {
         drainLightCurrency(lightType);
         lastDrainTime = currentTime;
       }
-      updateCalibrationMinigame(lightType);
-    }, 50);
+      // Throttle minigame UI updates to prevent performance issues
+      if (currentTime - lastCalibrationMinigameUpdateTime >= CALIBRATION_MINIGAME_UPDATE_THROTTLE) {
+        updateCalibrationMinigame(lightType);
+        lastCalibrationMinigameUpdateTime = currentTime;
+      }
+    }, CALIBRATION_MINIGAME_UPDATE_THROTTLE);
   } catch (error) {
   }
 }
@@ -2149,18 +2159,22 @@ function renderAdvancedPrismUI() {
   `;
   setTimeout(() => {
     initializeViTokenDrops();
-    updateAdvancedPrismUI();
+    updateAdvancedPrismUI(true); // Force immediate update when rendering
     initializeImageSwap();
     const lightCards = document.querySelectorAll('.light-type-card');
     lightCards.forEach(card => {
-      card.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-5px)';
-        this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-      });
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '';
-      });
+      // Prevent duplicate event listeners by checking for marker attribute
+      if (!card.dataset.labCardListenersAttached) {
+        card.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-5px)';
+          this.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+        });
+        card.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0)';
+          this.style.boxShadow = '';
+        });
+        card.dataset.labCardListenersAttached = 'true';
+      }
     });
   }, 100);
 }
@@ -2197,7 +2211,7 @@ function playPrismCoreUpgradeAnimation(callback) {
         }
       }, 2500);
       setTimeout(() => {
-        updateAdvancedPrismUI();
+        updateAdvancedPrismUI(true); // Force immediate update for upgrade animation
         if (levelText) {
           levelText.style.animation = 'numberFadeIn 1.5s ease-in forwards';
         }
@@ -2349,7 +2363,14 @@ function attemptPrismCoreUpgrade() {
     showViSpeech(`You need ${formatNumber(needed)} more prism potential to upgrade the core. Try gathering more light types!`, 4000);
   }
 }
-function updateAdvancedPrismUI() {
+function updateAdvancedPrismUI(forceUpdate = false) {
+  // Throttle UI updates to prevent performance issues
+  const now = Date.now();
+  if (!forceUpdate && (now - lastAdvancedPrismUIUpdateTime < ADVANCED_PRISM_UI_UPDATE_THROTTLE)) {
+    return;
+  }
+  lastAdvancedPrismUIUpdateTime = now;
+
   const potential = calculatePrismPotential();
   const potentialEl = document.getElementById('prismPotential');
   if (potentialEl) potentialEl.textContent = formatNumber(potential);
@@ -2607,6 +2628,7 @@ if (window.gameTick && !window._advancedPrismGameTickPatched) {
     if (originalGameTick) originalGameTick();
     const advancedArea = document.getElementById('prismAdvancedArea');
     if (advancedArea && advancedArea.style.display !== 'none') {
+      // Throttled update - prevents excessive UI updates
       updateAdvancedPrismUI();
     }
   };

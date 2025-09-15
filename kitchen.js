@@ -4,6 +4,34 @@
 
 // DecimalUtils is available globally from decimal_utils.js
 
+// Performance optimization constants
+const KITCHEN_UI_UPDATE_THROTTLE = 100; // 10 FPS for UI updates
+const COOKING_PROGRESS_UPDATE_THROTTLE = 200; // 5 FPS for cooking progress
+
+// Throttling helpers
+let lastKitchenUIUpdate = 0;
+let lastCookingProgressUpdate = 0;
+
+// Token cleanup management
+function cleanupExpiredIngredientTokens() {
+  if (!window.activeIngredientTokens) return;
+  
+  const now = Date.now();
+  window.activeIngredientTokens = window.activeIngredientTokens.filter(item => {
+    if (!item.token.parentNode) {
+      // Token was removed from DOM, clear its timeout and remove from array
+      clearTimeout(item.fadeTimeout);
+      return false;
+    }
+    return true;
+  });
+}
+
+// Run token cleanup every 30 seconds
+if (!window.kitchenTokenCleanupInterval) {
+  window.kitchenTokenCleanupInterval = setInterval(cleanupExpiredIngredientTokens, 30000);
+}
+
 
 
 
@@ -305,6 +333,15 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
   // token.onmouseenter and token.onmouseleave removed
   const fadeTimeout = setTimeout(() => {
     if (token.dataset.collected === 'true') return;
+    
+    // Clean up from active tokens array before removal
+    if (window.activeIngredientTokens) {
+      const index = window.activeIngredientTokens.findIndex(item => item.token === token);
+      if (index !== -1) {
+        window.activeIngredientTokens.splice(index, 1);
+      }
+    }
+    
     token.style.opacity = '0';
     setTimeout(() => token.remove(), 600);
   }, 10000);
@@ -317,6 +354,14 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
 }
 
 function collectIngredientToken(type, token) {
+  // Clean up token from active tokens array
+  if (window.activeIngredientTokens) {
+    const index = window.activeIngredientTokens.findIndex(item => item.token === token);
+    if (index !== -1) {
+      clearTimeout(window.activeIngredientTokens[index].fadeTimeout);
+      window.activeIngredientTokens.splice(index, 1);
+    }
+  }
 
   token.style.transform += ' scale(0.2)';
   token.style.opacity = '0';
@@ -340,7 +385,7 @@ function collectIngredientToken(type, token) {
     }
     
     if (typeof saveGame === 'function') saveGame();
-    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
+    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token collection
     return;
   }
   if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
@@ -356,9 +401,9 @@ function collectIngredientToken(type, token) {
     window.frontDesk.onTokenCollected();
   }
   
-  if (typeof updateKitchenUI === 'function') updateKitchenUI();
+  if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
   if (typeof saveGame === 'function') saveGame();
-  if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal();
+  if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token collection
 }
 
 function showIngredientGainPopup(token, amount) {
@@ -421,7 +466,13 @@ function showTokenBurstNotification(sourceElement) {
   }, 2000);
 }
 
-function updateKitchenUI() {
+function updateKitchenUI(forceUpdate = false) {
+  const now = Date.now();
+  if (!forceUpdate && (now - lastKitchenUIUpdate) < KITCHEN_UI_UPDATE_THROTTLE) {
+    return;
+  }
+  lastKitchenUIUpdate = now;
+
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
   const types = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'swabucks'];
   types.forEach(type => {
@@ -537,15 +588,20 @@ function showMysticSpeech(type = 'idle', forceSpeech) {
   }, 7000);
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  const mysticImg = document.getElementById('kitchenCharacterImg');
-  if (mysticImg) {
-    mysticImg.style.cursor = 'pointer';
-    mysticImg.onclick = function() {
-      showMysticSpeech('poke', true);
-    };
-  }
-});
+// Use single DOMContentLoaded listener with deduplication
+if (!window.kitchenDOMListenerAttached) {
+  window.kitchenDOMListenerAttached = true;
+  window.addEventListener('DOMContentLoaded', function() {
+    const mysticImg = document.getElementById('kitchenCharacterImg');
+    if (mysticImg && !mysticImg.dataset.kitchenClickHandlerAttached) {
+      mysticImg.dataset.kitchenClickHandlerAttached = 'true';
+      mysticImg.style.cursor = 'pointer';
+      mysticImg.onclick = function() {
+        showMysticSpeech('poke', true);
+      };
+    }
+  });
+}
 let mysticRandomSpeechTimer = null;
 
 function startMysticRandomSpeechTimer() {
@@ -568,6 +624,11 @@ function stopMysticRandomSpeechTimer() {
 }
 
 (function ensureMysticRandomSpeechAlwaysWorks() {
+  // Prevent duplicate intervals
+  if (window.kitchenVisibilityInterval) {
+    clearInterval(window.kitchenVisibilityInterval);
+  }
+
   let lastKitchenVisible = false;
 
   function checkKitchenVisibility() {
@@ -576,6 +637,7 @@ function stopMysticRandomSpeechTimer() {
     if (visible && !lastKitchenVisible) {
       showMysticSpeech('idle', true);
       startMysticRandomSpeechTimer();
+      updateMysticNightState(); // Merged functionality from second interval
     } else if (!visible && lastKitchenVisible) {
       stopMysticRandomSpeechTimer();
     }
@@ -583,7 +645,12 @@ function stopMysticRandomSpeechTimer() {
   }
 
   window.kitchenVisibilityInterval = setInterval(checkKitchenVisibility, 1000); 
-  document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
+  
+  // Use single DOMContentLoaded listener (already handled above)
+  if (!window.kitchenVisibilityDOMListenerAttached) {
+    window.kitchenVisibilityDOMListenerAttached = true;
+    document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
+  }
 })();
 (function patchCafeteriaSubTabSwitcher() {
 
@@ -614,7 +681,12 @@ function stopMysticRandomSpeechTimer() {
     }
   }
   tryPatch();
-  document.addEventListener('DOMContentLoaded', tryPatch);
+  
+  // Use single DOMContentLoaded listener with deduplication
+  if (!window.cafeteriaSubTabPatchDOMListenerAttached) {
+    window.cafeteriaSubTabPatchDOMListenerAttached = true;
+    document.addEventListener('DOMContentLoaded', tryPatch);
+  }
 })();
 window.spawnIngredientToken = spawnIngredientToken;
 window.INGREDIENT_TYPE_IMAGES = INGREDIENT_TYPE_IMAGES;
@@ -648,21 +720,8 @@ if (window.daynight && typeof window.daynight.onTimeChange === 'function') {
     updateMysticNightState();
   });
 }
-(function patchKitchenTabVisibility() {
-  let lastKitchenVisible = false;
-
-  function checkKitchenVisibility() {
-    const kitchenTab = document.getElementById('kitchenSubTab');
-    const visible = kitchenTab && kitchenTab.style.display !== 'none' && kitchenTab.offsetParent !== null;
-    if (visible && !lastKitchenVisible) {
-      updateMysticNightState();
-    }
-    lastKitchenVisible = visible;
-  }
-
-  window.kitchenVisibilityInterval2 = setInterval(checkKitchenVisibility, 1000);
-  document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
-})();
+// Remove duplicate kitchen visibility interval - functionality merged with first interval
+// (The first interval now handles both speech management AND night state updates)
 
 function saveCookingState() {
   if (!window.kitchenCooking || (!window.kitchenCooking.cooking && !window.kitchenCooking.pausedForNight)) return;
@@ -775,6 +834,12 @@ window.addEventListener('load', function() {
       saveCookingState(); 
 
       function updateProgress() {
+        const updateNow = Date.now();
+        if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+          return;
+        }
+        lastCookingProgressUpdate = updateNow;
+
         const now = Date.now();
         const elapsed = Math.max(0, totalMs - (cookingEndTime - now));
         const percent = Math.min(100, (elapsed / totalMs) * 100);
@@ -791,7 +856,7 @@ window.addEventListener('load', function() {
       }
 
       updateProgress();
-      cookingInterval = setInterval(updateProgress, 200);
+      cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
       cookingTimeout = setTimeout(function() {
         clearInterval(cookingInterval);
         const recipe = recipes.find(r => r.id === cookingRecipeId);
@@ -825,8 +890,9 @@ window.addEventListener('load', function() {
         }, 1200);
       }, totalMs);
       updateGlobals();
-        // Attach visibility event listeners for pausing/resuming
+        // Attach visibility event listeners for pausing/resuming (with proper deduplication)
         if (!window._kitchenVisibilityHandlerAttached) {
+          window._kitchenVisibilityHandlerAttached = true;
           document.addEventListener('visibilitychange', function() {
             if (document.visibilityState === 'hidden') {
               if (cooking && !pausedForNight && !pausedForHidden) {
@@ -845,6 +911,12 @@ window.addEventListener('load', function() {
                 saveCookingState();
                 // Resume timer
                 function updateProgress() {
+                  const updateNow = Date.now();
+                  if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+                    return;
+                  }
+                  lastCookingProgressUpdate = updateNow;
+
                   const now = Date.now();
                   const elapsed = Math.max(0, (cookingEndTime - now));
                   const percent = 100 - Math.min(100, (elapsed / pausedHiddenRemainingMs) * 100);
@@ -860,7 +932,7 @@ window.addEventListener('load', function() {
                   }
                 }
                 updateProgress();
-                cookingInterval = setInterval(updateProgress, 200);
+                cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
                 cookingTimeout = setTimeout(function() {
                   clearInterval(cookingInterval);
                   const recipe = recipes.find(r => r.id === cookingRecipeId);
@@ -926,6 +998,12 @@ window.addEventListener('load', function() {
       saveCookingState();
 
       function updateProgress() {
+        const updateNow = Date.now();
+        if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+          return;
+        }
+        lastCookingProgressUpdate = updateNow;
+
         const now = Date.now();
         const elapsed = Math.max(0, (cookingEndTime - now));
         const percent = 100 - Math.min(100, (elapsed / pausedRemainingMs) * 100);
@@ -942,7 +1020,7 @@ window.addEventListener('load', function() {
       }
 
       updateProgress();
-      cookingInterval = setInterval(updateProgress, 200);
+      cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
       cookingTimeout = setTimeout(function() {
         clearInterval(cookingInterval);
         cooking = false;
@@ -991,6 +1069,12 @@ window.addEventListener('load', function() {
         updateGlobals();
         saveCookingState();
         function updateProgress() {
+          const updateNow = Date.now();
+          if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+            return;
+          }
+          lastCookingProgressUpdate = updateNow;
+
           const now = Date.now();
           const elapsed = Math.max(0, (cookingEndTime - now));
           const percent = 100 - Math.min(100, (elapsed / pausedHiddenRemainingMs) * 100);
@@ -1006,7 +1090,7 @@ window.addEventListener('load', function() {
           }
         }
         updateProgress();
-        cookingInterval = setInterval(updateProgress, 200);
+        cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
         cookingTimeout = setTimeout(function() {
           clearInterval(cookingInterval);
           const recipe = recipes.find(r => r.id === cookingRecipeId);
@@ -1298,6 +1382,12 @@ window.addEventListener('load', function() {
           const totalMs = saved.endTime - now;
 
           function updateProgress() {
+            const updateNow = Date.now();
+            if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+              return;
+            }
+            lastCookingProgressUpdate = updateNow;
+
             const now2 = Date.now();
             const elapsed = Math.max(0, saved.endTime - now2);
             const percent = 100 - Math.min(100, (elapsed / (saved.endTime - (saved.endTime - saved.duration))) * 100);
@@ -1312,7 +1402,7 @@ window.addEventListener('load', function() {
           }
 
           updateProgress();
-          cookingInterval = setInterval(updateProgress, 200);
+          cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
           cookingTimeout = setTimeout(function() {
             clearInterval(cookingInterval);
             cooking = false;
@@ -1377,6 +1467,12 @@ window.addEventListener('load', function() {
             const totalMs = saved.endTime - (saved.startTime || (Date.now() - saved.duration));
 
             function updateProgress() {
+              const updateNow = Date.now();
+              if ((updateNow - lastCookingProgressUpdate) < COOKING_PROGRESS_UPDATE_THROTTLE) {
+                return;
+              }
+              lastCookingProgressUpdate = updateNow;
+
               const now2 = Date.now();
               const elapsed = Math.max(0, saved.endTime - now2);
               const percent = 100 - Math.min(100, (elapsed / totalMs) * 100);
@@ -1395,7 +1491,7 @@ window.addEventListener('load', function() {
             updateProgress();
             if (cookingInterval) clearInterval(cookingInterval);
             if (cookingTimeout) clearTimeout(cookingTimeout);
-            cookingInterval = setInterval(updateProgress, 200);
+            cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
             cookingTimeout = setTimeout(function() {
               clearInterval(cookingInterval);
               cooking = false;
