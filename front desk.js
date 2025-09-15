@@ -80,11 +80,11 @@
       "That's sweet! Is there anything I can help you with today?",
       "Aww, thank you for the friendly gesture!",
       "You always know how to brighten my day!",
-      "That's very kind of you! How are things going?",
+      "Did you know that I will craft a food ration for every 5 tokens you give me?",
       "I appreciate the friendly interaction while I work!",
-      "You're always so thoughtful! Need any worker assistance?",
+      "I will automatically give food rations to the workers we hire.",
       "That tickles! Thanks for taking a moment to say hello.",
-      "Such a pleasant surprise during my busy day!",
+      "Did you know that higher star workers consume more food rations? They do!",
       "You have a knack for timing - I could use a smile right now!",
       "That's delightful! The front desk can get a bit quiet sometimes.",
       "Your friendly nature always puts me in a good mood!",
@@ -100,9 +100,9 @@
         name: 'Ashen',
         images: {
           normal: 'assets/icons/bird.png',
-          speaking: 'assets/icons/bird speech.png',
-          sleep: 'assets/icons/bird sleep.png',
-          sleepTalk: 'assets/icons/bird sleep talk.png'
+          speaking: 'assets/icons/bird talking.png',
+          sleep: 'assets/icons/bird sleeping.png',
+          sleepTalk: 'assets/icons/bird sleep talking.png'
         },
         baseStats: {
           efficiency: 1.0,
@@ -2371,6 +2371,7 @@
     }
     this.showSpeech(response, 4000);
     this.updateWorkerHungerUI();
+    this.saveData();
     if (window.friendship && typeof window.friendship.addPoints === 'function') {
       window.friendship.addPoints('tico', friendshipGain);
     }
@@ -2732,7 +2733,8 @@
     }
     const rationElement = document.getElementById('ticoFoodRations');
     if (rationElement) {
-      rationElement.textContent = `Food Rations: ${this.foodRations}`;
+      const tokensForNextRation = this.tokensGivenToTico % 5;
+      rationElement.textContent = `Food Rations ${tokensForNextRation}/5: ${this.foodRations}`;
     }
   }
   canWorkerWork(slotId) {

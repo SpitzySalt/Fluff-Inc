@@ -42,6 +42,16 @@ function loadPermanentTabUnlocks() {
   }
 }
 
+function resetPermanentTabUnlocks() {
+  window.permanentTabUnlocks = {
+    prism: false,
+    kitchen: false,
+    frontDesk: false,
+    boutique: false,
+    terrarium: false
+  };
+}
+
 // Check if a tab should be permanently unlocked based on current grade
 function checkPermanentTabUnlocks() {
   if (!window.state || !window.state.grade) return;
@@ -52,7 +62,9 @@ function checkPermanentTabUnlocks() {
   let hasNewUnlock = false;
   
   // Check each department tab unlock requirement
-  if (currentGrade >= 2 && !window.permanentTabUnlocks.prism) {
+  // Lab can be unlocked by grade 2 OR having at least 1 total infinity earned
+  const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+  if ((currentGrade >= 2 || hasInfinityUnlock) && !window.permanentTabUnlocks.prism) {
     window.permanentTabUnlocks.prism = true;
     hasNewUnlock = true;
 
@@ -93,12 +105,15 @@ function updateAllTabVisibility() {
   // Prism Lab tab
   const prismBtn = document.getElementById('prismSubTabBtn');
   if (prismBtn) {
+    // Check if player has at least 1 total infinity earned (bypass grade requirement)
+    const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    
     // Hide Observatory on floor 2 (per user request)
     if (window.currentFloor === 2) {
       prismBtn.style.setProperty('display', 'none', 'important');
       prismBtn.textContent = 'Observatory';
 
-    } else if (window.permanentTabUnlocks.prism || (window.state && window.state.grade >= 2)) {
+    } else if (window.permanentTabUnlocks.prism || hasInfinityUnlock || (window.state && window.state.grade >= 2)) {
       prismBtn.style.display = 'inline-block';
     }
   }
@@ -442,3 +457,6 @@ window.debugResetPermanentTabUnlocks = function() {
   savePermanentTabUnlocks();
 
 };
+
+// Make reset function globally accessible
+window.resetPermanentTabUnlocks = resetPermanentTabUnlocks;

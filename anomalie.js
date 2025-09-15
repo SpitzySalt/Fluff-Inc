@@ -838,8 +838,8 @@ window.anomalySystem = {
                 }
                 break;
             case 'shopPrice':
-                // Only spawn if not already active
-                if (!this.activeAnomalies.shopPriceAnomaly) {
+                // Only spawn if not already active and crab anomaly is not active
+                if (!this.activeAnomalies.shopPriceAnomaly && !this.activeAnomalies.crabBucksAnomaly) {
                     this.spawnShopPriceAnomaly();
                 }
                 break;
@@ -880,8 +880,8 @@ window.anomalySystem = {
                 }
                 break;
             case 'crabBucks':
-                // Only spawn if not already active
-                if (!this.activeAnomalies.crabBucksAnomaly) {
+                // Only spawn if not already active and shop price anomaly is not active
+                if (!this.activeAnomalies.crabBucksAnomaly && !this.activeAnomalies.shopPriceAnomaly) {
                     this.spawnCrabBucksAnomaly();
                 }
                 break;
@@ -2548,6 +2548,11 @@ window.anomalySystem = {
 
             return; // Already active
         }
+        
+        // If crab anomaly is active, fix it first to prevent coexistence
+        if (this.activeAnomalies.crabBucksAnomaly) {
+            this.fixCrabBucksAnomaly();
+        }
 
         this.activeAnomalies.shopPriceAnomaly = true;
         
@@ -2731,6 +2736,11 @@ window.anomalySystem = {
 
     // Restore shop price anomaly from saved state
     restoreShopPriceAnomaly: function(savedAnomaly) {
+
+        // If crab anomaly is active, fix it first to prevent coexistence
+        if (this.activeAnomalies.crabBucksAnomaly) {
+            this.fixCrabBucksAnomaly();
+        }
 
         // Restore the affected item from saved data
         this.anomalyAffectedItem = savedAnomaly.affectedItem;
@@ -6195,6 +6205,11 @@ window.anomalySystem.spawnCrabBucksAnomaly = function() {
         return;
     }
     
+    // If shop price anomaly is active, fix it first to prevent coexistence
+    if (this.activeAnomalies.shopPriceAnomaly) {
+        this.fixShopPriceAnomaly();
+    }
+    
     // Create anomaly data
     const anomaly = {
         id: this.nextId++,
@@ -6456,6 +6471,11 @@ window.anomalySystem.restoreOriginalSwaIcons = function() {
 };
 
 window.anomalySystem.restoreCrabBucksAnomaly = function(savedAnomaly) {
+
+    // If shop price anomaly is active, fix it first to prevent coexistence
+    if (this.activeAnomalies.shopPriceAnomaly) {
+        this.fixShopPriceAnomaly();
+    }
 
     // Restore the anomaly state
     this.activeAnomalies.crabBucksAnomaly = true;

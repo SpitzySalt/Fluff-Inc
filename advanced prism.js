@@ -543,12 +543,12 @@ function startViRandomSpeechTimer() {
   if (advancedPrismState.imagesSwapped) {
     return;
   }
-  if (!boughtElements || !boughtElements[25]) {
+  if (!window.boughtElements || !window.boughtElements[25]) {
     return;
   }
   const randomDelay = Math.random() * 25000 + 20000;
   viRandomSpeechTimer = setTimeout(() => {
-    if (!isViSleepTime() && !advancedPrismState.imagesSwapped && boughtElements && boughtElements[25]) {
+    if (!isViSleepTime() && !advancedPrismState.imagesSwapped && window.boughtElements && window.boughtElements[25]) {
       showViRandomSpeech();
     } else {
     }
@@ -583,7 +583,7 @@ function showViLabDialogue() {
   if (advancedPrismState.hasShownLabDialogue) {
     return;
   }
-  if (!boughtElements || !boughtElements[25]) {
+  if (!window.boughtElements || !window.boughtElements[25]) {
     return;
   }
   const labDialogueMessage = "You seriously blown up the door? That was your epic solution? I must say, that was really epic! I'm finally free from this room thanks to you! I owe you eternal gratitude peachy!";
@@ -602,7 +602,7 @@ function setupViRandomSpeechTabHooks() {
     window._origSwitchHomeSubTabForVi = window.switchHomeSubTab;
     window.switchHomeSubTab = function(subTabId) {
       window._origSwitchHomeSubTabForVi.apply(this, arguments);
-      if (boughtElements && boughtElements[25] && !isViSleepTime()) {
+      if (window.boughtElements && window.boughtElements[25] && !isViSleepTime()) {
         setTimeout(() => {
           if (!viRandomSpeechTimer) {
             startViRandomSpeechTimer();
@@ -614,7 +614,7 @@ function setupViRandomSpeechTabHooks() {
 }
 setupViRandomSpeechTabHooks();
 function initializeViRandomSpeech() {
-  if (boughtElements && boughtElements[25] && !isViSleepTime() && !viRandomSpeechTimer) {
+  if (window.boughtElements && window.boughtElements[25] && !isViSleepTime() && !viRandomSpeechTimer) {
     startViRandomSpeechTimer();
   }
 }
@@ -651,8 +651,8 @@ window.resetViLabDialogue = function() {
 window.checkViLabDialogueStatus = function() {
   return {
     hasShown: advancedPrismState.hasShownLabDialogue,
-    element25Bought: !!(boughtElements && boughtElements[25]),
-    canShow: !!(boughtElements && boughtElements[25] && !advancedPrismState.hasShownLabDialogue)
+    element25Bought: !!(window.boughtElements && window.boughtElements[25]),
+    canShow: !!(window.boughtElements && window.boughtElements[25] && !advancedPrismState.hasShownLabDialogue)
   };
 };
 window.forceSaveViLabDialogueFlag = function() {
@@ -708,8 +708,8 @@ window.checkViRandomSpeechTimer = function() {
   return {
     timerActive: !!viRandomSpeechTimer,
     isSleepTime: isViSleepTime(),
-    element25Bought: !!(boughtElements && boughtElements[25]),
-    shouldRun: !!(boughtElements && boughtElements[25] && !isViSleepTime())
+    element25Bought: !!(window.boughtElements && window.boughtElements[25]),
+    shouldRun: !!(window.boughtElements && window.boughtElements[25] && !isViSleepTime())
   };
 };
 window.testSimpleViTimer = function() {
@@ -2473,7 +2473,9 @@ function attemptAdvancedPrismReset() {
   }
 }
 function checkAdvancedPrismUnlock() {
-  if (window.state && window.state.seenElement25StoryModal) {
+  const element25Bought = window.boughtElements && (window.boughtElements[25] || window.boughtElements["25"]);
+  const storyModalSeen = window.state && window.state.seenElement25StoryModal;
+  if (element25Bought && storyModalSeen) {
     advancedPrismState.unlocked = true;
     const advancedBtn = document.getElementById('prismAdvancedBtn');
     if (advancedBtn) {
@@ -2666,8 +2668,9 @@ window.testManualModal = function() {
 window.checkAdvancedPrismState = function() {
 };
 function attemptImageSwap() {
+  const element25Bought = window.boughtElements && (window.boughtElements[25] || window.boughtElements["25"]);
   const seenElement25Story = window.state && window.state.seenElement25StoryModal;
-  if (!seenElement25Story) {
+  if (!element25Bought || !seenElement25Story) {
     return;
   }
   if (!advancedPrismState.hasCompletedLabClicks) {
@@ -2799,7 +2802,7 @@ function addImageSwapToLabButton() {
       } else {
       }
       attemptImageSwap();
-      if (boughtElements && boughtElements[25] && !advancedPrismState.hasShownLabDialogue) {
+      if (window.boughtElements && window.boughtElements[25] && !advancedPrismState.hasShownLabDialogue) {
         if (!advancedPrismState.hasShownLabDialogue) {
           setTimeout(() => {
             if (!advancedPrismState.hasShownLabDialogue) {
@@ -2811,7 +2814,7 @@ function addImageSwapToLabButton() {
         }
       } else {
         if (advancedPrismState.hasShownLabDialogue) {
-        } else if (!boughtElements || !boughtElements[25]) {
+        } else if (!window.boughtElements || !window.boughtElements[25]) {
         }
       }
       setTimeout(() => {

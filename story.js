@@ -3,6 +3,24 @@
 // if you want to play the game without spoilers, please do not read this file
 
 
+// Global story modal checker
+if (typeof window.checkForPendingStoryModals === 'undefined') {
+  window.checkForPendingStoryModals = function() {
+    if (!window.state) return;
+    // Infinity reset story modal logic
+    if (window.state.pendingInfinityResetStory && !window.state.seenInfinityResetStory) {
+      window.state.pendingInfinityResetStory = false;
+      window.state.seenInfinityResetStory = true;
+      setTimeout(function() {
+        if (typeof window.showInfinityResetStoryModal === 'function') {
+          window.showInfinityResetStoryModal();
+        }
+      }, 100);
+      return;
+    }
+    // ...other modals can be checked here...
+  };
+}
 
 
 
@@ -63,7 +81,6 @@ function closeFirstDeliveryStoryModal() {
   document.body.style.overflow = '';
   if (window._reloadAfterStoryModal) {
     window._reloadAfterStoryModal = false;
-    window.location.reload();
   }
 }
 
@@ -203,6 +220,17 @@ function closeInfinityFluffStoryModal() {
     infinityFluffStoryModal.style.display = 'none';
     document.body.style.overflow = '';
   }
+  
+  // Set the flag to mark that the infinity fluff story modal has been seen
+  if (!window.state) {
+    window.state = {};
+  }
+  window.state.seenInfinityFluffStory = true;
+  
+  // Save the game to persist the flag
+  if (typeof saveGame === 'function') {
+    saveGame();
+  }
 }
 
 (function() {
@@ -288,8 +316,18 @@ function closeInfinityResetStoryModal() {
     
     if (window._reloadAfterStoryModal) {
       window._reloadAfterStoryModal = false;
-      window.location.reload();
     }
+  }
+  
+  // Set the flag to mark that the infinity reset story modal has been seen
+  if (!window.state) {
+    window.state = {};
+  }
+  window.state.seenInfinityResetStory = true;
+  
+  // Save the game to persist the flag
+  if (typeof saveGame === 'function') {
+    saveGame();
   }
 }
 
@@ -336,3 +374,23 @@ window.showElement25StoryModal = showElement25StoryModal;
 window.closeElement25StoryModal = closeElement25StoryModal;
 window.showInfinityResetStoryModal = showInfinityResetStoryModal;
 window.closeInfinityResetStoryModal = closeInfinityResetStoryModal;
+
+
+
+// Test function to check lab unlock status
+window.testLabUnlock = function() {
+  const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+  const gradeUnlock = window.state && window.state.grade >= 2;
+  const labBtn = document.getElementById('prismSubTabBtn');
+  
+  return {
+    totalInfinityEarned: window.infinitySystem ? window.infinitySystem.totalInfinityEarned : 0,
+    hasInfinityUnlock: hasInfinityUnlock,
+    currentGrade: window.state ? window.state.grade : 'undefined',
+    gradeUnlock: gradeUnlock,
+    shouldShowLab: hasInfinityUnlock || gradeUnlock,
+    labBtnExists: !!labBtn,
+    labBtnVisible: labBtn ? labBtn.style.display !== 'none' : false,
+    currentFloor: window.currentFloor
+  };
+};

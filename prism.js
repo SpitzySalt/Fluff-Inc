@@ -181,36 +181,47 @@ function spawnMultipleLightTiles() {
   const bonusCount = getVivienBonusLightCount();
   const totalTilesToSpawn = 1 + bonusCount;
 
-  // Spawn all tiles without clearing between them
-  for (let i = 0; i < totalTilesToSpawn; i++) {
-    spawnSingleLightTile();
-  }
-  
+  // Only spawn if Vi's friendship level is 4+ (otherwise just spawn the main tile)
   if (bonusCount > 0) {
-
+    // Spawn all tiles without clearing between them
+    for (let i = 0; i < totalTilesToSpawn; i++) {
+      spawnSingleLightTile();
+    }
+  } else {
+    // Vi's level is below 4, only spawn the main tile using the regular spawning function
+    spawnNewLightTile();
   }
 }
 
 // New function that spawns a single tile without clearing existing ones
 function spawnSingleLightTile() {
   const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism"));
+  
   // Remove tiles that are already active from the eligible list
   const availableTiles = eligible.filter(tile => !tile.classList.contains("active-tile"));
   
   if (availableTiles.length === 0) {
-
     return;
   }
   
   const randomTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
   const index = parseInt(randomTile.dataset.index);
   
-  // Check if yellow light is unlocked - requires prism core level 2
-  const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2));
-  // Check if green light is unlocked - requires prism core level 3
-  const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3));
-  // Check if blue light is unlocked - requires prism core level 4  
-  const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4));
+  // Check if yellow light is unlocked - prism core level 2 OR grade 8+ fallback
+  const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2)) || 
+                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(8));
+  // Check if green light is unlocked - prism core level 3 OR grade 10+ fallback
+  const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3)) || 
+                        (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(10));
+  // Check if blue light is unlocked - prism core level 4 OR grade 12+ fallback
+  const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4)) || 
+                       (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(12));
+  
+  // Check unlock conditions for red and orange light (prism core level 1+ OR grade fallback)
+  const redUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                     (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4));
+  const orangeUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6));
   
   // Check if prism core has been upgraded at least once (level > 1)
   const prismCoreUpgraded = window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gt(1);
@@ -222,7 +233,7 @@ function spawnSingleLightTile() {
   }
   
   if (prismCoreUpgraded) {
-    // If prism core has been upgraded, make all light types available
+    // If prism core has been upgraded, make all light types available based on unlock conditions
     const roll = Math.random();
     if (blueUnlocked && roll < 0.08) {
       randomTile.classList.add("active-tile", "blue-tile");
@@ -230,15 +241,31 @@ function spawnSingleLightTile() {
       randomTile.classList.add("active-tile", "green-tile");
     } else if (yellowUnlocked && roll < 0.24) {
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.44) {
+    } else if (orangeUnlocked && roll < 0.44) {
       randomTile.classList.add("active-tile", "orange-tile");
-    } else if (roll < 0.72) {
+    } else if (redUnlocked && roll < 0.72) {
+      randomTile.classList.add("active-tile", "red-tile");
+    } else {
+      randomTile.classList.add("active-tile", "white-tile");
+    }
+  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4)) {
+    // Grade-based fallback path for when prism core isn't upgraded (matches main spawning function)
+    const roll = Math.random();
+    if (blueUnlocked && roll < 0.1) {
+      randomTile.classList.add("active-tile", "blue-tile");
+    } else if (greenUnlocked && roll < 0.2) {
+      randomTile.classList.add("active-tile", "green-tile");
+    } else if (yellowUnlocked && roll < 0.3) {
+      randomTile.classList.add("active-tile", "yellow-tile");
+    } else if (orangeUnlocked && roll < 0.5) {
+      randomTile.classList.add("active-tile", "orange-tile");
+    } else if (redUnlocked && roll < 0.65) {
       randomTile.classList.add("active-tile", "red-tile");
     } else {
       randomTile.classList.add("active-tile", "white-tile");
     }
   } else {
-    // If prism core hasn't been upgraded, only spawn white light
+    // If prism core hasn't been upgraded and grade is too low, only spawn white light
     randomTile.classList.add("active-tile", "white-tile");
   }
 }
@@ -477,15 +504,28 @@ function spawnNewLightTile() {
   window.prismState.activeTileIndex = index;
   currentActiveTile = randomTile; // Cache the active tile
   
-  // Check if yellow light is unlocked - requires prism core level 2
-  const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2));
-  // Check if green light is unlocked - requires prism core level 3
-  const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3));
-  // Check if blue light is unlocked - requires prism core level 4  
-  const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4));
+  // Check unlock conditions for different light types
+  // Red light: unlocked via prism core level 1+ OR high grade (fallback at grade 4+)
+  const redUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                     (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4));
+  // Orange light: unlocked via prism core level 1+ OR high grade (fallback at grade 6+)
+  const orangeUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6));
+  // Yellow light: unlocked via prism core level 2 OR high grade (fallback at grade 8+)
+  const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2)) || 
+                        (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(8));
+  // Green light: unlocked via prism core level 3 OR high grade (fallback at grade 10+)
+  const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3)) || 
+                       (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(10));
+  // Blue light: unlocked via prism core level 4 OR high grade (fallback at grade 12+)
+  const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4)) || 
+                      (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(12));
   
   // Check if prism core has been upgraded at least once (level > 1)
   const prismCoreUpgraded = window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gt(1);
+  
+  // Debug: Log current state
+  
   
   // Check for grey anomaly - if active, only spawn grey tiles
   if (window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.prismGreyAnomaly) {
@@ -497,6 +537,7 @@ function spawnNewLightTile() {
   if (prismCoreUpgraded) {
     // If prism core has been upgraded, make all light types available
     const roll = Math.random();
+
     if (blueUnlocked && roll < 0.08) {
       window.prismState.activeTileColor = 'bluelight';
       randomTile.classList.add("active-tile", "blue-tile");
@@ -506,17 +547,17 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.24) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.44) {
+    } else if (orangeUnlocked && roll < 0.44) {
       window.prismState.activeTileColor = 'orangelight';
       randomTile.classList.add("active-tile", "orange-tile");
-    } else if (roll < 0.72) {
+    } else if (redUnlocked && roll < 0.72) {
       window.prismState.activeTileColor = 'redlight';
       randomTile.classList.add("active-tile", "red-tile");
     } else {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(8)) {
+  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(8)) {
     const roll = Math.random();
     if (blueUnlocked && roll < 0.1) {
       window.prismState.activeTileColor = 'bluelight';
@@ -527,17 +568,17 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.3) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.5) {
+    } else if (orangeUnlocked && roll < 0.5) {
       window.prismState.activeTileColor = 'orangelight';
       randomTile.classList.add("active-tile", "orange-tile");
-    } else if (roll < 0.75) {
+    } else if (redUnlocked && roll < 0.75) {
       window.prismState.activeTileColor = 'redlight';
       randomTile.classList.add("active-tile", "red-tile");
     } else {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(7)) {
+  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(7)) {
     const roll = Math.random();
     if (blueUnlocked && roll < 0.08) {
       window.prismState.activeTileColor = 'bluelight';
@@ -548,17 +589,17 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.24) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.44) {
+    } else if (orangeUnlocked && roll < 0.44) {
       window.prismState.activeTileColor = 'orangelight';
       randomTile.classList.add("active-tile", "orange-tile");
-    } else if (roll < 0.72) {
+    } else if (redUnlocked && roll < 0.72) {
       window.prismState.activeTileColor = 'redlight';
       randomTile.classList.add("active-tile", "red-tile");
     } else {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(6)) {
+  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6)) {
     const roll = Math.random();
     if (blueUnlocked && roll < 0.08) {
       window.prismState.activeTileColor = 'bluelight';
@@ -569,17 +610,17 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.24) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.44) {
+    } else if (orangeUnlocked && roll < 0.44) {
       window.prismState.activeTileColor = 'orangelight';
       randomTile.classList.add("active-tile", "orange-tile");
-    } else if (roll < 0.72) {
+    } else if (redUnlocked && roll < 0.72) {
       window.prismState.activeTileColor = 'redlight';
       randomTile.classList.add("active-tile", "red-tile");
     } else {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(4)) {
+  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4)) {
     const roll = Math.random();
     if (blueUnlocked && roll < 0.1) {
       window.prismState.activeTileColor = 'bluelight';
@@ -590,7 +631,7 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.3) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.65) {
+    } else if (redUnlocked && roll < 0.65) {
       window.prismState.activeTileColor = 'redlight';
       randomTile.classList.add("active-tile", "red-tile");
     } else {
@@ -608,9 +649,12 @@ function spawnNewLightTile() {
     } else if (yellowUnlocked && roll < 0.36) {
       window.prismState.activeTileColor = 'yellowlight';
       randomTile.classList.add("active-tile", "yellow-tile");
-    } else if (roll < 0.68) {
-      window.prismState.activeTileColor = 'light';
-      randomTile.classList.add("active-tile", "white-tile");
+    } else if (orangeUnlocked && roll < 0.54) {
+      window.prismState.activeTileColor = 'orangelight';
+      randomTile.classList.add("active-tile", "orange-tile");
+    } else if (redUnlocked && roll < 0.72) {
+      window.prismState.activeTileColor = 'redlight';
+      randomTile.classList.add("active-tile", "red-tile");
     } else {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
@@ -684,7 +728,7 @@ function clickLightTile(index) {
     if (color === 'light') {
       let particleBoost = getParticleBoost();
       totalGain = totalGain.add(particleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       totalGain = window.getLightGain(totalGain);
       
       // Ensure charger light boost is applied (in case patching didn't work)
@@ -696,7 +740,7 @@ function clickLightTile(index) {
     } else if (color === 'redlight') {
       let redParticleBoost = DecimalUtils.multiply(window.prismState.redlightparticle.floor(), 0.1);
       totalGain = totalGain.add(redParticleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getRedlightGain === 'function') {
         totalGain = window.getRedlightGain(totalGain);
       }
@@ -709,7 +753,7 @@ function clickLightTile(index) {
     } else if (color === 'orangelight') {
       let orangeParticleBoost = DecimalUtils.multiply(window.prismState.orangelightparticle.floor(), 0.1);
       totalGain = totalGain.add(orangeParticleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getOrangelightGain === 'function') {
         totalGain = window.getOrangelightGain(totalGain);
       }
@@ -723,7 +767,7 @@ function clickLightTile(index) {
     } else if (color === 'yellowlight') {
       let yellowParticleBoost = DecimalUtils.multiply(window.prismState.yellowlightparticle.floor(), 0.1);
       totalGain = totalGain.add(yellowParticleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getYellowlightGain === 'function') {
         totalGain = window.getYellowlightGain(totalGain);
       }
@@ -737,7 +781,7 @@ function clickLightTile(index) {
     } else if (color === 'greenlight') {
       let greenParticleBoost = DecimalUtils.multiply(window.prismState.greenlightparticle.floor(), 0.1);
       totalGain = totalGain.add(greenParticleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getGreenlightGain === 'function') {
         totalGain = window.getGreenlightGain(totalGain);
       }
@@ -750,7 +794,7 @@ function clickLightTile(index) {
     } else if (color === 'bluelight') {
       let blueParticleBoost = DecimalUtils.multiply(window.prismState.bluelightparticle.floor(), 0.1);
       totalGain = totalGain.add(blueParticleBoost);
-      if (boughtElements["13"]) totalGain = totalGain.mul(5);
+      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getBluelightGain === 'function') {
         totalGain = window.getBluelightGain(totalGain);
       }
@@ -1296,15 +1340,15 @@ function tickLightGenerators(diff) {
     const upgrades = window.prismState.generatorUpgrades[type].toNumber();
     
     let rate = DecimalUtils.multiply(config.baseRate, new Decimal(2).pow(upgrades));
-    if (typeof boughtElements !== 'undefined' && boughtElements[15]) {
+    if (typeof window.boughtElements !== 'undefined' && window.boughtElements[15]) {
       rate = rate.mul(5);
     }
-    if (typeof boughtElements !== 'undefined' && boughtElements[16] && typeof state !== 'undefined') {
-      // Ensure state.powerEnergy is a Decimal
-      if (!DecimalUtils.isDecimal(state.powerEnergy)) {
-        state.powerEnergy = new Decimal(state.powerEnergy || 0);
+    if (typeof window.boughtElements !== 'undefined' && window.boughtElements[16] && typeof window.state !== 'undefined') {
+      // Ensure window.state.powerEnergy is a Decimal
+      if (!DecimalUtils.isDecimal(window.state.powerEnergy)) {
+        window.state.powerEnergy = new Decimal(window.state.powerEnergy || 0);
       }
-      rate = rate.mul(state.powerEnergy.div(10));
+      rate = rate.mul(window.state.powerEnergy.div(10));
     }
     const accKey = `_accum_${type}`;
     if (!window.prismState[accKey] || !DecimalUtils.isDecimal(window.prismState[accKey])) {
@@ -2031,15 +2075,15 @@ window.checkParticleRates = function() {
     const upgrades = window.prismState.generatorUpgrades[type].toNumber();
     
     let rate = DecimalUtils.multiply(config.baseRate, new Decimal(2).pow(upgrades));
-    if (typeof boughtElements !== 'undefined' && boughtElements[15]) {
+    if (typeof window.boughtElements !== 'undefined' && window.boughtElements[15]) {
       rate = rate.mul(5);
     }
-    if (typeof boughtElements !== 'undefined' && boughtElements[16] && typeof state !== 'undefined') {
-      // Ensure state.powerEnergy is a Decimal
-      if (!DecimalUtils.isDecimal(state.powerEnergy)) {
-        state.powerEnergy = new Decimal(state.powerEnergy || 0);
+    if (typeof window.boughtElements !== 'undefined' && window.boughtElements[16] && typeof window.state !== 'undefined') {
+      // Ensure window.state.powerEnergy is a Decimal
+      if (!DecimalUtils.isDecimal(window.state.powerEnergy)) {
+        window.state.powerEnergy = new Decimal(window.state.powerEnergy || 0);
       }
-      rate = rate.mul(state.powerEnergy.div(10));
+      rate = rate.mul(window.state.powerEnergy.div(10));
     }
   });
 };
@@ -2122,250 +2166,250 @@ observeThemeChanges();
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.innerHTML = `
-    .red-tile {
+    .light-tile.red-tile {
       background: #ff4444 !important;
-      box-shadow: 0 0 10px 2px #ff4444;
-      border: 2px solid #b20000;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #ff4444 !important;
+      border: 2px solid #b20000 !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .red-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.red-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .red-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 68, 68, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(255, 68, 68, 0.8);
+    .light-tile.red-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 68, 68, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(255, 68, 68, 0.8) !important;
     }
-    .orange-tile {
+    .light-tile.orange-tile {
       background: #ff9900 !important;
-      box-shadow: 0 0 10px 2px #ff9900;
-      border: 2px solid #b36b00;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #ff9900 !important;
+      border: 2px solid #b36b00 !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .orange-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.orange-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .orange-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 153, 0, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(255, 153, 0, 0.8);
+    .light-tile.orange-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 153, 0, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(255, 153, 0, 0.8) !important;
     }
-    .yellow-tile {
+    .light-tile.yellow-tile {
       background: #ffff00 !important;
-      box-shadow: 0 0 10px 2px #ffff00;
-      border: 2px solid #cccc00;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #ffff00 !important;
+      border: 2px solid #cccc00 !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .yellow-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.yellow-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .yellow-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 0, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8);
+    .light-tile.yellow-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 0, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 0, 0.8) !important;
     }
-    .green-tile {
+    .light-tile.green-tile {
       background: #00ff00 !important;
-      box-shadow: 0 0 10px 2px #00ff00;
-      border: 2px solid #00cc00;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #00ff00 !important;
+      border: 2px solid #00cc00 !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .green-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.green-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .green-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(0, 255, 0, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    .light-tile.green-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(0, 255, 0, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8) !important;
     }
-    .blue-tile {
+    .light-tile.blue-tile {
       background: #0066ff !important;
-      box-shadow: 0 0 10px 2px #0066ff;
-      border: 2px solid #0044cc;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #0066ff !important;
+      border: 2px solid #0044cc !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .blue-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.blue-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .blue-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(0, 102, 255, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(0, 102, 255, 0.8);
+    .light-tile.blue-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(0, 102, 255, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(0, 102, 255, 0.8) !important;
     }
-    .white-tile {
+    .light-tile.white-tile {
       background: #fff !important;
-      box-shadow: 0 0 10px 2px #fff;
-      border: 2px solid #aaa;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #fff !important;
+      border: 2px solid #aaa !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .white-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.white-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .white-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    .light-tile.white-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8) !important;
     }
-    .grey-tile {
+    .light-tile.grey-tile {
       background: #808080 !important;
-      box-shadow: 0 0 10px 2px #808080;
-      border: 2px solid #606060;
-      position: relative;
-      overflow: visible;
+      box-shadow: 0 0 10px 2px #808080 !important;
+      border: 2px solid #606060 !important;
+      position: relative !important;
+      overflow: visible !important;
     }
-    .grey-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    .light-tile.grey-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(255, 255, 255, 0.3) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
     }
-    .grey-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(128, 128, 128, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(128, 128, 128, 0.8);
+    .light-tile.grey-tile::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 20px !important;
+      width: 500px !important;
+      height: 3px !important;
+      background: rgba(128, 128, 128, 1) !important;
+      transform: rotate(-45deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      box-shadow: 0 0 10px rgba(128, 128, 128, 0.8) !important;
     }
     @keyframes lightRay {
       0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
@@ -2417,79 +2461,14 @@ if (typeof document !== 'undefined') {
       border-top: 10px solid transparent !important;
       border-bottom: 10px solid transparent !important;
     }
-    .green-tile {
-      background: #00ff00 !important;
-      box-shadow: 0 0 10px 2px #00ff00;
-      border: 2px solid #00cc00;
-      position: relative;
-      overflow: visible;
-    }
-    .green-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
-    .green-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(0, 255, 0, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
-    }
-    .blue-tile {
-      background: #0066ff !important;
-      box-shadow: 0 0 10px 2px #0066ff;
-      border: 2px solid #0044cc;
-      position: relative;
-      overflow: visible;
-    }
-    .blue-tile::before {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 0px;
-      width: 500px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(-170deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 0.5;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
-    .blue-tile::after {
-      content: '';
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      width: 500px;
-      height: 3px;
-      background: rgba(0, 102, 255, 1);
-      transform: rotate(-45deg);
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 9999;
-      box-shadow: 0 0 10px rgba(0, 102, 255, 0.8);
-    }
   `;
   document.head.appendChild(style);
 }
+
+// Test function to manually trigger light spawning
+window.testPrismSpawning = function() {
+  spawnNewLightTile();
+};
 
 function addPrismTileTokenChance() {
   const grid = document.getElementById('lightGrid');

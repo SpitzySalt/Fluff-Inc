@@ -3064,66 +3064,78 @@ const soapQuotes = [
   { text: "The soap bubbles are floating everywhere! It's like living inside a giant bubble factory!", condition: () => window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.soapGeneratorAnomaly },
   { text: "I bet the other workers are wondering where all these bubbles are coming from. Hehe!", condition: () => window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.soapGeneratorAnomaly },
   
-  // Search Mode Enhancement Dialogue - Only when friendship level 7+
+  // Search Mode Enhancement Dialogue - Only when friendship level 7+ AND at least 1 total infinity earned
   { text: "Hey! I just upgraded your anomaly resolver tool with a search function! Pretty cool, right?", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "I added a right-click search mode to your anomaly resolver. Now you can scan for nearby anomalies!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "The search function uses advanced soap bubble resonance to detect dimensional disturbances!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "I installed the search upgrade myself! Just right-click while in find mode to use it.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "My search mode enhancement can detect up to 3 anomalies at once! It's soap-powered, naturally.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "The anomaly search works by creating micro-bubbles that resonate with dimensional tears!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "I'm so proud of my search mode upgrade! No more guessing where anomalies might be hiding.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "The search function was tricky to build, but I managed to integrate it with your resolver perfectly!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "Thanks for trusting me enough to let me upgrade your equipment! The search mode is my masterpiece.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "Who knew soap chemistry could enhance anomaly detection? Science is amazing!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "Your anomaly resolver is now 150% more efficient thanks to my soap-based search algorithm!", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   { text: "I hope you like the search mode! It should make finding anomalies much easier for you.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
-    return level >= 7;
+    const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    return level >= 7 && hasInfinity;
   }},
   
   // Anomaly-related quotes (only appear after doing an infinity reset at least once)
@@ -3889,6 +3901,10 @@ function updateSaveSlotModal() {
         if (currentSaveSlot && currentSaveSlot !== i.toString() && typeof window.reloadAchievementsForSlot === 'function') {
           window.reloadAchievementsForSlot();
         }
+        
+        // Automatically load the newly created slot
+        loadFromSlot(i);
+        
         updateSaveSlotModal();
       };
       slotContent.appendChild(createBtn);
@@ -4102,8 +4118,301 @@ function saveToSlot(slotNumber) {
 
 function loadFromSlot(slotNumber) {
   const slotData = localStorage.getItem(`swariaSaveSlot${slotNumber}`);
-  if (!slotData) return;
+  
+  // Reset permanent tab unlocks when switching save slots
+  if (typeof window.resetPermanentTabUnlocks === 'function') {
+    window.resetPermanentTabUnlocks();
+  }
+  
+  // Reset permanent element discovery to default state when switching slots
+  if (window.state) {
+    window.state.permanentElementDiscovery = {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
+    };
+  }
+  
+  if (!slotData) {
+    // If slot is empty, reset to clean state
+    window.boughtElements = {};
+    
+    // Also reset other permanent flags for empty slots
+    window.hardModePermanentlyUnlocked = false;
+    
+    if (typeof window.prismAdvancedLabUnlocked !== 'undefined') {
+      window.prismAdvancedLabUnlocked = false;
+    }
+    
+    if (typeof window.controlCenterUnlocked !== 'undefined') {
+      window.controlCenterUnlocked = false;
+    }
+    
+    if (typeof window.advancedPrismState !== 'undefined' && window.advancedPrismState) {
+      window.advancedPrismState.unlocked = false;
+    }
+    
+    if (typeof window.terrariumUpgradesUnlocked !== 'undefined') {
+      window.terrariumUpgradesUnlocked = {
+        pollen3: false,
+        pollen4: false,
+        pollen5: false,
+        flower2: false,
+        flower3: false,
+        flower4: false,
+        flower5: false,
+        nectarSection: false
+      };
+    }
+    
+    // Reset anomaly system for empty slots (if it exists)
+    if (typeof window.anomalySystem !== 'undefined' && window.anomalySystem) {
+      // Clear all visual anomalies
+      if (typeof window.clearAllAnomalies === 'function') {
+        window.clearAllAnomalies();
+      }
+      
+      // Reset all active anomaly flags
+      window.anomalySystem.activeAnomalies = {
+        clockAnomaly: false,
+        backwardClockAnomaly: false,
+        boxOrderAnomaly: false,
+        soapGeneratorAnomaly: false,
+        shopPriceAnomaly: false,
+        darkVoidAnomaly: false,
+        prismMirrorAnomaly: false,
+        cargoOmegaBoxAnomaly: false,
+        blurpleLightAnomaly: false,
+        boxGeneratorFreezeAnomaly: false,
+        labDarknessAnomaly: false,
+        prismGreyAnomaly: false,
+        notationScrambleAnomaly: false,
+        crabBucksAnomaly: false,
+        fluzzerFlipAnomaly: false,
+        rustlingFlowersAnomaly: false,
+        dramaticWindAnomaly: false
+      };
+      
+      // Clear anomaly-related timers and intervals
+      if (window.anomalySystem.darkVoidProgressTimer) {
+        clearInterval(window.anomalySystem.darkVoidProgressTimer);
+        window.anomalySystem.darkVoidProgressTimer = null;
+      }
+      if (window.anomalySystem.viPanicInterval) {
+        clearInterval(window.anomalySystem.viPanicInterval);
+        window.anomalySystem.viPanicInterval = null;
+      }
+      if (window.anomalySystem.cursorAnimationInterval) {
+        clearInterval(window.anomalySystem.cursorAnimationInterval);
+        window.anomalySystem.cursorAnimationInterval = null;
+      }
+      if (window.anomalySystem.clockAnomalyInterval) {
+        clearInterval(window.anomalySystem.clockAnomalyInterval);
+        window.anomalySystem.clockAnomalyInterval = null;
+      }
+      if (window.anomalySystem.backwardClockAnomalyInterval) {
+        clearInterval(window.anomalySystem.backwardClockAnomalyInterval);
+        window.anomalySystem.backwardClockAnomalyInterval = null;
+      }
+      
+      // Reset other anomaly state variables
+      window.anomalySystem.frozenGeneratorId = null;
+      window.anomalySystem.anomalyAffectedItem = null;
+      window.anomalySystem.analyzing = false;
+      window.anomalySystem.searching = false;
+      window.anomalySystem.findModeActive = false;
+      
+      // Clear anomaly localStorage
+      if (typeof window.anomalySystem.clearAnomalyState === 'function') {
+        window.anomalySystem.clearAnomalyState();
+      }
+    }
+    
+    // Reset advanced prism state (if it exists)
+    if (typeof window.advancedPrismState !== 'undefined' && window.advancedPrismState) {
+      window.advancedPrismState = {
+        unlocked: false,
+        viSpeechActive: false,
+        viSpeechTimeout: null,
+        swariaSpechTimeout: null,
+        viCurrentState: 'normal',
+        viLastInteractionTime: 0,
+        imagesSwapped: false,
+        advancedTabClicks: 0,
+        labTabClicks: 0,
+        hasCompletedLabClicks: false,
+        hasShownLabDialogue: false,
+        resetLayer: {
+          points: new Decimal(0),
+          timesReset: new Decimal(0),
+          canReset: false
+        },
+        calibration: {
+          stable: {
+            light: new Decimal(0),
+            redlight: new Decimal(0),
+            orangelight: new Decimal(0),
+            yellowlight: new Decimal(0),
+            greenlight: new Decimal(0),
+            bluelight: new Decimal(0)
+          },
+          nerfs: {
+            light: new Decimal(1),
+            redlight: new Decimal(1),
+            orangelight: new Decimal(1),
+            yellowlight: new Decimal(1),
+            greenlight: new Decimal(1),
+            bluelight: new Decimal(1)
+          },
+          activeMinigame: null,
+          minigameStartTime: 0,
+          lastSaveTime: 0,
+          lastSessionEfficiency: 1.0,
+          sessionPenalty: {
+            light: new Decimal(1.0),
+            redlight: new Decimal(1.0),
+            orangelight: new Decimal(1.0),
+            yellowlight: new Decimal(1.0),
+            greenlight: new Decimal(1.0),
+            bluelight: new Decimal(1.0)
+          },
+          totalTimeAccumulated: {
+            light: 0,
+            redlight: 0,
+            orangelight: 0,
+            yellowlight: 0,
+            greenlight: 0,
+            bluelight: 0
+          },
+          waveFrequency: 1,
+          optimalFrequency: 1,
+          wavePhase: 0,
+          lastAnimationTime: 0,
+          minigameInterval: null,
+          drainInterval: null
+        }
+      };
+    }
+    
+    // Create a clean save object without advanced prism data to prevent it from being loaded
+    const emptySaveData = {
+      state: {
+        fluff: 0,
+        swaria: 0,
+        feathers: 0,
+        artifacts: 0,
+        kp: 0,
+        grade: 1,
+        swabucks: 0,
+        characterHunger: {},
+        characterFullStatus: {},
+        hardModeQuestActive: false,
+        hardModeQuestProgress: {},
+        permanentElementDiscovery: {
+          highestGradeAchieved: 1,
+          permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
+        }
+      },
+      generators: [],
+      friendship: {},
+      boughtElements: {},
+      generatorUpgrades: { common: 0, uncommon: 0, rare: 0, legendary: 0, mythic: 0 },
+      prismState: { light: 0, redlight: 0, orangelight: 0, yellowlight: 0, greenlight: 0, bluelight: 0 },
+      settings: { theme: 'light', colour: 'green', style: 'rounded', autosave: true },
+      swariaKnowledge: {},
+      intercomState: { intercomEventTriggered: false, intercomEvent20Triggered: false },
+      prismAdvancedLabUnlocked: false
+    };
+    
+    // Save the clean state to the slot
+    const serializedData = DecimalUtils.serializeGameState(emptySaveData);
+    localStorage.setItem(`swariaSaveSlot${slotNumber}`, JSON.stringify(serializedData));
+    
+    // Reset infinity system (if it exists)
+    if (typeof window.infinitySystem !== 'undefined' && window.infinitySystem) {
+      // Reset infinity counts
+      window.infinitySystem.counts = {
+        fluff: 0,
+        swaria: 0,
+        feathers: 0,
+        artifacts: 0,
+        light: 0,
+        redLight: 0,
+        orangeLight: 0,
+        yellowLight: 0,
+        greenLight: 0,
+        blueLight: 0,
+        terrariumPollen: 0,
+        terrariumFlowers: 0,
+        terrariumNectar: 0,
+        charge: 0
+      };
+      
+      // Reset infinity discovery flags
+      window.infinitySystem.everReached = {
+        fluff: false,
+        swaria: false,
+        feathers: false,
+        artifacts: false,
+        light: false,
+        redLight: false,
+        orangeLight: false,
+        yellowLight: false,
+        greenLight: false,
+        blueLight: false,
+        terrariumPollen: false,
+        terrariumFlowers: false,
+        terrariumNectar: false,
+        charge: false
+      };
+      
+      // Reset infinity points and other infinity state
+      window.infinitySystem.infinityPoints = new Decimal(0);
+      window.infinitySystem.totalInfinityEarned = 0;
+      window.infinitySystem.lastInfinityPointsUpdate = Date.now();
+      
+      // Reset infinity upgrades
+      if (typeof window.infinityUpgrades !== 'undefined' && window.infinityUpgrades) {
+        Object.keys(window.infinityUpgrades).forEach(key => {
+          window.infinityUpgrades[key] = 0;
+        });
+      }
+    }
+    
+      // Reset story modal flags
+      if (window.state) {
+        window.state.seenFirstDeliveryStory = false;
+        window.state.seenGeneratorUnlockStory = false;
+        window.state.seenKpSoftcapStory = false;
+        window.state.seenKpMildcapStory = false;
+        window.state.seenNectarizeResetStory = false;
+        window.state.seenInfinityFluffStory = false;
+        window.state.seenInfinityResetStory = false;
+        window.state.seenElement25StoryModal = false;
+      }
+      
+      // Reset intercom event flags (element 10 and 20 dialogues)
+      if (typeof window.intercomEventTriggered !== 'undefined') {
+        window.intercomEventTriggered = false;
+      }
+      if (typeof window.intercomEvent20Triggered !== 'undefined') {
+        window.intercomEvent20Triggered = false;
+      }
+      
+      // Reset intercom event flags for empty slots (element 10 and 20 dialogues)
+      if (typeof window.intercomEventTriggered !== 'undefined') {
+        window.intercomEventTriggered = false;
+      }
+      if (typeof window.intercomEvent20Triggered !== 'undefined') {
+        window.intercomEvent20Triggered = false;
+      }
+      
+      // Clear element 25 story flag for empty slots
+      localStorage.removeItem(`element25StoryShown_${slotNumber}`);
+      
+    return;
+  }
   try {
+    
     currentSaveSlot = slotNumber; 
     localStorage.setItem('currentSaveSlot', slotNumber); 
     const rawData = JSON.parse(slotData);
@@ -4131,6 +4440,20 @@ function loadFromSlot(slotNumber) {
       // Restore element discovery progress for persistent element visibility
       if (typeof data.elementDiscoveryProgress !== 'undefined') {
         state.elementDiscoveryProgress = data.elementDiscoveryProgress;
+      }
+      
+      // Restore permanent element discovery data
+      if (typeof data.permanentElementDiscovery !== 'undefined') {
+        state.permanentElementDiscovery = {
+          highestGradeAchieved: data.permanentElementDiscovery.highestGradeAchieved || 1,
+          permanentlyDiscoveredElements: new Set(data.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+        };
+      } else if (!state.permanentElementDiscovery) {
+        // Initialize if not present
+        state.permanentElementDiscovery = {
+          highestGradeAchieved: 1,
+          permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
+        };
       }
     }
     if (!state.characterHunger) state.characterHunger = {};
@@ -4480,8 +4803,10 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
     }
     // Check boutique button visibility based on expansion level
     updateBoutiqueButtonVisibility();
-    // Show Lab (prismSubTabBtn) at grade >= 2, but hide on floor 2
-    if (typeof state.grade !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(2)) {
+    // Show Lab (prismSubTabBtn) at grade >= 2 OR if player has at least 1 total infinity earned, but hide on floor 2
+    const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    const gradeUnlock = typeof state.grade !== 'undefined' && DecimalUtils.isDecimal(state.grade) && state.grade.gte(2);
+    if (hasInfinityUnlock || gradeUnlock) {
       const labBtn = document.getElementById("prismSubTabBtn");
       if (labBtn) {
         if (window.currentFloor === 2) {
@@ -4662,6 +4987,9 @@ function recoverFromBackup(slotNumber) {
 
 function deleteSlot(slotNumber) {
   if (confirm(`Are you sure you want to delete save slot ${slotNumber}?`)) {
+    const currentSlot = localStorage.getItem('currentSaveSlot');
+    const isCurrentSlot = currentSlot && currentSlot === slotNumber.toString();
+    
     // Remove main save slot data
     localStorage.removeItem(`swariaSaveSlot${slotNumber}`);
     
@@ -4698,6 +5026,227 @@ function deleteSlot(slotNumber) {
     // Remove achievement data for this slot
     localStorage.removeItem(`fluffIncAchievementsSlot${slotNumber}`);
     localStorage.removeItem(`fluffIncSecretAchievementsSlot${slotNumber}`);
+    
+    // Remove element 25 story flag for this slot
+    localStorage.removeItem(`element25StoryShown_${slotNumber}`);
+    
+    // Remove permanent tab unlock data for this slot
+    if (typeof getSaveSlotSpecificKey === 'function') {
+      const originalSlot = localStorage.getItem('currentSaveSlot');
+      localStorage.setItem('currentSaveSlot', slotNumber.toString());
+      const permTabKey = getSaveSlotSpecificKey('permanentTabUnlocks');
+      localStorage.removeItem(permTabKey);
+      if (originalSlot) {
+        localStorage.setItem('currentSaveSlot', originalSlot);
+      } else {
+        localStorage.removeItem('currentSaveSlot');
+      }
+    }
+
+    // If we deleted the currently active slot, reset the session to default state
+    if (isCurrentSlot) {
+      // Reset to default state
+      window.boughtElements = {};
+      
+      // Reset all permanent unlock flags
+      if (typeof window.resetPermanentTabUnlocks === 'function') {
+        window.resetPermanentTabUnlocks();
+      }
+      
+      // Reset other permanent flags
+      window.hardModePermanentlyUnlocked = false;
+      
+      // Reset prism advanced lab unlock (if it exists)
+      if (typeof window.prismAdvancedLabUnlocked !== 'undefined') {
+        window.prismAdvancedLabUnlocked = false;
+      }
+      
+      // Reset control center unlock (if it exists)
+      if (typeof window.controlCenterUnlocked !== 'undefined') {
+        window.controlCenterUnlocked = false;
+      }
+      
+      // Reset advanced prism state (if it exists)
+      if (typeof window.advancedPrismState !== 'undefined' && window.advancedPrismState) {
+        window.advancedPrismState = {
+          unlocked: false,
+          viSpeechActive: false,
+          viSpeechTimeout: null,
+          swariaSpechTimeout: null,
+          viCurrentState: 'normal',
+          viLastInteractionTime: 0,
+          imagesSwapped: false,
+          advancedTabClicks: 0,
+          labTabClicks: 0,
+          hasCompletedLabClicks: false,
+          hasShownLabDialogue: false,
+          resetLayer: {
+            points: new Decimal(0),
+            timesReset: new Decimal(0),
+            canReset: false
+          },
+          calibration: {
+            stable: {
+              light: new Decimal(0),
+              redlight: new Decimal(0),
+              orangelight: new Decimal(0),
+              yellowlight: new Decimal(0),
+              greenlight: new Decimal(0),
+              bluelight: new Decimal(0)
+            },
+            nerfs: {
+              light: new Decimal(1),
+              redlight: new Decimal(1),
+              orangelight: new Decimal(1),
+              yellowlight: new Decimal(1),
+              greenlight: new Decimal(1),
+              bluelight: new Decimal(1)
+            },
+            activeMinigame: null,
+            minigameStartTime: 0,
+            lastSaveTime: 0,
+            lastSessionEfficiency: 1.0,
+            sessionPenalty: {
+              light: new Decimal(1.0),
+              redlight: new Decimal(1.0),
+              orangelight: new Decimal(1.0),
+              yellowlight: new Decimal(1.0),
+              greenlight: new Decimal(1.0),
+              bluelight: new Decimal(1.0)
+            },
+            totalTimeAccumulated: {
+              light: 0,
+              redlight: 0,
+              orangelight: 0,
+              yellowlight: 0,
+              greenlight: 0,
+              bluelight: 0
+            },
+            waveFrequency: 1,
+            optimalFrequency: 1,
+            wavePhase: 0,
+            lastAnimationTime: 0,
+            minigameInterval: null,
+            drainInterval: null
+          }
+        };
+      }
+      
+      // Reset terrarium upgrades unlocked (if it exists)
+      if (typeof window.terrariumUpgradesUnlocked !== 'undefined') {
+        window.terrariumUpgradesUnlocked = {
+          pollen3: false,
+          pollen4: false,
+          pollen5: false,
+          flower2: false,
+          flower3: false,
+          flower4: false,
+          flower5: false,
+          nectarSection: false
+        };
+      }
+      
+      // Reset anomaly system (if it exists)
+      if (typeof window.anomalySystem !== 'undefined' && window.anomalySystem) {
+        // Clear all visual anomalies
+        if (typeof window.clearAllAnomalies === 'function') {
+          window.clearAllAnomalies();
+        }
+        
+        // Reset all active anomaly flags
+        window.anomalySystem.activeAnomalies = {
+          clockAnomaly: false,
+          backwardClockAnomaly: false,
+          boxOrderAnomaly: false,
+          soapGeneratorAnomaly: false,
+          shopPriceAnomaly: false,
+          darkVoidAnomaly: false,
+          prismMirrorAnomaly: false,
+          cargoOmegaBoxAnomaly: false,
+          blurpleLightAnomaly: false,
+          boxGeneratorFreezeAnomaly: false,
+          labDarknessAnomaly: false,
+          prismGreyAnomaly: false,
+          notationScrambleAnomaly: false,
+          crabBucksAnomaly: false,
+          fluzzerFlipAnomaly: false,
+          rustlingFlowersAnomaly: false,
+          dramaticWindAnomaly: false
+        };
+        
+        // Clear anomaly-related timers and intervals
+        if (window.anomalySystem.darkVoidProgressTimer) {
+          clearInterval(window.anomalySystem.darkVoidProgressTimer);
+          window.anomalySystem.darkVoidProgressTimer = null;
+        }
+        if (window.anomalySystem.viPanicInterval) {
+          clearInterval(window.anomalySystem.viPanicInterval);
+          window.anomalySystem.viPanicInterval = null;
+        }
+        if (window.anomalySystem.cursorAnimationInterval) {
+          clearInterval(window.anomalySystem.cursorAnimationInterval);
+          window.anomalySystem.cursorAnimationInterval = null;
+        }
+        if (window.anomalySystem.clockAnomalyInterval) {
+          clearInterval(window.anomalySystem.clockAnomalyInterval);
+          window.anomalySystem.clockAnomalyInterval = null;
+        }
+        if (window.anomalySystem.backwardClockAnomalyInterval) {
+          clearInterval(window.anomalySystem.backwardClockAnomalyInterval);
+          window.anomalySystem.backwardClockAnomalyInterval = null;
+        }
+        
+        // Reset other anomaly state variables
+        window.anomalySystem.frozenGeneratorId = null;
+        window.anomalySystem.anomalyAffectedItem = null;
+        window.anomalySystem.analyzing = false;
+        window.anomalySystem.searching = false;
+        window.anomalySystem.findModeActive = false;
+        
+        // Clear anomaly localStorage
+        if (typeof window.anomalySystem.clearAnomalyState === 'function') {
+          window.anomalySystem.clearAnomalyState();
+        }
+      }
+      
+      // Create a clean save object without advanced prism data to prevent it from being loaded
+      const emptySaveData = {
+        state: {
+          fluff: 0,
+          swaria: 0,
+          feathers: 0,
+          artifacts: 0,
+          kp: 0,
+          grade: 1,
+          swabucks: 0,
+          characterHunger: {},
+          characterFullStatus: {},
+          hardModeQuestActive: false,
+          hardModeQuestProgress: {},
+          permanentElementDiscovery: {
+            highestGradeAchieved: 1,
+            permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
+          }
+        },
+        generators: [],
+        friendship: {},
+        boughtElements: {},
+        generatorUpgrades: { common: 0, uncommon: 0, rare: 0, legendary: 0, mythic: 0 },
+        prismState: { light: 0, redlight: 0, orangelight: 0, yellowlight: 0, greenlight: 0, bluelight: 0 },
+        settings: { theme: 'light', colour: 'green', style: 'rounded', autosave: true },
+        swariaKnowledge: {},
+        intercomState: { intercomEventTriggered: false, intercomEvent20Triggered: false },
+        prismAdvancedLabUnlocked: false
+      };
+      
+      // Clear current save slot selection
+      localStorage.removeItem('currentSaveSlot');
+      
+      // Refresh the UI to reflect empty state
+      if (typeof updateUI === 'function') {
+        updateUI();
+      }
+    }
 
     updateSaveSlotModal();
   }
@@ -5094,8 +5643,8 @@ function mainGameTick() {
   }
   
   // Check for infinity conditions
-  if (typeof infinitySystem !== 'undefined' && infinitySystem.checkInfinity) {
-    infinitySystem.checkInfinity();
+  if (typeof infinitySystem !== 'undefined' && infinitySystem.checkAllCurrencies) {
+    infinitySystem.checkAllCurrencies();
   }
 }
 
@@ -5662,7 +6211,8 @@ function updateFloor2NavLabels() {
     if (labBtn) {
       labBtn.textContent = 'Lab';
       // Respect original visibility rules when not on floor 2
-      if (state.grade >= 2) {
+      const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+      if (hasInfinityUnlock || state.grade >= 2) {
         labBtn.style.setProperty('display', 'inline-block', 'important');
       } else {
         labBtn.style.setProperty('display', 'none', 'important');
@@ -8167,7 +8717,7 @@ function generateRecoveryExport(targetGrade) {
       swariacoins: new Decimal("100").toString(),
       grade: targetGrade, // The main thing we want - correct expansion level
       feathers: targetGrade >= 4 ? new Decimal("100").toString() : "0",
-      light: targetGrade >= 2 ? new Decimal("100").toString() : "0",
+      light: (targetGrade >= 2 || (window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1)) ? new Decimal("100").toString() : "0",
       redLight: targetGrade >= 4 ? new Decimal("100").toString() : "0",
       orangeLight: targetGrade >= 6 ? new Decimal("100").toString() : "0",
       yellowLight: targetGrade >= 8 ? new Decimal("100").toString() : "0",
@@ -8178,6 +8728,10 @@ function generateRecoveryExport(targetGrade) {
       powerStatus: 'online',
       soapRefillUsed: false,
       elementDiscoveryProgress: 0, // Start fresh
+      permanentElementDiscovery: {
+        highestGradeAchieved: 1,
+        permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8] // Start with only basic elements
+      },
       // Special/cooked tokens (stored in state) - only for expansion 4-7
       glitteringPetals: targetGrade >= 4 ? 1 : 0,
       chargedPrisma: targetGrade >= 4 ? 1 : 0,
@@ -8195,8 +8749,12 @@ function generateRecoveryExport(targetGrade) {
     swariaKnowledge: {}, // Start fresh with no knowledge
     boughtElements: getBoughtElementsForGrade(targetGrade), // Elements 7&8 + basics
     elementDiscoveryProgress: 0,
+    permanentElementDiscovery: {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8] // Start with only basic elements
+    },
     generatorUpgrades: {}, // Start fresh
-    prismState: targetGrade >= 2 ? {
+    prismState: (targetGrade >= 2 || (window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1)) ? {
       discovered: ["white"],
       unlocked: targetGrade >= 4 ? ["white", "red"] : ["white"],
       orangeUnlocked: targetGrade >= 6,
@@ -8292,7 +8850,9 @@ function getBoughtElementsForGrade(grade) {
 function getGeneratorsUnlockedForGrade(grade) {
   const unlocked = [true, true, true]; // fluff, kp, swariacoins always unlocked
   
-  if (grade >= 2) unlocked.push(true); // light
+  // Light generator can be unlocked by grade 2 OR having at least 1 total infinity earned
+  const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+  if (hasInfinityUnlock || grade >= 2) unlocked.push(true); // light
   else unlocked.push(false);
   
   if (grade >= 4) {
@@ -8613,6 +9173,13 @@ function createCompleteGameState() {
     swariaKnowledge,
     boughtElements,
     elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
+    permanentElementDiscovery: state.permanentElementDiscovery ? {
+      highestGradeAchieved: state.permanentElementDiscovery.highestGradeAchieved || 1,
+      permanentlyDiscoveredElements: Array.from(state.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+    } : {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
+    },
     generatorUpgrades,
     prismState: window.prismState || {},
     generatorsUnlocked: generators.map(g => g.unlocked || false),
@@ -8969,4 +9536,3 @@ if (document.readyState === 'loading') {
   setTimeout(checkLastDeliveryInfo, 1000);
 }
     
-

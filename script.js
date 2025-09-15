@@ -6,6 +6,9 @@ let lastBlackoutState = null;
 let lastDimState = null;
 let lastOverlayUpdate = 0;
 const OVERLAY_UPDATE_THROTTLE = 100; // ms (10 FPS)
+// --- Infinity Shop FPS Optimization ---
+let lastInfinityShopUpdate = 0;
+const INFINITY_SHOP_UPDATE_THROTTLE = 100; // ms (10 FPS)
 
 // Make optimization variables globally accessible
 window.lastGeneratorUIUpdate = lastGeneratorUIUpdate;
@@ -14,6 +17,8 @@ window.lastBlackoutState = lastBlackoutState;
 window.lastDimState = lastDimState;
 window.lastOverlayUpdate = lastOverlayUpdate;
 window.OVERLAY_UPDATE_THROTTLE = OVERLAY_UPDATE_THROTTLE;
+window.lastInfinityShopUpdate = lastInfinityShopUpdate;
+window.INFINITY_SHOP_UPDATE_THROTTLE = INFINITY_SHOP_UPDATE_THROTTLE;
 
 function updateGlobalBlackoutOverlay(force) {
   const now = Date.now();
@@ -472,9 +477,9 @@ window.testElement1 = function() {
 // Debug function to check artifact multipliers
 window.checkArtifactMultiplier = function() {
 
-
-  if (state.grade && state.grade.gte(5)) {
-    const gradeMultiplier = new Decimal(2).pow(state.grade.sub(4));
+  const grade = DecimalUtils.toDecimal(state.grade || 1);
+  if (grade.gte(5)) {
+    const gradeMultiplier = new Decimal(2).pow(grade.sub(4));
 
   } else {
 
@@ -498,8 +503,9 @@ window.checkArtifactMultiplier = function() {
     totalArtifacts += kpDecimal.mul(0.1).floor().toNumber();
   }
   
-  if (state.grade && state.grade.gte(5)) {
-    const gradeMultiplier = new Decimal(2).pow(state.grade.sub(4));
+  const grade2 = DecimalUtils.toDecimal(state.grade || 1);
+  if (grade2.gte(5)) {
+    const gradeMultiplier = new Decimal(2).pow(grade2.sub(4));
     totalArtifacts *= gradeMultiplier.toNumber();
   }
 
@@ -1215,7 +1221,7 @@ function buyBox(type) {
     if (boughtElements[4]) {
       featherGain = featherGain.add(state.artifacts.mul(0.1).floor());
     }
-    if (typeof state !== 'undefined' && typeof prismState !== 'undefined' && state.grade.gte(4)) {
+    if (typeof state !== 'undefined' && typeof prismState !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(4)) {
       featherGain = featherGain.add(prismState.redlight || 0);
     }
     // Apply expansion multiplier using the proper function
@@ -1230,8 +1236,9 @@ function buyBox(type) {
       const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
       artifactGain += kpDecimal.mul(0.1).floor().toNumber();
     }
-    if (typeof state !== 'undefined' && state.grade.gte(5)) {
-      artifactGain *= new Decimal(2).pow(state.grade.sub(4)).toNumber();
+    if (typeof state !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(5)) {
+      const grade = DecimalUtils.toDecimal(state.grade || 1);
+      artifactGain *= new Decimal(2).pow(grade.sub(4)).toNumber();
     }
     if (typeof prismState !== 'undefined' && prismState.orangelight) {
       artifactGain *= (1 + prismState.orangelight);
@@ -1416,7 +1423,6 @@ function resetGame() {
     if (typeof window.trackDeliveryReset === 'function') {
       window.trackDeliveryReset();
     }
-    window.location.reload();
   }
 }
 
@@ -1424,7 +1430,7 @@ function getFluffRate() {
   let base = new Decimal(1);
   if (boughtElements["1"]) base = base.mul(1.25);
   if (boughtElements["5"]) base = base.mul(1.25);
-  const grade = state.grade || new Decimal(1);
+  const grade = DecimalUtils.toDecimal(state.grade || 1);
   if (grade.gte(2)) {
     const gradeBoost = new Decimal(2).pow(grade.sub(1));
     base = base.mul(gradeBoost);
@@ -1943,7 +1949,7 @@ function updateUI() {
     updateInfinityResetInfo();
   }
   
-  // Update infinity tree if infinity tree tab is visible
+  // Update infinity tree if infinity tree tab is visible (throttled to prevent performance issues)
   const infinityTreeTab = document.getElementById('infinityShop');
   if (infinityTreeTab && infinityTreeTab.classList.contains('active')) {
     updateInfinityShopInfo();
@@ -1952,6 +1958,11 @@ function updateUI() {
   // Update infinity research displays
   if (typeof window.updateInfinityResearchDisplay === 'function') {
     window.updateInfinityResearchDisplay();
+  }
+  
+  // Update expansion/grade UI to reflect current KP
+  if (typeof updateGradeUI === 'function') {
+    updateGradeUI();
   }
 }
 
@@ -2755,6 +2766,13 @@ function saveGame() {
     boughtElements,
     prismAdvancedLabUnlocked: window.prismAdvancedLabUnlocked || false,
     elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
+    permanentElementDiscovery: state.permanentElementDiscovery ? {
+      highestGradeAchieved: state.permanentElementDiscovery.highestGradeAchieved || 1,
+      permanentlyDiscoveredElements: Array.from(state.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+    } : {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
+    },
     generatorUpgrades,
     prismState: window.prismState || {},
     generatorsUnlocked: generators.map(g => g.unlocked || false),
@@ -2915,8 +2933,8 @@ function saveGame() {
   // Add infinity caps data
   save.infinityCaps = window.infinityCaps || {};
   
-  // Add advanced prism calibration state
-  save.advancedPrismCalibration = window.advancedPrismState ? {
+  // Add advanced prism calibration state - only if advanced prism is unlocked
+  save.advancedPrismCalibration = (window.advancedPrismState && window.advancedPrismState.unlocked) ? {
     stable: {
       light: window.advancedPrismState.calibration.stable.light ? window.advancedPrismState.calibration.stable.light.toString() : "0",
       redlight: window.advancedPrismState.calibration.stable.redlight ? window.advancedPrismState.calibration.stable.redlight.toString() : "0",
@@ -2941,30 +2959,15 @@ function saveGame() {
       greenlight: 0,
       bluelight: 0
     }
-  } : {
-    stable: {
-      light: "0", redlight: "0", orangelight: "0", yellowlight: "0", greenlight: "0", bluelight: "0"
-    },
-    nerfs: {
-      light: "1", redlight: "1", orangelight: "1", yellowlight: "1", greenlight: "1", bluelight: "1"
-    },
-    totalTimeAccumulated: {
-      light: 0, redlight: 0, orangelight: 0, yellowlight: 0, greenlight: 0, bluelight: 0
-    }
-  };
+  } : null;
   
-  // Add advanced prism lab clicks and image swap state
-  save.advancedPrismState = window.advancedPrismState ? {
+  // Add advanced prism lab clicks and image swap state - only if advanced prism is unlocked
+  save.advancedPrismState = (window.advancedPrismState && window.advancedPrismState.unlocked) ? {
     labTabClicks: window.advancedPrismState.labTabClicks || 0,
     hasCompletedLabClicks: window.advancedPrismState.hasCompletedLabClicks || false,
     imagesSwapped: window.advancedPrismState.imagesSwapped || false,
     hasShownLabDialogue: window.advancedPrismState.hasShownLabDialogue || false
-  } : {
-    labTabClicks: 0,
-    hasCompletedLabClicks: false,
-    imagesSwapped: false,
-    hasShownLabDialogue: false
-  };
+  } : null;
   
   save.infinityChallengeData = (typeof window.infinityChallenges !== 'undefined' && typeof window.activeChallenge !== 'undefined' && typeof window.activeDifficulty !== 'undefined') ? {
       challenges: window.infinityChallenges,
@@ -3089,6 +3092,21 @@ function loadGame() {
   if (save.elementDiscoveryProgress !== undefined) {
     state.elementDiscoveryProgress = save.elementDiscoveryProgress;
   }
+  
+  // Load permanent element discovery data
+  if (save.permanentElementDiscovery !== undefined) {
+    state.permanentElementDiscovery = {
+      highestGradeAchieved: save.permanentElementDiscovery.highestGradeAchieved || 1,
+      permanentlyDiscoveredElements: new Set(save.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+    };
+  } else if (!state.permanentElementDiscovery) {
+    // Initialize if not present
+    state.permanentElementDiscovery = {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
+    };
+  }
+  
   if (typeof window.trackElementDiscovery === 'function' && boughtElements) {
     window.trackElementDiscovery(boughtElements);
   }
@@ -3665,8 +3683,8 @@ else window.state.swabucks = new Decimal(0);
     }
   }
   
-  // Load advanced prism calibration state
-  if (save.advancedPrismCalibration && window.advancedPrismState) {
+  // Load advanced prism calibration state - only if the system is unlocked
+  if (save.advancedPrismCalibration && window.advancedPrismState && window.advancedPrismState.unlocked) {
     try {
       // Load stable light values
       if (save.advancedPrismCalibration.stable) {
@@ -3709,8 +3727,8 @@ else window.state.swabucks = new Decimal(0);
     }
   }
   
-  // Load advanced prism lab clicks and image swap state
-  if (save.advancedPrismState && window.advancedPrismState) {
+  // Load advanced prism lab clicks and image swap state - only if the system is unlocked
+  if (save.advancedPrismState && window.advancedPrismState && window.advancedPrismState.unlocked) {
     try {
       if (save.advancedPrismState.labTabClicks !== undefined) {
         window.advancedPrismState.labTabClicks = save.advancedPrismState.labTabClicks;
@@ -3761,6 +3779,13 @@ else window.state.swabucks = new Decimal(0);
   if (typeof window.checkAdvancedPrismUnlock === 'function') {
     window.checkAdvancedPrismUnlock();
   }
+  
+  // Check for pending story modals after loading (including infinity reset story)
+  setTimeout(() => {
+    if (typeof window.checkForPendingStoryModals === 'function') {
+      window.checkForPendingStoryModals();
+    }
+  }, 1500);
 }
 
 let lastExportClickTime = 0;
@@ -3789,6 +3814,13 @@ function exportSave() {
     swariaKnowledge,
     boughtElements,
     elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
+    permanentElementDiscovery: state.permanentElementDiscovery ? {
+      highestGradeAchieved: state.permanentElementDiscovery.highestGradeAchieved || 1,
+      permanentlyDiscoveredElements: Array.from(state.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+    } : {
+      highestGradeAchieved: 1,
+      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
+    },
     generatorUpgrades,
     prismState: window.prismState || {},
     generatorsUnlocked: generators.map(g => g.unlocked || false),
@@ -3991,6 +4023,21 @@ function importSave() {
     if (save.elementDiscoveryProgress !== undefined) {
       state.elementDiscoveryProgress = save.elementDiscoveryProgress;
     }
+    
+    // Load permanent element discovery data
+    if (save.permanentElementDiscovery !== undefined) {
+      state.permanentElementDiscovery = {
+        highestGradeAchieved: save.permanentElementDiscovery.highestGradeAchieved || 1,
+        permanentlyDiscoveredElements: new Set(save.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
+      };
+    } else if (!state.permanentElementDiscovery) {
+      // Initialize if not present
+      state.permanentElementDiscovery = {
+        highestGradeAchieved: 1,
+        permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
+      };
+    }
+    
     if (typeof window.trackElementDiscovery === 'function' && boughtElements) {
       window.trackElementDiscovery(boughtElements);
     }
@@ -4509,8 +4556,8 @@ function importSave() {
 
   }
   
-  // Load advanced prism calibration state from imported save
-  if (save.advancedPrismCalibration && window.advancedPrismState) {
+  // Load advanced prism calibration state from imported save - only if the system is unlocked
+  if (save.advancedPrismCalibration && window.advancedPrismState && window.advancedPrismState.unlocked) {
     try {
       // Load stable light values
       if (save.advancedPrismCalibration.stable) {
@@ -4553,8 +4600,8 @@ function importSave() {
     }
   }
   
-  // Load advanced prism lab clicks and image swap state from imported save
-  if (save.advancedPrismState && window.advancedPrismState) {
+  // Load advanced prism lab clicks and image swap state from imported save - only if the system is unlocked
+  if (save.advancedPrismState && window.advancedPrismState && window.advancedPrismState.unlocked) {
     try {
       if (save.advancedPrismState.labTabClicks !== undefined) {
         window.advancedPrismState.labTabClicks = save.advancedPrismState.labTabClicks;
@@ -5118,10 +5165,10 @@ function updatePrismAdvancedButtonVisibility() {
 
 
   if (advancedBtn) {
-    // Check permanent unlock flag first, then element 25 status, then story modal unlock
+    // Advanced prism requires seeing the element 25 story modal first
     const element25Bought = window.boughtElements && (window.boughtElements[25] || window.boughtElements["25"]);
     const storyModalSeen = window.state && window.state.seenElement25StoryModal;
-    const shouldShow = window.prismAdvancedLabUnlocked || element25Bought || storyModalSeen;
+    const shouldShow = (window.prismAdvancedLabUnlocked || element25Bought) && storyModalSeen;
 
 
 
@@ -5129,8 +5176,8 @@ function updatePrismAdvancedButtonVisibility() {
 
       advancedBtn.style.display = 'inline-block';
       
-      // If element 25 was just bought and permanent flag isn't set, set it now
-      if (element25Bought && !window.prismAdvancedLabUnlocked) {
+      // If element 25 was bought, story modal seen, and permanent flag isn't set, set it now
+      if (element25Bought && storyModalSeen && !window.prismAdvancedLabUnlocked) {
 
         window.prismAdvancedLabUnlocked = true;
         // Auto-save to preserve the permanent unlock
@@ -5668,8 +5715,15 @@ function updateInfinityResetInfo() {
 }
 
 // Update infinity tree info display
-function updateInfinityShopInfo() {
+function updateInfinityShopInfo(force = false) {
   if (typeof window.infinitySystem === 'undefined') return;
+  
+  // Throttle updates to prevent performance issues
+  const now = Date.now();
+  if (!force && now - window.lastInfinityShopUpdate < window.INFINITY_SHOP_UPDATE_THROTTLE) {
+    return;
+  }
+  window.lastInfinityShopUpdate = now;
   
   // Update infinity points display
   const infinityPointsElement = document.getElementById('infinityPointsDisplay');
@@ -6140,7 +6194,7 @@ function earnBox(type, rewardMultiplier = 1, suppressPopup = false, count = 1) {
     const avgFeather = new Decimal((box.feather[0] + box.feather[1]) / 2).mul(rewardMultiplierDecimal);
     featherGain = avgFeather.mul(countDecimal);
     if (boughtElements[4]) featherGain = featherGain.add(state.artifacts.mul(0.1).floor().mul(rewardMultiplierDecimal).mul(countDecimal));
-    if (typeof state !== 'undefined' && typeof prismState !== 'undefined' && state.grade.gte(4)) {
+    if (typeof state !== 'undefined' && typeof prismState !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(4)) {
       featherGain = featherGain.add(new Decimal(prismState.redlight || 0).mul(countDecimal));
     }
   }
@@ -6151,8 +6205,9 @@ function earnBox(type, rewardMultiplier = 1, suppressPopup = false, count = 1) {
       const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
       artifactGain = artifactGain.add(kpDecimal.mul(0.1).floor().mul(rewardMultiplierDecimal).mul(countDecimal));
     }
-    if (typeof state !== 'undefined' && state.grade.gte(5)) {
-      artifactGain = artifactGain.mul(new Decimal(2).pow(state.grade.sub(4)));
+    if (typeof state !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(5)) {
+      const grade = DecimalUtils.toDecimal(state.grade || 1);
+      artifactGain = artifactGain.mul(new Decimal(2).pow(grade.sub(4)));
     }
     if (typeof prismState !== 'undefined' && prismState.orangelight) {
       artifactGain = artifactGain.mul(new Decimal(1).add(prismState.orangelight));
@@ -8027,8 +8082,15 @@ function testInfinitySaveSlotIsolation() {
 
 // Function to check for pending story modals that should be shown after page reload
 function checkForPendingStoryModals() {
-    // Check if we need to show the infinity reset story modal
-    if (window.state && window.state.pendingInfinityResetStory) {
+    if (!window.state) return;
+    
+    // Initialize flag if it doesn't exist
+    if (typeof window.state.seenInfinityResetStory === 'undefined') {
+        window.state.seenInfinityResetStory = false;
+    }
+    
+    // Check if we need to show the infinity reset story modal from actual reset
+    if (window.state.pendingInfinityResetStory && !window.state.seenInfinityResetStory) {
         // Clear the pending flag and mark story as seen
         window.state.pendingInfinityResetStory = false;
         window.state.seenInfinityResetStory = true;
@@ -8039,7 +8101,22 @@ function checkForPendingStoryModals() {
             if (typeof window.showInfinityResetStoryModal === 'function') {
                 window.showInfinityResetStoryModal();
             }
-        }, 1000); // Delay to ensure page is fully loaded
+        }, 1000);
+        return;
+    }
+    
+    // Automatic trigger - show modal when player has totalInfinityEarned >= 1 (only once)
+    var infinityEarned = window.infinitySystem && window.infinitySystem.totalInfinityEarned ? window.infinitySystem.totalInfinityEarned : 0;
+    if (infinityEarned >= 1 && !window.state.seenInfinityResetStory) {
+        window.state.seenInfinityResetStory = true;
+        if (typeof saveGame === 'function') saveGame();
+        
+        setTimeout(() => {
+            if (typeof window.showInfinityResetStoryModal === 'function') {
+                window.showInfinityResetStoryModal();
+            }
+        }, 100);
+        return;
     }
 }
 
@@ -8047,23 +8124,19 @@ window.testInfinitySaveSlotIsolation = testInfinitySaveSlotIsolation;
 
 // Test function for infinity reset story modal
 function testInfinityResetStoryModal() {
-
     // Check current state
-
-
-
-
-    // Simulate first infinity reset
-    if (window.state) {
-        window.state.seenInfinityResetStory = false;
-        window.state.pendingInfinityResetStory = true;
-
-        // Test the check function
-        setTimeout(() => {
-
-            checkForPendingStoryModals();
-        }, 100);
+    if (!window.state) window.state = {};
+    if (!window.infinitySystem) return;
+    
+    // Ensure player has at least 1 infinity for testing
+    if (window.infinitySystem.totalInfinityEarned < 1) {
+        window.infinitySystem.totalInfinityEarned = 1;
     }
+    
+    // Test the automatic trigger
+    setTimeout(() => {
+        checkForPendingStoryModals();
+    }, 100);
 }
 
 window.testInfinityResetStoryModal = testInfinityResetStoryModal;

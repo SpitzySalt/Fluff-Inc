@@ -971,6 +971,7 @@ if (document.readyState === 'loading') {
 }
 setTimeout(initializeBoostDisplay, 1000);
 setTimeout(initializeDeliverButtonCooldown, 1500);
+setTimeout(initializeFreeGiftModal, 2000);
 window.testBoostDisplay = function() {
     if (!window.state) window.state = {};
     window.state.mysticCookingSpeedBoost = 60000; 
@@ -1159,19 +1160,9 @@ function applyElementVisibilityFilter() {
             currentMaxUnlocked = baseMaxUnlocked + 10;
         }
         
-        // Get persistent element discovery progress (highest element ever discovered through base expansion)
-        let persistentDiscovery;
-        try {
-            persistentDiscovery = (typeof window.getHighestElementDiscovery === 'function') 
-                ? window.getHighestElementDiscovery() 
-                : (window.state && window.state.elementDiscoveryProgress || 0);
-        } catch (error) {
-
-            persistentDiscovery = 0; // Safe fallback
-        }
-        
-        // Use the higher of current unlock level or persistent discovery to preserve visibility
-        const maxUnlockedElements = Math.max(currentMaxUnlocked, persistentDiscovery);
+        // For new saves, only use current unlock level (which comes from permanent discovery system)
+        // Don't use elementDiscoveryProgress as it can get inflated incorrectly
+        const maxUnlockedElements = currentMaxUnlocked;
 
         const grid = document.getElementById("elementGrid");
         
@@ -1263,3 +1254,149 @@ function injectElementUnlockCSS() {
 
 // Initialize CSS when script loads
 injectElementUnlockCSS();
+
+// --- FREE GIFT MODAL SYSTEM ---
+let freeGiftModalShown = false;
+
+function showFreeGiftModal() {
+    if (freeGiftModalShown) return;
+    
+    const modal = document.getElementById('freeGiftModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    freeGiftModalShown = true;
+    
+    // Add click-outside-to-claim functionality
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            claimFreeGift();
+        }
+    });
+}
+
+function claimFreeGift() {
+    const modal = document.getElementById('freeGiftModal');
+    if (!modal) return;
+    
+    // Award all the specified rewards
+    awardFreeGiftRewards();
+    
+    // Hide the modal
+    modal.style.display = 'none';
+    
+    // Mark as claimed to prevent showing again
+    localStorage.setItem('freeGiftClaimed', 'true');
+}
+
+function awardFreeGiftRewards() {
+    // Award kitchen ingredient tokens using proper system
+    if (!window.kitchenIngredients) {
+        window.kitchenIngredients = {};
+    }
+    
+    // Award ingredient tokens by adding to existing amounts
+    const ingredientRewards = {
+        berries: 500,
+        mushroom: 300,
+        sparks: 300,
+        prisma: 300,
+        water: 300,
+        petals: 300,
+        stardust: 100
+    };
+    
+    for (const [type, amount] of Object.entries(ingredientRewards)) {
+        // Ensure the ingredient exists and is a Decimal
+        if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
+            window.kitchenIngredients[type] = new Decimal(0);
+        }
+        // Add the reward amount to existing inventory
+        window.kitchenIngredients[type] = window.kitchenIngredients[type].add(amount);
+    }
+    
+    // Award special tokens stored in window.state (including swabucks)
+    if (window.state) {
+        const specialTokenRewards = {
+            swabucks: 250,
+            berryPlate: 5,
+            mushroomSoup: 5,
+            batteries: 5,
+            chargedPrisma: 5,
+            glitteringPetals: 5
+        };
+        
+        for (const [token, amount] of Object.entries(specialTokenRewards)) {
+            if (token === 'swabucks') {
+                // Handle swabucks as Decimal (it's saved as Decimal string)
+                if (!DecimalUtils.isDecimal(window.state[token])) {
+                    window.state[token] = new Decimal(0);
+                }
+                window.state[token] = window.state[token].add(amount);
+            } else {
+                // Handle other special tokens as numbers (save system expects numbers)
+                if (typeof window.state[token] !== 'number') {
+                    window.state[token] = 0;
+                }
+                window.state[token] += amount;
+            }
+        }
+        
+        // Save immediately after awarding special tokens to persist changes
+        if (typeof saveGame === 'function') {
+            saveGame();
+        }
+    }
+    
+    // Track token collection for front desk automator unlock progress (same as kitchen system)
+    if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
+        // Call for each ingredient type collected (7 ingredients + 5 special tokens = 12 total)
+        for (let i = 0; i < 12; i++) {
+            window.frontDesk.onTokenCollected();
+        }
+    }
+    
+    // Update UI and save game (same as kitchen system)
+    if (typeof window.updateKitchenUI === 'function') {
+        window.updateKitchenUI();
+    }
+    if (typeof window.updateUI === 'function') {
+        window.updateUI();
+    }
+    if (typeof window.updateInventoryModal === 'function') {
+        window.updateInventoryModal();
+    }
+    if (typeof saveGame === 'function') {
+        saveGame();
+    }
+}
+
+function initializeFreeGiftModal() {
+    // Check if the gift has already been claimed
+    if (localStorage.getItem('freeGiftClaimed') === 'true') {
+        return;
+    }
+    
+    // Show the modal after a short delay to ensure the page is loaded
+    setTimeout(() => {
+        showFreeGiftModal();
+    }, 1500);
+}
+
+// Make functions globally accessible
+window.showFreeGiftModal = showFreeGiftModal;
+window.claimFreeGift = claimFreeGift;
+window.awardFreeGiftRewards = awardFreeGiftRewards;
+window.initializeFreeGiftModal = initializeFreeGiftModal;
+
+// Debug function to test the free gift modal
+window.testFreeGiftModal = function() {
+    localStorage.removeItem('freeGiftClaimed');
+    freeGiftModalShown = false;
+    showFreeGiftModal();
+};
+
+// Debug function to test reward addition without modal
+window.testFreeGiftRewards = function() {
+    awardFreeGiftRewards();
+};

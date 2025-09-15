@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en" id="root" data-theme="light" data-colour="green" data-style="rounded">
 <head>
   <meta charset="UTF-8">
@@ -1409,7 +1409,7 @@ body {
     <div id="infinityReset" class="infinity-sub-tab active">
       <div class="infinity-card">
         <h2>∞ Infinity Reset ∞</h2>
-        <p>Reset everything expansion does as well as expansion levels, every elements (including 7, 8) and terrarium content to increase your total infinity.</p>
+        <p>Reset everything expansion does as well as expansion levels, every elements (excluding 7, 8, 25) and terrarium content to increase your total infinity.</p>
         
         <button class="infinity-reset-btn" id="performInfinityReset" disabled>Perform Infinity Reset</button>
       </div>
@@ -2251,6 +2251,7 @@ body {
 <script src="merchant.js"></script>
 <script src="front desk.js"></script>
 <script src="permanent-tab-unlock.js"></script>
+<script src="test-infinity.js"></script>
 <div id="gradeUpAnimation" class="grade-up-animation" style="display:none;">
   <span class="grade-old"></span>
   <span class="grade-new"></span>
@@ -2646,6 +2647,28 @@ body {
       After doing the first infinity reset, you recieved a new gift from the Swa elites, an anomaly detector. There is a note attached to it, it reads "We have detected an unusual fluctation in the fabric of reality around the facility, anomalies will start appearing and you will need to find them and remove them using this device, these anomalies can appear anywhere and at any time, for each anomaly present, they will affect your production until you remove them, be careful. Good luck, The Swa Elites."
     </div>
     <button onclick="closeInfinityResetStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
+  </div>
+</div>
+<div id="freeGiftModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); backdrop-filter:blur(2px);">
+  <div style="background:linear-gradient(135deg, #fff 0%, #f8f9fa 100%); color:#333; padding:2.5em; text-align:center; max-width:600px; border-radius:20px; box-shadow:0 0 80px rgba(255,215,0,0.6), 0 0 40px rgba(255,165,0,0.4); border:3px solid #ffd700; position:relative;">
+    <div style="position:absolute; top:-10px; left:-10px; right:-10px; bottom:-10px; background:linear-gradient(45deg, #ffd700, #ffed4e, #ffd700); border-radius:25px; z-index:-1; opacity:0.3;"></div>
+    <h2 style="color:#ff6b35; margin-bottom:0.8em; font-size:2.2em; text-shadow:2px 2px 4px rgba(0,0,0,0.1);">Game updated!</h2>
+    <p style="font-size:1.3em; margin-bottom:2em; color:#555; font-weight:500;">I've fixed all the bugs that was in the last update, I'm sorry to anyone who may have lost their progress due to the last update so I will give free tokens for compensation.</p>
+    <div style="background:rgba(255,215,0,0.1); padding:1.5em; border-radius:15px; margin:1.5em 0; border:2px solid #ffd700;">
+      <p style="margin:0; font-size:1.1em; color:#333; line-height:1.6;">
+        <strong style="color:#ff6b35;">Reward Includes:</strong><br>
+        250 Swa Bucks<br>
+        500 Berry Tokens • 300 Mushroom Tokens<br>
+        300 Spark Tokens • 300 Prisma Shard Tokens<br>
+        300 Water Tokens • 300 Petal Tokens<br>
+        100 Stardust Tokens<br>
+        5 Berry Plates • 5 Mushroom Soups<br>
+        5 Batteries • 5 Charged Prismas • 5 Glittering Petals
+      </p>
+    </div>
+    <button onclick="claimFreeGift()" style="background:linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ff6b35 100%); color:white; border:none; padding:1em 2.5em; border-radius:15px; cursor:pointer; font-weight:bold; font-size:1.3em; box-shadow:0 6px 20px rgba(255,107,53,0.4); transition:all 0.3s ease; transform:scale(1);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      Claim gift
+    </button>
   </div>
 </div>
 </body>

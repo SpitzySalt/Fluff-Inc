@@ -126,7 +126,18 @@ function checkNectarizeMilestones() {
   return nectarizeMilestoneData;
 }
 
-function renderNectarizeMilestoneTable() {
+function renderNectarizeMilestoneTable(force = false) {
+  // Throttle updates to prevent performance issues (shared constant from terrarium.js)
+  const NECTARIZE_MILESTONE_UPDATE_THROTTLE = 100; // ms (10 FPS)
+  if (typeof lastNectarizeMilestoneUpdateTime === 'undefined') {
+    window.lastNectarizeMilestoneUpdateTime = 0;
+  }
+  const now = Date.now();
+  if (!force && now - window.lastNectarizeMilestoneUpdateTime < NECTARIZE_MILESTONE_UPDATE_THROTTLE) {
+    return;
+  }
+  window.lastNectarizeMilestoneUpdateTime = now;
+  
   const milestoneTable = document.getElementById('nectarizeMilestoneTable');
   const milestoneContent = document.getElementById('nectarizeMilestoneTableContent');
   if (!milestoneTable || !milestoneContent) {

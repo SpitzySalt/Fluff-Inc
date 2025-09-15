@@ -3,6 +3,10 @@
 
 const INFINITY_THRESHOLD = new Decimal('1.8e308');
 
+// Throttling for infinity tree UI updates to prevent performance issues
+const INFINITY_TREE_UPDATE_THROTTLE = 100; // ms (10 FPS)
+let lastInfinityTreeUpdateTime = 0;
+
 // Track infinity counts for each currency
 window.infinitySystem = {
     counts: {
@@ -93,6 +97,7 @@ window.infinitySystem = {
     // Trigger infinity for a currency
     triggerInfinity: function(currencyName, currentValue) {
         this.counts[currencyName] = (this.counts[currencyName] || 0) + 1;
+        const infinityCount = this.counts[currencyName];
         
         // Mark currency as discovered
         this.everReached[currencyName] = true;
@@ -111,6 +116,9 @@ window.infinitySystem = {
             this.resetCurrency('feathers');
             this.resetCurrency('artifacts');
         }
+        
+        // Show infinity notification (including story modal for first fluff infinity)
+        this.showInfinityNotification(currencyName, infinityCount);
         
         // Update UI to show infinity symbol immediately
         if (typeof updateUI === 'function') {
@@ -184,8 +192,8 @@ window.infinitySystem = {
         // Special story modal for first fluff infinity
         if (currencyName === 'fluff' && infinityCount === 1) {
             // Check if we've already shown the story modal
-            if (!state.seenInfinityFluffStory && typeof window.showInfinityFluffStoryModal === 'function') {
-                state.seenInfinityFluffStory = true;
+            if (!window.state.seenInfinityFluffStory && typeof window.showInfinityFluffStoryModal === 'function') {
+                window.state.seenInfinityFluffStory = true;
                 window.showInfinityFluffStoryModal();
                 return;
             }
@@ -619,11 +627,12 @@ window.infinitySystem = {
             if (typeof saveGame === 'function') saveGame();
         }
 
-        
-        // Reload the page after a delay (like expansion reset)
+        // Check for pending story modals after reset
         setTimeout(() => {
-            window.location.reload();
-        }, 4000);
+            if (typeof window.checkForPendingStoryModals === 'function') {
+                window.checkForPendingStoryModals();
+            }
+        }, 1000);
         
         return true;
     },
@@ -1810,6 +1819,11 @@ window.buyInfinityUpgrade = function(upgradeName) {
 
 // Apply swalement discovery effect - unlocks additional elements
 function applySwalementDiscoveryEffect() {
+    // Update permanent element discovery when infinity upgrade changes
+    if (typeof window.updatePermanentElementDiscovery === 'function') {
+        window.updatePermanentElementDiscovery();
+    }
+    
     if (typeof window.applyElementVisibilityFilter === 'function') {
         // Refresh element visibility to show newly unlocked elements
         window.applyElementVisibilityFilter();
@@ -1823,6 +1837,12 @@ function applySwalementDiscoveryEffect() {
 
 // Get maximum elements available including infinity upgrade bonus
 function getMaxElementsWithInfinityBonus() {
+    // Use the new permanent element discovery system
+    if (typeof window.getPermanentlyAvailableElements === 'function') {
+        return window.getPermanentlyAvailableElements();
+    }
+    
+    // Fallback to old system if permanent system not available
     let baseMax = 0;
     
     // Get base maximum from expansion level
@@ -1996,7 +2016,14 @@ window.applyInfinityUpgrades = function(baseValue, upgradeTypes = ['all']) {
 };
 
 // Update infinity upgrade tree UI
-window.updateInfinityUpgradeTree = function() {
+window.updateInfinityUpgradeTree = function(force = false) {
+    // Throttle updates to prevent performance issues
+    const now = Date.now();
+    if (!force && now - lastInfinityTreeUpdateTime < INFINITY_TREE_UPDATE_THROTTLE) {
+        return;
+    }
+    lastInfinityTreeUpdateTime = now;
+    
     const upgradeNames = Object.keys(window.infinityUpgradeData);
     
     // Update tier separators first
@@ -2083,13 +2110,16 @@ window.updateInfinityUpgradeTree = function() {
             upgradeElement.classList.add('affordable');
         }
         
-        // Add click handler
-        upgradeElement.onclick = () => {
-            if (window.buyInfinityUpgrade(upgradeName)) {
-                window.updateInfinityUpgradeTree();
-                window.updateInfinityShopInfo();
-            }
-        };
+        // Add click handler only if not already added
+        if (!upgradeElement.hasAttribute('data-click-handler-added')) {
+            upgradeElement.onclick = () => {
+                if (window.buyInfinityUpgrade(upgradeName)) {
+                    window.updateInfinityUpgradeTree(true); // Force immediate update
+                    window.updateInfinityShopInfo(true); // Force immediate update
+                }
+            };
+            upgradeElement.setAttribute('data-click-handler-added', 'true');
+        }
     });
 };
 
@@ -2119,12 +2149,12 @@ function giveInfinityTheorems(amount = 1000) {
     window.infinitySystem.infinityTheorems += amount;
 
     
-    // Update UI if function exists
+    // Update UI if function exists - force immediate update for test function
     if (typeof window.updateInfinityShopInfo === 'function') {
-        window.updateInfinityShopInfo();
+        window.updateInfinityShopInfo(true);
     }
     if (typeof window.updateInfinityUpgradeTree === 'function') {
-        window.updateInfinityUpgradeTree();
+        window.updateInfinityUpgradeTree(true);
     }
 }
 
@@ -2729,10 +2759,6 @@ window.respecInfinityTheorems = function() {
     if (typeof saveGame === 'function') {
         saveGame();
     }
-    
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
 };
 
 // Add event listener for respec button

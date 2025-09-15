@@ -1,6 +1,10 @@
-﻿// welcome to the Fluff Inc. game script
+﻿﻿// welcome to the Fluff Inc. game script
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
+
+// Throttling for terrarium UI updates to prevent performance issues
+const TERRARIUM_UI_UPDATE_THROTTLE = 100; // ms (10 FPS)
+let lastTerrariumUIUpdateTime = 0;
 
 // Fallback for DecimalUtils in case it's not loaded yet
 if (typeof DecimalUtils === 'undefined') {
@@ -1537,11 +1541,21 @@ function regrowFlowers() {
     }
   }
   if (flowersRegrown > 0) {
-    renderTerrariumUI();
+    // Only force immediate update if terrarium tab is visible
+    const terrariumTab = document.getElementById('terrariumTab');
+    const isTabVisible = terrariumTab && terrariumTab.classList.contains('active');
+    renderTerrariumUI(isTabVisible);
   }
 }
 
-function renderTerrariumUI() {
+function renderTerrariumUI(force = false) {
+  // Throttle updates to prevent performance issues
+  const now = Date.now();
+  if (!force && now - lastTerrariumUIUpdateTime < TERRARIUM_UI_UPDATE_THROTTLE) {
+    return;
+  }
+  lastTerrariumUIUpdateTime = now;
+  
   syncTerrariumVarsFromWindow();
   if (nectarizeQuestActive && !nectarizeMachineRepaired && !window.nectarizeQuestPermanentlyCompleted) {
     setTimeout(() => {
@@ -2514,7 +2528,7 @@ function handleWateringCanClick(index, cols, rows) {
   if (flowersWatered > 0) {
     showTerrariumGainPopup('terrariumWatered', flowersWatered, 'Health');
   }
-  renderTerrariumUI();
+  renderTerrariumUI(true); // Force immediate update for player interaction
 }
 
 function handlePollenWandClick(index, cols, rows) {
@@ -2614,7 +2628,7 @@ function handlePollenWandClick(index, cols, rows) {
   window.terrariumFlowers = terrariumFlowers;
   window.terrariumXP = terrariumXP;
   window.terrariumLevel = terrariumLevel;
-  renderTerrariumUI();
+  renderTerrariumUI(true); // Force immediate update for player interaction
   checkAndUpdateFluzzerSleepState();
   updateFluzzerSleepState();
   if (leveledUp) {
@@ -3158,19 +3172,23 @@ function updateFlowerUpgradeRow() {
       </div>
     `;
     flowerRow.appendChild(div);
-    div.addEventListener('click', function(e) {
-      updateFlowerXPUpgradeModal();
-      const modal = document.getElementById('flowerXPUpgradeModal');
-      if (modal) modal.style.display = 'flex';
-      e.stopPropagation();
-    });
-    div.addEventListener('contextmenu', function(e) {
-      if (canBuyFlowerXPUpgrade()) {
-        buyMaxFlowerXPUpgrade();
-      }
-      e.preventDefault();
-      e.stopPropagation();
-    });
+    // Add event listeners only if not already added
+    if (!div.hasAttribute('data-listeners-added')) {
+      div.addEventListener('click', function(e) {
+        updateFlowerXPUpgradeModal();
+        const modal = document.getElementById('flowerXPUpgradeModal');
+        if (modal) modal.style.display = 'flex';
+        e.stopPropagation();
+      });
+      div.addEventListener('contextmenu', function(e) {
+        if (canBuyFlowerXPUpgrade()) {
+          buyMaxFlowerXPUpgrade();
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      div.setAttribute('data-listeners-added', 'true');
+    }
     updateFlowerXPUpgradeCircleCost();
   }
   if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 10) || window.terrariumUpgradesUnlocked.flower3) {
@@ -3202,19 +3220,23 @@ function updateFlowerUpgradeRow() {
       </div>
     `;
     flowerRow.appendChild(div);
-    div.addEventListener('click', function(e) {
-      updateFlowerUpgrade3Modal();
-      const modal = document.getElementById('pollenUpgrade2Modal');
-      if (modal) modal.style.display = 'flex';
-      e.stopPropagation();
-    });
-    div.addEventListener('contextmenu', function(e) {
-      if (canBuyFlowerUpgrade3()) {
-        buyMaxFlowerUpgrade3();
-      }
-      e.preventDefault();
-      e.stopPropagation();
-    });
+    // Add event listeners only if not already added
+    if (!div.hasAttribute('data-listeners-added')) {
+      div.addEventListener('click', function(e) {
+        updateFlowerUpgrade3Modal();
+        const modal = document.getElementById('pollenUpgrade2Modal');
+        if (modal) modal.style.display = 'flex';
+        e.stopPropagation();
+      });
+      div.addEventListener('contextmenu', function(e) {
+        if (canBuyFlowerUpgrade3()) {
+          buyMaxFlowerUpgrade3();
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      div.setAttribute('data-listeners-added', 'true');
+    }
     updateFlowerUpgrade3CircleCost();
   }
   if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 30) || window.terrariumUpgradesUnlocked.flower4) {
@@ -3251,12 +3273,16 @@ function updateFlowerUpgradeRow() {
       flowerUpgrade4Card = div;
     }
     flowerUpgrade4Card.style.display = 'flex';
-    flowerUpgrade4Card.onclick = function(e) {
-      updateFlowerUpgrade4Modal();
-      const modal = document.getElementById('flowerUpgrade4Modal');
-      if (modal) modal.style.display = 'flex';
-      e.stopPropagation();
-    };
+    // Add click handler only if not already added
+    if (!flowerUpgrade4Card.hasAttribute('data-click-handler-added')) {
+      flowerUpgrade4Card.onclick = function(e) {
+        updateFlowerUpgrade4Modal();
+        const modal = document.getElementById('flowerUpgrade4Modal');
+        if (modal) modal.style.display = 'flex';
+        e.stopPropagation();
+      };
+      flowerUpgrade4Card.setAttribute('data-click-handler-added', 'true');
+    }
     flowerUpgrade4Card.oncontextmenu = function(e) {
       if (canBuyFlowerUpgrade4()) {
         buyFlowerUpgrade4(1); 
@@ -3300,19 +3326,27 @@ function updateFlowerUpgradeRow() {
       flowerUpgrade5Card = div;
     }
     flowerUpgrade5Card.style.display = 'flex';
-    flowerUpgrade5Card.onclick = function(e) {
-      updateFlowerUpgrade5Modal();
-      const modal = document.getElementById('flowerUpgrade5Modal');
-      if (modal) modal.style.display = 'flex';
-      e.stopPropagation();
-    };
-    flowerUpgrade5Card.oncontextmenu = function(e) {
-      if (canBuyFlowerUpgrade5()) {
-        buyMaxFlowerUpgrade5(); 
+    // Add click handler only if not already added
+    if (!flowerUpgrade5Card.hasAttribute('data-click-handler-added')) {
+      flowerUpgrade5Card.onclick = function(e) {
+        updateFlowerUpgrade5Modal();
+        const modal = document.getElementById('flowerUpgrade5Modal');
+        if (modal) modal.style.display = 'flex';
+        e.stopPropagation();
+      };
+      flowerUpgrade5Card.setAttribute('data-click-handler-added', 'true');
+      // Add context menu handler only if not already added
+      if (!flowerUpgrade5Card.hasAttribute('data-context-handler-added')) {
+        flowerUpgrade5Card.oncontextmenu = function(e) {
+          if (canBuyFlowerUpgrade5()) {
+            buyMaxFlowerUpgrade5(); 
+          }
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        flowerUpgrade5Card.setAttribute('data-context-handler-added', 'true');
       }
-      e.preventDefault();
-      e.stopPropagation();
-    };
+    }
     updateFlowerUpgrade5CircleCost();
   }
   const nextUnlock = document.getElementById('terrariumFlowerNextUnlock');
@@ -3350,31 +3384,47 @@ setupTerrariumSubTabButtons = function() {
   }, 100);
   const kpNectarCard = document.getElementById('nectar-upgrade-1');
   if (kpNectarCard) {
-    kpNectarCard.onclick = function() {
-      updateKpNectarUpgradeModal();
-      const modal = document.getElementById('kpNectarUpgradeModal');
-      if (modal) {
-        modal.style.display = 'flex';
-      } else {
-      }
-    };
-    kpNectarCard.oncontextmenu = function(e) {
-      handlePollenUpgradeRightClick('nectar1', e);
-    };
+    // Add click handler only if not already added
+    if (!kpNectarCard.hasAttribute('data-click-handler-added')) {
+      kpNectarCard.onclick = function() {
+        updateKpNectarUpgradeModal();
+        const modal = document.getElementById('kpNectarUpgradeModal');
+        if (modal) {
+          modal.style.display = 'flex';
+        } else {
+        }
+      };
+      kpNectarCard.setAttribute('data-click-handler-added', 'true');
+    // Add context menu handler only if not already added
+    if (!kpNectarCard.hasAttribute('data-context-handler-added')) {
+      kpNectarCard.oncontextmenu = function(e) {
+        handlePollenUpgradeRightClick('nectar1', e);
+      };
+      kpNectarCard.setAttribute('data-context-handler-added', 'true');
+    }
+  }
   }
   const pollenFlowerNectarCard = document.getElementById('nectar-upgrade-2');
   if (pollenFlowerNectarCard) {
-    pollenFlowerNectarCard.onclick = function() {
-      updatePollenFlowerNectarUpgradeModal();
-      const modal = document.getElementById('pollenFlowerNectarUpgradeModal');
-      if (modal) {
-        modal.style.display = 'flex';
-      } else {
-      }
-    };
-    pollenFlowerNectarCard.oncontextmenu = function(e) {
-      handlePollenUpgradeRightClick('nectar2', e);
-    };
+    // Add click handler only if not already added
+    if (!pollenFlowerNectarCard.hasAttribute('data-click-handler-added')) {
+      pollenFlowerNectarCard.onclick = function() {
+        updatePollenFlowerNectarUpgradeModal();
+        const modal = document.getElementById('pollenFlowerNectarUpgradeModal');
+        if (modal) {
+          modal.style.display = 'flex';
+        } else {
+        }
+      };
+      pollenFlowerNectarCard.setAttribute('data-click-handler-added', 'true');
+    }
+    // Add context menu handler only if not already added
+    if (!pollenFlowerNectarCard.hasAttribute('data-context-handler-added')) {
+      pollenFlowerNectarCard.oncontextmenu = function(e) {
+        handlePollenUpgradeRightClick('nectar2', e);
+      };
+      pollenFlowerNectarCard.setAttribute('data-context-handler-added', 'true');
+    }
   }
   const nectarXpCard = document.getElementById('nectar-upgrade-3');
   if (nectarXpCard) {
