@@ -3902,6 +3902,58 @@ function updateSaveSlotModal() {
           window.reloadAchievementsForSlot();
         }
         
+        // Reset infinity system for new slot
+        if (typeof window.infinitySystem !== 'undefined' && window.infinitySystem) {
+          // Reset infinity counts
+          window.infinitySystem.counts = {
+            fluff: 0,
+            swaria: 0,
+            feathers: 0,
+            artifacts: 0,
+            light: 0,
+            redLight: 0,
+            orangeLight: 0,
+            yellowLight: 0,
+            greenLight: 0,
+            blueLight: 0,
+            terrariumPollen: 0,
+            terrariumFlowers: 0,
+            terrariumNectar: 0,
+            charge: 0
+          };
+          
+          // Reset infinity discovery flags
+          window.infinitySystem.everReached = {
+            fluff: false,
+            swaria: false,
+            feathers: false,
+            artifacts: false,
+            light: false,
+            redLight: false,
+            orangeLight: false,
+            yellowLight: false,
+            greenLight: false,
+            blueLight: false,
+            terrariumPollen: false,
+            terrariumFlowers: false,
+            terrariumNectar: false,
+            charge: false
+          };
+          
+          // Reset currency images
+          if (typeof window.infinitySystem.resetAllCurrencyImages === 'function') {
+            window.infinitySystem.resetAllCurrencyImages();
+          }
+          
+          // Reset infinity points and theorems
+          window.infinitySystem.infinityPoints = new Decimal(0);
+          window.infinitySystem.infinityTheorems = 0;
+          window.infinitySystem.totalInfinityTheorems = 0;
+          window.infinitySystem.theoremProgress = new Decimal(0);
+          window.infinitySystem.totalInfinityEarned = 0;
+          window.infinitySystem.lastInfinityPointsUpdate = Date.now();
+        }
+        
         // Automatically load the newly created slot
         loadFromSlot(i);
         
@@ -5047,6 +5099,31 @@ function deleteSlot(slotNumber) {
     if (isCurrentSlot) {
       // Reset to default state
       window.boughtElements = {};
+      
+      // Reset infinity system to default state
+      if (typeof window.infinitySystem !== 'undefined') {
+        // Reset all infinity counts to 0
+        for (const currencyName in window.infinitySystem.counts) {
+          window.infinitySystem.counts[currencyName] = 0;
+        }
+        
+        // Reset all "ever reached" flags to false
+        for (const currencyName in window.infinitySystem.everReached) {
+          window.infinitySystem.everReached[currencyName] = false;
+        }
+        
+        // Reset currency images back to normal (remove infinity symbols)
+        if (typeof window.infinitySystem.resetAllCurrencyImages === 'function') {
+          window.infinitySystem.resetAllCurrencyImages();
+        }
+        
+        // Reset other infinity system properties
+        window.infinitySystem.infinityPoints = new Decimal(0);
+        window.infinitySystem.infinityTheorems = 0;
+        window.infinitySystem.totalInfinityTheorems = 0;
+        window.infinitySystem.theoremProgress = new Decimal(0);
+        window.infinitySystem.totalInfinityEarned = 0;
+      }
       
       // Reset all permanent unlock flags
       if (typeof window.resetPermanentTabUnlocks === 'function') {
