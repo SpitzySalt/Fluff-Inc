@@ -1111,10 +1111,19 @@ window.elementData = elementData;
 function renderElementGrid() {
   const grid = document.getElementById("elementGrid");
   grid.innerHTML = "";
+  
+  // Get maximum available elements based on current expansion level
+  const maxAvailableElements = (typeof getPermanentlyAvailableElements === 'function') 
+    ? getPermanentlyAvailableElements() 
+    : 8; // fallback to default
+  
   for (let i = 1; i <= 118; i++) {
     const data = elementData[i] || {};
     const pos = elementPositions[i];
     if (!pos) continue;
+    
+    // Only render elements that should be visible based on expansion level
+    if (i > maxAvailableElements) continue;
     const tile = document.createElement("div");
     tile.classList.add("element-tile", data.category || "unknown");
     
@@ -1168,6 +1177,9 @@ function renderElementGrid() {
     grid.appendChild(tile);
   }
 }
+
+// Make renderElementGrid globally accessible
+window.renderElementGrid = renderElementGrid;
 
 const boxTiers = {
   common: { cost: 100, swaria: [1, 3], feather: [0, 0], artifact: [0, 0] },

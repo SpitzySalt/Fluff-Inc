@@ -90,15 +90,16 @@ function calculatePowerGeneratorCap() {
   return baseCap;
 }
 
-// Get permanently available elements based on highest grade achieved + infinity upgrade
+// Get permanently available elements based on current grade + infinity upgrade
 function getPermanentlyAvailableElements() {
-  if (!window.state.permanentElementDiscovery) {
-    return 8; // Default starting elements
-  }
+  // Use current grade, not just highest achieved grade
+  const currentGrade = DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1);
+  const highestGrade = window.state.permanentElementDiscovery ? (window.state.permanentElementDiscovery.highestGradeAchieved || 1) : 1;
   
-  const highestGrade = window.state.permanentElementDiscovery.highestGradeAchieved || 1;
+  // Use the higher of current grade or highest achieved grade to determine element availability
+  const effectiveGrade = Math.max(currentGrade, highestGrade);
   
-  // Get base max from highest grade ever achieved
+  // Get base max from effective grade (current or highest achieved)
   let baseMax = 8; // Default
   const ELEMENT_UNLOCK_CONFIG = {
     1: { maxElements: 8 },
@@ -111,7 +112,7 @@ function getPermanentlyAvailableElements() {
     8: { maxElements: 118 }
   };
   
-  for (let level = 1; level <= highestGrade; level++) {
+  for (let level = 1; level <= effectiveGrade; level++) {
     if (ELEMENT_UNLOCK_CONFIG[level]) {
       baseMax = ELEMENT_UNLOCK_CONFIG[level].maxElements;
     }
@@ -137,10 +138,20 @@ function updatePermanentElementDiscovery() {
 }
 
 // Make expansion functions globally accessible
+// Function to update element availability when expansion level changes (for console use)
+function updateElementsForCurrentExpansion() {
+  updatePermanentElementDiscovery();
+  if (typeof window.renderElementGrid === 'function') {
+    window.renderElementGrid();
+  }
+}
+
 // Make expansion functions globally accessible
 window.calculatePowerGeneratorCap = calculatePowerGeneratorCap;
 window.getPermanentlyAvailableElements = getPermanentlyAvailableElements;
 window.updatePermanentElementDiscovery = updatePermanentElementDiscovery;
+window.updateElementsForCurrentExpansion = updateElementsForCurrentExpansion;
+window.updateGradeUI = updateGradeUI;
 
 function updateGradeUI() {
   const gradeDisplay = document.getElementById("currentGrade");
@@ -150,6 +161,16 @@ function updateGradeUI() {
   // Convert Decimal grade to number for display
   const currentGrade = DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1);
   if (gradeDisplay) gradeDisplay.textContent = currentGrade;
+  
+  // Check if grade has changed and update element availability accordingly
+  if (!window._lastKnownGrade || window._lastKnownGrade !== currentGrade) {
+    window._lastKnownGrade = currentGrade;
+    // Update element discovery and grid when grade changes
+    updatePermanentElementDiscovery();
+    if (typeof window.renderElementGrid === 'function') {
+      window.renderElementGrid();
+    }
+  }
   
   const nextGrade = currentGrade + 1;
   const nextCost = getGradeKPCost(nextGrade);
@@ -440,7 +461,10 @@ function gradeUp() {
     window.saveGame();
   }
   
-  // Update UI to reflect the reset elements (except permanently discovered ones)
+  // Update element discovery for new expansion level
+  updatePermanentElementDiscovery();
+  
+  // Update UI to reflect the reset elements and new available elements
   if (typeof window.renderElementGrid === 'function') {
     window.renderElementGrid();
   }
@@ -668,6 +692,14 @@ document.addEventListener('DOMContentLoaded', function() {
   window.loadGame = function() {
     origLoadGame.apply(this, arguments);
     updateKitchenUnlock();
+    
+    // Update element discovery based on current expansion level on game load
+    updatePermanentElementDiscovery();
+    
+    // Re-render the element grid to show correct elements for current expansion level
+    if (typeof window.renderElementGrid === 'function') {
+      window.renderElementGrid();
+    }
     
     // Check front desk unlock after loading
     if (typeof window.frontDesk !== 'undefined' && window.frontDesk.checkUnlock) {

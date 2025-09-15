@@ -6720,13 +6720,17 @@ window.addEventListener('DOMContentLoaded', function() {
     'viCharacterSleepTalking'
   ];
 
-  function restoreSwariaImage() {
-    const swariaImg = document.getElementById('swariaCharacter');
-    if (swariaImg && swariaImg._originalSrc) {
-      swariaImg.src = swariaImg._originalSrc;
-      delete swariaImg._originalSrc;
-    }
+// Move restoreSwariaImage to global scope to fix ReferenceError
+function restoreSwariaImage() {
+  const swariaImg = document.getElementById('swariaCharacter');
+  if (swariaImg && swariaImg._originalSrc) {
+    swariaImg.src = swariaImg._originalSrc;
+    delete swariaImg._originalSrc;
   }
+}
+
+// Make it globally accessible immediately
+window.restoreSwariaImage = restoreSwariaImage;
 
   function getCharacterNameFromId(id) {
     switch (id) {
@@ -6787,7 +6791,9 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // Restore original Swaria image when token leaves
         if (id === 'swariaCharacter') {
-          restoreSwariaImage();
+          if (typeof restoreSwariaImage === 'function') {
+            restoreSwariaImage();
+          }
         }
       });
       
@@ -8271,7 +8277,9 @@ function showCharacterSpeech(characterName, tokenType) {
             window._draggingTokenType = null;
             
             // Restore Swaria image when drag ends
-            restoreSwariaImage();
+            if (typeof restoreSwariaImage === 'function') {
+              restoreSwariaImage();
+            }
             
             img.classList.remove('dragging-token');
             img.style.cursor = 'grab';
@@ -8300,7 +8308,9 @@ function showCharacterSpeech(characterName, tokenType) {
           function cleanup() {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            restoreSwariaImage(); // Restore Swaria image if drag was cancelled
+            if (typeof restoreSwariaImage === 'function') {
+              restoreSwariaImage(); // Restore Swaria image if drag was cancelled
+            }
           }
 
           document.addEventListener('mousemove', onMove);
@@ -8364,7 +8374,9 @@ function showCharacterSpeech(characterName, tokenType) {
         lastInventoryUpdate = Date.now(); // Reset throttle timer for immediate update
       } else {
         inventoryModal.style.display = 'none';
-        restoreSwariaImage(); // Restore Swaria image when inventory closes
+        if (typeof restoreSwariaImage === 'function') {
+          restoreSwariaImage(); // Restore Swaria image when inventory closes
+        }
       }
     });
   }
@@ -9625,7 +9637,7 @@ window.saveDeliveryResetBackup = saveDeliveryResetBackup;
 window.exportLastDeliveryReset = exportLastDeliveryReset;
 window.checkLastDeliveryInfo = checkLastDeliveryInfo;
 window.showSoapDisappointedSpeech = showSoapDisappointedSpeech;
-window.restoreSwariaImage = restoreSwariaImage;
+// restoreSwariaImage is already assigned to window earlier at line 6733
 
 // Initialize on page load
 if (document.readyState === 'loading') {
