@@ -6536,7 +6536,7 @@ function renderGenerators() {
         content += `<button id="upgradeMk2Speed" disabled>Maxed</button>`;
       } else {
         const upgradeCount = state.mk2SpeedUpgrades || 0;
-        content += `<button id="upgradeMk2Speed" onclick="upgradeMk2Speed()" ${!canUpgrade ? 'disabled' : ''}>
+        content += `<button id="upgradeMk2Speed" onclick="upgradeMk2Speed(); updateMk2ButtonsImmediately();" ${!canUpgrade ? 'disabled' : ''}>
           Upgrade Mk.2 Speed (${formatNumber(speedCost)} combined boxes)
         </button>`;
       }
@@ -6558,7 +6558,7 @@ function renderGenerators() {
         const canAffordBoxUpgrade = combinedBoxes.gte(boxUpgradeCost);
         const upgradeCount = state.doubleAllBoxUpgrades || 0;
         
-        content += `<button class="upgrade-btn" id="doubleAllBoxTypes" onclick="buyAllGeneratorUpgrades()" ${!canAffordBoxUpgrade ? 'disabled' : ''}>
+        content += `<button class="upgrade-btn" id="doubleAllBoxTypes" onclick="buyAllGeneratorUpgrades(); updateMk2ButtonsImmediately();" ${!canAffordBoxUpgrade ? 'disabled' : ''}>
           <img src="assets/icons/gen-common.png" class="icon rainbow-icon"> Double All Box Types
           <br><small>Cost: ${formatNumber(boxUpgradeCost)} Combined Boxes</small>
         </button>`;
@@ -6868,31 +6868,19 @@ function getDoubleAllBoxCost() {
 
 // Unified Mk.2 speed upgrade function
 function upgradeMk2Speed() {
-  // Mk.2 system works independently - no need to check for unlocked generators
+  // Mk.2 speed upgrades are free - no cost deduction needed
   
-  // Calculate cost based on combined box count and upgrade scaling
+  // Calculate cost for display purposes only
   const cost = getMk2SpeedUpgradeCost();
   const combinedBoxes = getCombinedBoxCount();
   
-  // Check if we have enough combined boxes
+  // Check if we have enough combined boxes (requirement but no deduction)
   const canUpgrade = combinedBoxes.gte(cost);
   
   if (!canUpgrade) return;
   
-  // Deduct the cost from combined box counts proportionally
-  let remainingCost = cost;
-  unlockedGenerators.forEach(gen => {
-    if (remainingCost.lte(0)) return;
-    
-    const boxCount = state.boxesProducedByType[gen.reward] || new Decimal(0);
-    const boxCountDecimal = DecimalUtils.isDecimal(boxCount) ? boxCount : new Decimal(boxCount);
-    
-    if (boxCountDecimal.gt(0)) {
-      const deduction = DecimalUtils.min(boxCountDecimal, remainingCost);
-      state.boxesProducedByType[gen.reward] = boxCountDecimal.sub(deduction);
-      remainingCost = remainingCost.sub(deduction);
-    }
-  });
+  // No cost deduction - speed upgrades are free!
+  // Just increment the upgrade counter
   
   // Increment upgrade counter
   if (!state.mk2SpeedUpgrades) {
@@ -6900,19 +6888,12 @@ function upgradeMk2Speed() {
   }
   state.mk2SpeedUpgrades++;
   
-  // Upgrade all unlocked generators
-  unlockedGenerators.forEach(gen => {
-    const instantFill = gen.baseSpeed * Math.pow(1.3, (gen.speedUpgrades || 0)) * 0.1 >= 100;
-    if (!instantFill) {
-      gen.speedUpgrades = (gen.speedUpgrades || 0) + 1;
-      gen.upgrades++;
-      gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades);
-    }
-  });
+  // In Mk.2 mode, we don't need to upgrade individual generators
+  // The Mk.2 system manages speed independently through mk2SpeedUpgrades counter
+  // Individual generator speeds are handled by the Mk.2 system
   
   updateUI();
   updateKnowledgeUI();
-  renderGenerators();
 }
 
 // Unified "Double all box type" upgrade function
@@ -6964,6 +6945,7 @@ function buyAllGeneratorUpgrades() {
     });
   } else {
     // Individual generator mode: only deduct from unlocked generators
+    const unlockedGenerators = generators.filter(gen => gen.unlocked);
     unlockedGenerators.forEach(gen => {
       if (remainingCost.lte(0)) return;
       
@@ -6985,6 +6967,7 @@ function buyAllGeneratorUpgrades() {
   state.doubleAllBoxUpgrades++;
   
   // Apply the upgrade to all unlocked generators
+  const unlockedGenerators = generators.filter(gen => gen.unlocked);
   unlockedGenerators.forEach(gen => {
     if (!generatorUpgrades[gen.reward]) {
       generatorUpgrades[gen.reward] = new Decimal(0);
@@ -6993,7 +6976,6 @@ function buyAllGeneratorUpgrades() {
   });
   
   updateUI();
-  renderGenerators();
 }
 
 // Function to update Mk.2 combined boxes display without re-rendering the entire interface
@@ -7055,9 +7037,10 @@ function updateMk2CombinedBoxesDisplay() {
     const canAfford = combinedBoxes.gte(cost);
     
     speedUpgradeBtn.disabled = !canAfford;
-    const costElement = speedUpgradeBtn.querySelector('small');
-    if (costElement) {
-      costElement.textContent = `Cost: ${formatNumber(cost)} combined boxes`;
+    
+    // Speed button has cost in main text, not in <small> element
+    if (!speedUpgradeBtn.textContent.includes('Maxed')) {
+      speedUpgradeBtn.innerHTML = `Upgrade Mk.2 Speed (${formatNumber(cost)} combined boxes)`;
     }
   }
   
@@ -7074,6 +7057,61 @@ function updateMk2CombinedBoxesDisplay() {
     }
   }
 }
+
+// Function to immediately update Mk.2 button costs and states after purchase
+function updateMk2ButtonsImmediately() {
+  // Update speed upgrade button
+  const speedUpgradeBtn = document.getElementById('upgradeMk2Speed');
+  if (speedUpgradeBtn && !speedUpgradeBtn.textContent.includes('Maxed')) {
+    const cost = getMk2SpeedUpgradeCost();
+    const combinedBoxes = getCombinedBoxCount();
+    const canAfford = combinedBoxes.gte(cost);
+    
+    speedUpgradeBtn.disabled = !canAfford;
+    speedUpgradeBtn.innerHTML = `Upgrade Mk.2 Speed (${formatNumber(cost)} combined boxes)`;
+  }
+  
+  // Update doubler button
+  const doubleAllBtn = document.getElementById('doubleAllBoxTypes');
+  if (doubleAllBtn) {
+    const cost = getDoubleAllBoxCost();
+    const combinedBoxes = getCombinedBoxCount();
+    const canAfford = combinedBoxes.gte(cost);
+    
+    doubleAllBtn.disabled = !canAfford;
+    const costElement = doubleAllBtn.querySelector('small');
+    if (costElement) {
+      costElement.textContent = `Cost: ${formatNumber(cost)} Combined Boxes`;
+    }
+  }
+  
+  // Update the box tracker display
+  if (typeof updateMk2CombinedBoxesDisplay === 'function') {
+    updateMk2CombinedBoxesDisplay();
+  }
+}
+
+// Make the function globally accessible
+window.updateMk2ButtonsImmediately = updateMk2ButtonsImmediately;
+
+// Debug function to help investigate Mk.2 upgrade issues
+window.debugMk2Upgrades = function() {
+  
+  const combinedBoxes = getCombinedBoxCount();
+  
+  const speedCost = getMk2SpeedUpgradeCost();
+  const speedCanAfford = combinedBoxes.gte(speedCost);
+  
+  const boxCost = getDoubleAllBoxCost();
+  const boxCanAfford = combinedBoxes.gte(boxCost);
+  
+  ['common', 'uncommon', 'rare', 'legendary', 'mythic'].forEach(boxType => {
+    const count = state.boxesProducedByType[boxType] || new Decimal(0);
+  });
+  
+  const speedBtn = document.getElementById('upgradeMk2Speed');
+  const boxBtn = document.getElementById('doubleAllBoxTypes');
+};
 
 // Make Mk.2 functions globally accessible
 window.upgradeMk2Speed = upgradeMk2Speed;

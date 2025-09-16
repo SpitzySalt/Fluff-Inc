@@ -1114,7 +1114,10 @@ function createCharacterCards() {
       transform: translate(-50%, -50%);
       display: none; 
     `;
-    if (character === 'soap' || character === 'fluzzer' || character === 'vi') {
+    // Face characters based on their card position
+    // Top Right (index 1) and Bottom Right (index 3) should face left (flipped)
+    // Top Left (index 0) and Bottom Left (index 2) should face right (not flipped)
+    if (index === 1 || index === 3) {
       characterImg.style.transform = 'scaleX(-1)';
       speakingImg.style.transform = 'translate(-50%, -50%) scaleX(-1)';
     }
@@ -1214,12 +1217,19 @@ function updateCharacterForDialogue(speaker) {
     if (speakingImg) speakingImg.style.display = 'block';
     const speechBubble = document.createElement('div');
     speechBubble.className = 'cafeteria-speech';
-    const isLeftSide = speaker === 'soap' || speaker === 'fluzzer' || speaker === 'vi';
+    
+    // Determine bubble position based on character's position index
+    const speakerIndex = cafeteriaState.activeCharacters.indexOf(speaker);
+    
+    // Right-side characters (index 1 and 3) have bubbles on the left
+    // Left-side characters (index 0 and 2) have bubbles on the right
+    const isRightSideCharacter = speakerIndex === 1 || speakerIndex === 3;
+    
     speechBubble.style.cssText = `
       position: absolute;
-      ${isLeftSide ? 'right: 100%;' : 'left: 100%;'}
+      ${isRightSideCharacter ? 'right: 100%;' : 'left: 100%;'}
       top: 50%;
-      transform: translateY(-50%) ${isLeftSide ? 'translateX(-18px)' : 'translateX(18px)'};
+      transform: translateY(-50%) ${isRightSideCharacter ? 'translateX(-18px)' : 'translateX(18px)'};
       background: white;
       color: #111;
       padding: 1rem;
@@ -1250,11 +1260,27 @@ function advanceDialogue() {
     showDialogueFinishedMessage();
     cafeteriaState.activeCharacters.forEach(character => {
       const friendshipCharacter = character.toLowerCase() === 'peachy' ? 'swaria' : character.toLowerCase();
-      if (window.friendship && typeof window.friendship.getPoints === 'function' && typeof window.friendship.addPoints === 'function') {
-        const currentPoints = window.friendship.getPoints(friendshipCharacter) || new Decimal(0);
-        const bonus = new Decimal(currentPoints).mul(0.05).ceil(); 
-        if (bonus.gt(0)) {
-          window.friendship.addPoints(friendshipCharacter, bonus);
+      
+      // Try multiple friendship system access methods for compatibility
+      let friendshipSystem = null;
+      if (window.friendship && typeof window.friendship.getPoints === 'function') {
+        friendshipSystem = window.friendship;
+      } else if (typeof friendship !== 'undefined' && typeof friendship.getPoints === 'function') {
+        friendshipSystem = friendship;
+      }
+      
+      if (friendshipSystem) {
+        try {
+          const currentPoints = friendshipSystem.getPoints(friendshipCharacter) || new Decimal(0);
+          let bonus = new Decimal(currentPoints).mul(0.05).ceil();
+          
+          // Ensure every participating character gets at least 1 point as a minimum reward
+          if (bonus.lte(0)) {
+            bonus = new Decimal(1);
+          }
+          
+          friendshipSystem.addPoints(friendshipCharacter, bonus);
+        } catch (error) {
         }
       } else {
       }
