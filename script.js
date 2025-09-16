@@ -6500,22 +6500,37 @@ function renderGenerators() {
       <img src="${iconPath}" class="icon rainbow-icon" style="width: 32px; height: 32px; margin-right: 10px;">Box Generator Mk.2
     </h3>`;
     
-    // Check if any unlocked generators exist
-    const unlockedGenerators = generators.filter(gen => gen.unlocked);
-    if (unlockedGenerators.length === 0) {
-      content += `<p style="color: #aaa; text-align: center; margin: 15px 0;">Unlock at least one box generator to use Mk.2</p>`;
-    } else {
-      // Find the slowest unlocked generator to use as the main progress
-      const slowestGen = unlockedGenerators.reduce((slowest, gen) => {
-        gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades || 0) * (gen.speedMultiplier || 1);
-        return gen.speed < slowest.speed ? gen : slowest;
-      });
+    // Mk.2 mode always works independently - no need to check for unlocked generators
+    
+    // Use a base speed for Mk.2 system independent of individual generators
+    const mk2BaseSpeed = 10; // Base speed for Mk.2 system
+    const mk2SpeedUpgrades = state.mk2SpeedUpgrades || 0;
+    const mk2Speed = mk2BaseSpeed * Math.pow(1.3, mk2SpeedUpgrades);
+    
+    // Create a virtual generator object for Mk.2 progress tracking
+    const mk2Generator = {
+      speed: mk2Speed,
+      progress: state.mk2Progress || 0,
+      reward: 'mk2-unified'
+    };
+    
+    // Always show Mk.2 interface
+    {
+      // Create a virtual generator for Mk.2 with independent speed
+      const slowestGen = {
+        speed: mk2Speed,
+        progress: state.mk2Progress || 0,
+        reward: 'mk2-unified',
+        baseSpeed: 10,
+        speedUpgrades: state.mk2SpeedUpgrades || 0,
+        speedMultiplier: 1
+      };
       
       // Single unified tick speed upgrade button using scaling cost system
       const speedCost = getMk2SpeedUpgradeCost();
       const combinedBoxes = getCombinedBoxCount();
       const canUpgrade = combinedBoxes.gte(speedCost);
-      const allMaxed = unlockedGenerators.every(gen => gen.speed * 0.1 >= 100);
+      const allMaxed = (state.mk2SpeedUpgrades || 0) >= 50; // Mk.2 speed upgrade cap
       
       if (allMaxed) {
         content += `<button id="upgradeMk2Speed" disabled>Maxed</button>`;
@@ -6853,8 +6868,7 @@ function getDoubleAllBoxCost() {
 
 // Unified Mk.2 speed upgrade function
 function upgradeMk2Speed() {
-  const unlockedGenerators = generators.filter(gen => gen.unlocked);
-  if (unlockedGenerators.length === 0) return;
+  // Mk.2 system works independently - no need to check for unlocked generators
   
   // Calculate cost based on combined box count and upgrade scaling
   const cost = getMk2SpeedUpgradeCost();
@@ -6903,8 +6917,7 @@ function upgradeMk2Speed() {
 
 // Unified "Double all box type" upgrade function
 function buyAllGeneratorUpgrades() {
-  const unlockedGenerators = generators.filter(gen => gen.unlocked);
-  if (unlockedGenerators.length === 0) return;
+  // Mk.2 system works independently - no need to check for unlocked generators
   
   // Calculate cost based on combined box count and upgrade scaling
   const cost = getDoubleAllBoxCost();
@@ -7186,18 +7199,31 @@ function tickGenerators(diff) {
       state.mk2UpgradesReset = true;
     }
     
-    // Box Generator Mk.2 mode: Use slowest unlocked generator for unified progress
-    const unlockedGenerators = generators.filter(gen => gen.unlocked);
-    if (unlockedGenerators.length > 0) {
-      // Find the slowest generator to use as the master progress
-      const slowestGen = unlockedGenerators.reduce((slowest, gen) => {
-        gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades || 0) * (gen.speedMultiplier || 1);
-        return gen.speed < slowest.speed ? gen : slowest;
-      });
+    // Box Generator Mk.2 mode: Use independent speed system
+    // Always run Mk.2 logic when unlocked, regardless of individual generator status
+    {
+      // Create independent Mk.2 generator with its own speed system
+      const mk2BaseSpeed = 10;
+      const mk2SpeedUpgrades = state.mk2SpeedUpgrades || 0;
+      const mk2Speed = mk2BaseSpeed * Math.pow(1.3, mk2SpeedUpgrades);
       
-      // Check if master generator is frozen by anomaly
-      const isFrozen = window.anomalySystem && window.anomalySystem.isGeneratorFrozen && 
-                      window.anomalySystem.isGeneratorFrozen(generators.indexOf(slowestGen));
+      // Initialize Mk.2 progress if not exists
+      if (typeof state.mk2Progress === 'undefined') {
+        state.mk2Progress = 0;
+      }
+      
+      // Create virtual Mk.2 generator object
+      const slowestGen = {
+        speed: mk2Speed,
+        progress: state.mk2Progress,
+        reward: 'mk2-unified',
+        baseSpeed: mk2BaseSpeed,
+        speedUpgrades: mk2SpeedUpgrades,
+        speedMultiplier: 1
+      };
+      
+      // Mk.2 is never frozen by anomalies - it's independent
+      const isFrozen = false;
       
       if (!isFrozen) {
         slowestGen.progress += slowestGen.speed * diff;
@@ -7252,9 +7278,10 @@ function tickGenerators(diff) {
         });
         
         // Track generator completion for front desk automator system
-        unlockedGenerators.forEach(gen => {
+        // In Mk.2 mode, notify for all box types produced
+        allBoxTypes.forEach(boxType => {
           if (typeof window.onGeneratorCompleted === 'function') {
-            window.onGeneratorCompleted(gen.reward);
+            window.onGeneratorCompleted(boxType);
           }
         });
         
@@ -7291,6 +7318,9 @@ function tickGenerators(diff) {
           mk2Bar.style.background = "#00cc00";
         }
       }
+      
+      // Save Mk.2 progress back to state
+      state.mk2Progress = slowestGen.progress;
     }
   } else {
     // Individual generator mode (original behavior)
