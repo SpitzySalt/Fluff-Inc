@@ -131,6 +131,9 @@ window.anomalySystem = {
     
     // Update detector button visibility based on game progress
     updateDetectorVisibility: function() {
+        // Check if player still has anomaly resolver and clear anomalies if not
+        this.checkAndClearAnomaliesWithoutResolver();
+        
         const detectorContainer = document.getElementById('anomalyDetectorContainer');
         
         if (detectorContainer) {
@@ -314,6 +317,187 @@ window.anomalySystem = {
         // Save state to persist across refreshes
         this.saveAnomalyState();
 
+    },
+    
+    // Check if player has anomaly resolver and clear anomalies if not
+    checkAndClearAnomaliesWithoutResolver: function() {
+        // Check if player has the anomaly resolver (requires totalInfinityEarned >= 1)
+        const hasAnomalyResolver = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+        
+        if (!hasAnomalyResolver) {
+            // Player doesn't have the anomaly resolver - clear all active anomalies
+            const hadActiveAnomalies = this.anomalies.length > 0 || this.hasAnyActiveAnomalyEffects();
+            
+            if (hadActiveAnomalies) {
+                // Clear all visual anomalies
+                this.removeAllAnomalies();
+                
+                // Clear all active anomaly effects
+                this.clearAllAnomalyEffects();
+                
+                // Hide detector if it was visible
+                this.updateDetectorVisibility();
+
+            }
+        }
+    },
+    
+    // Check if any anomaly effects are currently active
+    hasAnyActiveAnomalyEffects: function() {
+        for (let anomalyType in this.activeAnomalies) {
+            if (this.activeAnomalies[anomalyType]) {
+                return true;
+            }
+        }
+        return false;
+    },
+    
+    // Clear all active anomaly effects
+    clearAllAnomalyEffects: function() {
+        // Call specific fix functions for any currently active anomalies
+        if (this.activeAnomalies.clockAnomaly && typeof this.fixClockAnomaly === 'function') {
+            this.fixClockAnomaly();
+        }
+        if (this.activeAnomalies.backwardClockAnomaly && typeof this.fixBackwardClockAnomaly === 'function') {
+            this.fixBackwardClockAnomaly();
+        }
+        if (this.activeAnomalies.boxOrderAnomaly && typeof this.fixBoxOrderAnomaly === 'function') {
+            this.fixBoxOrderAnomaly();
+        }
+        if (this.activeAnomalies.soapGeneratorAnomaly && typeof this.fixSoapGeneratorAnomaly === 'function') {
+            this.fixSoapGeneratorAnomaly();
+        }
+        if (this.activeAnomalies.shopPriceAnomaly && typeof this.fixShopPriceAnomaly === 'function') {
+            this.fixShopPriceAnomaly();
+        }
+        if (this.activeAnomalies.darkVoidAnomaly && typeof this.fixDarkVoidAnomaly === 'function') {
+            this.fixDarkVoidAnomaly();
+        }
+        if (this.activeAnomalies.prismMirrorAnomaly && typeof this.fixPrismMirrorAnomaly === 'function') {
+            this.fixPrismMirrorAnomaly();
+        }
+        if (this.activeAnomalies.cargoOmegaBoxAnomaly && typeof this.fixCargoOmegaBoxAnomaly === 'function') {
+            this.fixCargoOmegaBoxAnomaly();
+        }
+        if (this.activeAnomalies.blurpleLightAnomaly && typeof this.fixBlurpleLightAnomaly === 'function') {
+            this.fixBlurpleLightAnomaly();
+        }
+        if (this.activeAnomalies.boxGeneratorFreezeAnomaly && typeof this.fixBoxGeneratorFreezeAnomaly === 'function') {
+            this.fixBoxGeneratorFreezeAnomaly();
+        }
+        if (this.activeAnomalies.labDarknessAnomaly && typeof this.fixLabDarknessAnomaly === 'function') {
+            this.fixLabDarknessAnomaly(false); // Don't give reward since this is auto-clear
+        }
+        if (this.activeAnomalies.prismGreyAnomaly && typeof this.fixPrismGreyAnomaly === 'function') {
+            this.fixPrismGreyAnomaly();
+        }
+        if (this.activeAnomalies.notationScrambleAnomaly && typeof this.fixNotationScrambleAnomaly === 'function') {
+            this.fixNotationScrambleAnomaly();
+        }
+        if (this.activeAnomalies.crabBucksAnomaly && typeof this.fixCrabBucksAnomaly === 'function') {
+            this.fixCrabBucksAnomaly();
+        }
+        if (this.activeAnomalies.fluzzerFlipAnomaly && typeof this.fixFluzzerFlipAnomaly === 'function') {
+            this.fixFluzzerFlipAnomaly();
+        }
+        if (this.activeAnomalies.rustlingFlowersAnomaly && typeof this.fixRustlingFlowersAnomaly === 'function') {
+            this.fixRustlingFlowersAnomaly();
+        }
+        if (this.activeAnomalies.dramaticWindAnomaly && typeof this.fixDramaticWindAnomaly === 'function') {
+            this.fixDramaticWindAnomaly();
+        }
+        
+        // Reset all active anomaly flags (this should happen after fix functions are called)
+        for (let anomalyType in this.activeAnomalies) {
+            this.activeAnomalies[anomalyType] = false;
+        }
+        
+        // Clear any specific anomaly state variables
+        this.frozenGeneratorId = null;
+        this.anomalyAffectedItem = null;
+        this.analyzing = false;
+        this.searching = false;
+        this.findModeActive = false;
+        
+        // Clear anomaly-related intervals and timers
+        if (this.darkVoidProgressTimer) {
+            clearInterval(this.darkVoidProgressTimer);
+            this.darkVoidProgressTimer = null;
+        }
+        if (this.viPanicInterval) {
+            clearInterval(this.viPanicInterval);
+            this.viPanicInterval = null;
+        }
+        if (this.cursorAnimationInterval) {
+            clearInterval(this.cursorAnimationInterval);
+            this.cursorAnimationInterval = null;
+        }
+        if (this.clockAnomalyInterval) {
+            clearInterval(this.clockAnomalyInterval);
+            this.clockAnomalyInterval = null;
+        }
+        if (this.backwardClockAnomalyInterval) {
+            clearInterval(this.backwardClockAnomalyInterval);
+            this.backwardClockAnomalyInterval = null;
+        }
+        
+        // Clear any visual effects or modifications that anomalies might have caused
+        this.clearAnomalyVisualEffects();
+        
+        // Clear anomaly localStorage if function exists
+        if (typeof this.clearAnomalyState === 'function') {
+            this.clearAnomalyState();
+        }
+        
+        // Save the cleared state
+        this.saveAnomalyState();
+    },
+    
+    // Clear visual effects caused by anomalies
+    clearAnomalyVisualEffects: function() {
+        // Remove any anomaly-specific CSS classes or style modifications
+        document.body.classList.remove('dark-void-active', 'lab-darkness-active', 'dramatic-wind-active');
+        
+        // Reset any modified UI elements to their normal state
+        const prismGrid = document.querySelector('#prismGrid');
+        if (prismGrid) {
+            prismGrid.classList.remove('grey-anomaly-active');
+        }
+        
+        // Reset cursor to default if it was modified by anomalies
+        document.body.style.cursor = '';
+        
+        // Remove any overlay elements that might have been added by anomalies
+        const overlays = document.querySelectorAll('.anomaly-overlay, .dark-void-overlay, .lab-darkness-overlay');
+        overlays.forEach(overlay => {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+        });
+        
+        // Reset any modified text content or images
+        this.resetAnomalyTextEffects();
+    },
+    
+    // Reset text effects caused by anomalies (like notation scramble, crab bucks, etc.)
+    resetAnomalyTextEffects: function() {
+        // This would reset any text modifications caused by specific anomalies
+        // For example, notation scramble or crab bucks icon changes
+        
+        // Reset notation format if it was scrambled
+        if (typeof window.resetNotationFormat === 'function') {
+            window.resetNotationFormat();
+        }
+        
+        // Reset any modified currency icons
+        const swaIcons = document.querySelectorAll('img[src*="swaria"], img[alt*="Swa"]');
+        swaIcons.forEach(icon => {
+            if (icon.src.includes('crab') || icon.alt.includes('🦀')) {
+                // Reset to normal swaria icon
+                icon.src = 'assets/icons/swaria.png';
+                icon.alt = 'Swa Bucks';
+            }
+        });
     },
     
     // Give reward for removing anomaly
@@ -751,10 +935,18 @@ window.anomalySystem = {
         setInterval(() => {
             this.checkAnomalySpawn();
         }, 30000);
+        
+        // Also run a more frequent check (every 5 seconds) specifically for resolver availability
+        setInterval(() => {
+            this.checkAndClearAnomaliesWithoutResolver();
+        }, 5000);
     },
     
     // Check if an anomaly should spawn
     checkAnomalySpawn: function() {
+        // First, check if player has anomaly resolver and clear anomalies if not
+        this.checkAndClearAnomaliesWithoutResolver();
+        
         // Only spawn anomalies if player has unlocked infinity system (same requirement as detector)
         const hasInfinity = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
         if (!hasInfinity) {
@@ -8675,5 +8867,15 @@ window.forceSoapFriendshipLevel = function(targetLevel) {
     if (typeof getFriendshipBuffs === 'function') {
         const buffs = getFriendshipBuffs('Generator', targetLevel);
 
+    }
+};
+
+// Test function for anomaly resolver check
+window.testAnomalyResolverCheck = function() {
+    const hasResolver = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    
+    // Test the check function
+    if (window.anomalySystem) {
+        window.anomalySystem.checkAndClearAnomaliesWithoutResolver();
     }
 };
