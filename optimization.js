@@ -143,6 +143,12 @@ function optimizedSetInterval(callback, interval, options = {}) {
 }
 
 function clearOldIntervals() {
+    // Clear unified interval instead of separate intervals
+    if (window._unifiedGameTickInterval) {
+        clearInterval(window._unifiedGameTickInterval);
+        window._unifiedGameTickInterval = null;
+    }
+    // Legacy interval cleanup for compatibility
     if (window._gameTickInterval) {
         clearInterval(window._gameTickInterval);
         window._gameTickInterval = null;

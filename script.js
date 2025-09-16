@@ -560,11 +560,17 @@ function gameTick() {
   if (window.isGamePaused) {
     return;
   }
-  
-  const now = Date.now();
-  const diff = (now - lastGameTick) / 1000;
-  lastGameTick = now;
-  sanityCheckCurrencies();
+
+  // Set critical operation flag during game tick if the function exists
+  if (typeof window.setGameTickInProgress === 'function') {
+    window.setGameTickInProgress(true);
+  }
+
+  try {
+    const now = Date.now();
+    const diff = (now - lastGameTick) / 1000;
+    lastGameTick = now;
+    sanityCheckCurrencies();
   let fluffGain = DecimalUtils.floor(getFluffRate());
   if (fluffGain.gt(1000) || state.fluff.gt(1e10)) {
   }
@@ -610,18 +616,25 @@ function gameTick() {
     checkChallengeCompletion();
   }
 
-// Make key functions globally accessible
-window.recalculateAllElementEffects = recalculateAllElementEffects;
-window.lastGameTick = lastGameTick;
-window.gameTick = gameTick;
-  
-  updateUI();
+    // Make key functions globally accessible
+    window.recalculateAllElementEffects = recalculateAllElementEffects;
+    window.lastGameTick = lastGameTick;
+    window.gameTick = gameTick;
+      
+    updateUI();
+  } finally {
+    // Always clear the game tick flag, whether tick succeeded or failed
+    if (typeof window.setGameTickInProgress === 'function') {
+      window.setGameTickInProgress(false);
+    }
+  }
 }
 
-if (window._mainGameTickInterval) clearInterval(window._mainGameTickInterval);
-window._mainGameTickInterval = null;
-if (window._gameTickInterval) clearInterval(window._gameTickInterval);
-window._gameTickInterval = setInterval(gameTick, 100); 
+// Intervals now managed by unified system in script2.js
+// if (window._mainGameTickInterval) clearInterval(window._mainGameTickInterval);
+// window._mainGameTickInterval = null;
+// if (window._gameTickInterval) clearInterval(window._gameTickInterval);
+// window._gameTickInterval = setInterval(gameTick, 100); 
 
 function formatNumber(num) {
   // Use DecimalUtils for formatting
@@ -6831,8 +6844,7 @@ function getCombinedBoxCount() {
     });
   } else {
     // Individual generator mode: only multiply unlocked generators
-    const unlockedGenerators = generators.filter(gen => gen.unlocked);
-    unlockedGenerators.forEach(gen => {
+    GeneratorUtils.forEachUnlocked(generators, (gen) => {
       const boxCount = state.boxesProducedByType[gen.reward] || new Decimal(0);
       const boxCountDecimal = DecimalUtils.isDecimal(boxCount) ? boxCount : new Decimal(boxCount);
       totalBoxes = totalBoxes.mul(boxCountDecimal);
@@ -6951,8 +6963,7 @@ function buyAllGeneratorUpgrades() {
     });
   } else {
     // Individual generator mode: only deduct from unlocked generators
-    const unlockedGenerators = generators.filter(gen => gen.unlocked);
-    unlockedGenerators.forEach(gen => {
+    GeneratorUtils.forEachUnlocked(generators, (gen) => {
       if (remainingCost.lte(0)) return;
       
       const boxCount = state.boxesProducedByType[gen.reward] || new Decimal(0);
@@ -6973,8 +6984,7 @@ function buyAllGeneratorUpgrades() {
   state.doubleAllBoxUpgrades++;
   
   // Apply the upgrade to all unlocked generators
-  const unlockedGenerators = generators.filter(gen => gen.unlocked);
-  unlockedGenerators.forEach(gen => {
+  GeneratorUtils.forEachUnlocked(generators, (gen) => {
     if (!generatorUpgrades[gen.reward]) {
       generatorUpgrades[gen.reward] = new Decimal(0);
     }
@@ -7229,9 +7239,9 @@ function tickGenerators(diff) {
     // Reset all individual generator upgrades when in Mk.2 mode (one-time transition)
     // This ensures clean transition from individual upgrades to unified system
     if (!state.mk2UpgradesReset) {
-      const unlockedGenerators = generators.filter(gen => gen.unlocked);
       let hasAnyUpgrades = false;
-      unlockedGenerators.forEach(gen => {
+      // Use memory-efficient iteration instead of creating temporary arrays
+      GeneratorUtils.forEachUnlocked(generators, (gen) => {
         if (generatorUpgrades[gen.reward] && !generatorUpgrades[gen.reward].eq(0)) {
           hasAnyUpgrades = true;
           generatorUpgrades[gen.reward] = new Decimal(0);

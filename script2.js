@@ -3,6 +3,486 @@
 // if you want to play the game without spoilers, please do not read this file
 // Script2 is a continuation of script.js
 
+// Save system mutex to prevent simultaneous save operations
+let saveMutex = false;
+
+// Critical operation flags to prevent saving during sensitive moments
+let criticalOperationInProgress = false;
+let gameTickInProgress = false;
+
+// Enhanced validation function to check game state integrity
+function validateGameState() {
+  if (!window.state || !window.kitchenIngredients || !window.friendship) {
+    return false;
+  }
+  
+  // Validate all major Decimal currencies
+  const currencies = ['fluff', 'swaria', 'feathers', 'artifacts'];
+  for (const currency of currencies) {
+    if (window.state[currency] && DecimalUtils.isDecimal(window.state[currency])) {
+      if (window.state[currency].lt(0) || !window.state[currency].isFinite()) {
+        return false;
+      }
+    }
+  }
+  
+  // Validate critical arrays and objects exist
+  if (!Array.isArray(window.friendship) || !window.kitchenIngredients) {
+    return false;
+  }
+  
+  // Check if generators array exists and has valid structure
+  if (window.state.generators && Array.isArray(window.state.generators)) {
+    for (const gen of window.state.generators) {
+      if (gen && gen.baseCost && DecimalUtils.isDecimal(gen.baseCost)) {
+        if (gen.baseCost.lt(0) || !gen.baseCost.isFinite()) {
+          return false;
+        }
+      }
+    }
+  }
+  
+  return true;
+}
+
+// Functions to manage critical operation states
+function setCriticalOperation(inProgress) {
+  criticalOperationInProgress = inProgress;
+}
+
+function setGameTickInProgress(inProgress) {
+  gameTickInProgress = inProgress;
+}
+
+function isSafeToPersist() {
+  return !criticalOperationInProgress && 
+         !gameTickInProgress && 
+         !saveMutex &&
+         !document.hidden && 
+         document.hasFocus();
+}
+
+// Make functions globally accessible
+window.setCriticalOperation = setCriticalOperation;
+window.setGameTickInProgress = setGameTickInProgress;
+window.isSafeToPersist = isSafeToPersist;
+
+// Unified game tick system to reduce memory overhead from multiple intervals
+function unifiedGameTick() {
+  // Check if game is paused - if so, don't execute
+  if (window.isGamePaused) {
+    return;
+  }
+  
+  // Set critical operation flag during game tick to prevent save corruption
+  setGameTickInProgress(true);
+  
+  try {
+    const now = Date.now();
+    if (!window.lastUnifiedTick) window.lastUnifiedTick = now;
+    const diff = (now - window.lastUnifiedTick) / 1000;
+    window.lastUnifiedTick = now;
+    
+    // Sanity check currencies (from gameTick)
+    if (typeof sanityCheckCurrencies === 'function') {
+      sanityCheckCurrencies();
+    }
+    
+    // Calculate and add fluff gain (from gameTick)
+    if (typeof getFluffRate === 'function') {
+      let fluffGain = DecimalUtils.floor(getFluffRate());
+      if (typeof addCurrency === 'function') {
+        addCurrency('fluff', fluffGain);
+      }
+      if (typeof window.trackFluffMilestone === 'function') {
+        window.trackFluffMilestone(state.fluff);
+      }
+    }
+    
+    // Tick generators (shared by both functions)
+    if (typeof tickGenerators === 'function') {
+      tickGenerators(diff);
+    }
+    
+    // Power generator tick (from both functions)
+    if (boughtElements && boughtElements[7] && !(window.isTabHidden || document.hidden)) {
+      if (typeof tickPowerGenerator === 'function') {
+        tickPowerGenerator(diff);
+      }
+    }
+    
+    // Light generators tick (from mainGameTick)
+    if (window.tickLightGenerators) {
+      window.tickLightGenerators(diff);
+    }
+    
+    // Charger milestone effects (from gameTick)
+    if (window.charger && typeof window.applyChargerMilestoneEffects === 'function') {
+      window.applyChargerMilestoneEffects();
+    }
+    
+    // Mystic cooking speed boost (from mainGameTick)
+    if (window.state && window.state.mysticCookingSpeedBoost && window.state.mysticCookingSpeedBoost > 0) {
+      if (window.kitchenCooking && window.kitchenCooking.cooking) {
+        window.state.mysticCookingSpeedBoost -= diff * 1000; 
+        if (window.state.mysticCookingSpeedBoost <= 0) {
+          window.state.mysticCookingSpeedBoost = 0;
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+        }
+      }
+    }
+    
+    // Peachy hunger boost (from mainGameTick)
+    if (window.state && window.state.peachyHungerBoost && window.state.peachyHungerBoost > 0) {
+      if (!document.hidden) {
+        window.state.peachyHungerBoost -= diff * 1000; 
+        if (window.state.peachyHungerBoost <= 0) {
+          window.state.peachyHungerBoost = 0;
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+        }
+      }
+    }
+    
+    // Soap battery boost (from mainGameTick)
+    if (window.state && window.state.soapBatteryBoost && window.state.soapBatteryBoost > 0) {
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function';
+      if (isNight) {
+        window.state.soapBatteryBoost -= diff * 1000;
+        if (window.state.soapBatteryBoost <= 0) {
+          window.state.soapBatteryBoost = 0;
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+        }
+      }
+    }
+    
+    // Fluzzer AI management (from mainGameTick)
+    if (window.state && window.state.fluzzerSleepBoost && window.state.fluzzerSleepBoost > 0) {
+      if (!document.hidden) {
+        window.state.fluzzerSleepBoost -= diff * 1000;
+        if (window.state.fluzzerSleepBoost <= 0) {
+          window.state.fluzzerSleepBoost = 0;
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+          if (!window.isFluzzerSleeping) {
+            window.startFluzzerAI();
+          }
+        }
+      }
+    }
+    
+    // Calibration nerfs decay (from gameTick)
+    if (typeof window.decayCalibrationNerfs === 'function') {
+      window.decayCalibrationNerfs(diff);
+    }
+    
+    // Infinity system updates (from gameTick)
+    if (typeof updateInfinityDisplay === 'function') {
+      updateInfinityDisplay();
+    }
+    
+    if (typeof checkChallengeCompletion === 'function') {
+      checkChallengeCompletion();
+    }
+    
+    // Check for infinity conditions (from mainGameTick)
+    if (typeof infinitySystem !== 'undefined' && infinitySystem.checkAllCurrencies) {
+      infinitySystem.checkAllCurrencies();
+    }
+    
+    // Update UI (from gameTick)
+    if (typeof updateUI === 'function') {
+      updateUI();
+    }
+    
+  } finally {
+    // Always clear the game tick flag, whether tick succeeded or failed
+    setGameTickInProgress(false);
+  }
+}
+
+// Make unified tick globally accessible
+window.unifiedGameTick = unifiedGameTick;
+
+// Memory optimization helper functions for generator operations
+const GeneratorUtils = {
+  // Iterate over unlocked generators without creating temporary arrays
+  forEachUnlocked: function(generators, callback) {
+    if (!generators || !Array.isArray(generators)) return;
+    
+    for (let i = 0; i < generators.length; i++) {
+      const gen = generators[i];
+      if (gen && gen.unlocked) {
+        callback(gen, i);
+      }
+    }
+  },
+  
+  // Count unlocked generators without filtering
+  countUnlocked: function(generators) {
+    if (!generators || !Array.isArray(generators)) return 0;
+    
+    let count = 0;
+    for (let i = 0; i < generators.length; i++) {
+      if (generators[i] && generators[i].unlocked) {
+        count++;
+      }
+    }
+    return count;
+  },
+  
+  // Find first generator matching condition without creating arrays
+  findFirst: function(generators, predicate) {
+    if (!generators || !Array.isArray(generators)) return null;
+    
+    for (let i = 0; i < generators.length; i++) {
+      const gen = generators[i];
+      if (gen && predicate(gen, i)) {
+        return gen;
+      }
+    }
+    return null;
+  },
+  
+  // Check if any generator matches condition without creating arrays
+  hasAny: function(generators, predicate) {
+    if (!generators || !Array.isArray(generators)) return false;
+    
+    for (let i = 0; i < generators.length; i++) {
+      const gen = generators[i];
+      if (gen && predicate(gen, i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+// Make generator utils globally accessible
+window.GeneratorUtils = GeneratorUtils;
+
+// Event listener management system to prevent memory leaks
+const EventListenerManager = {
+  // Registry of active listeners for cleanup
+  listeners: new Map(),
+  
+  // Add event listener with automatic cleanup tracking
+  addEventListener: function(element, event, handler, options = {}) {
+    if (!element || typeof handler !== 'function') return;
+    
+    // Generate unique ID for this listener
+    const listenerId = `${event}_${Date.now()}_${Math.random()}`;
+    
+    // Store the listener info
+    this.listeners.set(listenerId, {
+      element: element,
+      event: event,
+      handler: handler,
+      options: options
+    });
+    
+    element.addEventListener(event, handler, options);
+    return listenerId;
+  },
+  
+  // Remove specific listener
+  removeEventListener: function(listenerId) {
+    const listenerInfo = this.listeners.get(listenerId);
+    if (listenerInfo) {
+      listenerInfo.element.removeEventListener(listenerInfo.event, listenerInfo.handler, listenerInfo.options);
+      this.listeners.delete(listenerId);
+    }
+  },
+  
+  // Clean up all listeners for a specific element
+  cleanupElement: function(element) {
+    for (const [listenerId, listenerInfo] of this.listeners.entries()) {
+      if (listenerInfo.element === element) {
+        this.removeEventListener(listenerId);
+      }
+    }
+  },
+  
+  // Clean up all event listeners (for memory optimization)
+  cleanupAll: function() {
+    for (const [listenerId] of this.listeners.entries()) {
+      this.removeEventListener(listenerId);
+    }
+  },
+  
+  // Get count of active listeners (for debugging)
+  getListenerCount: function() {
+    return this.listeners.size;
+  }
+};
+
+// Make event listener manager globally accessible
+window.EventListenerManager = EventListenerManager;
+
+// DOM cleanup utilities to prevent memory leaks
+const DOMUtils = {
+  // Safely replace innerHTML after cleaning up event listeners
+  setInnerHTML: function(element, html) {
+    if (!element) return;
+    
+    // Clean up existing event listeners
+    EventListenerManager.cleanupElement(element);
+    
+    // Also clean up any child elements
+    const children = element.querySelectorAll('*');
+    children.forEach(child => {
+      EventListenerManager.cleanupElement(child);
+    });
+    
+    // Now safely set innerHTML
+    element.innerHTML = html;
+  },
+  
+  // Remove element with proper cleanup
+  removeElement: function(element) {
+    if (!element) return;
+    
+    // Clean up event listeners for element and children
+    EventListenerManager.cleanupElement(element);
+    const children = element.querySelectorAll('*');
+    children.forEach(child => {
+      EventListenerManager.cleanupElement(child);
+    });
+    
+    // Remove from DOM
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+  },
+  
+  // Create element with event listener tracking
+  createElement: function(tagName, attributes = {}, innerHTML = '') {
+    const element = document.createElement(tagName);
+    
+    // Set attributes
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === 'onclick' && typeof value === 'function') {
+        // Use tracked event listener instead of onclick
+        EventListenerManager.addEventListener(element, 'click', value);
+      } else {
+        element.setAttribute(key, value);
+      }
+    }
+    
+    if (innerHTML) {
+      element.innerHTML = innerHTML;
+    }
+    
+    return element;
+  }
+};
+
+// Make DOM utils globally accessible
+window.DOMUtils = DOMUtils;
+
+// UI update throttling system to reduce memory pressure
+const UIUpdateManager = {
+  throttleDelay: 50, // 50ms throttle (20 FPS max)
+  lastUpdateTime: 0,
+  pendingUpdate: false,
+  
+  // Throttled updateUI that batches updates
+  requestUpdate: function() {
+    if (this.pendingUpdate) return;
+    
+    const now = Date.now();
+    const timeSinceLastUpdate = now - this.lastUpdateTime;
+    
+    if (timeSinceLastUpdate >= this.throttleDelay) {
+      // Execute immediately if enough time has passed
+      this.executeUpdate();
+    } else {
+      // Schedule update for later
+      this.pendingUpdate = true;
+      setTimeout(() => {
+        if (this.pendingUpdate) {
+          this.executeUpdate();
+        }
+      }, this.throttleDelay - timeSinceLastUpdate);
+    }
+  },
+  
+  executeUpdate: function() {
+    this.pendingUpdate = false;
+    this.lastUpdateTime = Date.now();
+    
+    // Call the original updateUI function
+    if (typeof window._originalUpdateUI === 'function') {
+      window._originalUpdateUI();
+    } else if (typeof updateUI === 'function') {
+      updateUI();
+    }
+  },
+  
+  // Force immediate update (for critical situations)
+  forceUpdate: function() {
+    this.pendingUpdate = false;
+    this.executeUpdate();
+  }
+};
+
+// Make UI update manager globally accessible
+window.UIUpdateManager = UIUpdateManager;
+
+// Decimal constants cache to reduce object creation
+const DecimalConstants = {
+  // Pre-created commonly used Decimal instances
+  ZERO: new Decimal(0),
+  ONE: new Decimal(1),
+  TWO: new Decimal(2),
+  TEN: new Decimal(10),
+  HUNDRED: new Decimal(100),
+  THOUSAND: new Decimal(1000),
+  
+  // Get cached constant or create new one
+  get: function(value) {
+    switch(value) {
+      case 0: return this.ZERO;
+      case 1: return this.ONE;
+      case 2: return this.TWO;
+      case 10: return this.TEN;
+      case 100: return this.HUNDRED;
+      case 1000: return this.THOUSAND;
+      default: return new Decimal(value);
+    }
+  },
+  
+  // Safe comparison - handles both Decimal and number
+  equal: function(a, b) {
+    if (DecimalUtils.isDecimal(a) && DecimalUtils.isDecimal(b)) {
+      return a.eq(b);
+    } else if (DecimalUtils.isDecimal(a)) {
+      return a.eq(new Decimal(b));
+    } else if (DecimalUtils.isDecimal(b)) {
+      return new Decimal(a).eq(b);
+    } else {
+      return a === b;
+    }
+  },
+  
+  // Create Decimal only if needed (returns number if small enough)
+  create: function(value) {
+    if (typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 1e15) {
+      return value; // Keep as number for small values
+    }
+    return new Decimal(value);
+  }
+};
+
+// Make Decimal constants globally accessible
+window.DecimalConstants = DecimalConstants;
+
 // Helper function to get the appropriate fluzzer image based on infinity total
 function getFluzzerImagePath(imageType = 'normal') {
   const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3;
@@ -3513,7 +3993,7 @@ function getBoxGeneratorBoost() {
   if (!boughtElements[12]) return new Decimal(1);
   let count = 0;
   if (typeof generators !== 'undefined') {
-    count = generators.filter(g => g.unlocked).length;
+    count = GeneratorUtils.countUnlocked(generators);
   }
   return new Decimal(1).add(new Decimal(count).mul(0.1)); 
 }
@@ -3988,19 +4468,19 @@ function updateSaveSlotModal() {
 }
 
 function saveToSlot(slotNumber) {
-  // Safety checks to prevent corrupted saves
-  if (!window.state || !window.kitchenIngredients || !window.friendship) {
-
+  // Check if save is already in progress
+  if (saveMutex) {
     return false;
   }
   
-  // Additional safety: Don't save if values seem corrupted
-  if (!window.state.fluff || window.state.fluff.lt && window.state.fluff.lt(0)) {
-
-    return false;
-  }
+  // Set mutex to prevent simultaneous saves
+  saveMutex = true;
   
   try {
+    // Enhanced validation to prevent corrupted saves
+    if (!validateGameState()) {
+      return false;
+    }
     const stateCopy = { ...state };
     delete stateCopy.hardModeQuestProgress;
     delete stateCopy.hardModeQuestActive;
@@ -4143,14 +4623,32 @@ function saveToSlot(slotNumber) {
   // Use DecimalUtils to serialize the save data for slot storage
   const serializedSaveData = DecimalUtils.serializeGameState(saveData);
   
-  // Create backup before saving
+  // Atomic save operation - write to temporary location first
+  const tempKey = `swariaSaveSlot${slotNumber}_temp`;
+  const finalKey = `swariaSaveSlot${slotNumber}`;
   const backupKey = `swariaSaveSlot${slotNumber}_backup`;
-  const currentSave = localStorage.getItem(`swariaSaveSlot${slotNumber}`);
+  
+  // Create backup before saving
+  const currentSave = localStorage.getItem(finalKey);
   if (currentSave) {
     localStorage.setItem(backupKey, currentSave);
   }
   
-  localStorage.setItem(`swariaSaveSlot${slotNumber}`, JSON.stringify(serializedSaveData));
+  // Write to temporary location first
+  const saveDataString = JSON.stringify(serializedSaveData);
+  localStorage.setItem(tempKey, saveDataString);
+  
+  // Verify the temporary save was written correctly
+  const tempData = localStorage.getItem(tempKey);
+  if (tempData && tempData === saveDataString) {
+    // Only overwrite real save if temp write succeeded and matches
+    localStorage.setItem(finalKey, tempData);
+    localStorage.removeItem(tempKey);
+  } else {
+    // If temp save failed, clean up and throw error
+    localStorage.removeItem(tempKey);
+    throw new Error('Atomic save verification failed');
+  }
   updateSaveSlotModal();
   
   if (typeof window.saveChargerState === 'function') {
@@ -4163,11 +4661,13 @@ function saveToSlot(slotNumber) {
       slot.style.background = '';
     }, 1000);
   }
-  return true;
+    return true;
   } catch (error) {
-
     alert('Save failed! Your progress was not saved to prevent corruption.');
     return false;
+  } finally {
+    // Always release the mutex, whether save succeeded or failed
+    saveMutex = false;
   }
 }
 
@@ -5334,21 +5834,19 @@ function deleteSlot(slotNumber) {
 
 window.slotAutosaveInterval = setInterval(() => {
   if (settings.autosave && currentSaveSlot) {
-    // Safety check: Don't autosave if the game is in an invalid state
+    // Enhanced safety check using the new critical operation tracking
     try {
-      // Check if essential game objects exist before saving
-      if (window.state && 
+      if (isSafeToPersist() && 
+          window.state && 
           window.kitchenIngredients !== undefined && 
-          window.friendship !== undefined &&
-          !document.hidden && // Don't save when tab is hidden/frozen
-          document.hasFocus()) { // Only save when window has focus
+          window.friendship !== undefined) {
         saveToSlot(currentSaveSlot);
         showAutosaveIndicator();
       } else {
-
+        // Skip save due to critical operation or unsafe conditions
       }
     } catch (error) {
-
+      console.warn('Autosave failed safely:', error);
     }
   }
 }, 30000);
@@ -5367,6 +5865,33 @@ window.emergencyBackupInterval = setInterval(() => {
     }
   }
 }, 300000); // 5 minutes 
+
+// Add page visibility change listeners to prevent saving during critical moments
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    setCriticalOperation(true);
+    // Give a brief window for the page to fully hide before allowing saves again
+    setTimeout(() => setCriticalOperation(false), 1000);
+  }
+});
+
+// Add beforeunload listener to prevent saves during page transitions
+window.addEventListener('beforeunload', function() {
+  setCriticalOperation(true);
+});
+
+// Add focus/blur listeners for additional safety
+window.addEventListener('blur', function() {
+  setCriticalOperation(true);
+  setTimeout(() => setCriticalOperation(false), 500);
+});
+
+window.addEventListener('focus', function() {
+  // Brief delay before allowing saves after regaining focus
+  setCriticalOperation(true);
+  setTimeout(() => setCriticalOperation(false), 200);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   const manualSaveBtn = document.getElementById('manualSaveBtn');
   if (manualSaveBtn) {
@@ -5583,6 +6108,12 @@ function soapGetsMad() {
     canCloseKpSoftcapModal = false;
     kpSoftcapModal.style.cursor = 'default';
     pausedIntervals = [];
+    // Pause unified game tick interval
+    if (window._unifiedGameTickInterval) {
+      clearInterval(window._unifiedGameTickInterval);
+      pausedIntervals.push('_unifiedGameTickInterval');
+    }
+    // Legacy interval handling for compatibility
     if (tickInterval) {
       clearInterval(tickInterval);
       pausedIntervals.push('tickInterval');
@@ -5610,6 +6141,11 @@ function soapGetsMad() {
     if (!kpSoftcapModal) return;
     kpSoftcapModal.classList.remove('active');
     if (openTimer) clearTimeout(openTimer);
+    // Resume unified game tick interval
+    if (pausedIntervals.includes('_unifiedGameTickInterval')) {
+      window._unifiedGameTickInterval = setInterval(unifiedGameTick, 100);
+    }
+    // Legacy interval handling for compatibility
     if (pausedIntervals.includes('tickInterval')) {
       window.tickInterval = setInterval(gameTick, 1000 / (tickSpeedMultiplier || 1));
     }
@@ -5648,11 +6184,15 @@ function mainGameTick() {
     return;
   }
   
-  const now = Date.now();
-  if (!window.lastTick) window.lastTick = now;
-  const diff = (now - window.lastTick) / 1000;
-  window.lastTick = now;
-  tickGenerators(diff);
+  // Set critical operation flag during game tick to prevent save corruption
+  setGameTickInProgress(true);
+  
+  try {
+    const now = Date.now();
+    if (!window.lastTick) window.lastTick = now;
+    const diff = (now - window.lastTick) / 1000;
+    window.lastTick = now;
+    tickGenerators(diff);
   if (boughtElements[7]) {
     tickPowerGenerator(diff);
   }
@@ -5717,17 +6257,26 @@ function mainGameTick() {
     }
   }
   
-  // Check for infinity conditions
-  if (typeof infinitySystem !== 'undefined' && infinitySystem.checkAllCurrencies) {
-    infinitySystem.checkAllCurrencies();
+    // Check for infinity conditions
+    if (typeof infinitySystem !== 'undefined' && infinitySystem.checkAllCurrencies) {
+      infinitySystem.checkAllCurrencies();
+    }
+  } finally {
+    // Always clear the game tick flag, whether tick succeeded or failed
+    setGameTickInProgress(false);
   }
 }
 
+// Clear old intervals and replace with unified system
 if (window._mainGameTickInterval) clearInterval(window._mainGameTickInterval);
-window._mainGameTickInterval = setInterval(mainGameTick, 100);
+if (window._gameTickInterval) clearInterval(window._gameTickInterval);
 
+// Use unified tick system to reduce memory overhead
+window._unifiedGameTickInterval = setInterval(unifiedGameTick, 100);
 
+// Keep references for compatibility
 window.mainGameTick = mainGameTick;
+window.gameTick = gameTick;
 
 function checkKpSoftcapStory() {
   if (!state.seenKpSoftcapStory && typeof getKpGainPreview === 'function' && getKpGainPreview().gte(new Decimal("1e20"))) {
