@@ -3191,8 +3191,8 @@ function updateFlowerUpgradeRow() {
     }
     updateFlowerXPUpgradeCircleCost();
   }
-  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 10) || window.terrariumUpgradesUnlocked.flower3) {
-    if (typeof terrariumLevel !== 'undefined' && terrariumLevel >= 10) {
+  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 10) || window.terrariumUpgradesUnlocked.flower3 || (window.terrariumFlowerValueUpgradeLevel && window.terrariumFlowerValueUpgradeLevel > 0)) {
+    if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 10) || (window.terrariumFlowerValueUpgradeLevel && window.terrariumFlowerValueUpgradeLevel > 0)) {
       window.terrariumUpgradesUnlocked.flower3 = true;
     }
     const div = document.createElement('div');
@@ -3239,8 +3239,8 @@ function updateFlowerUpgradeRow() {
     }
     updateFlowerUpgrade3CircleCost();
   }
-  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 30) || window.terrariumUpgradesUnlocked.flower4) {
-    if (typeof terrariumLevel !== 'undefined' && terrariumLevel >= 30) {
+  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 30) || window.terrariumUpgradesUnlocked.flower4 || (window.terrariumFlowerUpgrade4Level && window.terrariumFlowerUpgrade4Level > 0)) {
+    if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 30) || (window.terrariumFlowerUpgrade4Level && window.terrariumFlowerUpgrade4Level > 0)) {
       window.terrariumUpgradesUnlocked.flower4 = true;
     }
     let flowerUpgrade4Card = document.getElementById('flower-upgrade-4');
@@ -3292,8 +3292,8 @@ function updateFlowerUpgradeRow() {
     };
     updateFlowerUpgrade4CircleCost();
   }
-  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 75) || window.terrariumUpgradesUnlocked.flower5) {
-    if (typeof terrariumLevel !== 'undefined' && terrariumLevel >= 75) {
+  if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 75) || window.terrariumUpgradesUnlocked.flower5 || (window.terrariumFlowerUpgrade5Level && window.terrariumFlowerUpgrade5Level > 0)) {
+    if ((typeof terrariumLevel !== 'undefined' && terrariumLevel >= 75) || (window.terrariumFlowerUpgrade5Level && window.terrariumFlowerUpgrade5Level > 0)) {
       window.terrariumUpgradesUnlocked.flower5 = true;
     }
     let flowerUpgrade5Card = document.getElementById('flower-upgrade-5');

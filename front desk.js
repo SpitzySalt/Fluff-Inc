@@ -3115,6 +3115,10 @@
         window.buyFlowerUpgrade4(1);
         this.totalFlowerUpgradesBought += 1;
       }
+      if (window.buyFlowerUpgrade5 && typeof window.buyFlowerUpgrade5 === 'function') {
+        window.buyFlowerUpgrade5(1);
+        this.totalFlowerUpgradesBought += 1;
+      }
     } catch (error) {
     }
   }  buyMaxNectarUpgrades(worker) {
@@ -3133,6 +3137,10 @@
       }
       if (window.buyMaxKpNectarUpgrade && typeof window.buyMaxKpNectarUpgrade === 'function') {
         window.buyMaxKpNectarUpgrade();
+        this.totalNectarUpgradesBought += 1;
+      }
+      if (window.buyMaxNectarInfinityUpgrade && typeof window.buyMaxNectarInfinityUpgrade === 'function') {
+        window.buyMaxNectarInfinityUpgrade();
         this.totalNectarUpgradesBought += 1;
       }
     } catch (error) {
