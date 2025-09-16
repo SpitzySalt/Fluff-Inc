@@ -3,6 +3,16 @@
 // if you want to play the game without spoilers, please do not read this file
 // terrarium2.js is a continuation of terrarium.js
 
+// Terrarium2 system timeout tracking
+if (typeof window.terrarium2Timeouts === 'undefined') {
+  window.terrarium2Timeouts = [];
+}
+
+// Terrarium2 system initialization guard
+if (typeof window._terrarium2Initialized === 'undefined') {
+  window._terrarium2Initialized = false;
+}
+
 
 
 
@@ -117,6 +127,28 @@ const nectarizeMilestoneData = [
 
 // Make terrarium2.js variables globally accessible
 window.nectarizeMilestoneData = nectarizeMilestoneData;
+
+// Terrarium2 system cleanup function
+if (typeof window.cleanupTerrarium2 === 'undefined') {
+  window.cleanupTerrarium2 = function() {
+    // Clear all terrarium2 timeouts
+    if (window.terrarium2Timeouts) {
+      window.terrarium2Timeouts.forEach(function(timeoutId) {
+        clearTimeout(timeoutId);
+      });
+      window.terrarium2Timeouts = [];
+    }
+    
+    // Clean up any leftover modals
+    if (typeof window.cleanupTerrarium2Modals === 'function') {
+      window.cleanupTerrarium2Modals();
+    }
+    
+    // Reset initialization flags
+    window._terrarium2Initialized = false;
+    window._terrarium2SwitchHomeSubTabOverridden = false;
+  };
+}
 
 function checkNectarizeMilestones() {
   const currentTier = window.nectarizeTier || 0;
@@ -313,9 +345,14 @@ window.nectarizeMilestoneData = nectarizeMilestoneData;
 })();
 
 function showNectarizeTierInfo() {
+  // Remove any existing tier info modals first
+  const existingModals = document.querySelectorAll('[data-terrarium2-modal="tier-info"]');
+  existingModals.forEach(modal => modal.remove());
+  
   const tier = window.nectarizeTier || 0;
   const resets = window.nectarizeResets || 0;
   const modal = document.createElement('div');
+  modal.setAttribute('data-terrarium2-modal', 'tier-info');
   modal.style.cssText = `
     position: fixed;
     top: 0;
@@ -371,7 +408,7 @@ function completeNectarizeQuest() {
   window.nectarizeMachineRepaired = true;
   window.nectarizeMachineLevel = 1;
   window.nectarizeQuestPermanentlyCompleted = true;
-  setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     if (typeof window.updateNectarizeMachineDisplay === 'function') {
       window.updateNectarizeMachineDisplay();
     }
@@ -394,6 +431,7 @@ function completeNectarizeQuest() {
        window.saveGame();
      }
    }, 100);
+   if (window.terrarium2Timeouts) window.terrarium2Timeouts.push(timeoutId);
 }
 
 window.completeNectarizeQuest = completeNectarizeQuest;
@@ -491,16 +529,32 @@ function ensureFlowerUpgrade4Persistence() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(ensureFlowerUpgrade4Persistence, 1000);
-});
-if (typeof window !== 'undefined' && window.switchHomeSubTab) {
+if (!window._terrarium2Initialized) {
+  const terrarium2DOMHandler = function() {
+    const timeoutId = setTimeout(ensureFlowerUpgrade4Persistence, 1000);
+    if (window.terrarium2Timeouts) window.terrarium2Timeouts.push(timeoutId);
+    document.removeEventListener('DOMContentLoaded', terrarium2DOMHandler);
+  };
+  document.addEventListener('DOMContentLoaded', terrarium2DOMHandler);
+}
+if (typeof window !== 'undefined' && window.switchHomeSubTab && !window._terrarium2SwitchHomeSubTabOverridden) {
   const originalSwitchHomeSubTab = window.switchHomeSubTab;
   window.switchHomeSubTab = function(tabId) {
     originalSwitchHomeSubTab.call(this, tabId);
     if (tabId === 'terrariumTab') {
-      setTimeout(ensureFlowerUpgrade4Persistence, 500);
+      const timeoutId = setTimeout(ensureFlowerUpgrade4Persistence, 500);
+      if (window.terrarium2Timeouts) window.terrarium2Timeouts.push(timeoutId);
     }
   };
+  window._terrarium2SwitchHomeSubTabOverridden = true;
+  window._terrarium2Initialized = true;
 }
 window.ensureFlowerUpgrade4Persistence = ensureFlowerUpgrade4Persistence;
+
+// Function to clean up any leftover terrarium2 modals
+if (typeof window.cleanupTerrarium2Modals === 'undefined') {
+  window.cleanupTerrarium2Modals = function() {
+    const modals = document.querySelectorAll('[data-terrarium2-modal]');
+    modals.forEach(modal => modal.remove());
+  };
+}

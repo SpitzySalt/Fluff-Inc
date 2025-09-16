@@ -222,9 +222,15 @@ let currentHomeSubTab = 'gamblingMain';
 let currentGeneratorSubTab = 'boxGen'; // Track which generator sub-area is active
 let lastPrismPowerOnline = true; // Track prism power state for optimization - prism lab is always online
 window.isTabHidden = false;
-document.addEventListener('visibilitychange', function() {
+
+// Timeout tracking for cleanup
+window.scriptTimeouts = window.scriptTimeouts || [];
+
+// Track visibility change handler for cleanup
+window.visibilityChangeHandler = function() {
   window.isTabHidden = document.hidden;
-});
+};
+document.addEventListener('visibilitychange', window.visibilityChangeHandler);
 let currentSaveSlot = null;
 if (localStorage.getItem('currentSaveSlot')) {
   currentSaveSlot = parseInt(localStorage.getItem('currentSaveSlot'), 10);
@@ -1734,7 +1740,7 @@ function tryBuyElement(index) {
     if (!state.seenGeneratorUnlockStory) {
       state.seenGeneratorUnlockStory = true;
       if (typeof saveGame === 'function') saveGame();
-      setTimeout(() => {
+      window.trackedSetTimeout(() => {
         if (typeof showGeneratorUnlockStoryModal === 'function') {
           showGeneratorUnlockStoryModal();
         }
@@ -1758,7 +1764,7 @@ function tryBuyElement(index) {
     const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
     const flagKey = `element10SpeechShown_${currentSaveSlot}`;
     if (!localStorage.getItem(flagKey) && typeof window.triggerElement10IntercomEvent === 'function') {
-      setTimeout(() => {
+      window.trackedSetTimeout(() => {
         window.triggerElement10IntercomEvent();
         localStorage.setItem(flagKey, '1');
       }, 500);
@@ -1768,7 +1774,7 @@ function tryBuyElement(index) {
     const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
     const flagKey = `element20SpeechShown_${currentSaveSlot}`;
     if (!localStorage.getItem(flagKey) && typeof window.triggerElement20IntercomEvent === 'function') {
-      setTimeout(() => {
+      window.trackedSetTimeout(() => {
         window.triggerElement20IntercomEvent();
         localStorage.setItem(flagKey, '1');
       }, 500);
@@ -1778,7 +1784,7 @@ function tryBuyElement(index) {
     const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
     const flagKey = `element25StoryShown_${currentSaveSlot}`;
     if (!localStorage.getItem(flagKey) && typeof window.showElement25StoryModal === 'function') {
-      setTimeout(() => {
+      window.trackedSetTimeout(() => {
         window.showElement25StoryModal();
         localStorage.setItem(flagKey, '1');
       }, 500);
@@ -9116,3 +9122,75 @@ window.addResumeClickListener = addResumeClickListener;
 window.removeResumeClickListener = removeResumeClickListener;
 window.showResumeAnimation = showResumeAnimation;
 window.handlePauseIndicatorClick = handlePauseIndicatorClick;
+
+// Helper function to track timeouts
+window.trackedSetTimeout = function(callback, delay) {
+  const timeoutId = setTimeout(callback, delay);
+  window.scriptTimeouts.push(timeoutId);
+  return timeoutId;
+};
+
+// Main script cleanup function
+window.cleanupMainScript = function() {
+  // Clear main game intervals
+  if (window.tickInterval) {
+    clearInterval(window.tickInterval);
+    window.tickInterval = null;
+  }
+  
+  if (window._gameTickInterval) {
+    clearInterval(window._gameTickInterval);
+    window._gameTickInterval = null;
+  }
+  
+  if (window._mainGameTickInterval) {
+    clearInterval(window._mainGameTickInterval);
+    window._mainGameTickInterval = null;
+  }
+  
+  // Clear speech timers
+  if (window.viSpeechTimeout) {
+    clearTimeout(window.viSpeechTimeout);
+    window.viSpeechTimeout = null;
+  }
+  
+  if (window.hardModeSpeechTimer) {
+    clearTimeout(window.hardModeSpeechTimer);
+    window.hardModeSpeechTimer = null;
+  }
+  
+  // Clear fluzzer timers
+  if (window.fluzzerTimerInterval) {
+    clearInterval(window.fluzzerTimerInterval);
+    window.fluzzerTimerInterval = null;
+  }
+  
+  if (window.fluzzerAITimer) {
+    clearTimeout(window.fluzzerAITimer);
+    window.fluzzerAITimer = null;
+  }
+  
+  // Clear all tracked timeouts
+  if (window.scriptTimeouts) {
+    window.scriptTimeouts.forEach(timeoutId => {
+      clearTimeout(timeoutId);
+    });
+    window.scriptTimeouts = [];
+  }
+  
+  // Remove event listeners
+  if (window.visibilityChangeHandler) {
+    document.removeEventListener('visibilitychange', window.visibilityChangeHandler);
+    window.visibilityChangeHandler = null;
+  }
+  
+  if (window._genCursorLightHandler) {
+    window.removeEventListener('mousemove', window._genCursorLightHandler);
+    window._genCursorLightHandler = null;
+  }
+  
+  // Stop Vi random speech timer if it exists
+  if (typeof window.stopViRandomSpeechTimer === 'function') {
+    window.stopViRandomSpeechTimer();
+  }
+};

@@ -195,6 +195,9 @@ window.swariaImage = swariaImage;
 window.swariaSpeech = swariaSpeech;
 window.swariaQuotes = swariaQuotes;
 
+// Timeout tracking for script2.js
+window.script2Timeouts = window.script2Timeouts || [];
+
 function showSwariaSpeech() {
   if (!swariaSpeech || !swariaImage) return;
   const availableQuotes = swariaQuotes.filter(q => q.condition());
@@ -202,7 +205,7 @@ function showSwariaSpeech() {
   swariaSpeech.textContent = randomQuote ? randomQuote.text : "...";
   swariaSpeech.style.display = "block";
   swariaImage.src = getMainCargoCharacterImage(true); 
-  setTimeout(() => {
+  window.script2TrackedSetTimeout(() => {
     swariaSpeech.style.display = "none";
     swariaImage.src = getMainCargoCharacterImage(false); 
   }, 10000);
@@ -5329,7 +5332,7 @@ function deleteSlot(slotNumber) {
   }
 }
 
-setInterval(() => {
+window.slotAutosaveInterval = setInterval(() => {
   if (settings.autosave && currentSaveSlot) {
     // Safety check: Don't autosave if the game is in an invalid state
     try {
@@ -5351,7 +5354,7 @@ setInterval(() => {
 }, 30000);
 
 // Emergency backup system - saves every 5 minutes to a separate key
-setInterval(() => {
+window.emergencyBackupInterval = setInterval(() => {
   if (currentSaveSlot && checkGameIntegrity()) {
     try {
       const currentSave = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
@@ -5418,12 +5421,7 @@ function showAutosaveIndicator() {
   }
 }
 
-setInterval(() => {
-  if (settings.autosave && currentSaveSlot) {
-    saveToSlot(currentSaveSlot);
-    showAutosaveIndicator();
-  }
-}, 30000); 
+// Duplicate autosave interval removed - using slotAutosaveInterval instead
 document.addEventListener('DOMContentLoaded', function() {
   const manualSaveBtn = document.getElementById('manualSaveBtn');
   if (manualSaveBtn) {
@@ -9719,9 +9717,105 @@ window.showSoapDisappointedSpeech = showSoapDisappointedSpeech;
 // Initialize on page load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(checkLastDeliveryInfo, 1000);
+    window.script2TrackedSetTimeout(checkLastDeliveryInfo, 1000);
   });
 } else {
-  setTimeout(checkLastDeliveryInfo, 1000);
+  window.script2TrackedSetTimeout(checkLastDeliveryInfo, 1000);
 }
-    
+
+// Comprehensive cleanup function for script2.js
+window.cleanupScript2 = function() {
+  // Clear all major intervals
+  if (window.swariaSpeechInterval) {
+    clearInterval(window.swariaSpeechInterval);
+    window.swariaSpeechInterval = null;
+  }
+  
+  if (window.secondaryTickInterval) {
+    clearInterval(window.secondaryTickInterval);
+    window.secondaryTickInterval = null;
+  }
+  
+  if (window.autosaveInterval) {
+    clearInterval(window.autosaveInterval);
+    window.autosaveInterval = null;
+  }
+  
+  if (window.slotAutosaveInterval) {
+    clearInterval(window.slotAutosaveInterval);
+    window.slotAutosaveInterval = null;
+  }
+  
+  if (window.emergencyBackupInterval) {
+    clearInterval(window.emergencyBackupInterval);
+    window.emergencyBackupInterval = null;
+  }
+  
+  if (window.generatorDarknessInterval) {
+    clearInterval(window.generatorDarknessInterval);
+    window.generatorDarknessInterval = null;
+  }
+  
+  if (window._mainGameTickInterval) {
+    clearInterval(window._mainGameTickInterval);
+    window._mainGameTickInterval = null;
+  }
+  
+  if (window.observatoryWatchdogInterval) {
+    clearInterval(window.observatoryWatchdogInterval);
+    window.observatoryWatchdogInterval = null;
+  }
+  
+  if (window.chargerUpdateInterval) {
+    clearInterval(window.chargerUpdateInterval);
+    window.chargerUpdateInterval = null;
+  }
+  
+  // Clear soap timers
+  if (soapRandomSpeechTimer) {
+    clearTimeout(soapRandomSpeechTimer);
+    soapRandomSpeechTimer = null;
+  }
+  
+  if (window.soapCurrentSpeechTimeout) {
+    clearTimeout(window.soapCurrentSpeechTimeout);
+    window.soapCurrentSpeechTimeout = null;
+  }
+  
+  if (window.soapClickResetTimer) {
+    clearTimeout(window.soapClickResetTimer);
+    window.soapClickResetTimer = null;
+  }
+  
+  // Stop soap speech timer
+  if (typeof stopSoapRandomSpeechTimer === 'function') {
+    stopSoapRandomSpeechTimer();
+  }
+  
+  // Clean up event listeners that don't have proper cleanup
+  if (window._blackoutMoveListener) {
+    window.removeEventListener('mousemove', window._blackoutMoveListener);
+    window._blackoutMoveListener = null;
+  }
+  
+  // Clear all tracked timeouts
+  if (window.script2Timeouts) {
+    window.script2Timeouts.forEach(timeoutId => {
+      clearTimeout(timeoutId);
+    });
+    window.script2Timeouts = [];
+  }
+  
+  // Reset state flags
+  window.soapIsTalking = false;
+  window.soapClickCount = 0;
+  window.soapLastClickTime = 0;
+  window.soapIsMad = false;
+};
+
+// Helper function to track timeouts for script2
+window.script2TrackedSetTimeout = function(callback, delay) {
+  const timeoutId = setTimeout(callback, delay);
+  window.script2Timeouts.push(timeoutId);
+  return timeoutId;
+};

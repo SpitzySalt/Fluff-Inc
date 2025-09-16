@@ -153,10 +153,18 @@ function initFriendshipFunctions() {
   };
 }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(initFriendshipFunctions, 0);
-} else {
-  document.addEventListener('DOMContentLoaded', initFriendshipFunctions);
+// Initialize friendship functions with cleanup tracking
+if (!window._statsInitialized) {
+  window._statsInitialized = true;
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(initFriendshipFunctions, 0);
+  } else {
+    const initHandler = function() {
+      initFriendshipFunctions();
+      document.removeEventListener('DOMContentLoaded', initHandler);
+    };
+    document.addEventListener('DOMContentLoaded', initHandler);
+  }
 }
 const origLoadGame = window.loadGame;
 window.loadGame = function() {
@@ -349,18 +357,24 @@ function showDepartmentStatsModal(department) {
 
 if (typeof window._departmentStatsModalInit === 'undefined') {
   window._departmentStatsModalInit = true;
-  document.addEventListener('DOMContentLoaded', function() {
+  const modalInitHandler = function() {
     const closeBtn = document.getElementById('departmentStatsModalCloseBtn');
-    if (closeBtn) closeBtn.onclick = function() {
-      document.getElementById('departmentStatsModal').style.display = 'none';
-    };
-    const modal = document.getElementById('departmentStatsModal');
-    if (modal) {
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.style.display = 'none';
-      });
+    if (closeBtn && !closeBtn._statsClickHandler) {
+      closeBtn._statsClickHandler = function() {
+        document.getElementById('departmentStatsModal').style.display = 'none';
+      };
+      closeBtn.onclick = closeBtn._statsClickHandler;
     }
-  });
+    const modal = document.getElementById('departmentStatsModal');
+    if (modal && !modal._statsClickHandler) {
+      modal._statsClickHandler = function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+      };
+      modal.addEventListener('click', modal._statsClickHandler);
+    }
+    document.removeEventListener('DOMContentLoaded', modalInitHandler);
+  };
+  document.addEventListener('DOMContentLoaded', modalInitHandler);
 }
 
 // Debug function to test friendship levels (remove in production)
@@ -415,15 +429,44 @@ function renderDepartmentStatsButtons() {
   }
 }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(renderDepartmentStatsButtons, 0);
-} else {
-  document.addEventListener('DOMContentLoaded', renderDepartmentStatsButtons);
+// Initialize department stats with cleanup tracking
+if (!window._departmentStatsInitialized) {
+  window._departmentStatsInitialized = true;
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(renderDepartmentStatsButtons, 0);
+  } else {
+    const renderHandler = function() {
+      renderDepartmentStatsButtons();
+      document.removeEventListener('DOMContentLoaded', renderHandler);
+    };
+    document.addEventListener('DOMContentLoaded', renderHandler);
+  }
 }
 const origShowPageStats = window.showPage || (typeof showPage === 'function' && showPage);
 window.showPage = function(pageId) {
   if (origShowPageStats) origShowPageStats.apply(this, arguments);
   if (pageId === 'settings') {
     renderDepartmentStatsButtons();
+  }
+};
+
+// Cleanup function for stats.js (minimal cleanup needed)
+window.cleanupStats = function() {
+  // Reset initialization flags to allow re-initialization if needed
+  window._statsInitialized = false;
+  window._departmentStatsInitialized = false;
+  window._departmentStatsModalInit = false;
+  
+  // Remove modal event listeners if they exist
+  const modal = document.getElementById('departmentStatsModal');
+  if (modal && modal._statsClickHandler) {
+    modal.removeEventListener('click', modal._statsClickHandler);
+    modal._statsClickHandler = null;
+  }
+  
+  const closeBtn = document.getElementById('departmentStatsModalCloseBtn');
+  if (closeBtn && closeBtn._statsClickHandler) {
+    closeBtn.removeEventListener('click', closeBtn._statsClickHandler);
+    closeBtn._statsClickHandler = null;
   }
 };

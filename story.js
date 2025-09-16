@@ -2,6 +2,10 @@
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
+// Story system timeout tracking
+if (typeof window.storyTimeouts === 'undefined') {
+  window.storyTimeouts = [];
+}
 
 // Global story modal checker
 if (typeof window.checkForPendingStoryModals === 'undefined') {
@@ -11,11 +15,12 @@ if (typeof window.checkForPendingStoryModals === 'undefined') {
     if (window.state.pendingInfinityResetStory && !window.state.seenInfinityResetStory) {
       window.state.pendingInfinityResetStory = false;
       window.state.seenInfinityResetStory = true;
-      setTimeout(function() {
+      const timeoutId = setTimeout(function() {
         if (typeof window.showInfinityResetStoryModal === 'function') {
           window.showInfinityResetStoryModal();
         }
       }, 100);
+      if (window.storyTimeouts) window.storyTimeouts.push(timeoutId);
       return;
     }
     // ...other modals can be checked here...
@@ -71,6 +76,27 @@ if (typeof window.checkForPendingStoryModals === 'undefined') {
 
 if (typeof window.state === 'undefined') window.state = window.state || {};
 
+// Story system initialization guard
+if (typeof window._storyInitialized === 'undefined') {
+  window._storyInitialized = false;
+}
+
+// Story system cleanup function
+if (typeof window.cleanupStory === 'undefined') {
+  window.cleanupStory = function() {
+    // Clear all story timeouts
+    if (window.storyTimeouts) {
+      window.storyTimeouts.forEach(function(timeoutId) {
+        clearTimeout(timeoutId);
+      });
+      window.storyTimeouts = [];
+    }
+    
+    // Reset initialization flag
+    window._storyInitialized = false;
+  };
+}
+
 function showFirstDeliveryStoryModal() {
   document.getElementById('firstDeliveryStoryModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -85,17 +111,23 @@ function closeFirstDeliveryStoryModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const firstDeliveryModalHandler = function() {
     const modal = document.getElementById('firstDeliveryStoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeFirstDeliveryStoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', firstDeliveryModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', firstDeliveryModalHandler);
+  }
 })();
 
 function showGeneratorUnlockStoryModal() {
@@ -109,17 +141,23 @@ function closeGeneratorUnlockStoryModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const generatorUnlockModalHandler = function() {
     const modal = document.getElementById('generatorUnlockStoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeGeneratorUnlockStoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', generatorUnlockModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', generatorUnlockModalHandler);
+  }
 })();
 
 function showKpSoftcapModal() {
@@ -139,17 +177,23 @@ function closeKpSoftcapModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const kpSoftcapModalHandler = function() {
     const kpSoftcapModal = document.getElementById('kpSoftcapModal');
     if (kpSoftcapModal) {
       const btn = kpSoftcapModal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeKpSoftcapModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', kpSoftcapModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', kpSoftcapModalHandler);
+  }
 })();
 
 function showKpMildcapModal() {
@@ -193,17 +237,23 @@ function closeNectarizeResetStoryModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const nectarizeResetModalHandler = function() {
     const modal = document.getElementById('nectarizeResetStoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeNectarizeResetStoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', nectarizeResetModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', nectarizeResetModalHandler);
+  }
 })();
 
 function showInfinityFluffStoryModal() {
@@ -234,17 +284,23 @@ function closeInfinityFluffStoryModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const infinityFluffModalHandler = function() {
     const modal = document.getElementById('infinityFluffStoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeInfinityFluffStoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', infinityFluffModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', infinityFluffModalHandler);
+  }
 })();
 
 function showElement25StoryModal() {
@@ -332,31 +388,44 @@ function closeInfinityResetStoryModal() {
 }
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const infinityResetModalHandler = function() {
     const modal = document.getElementById('infinityResetStoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeInfinityResetStoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', infinityResetModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', infinityResetModalHandler);
+  }
 })();
 
 (function() {
-  document.addEventListener('DOMContentLoaded', function() {
+  const element25ModalHandler = function() {
     const modal = document.getElementById('element25StoryModal');
     if (modal) {
       const btn = modal.querySelector('button');
-      if (btn) {
-        btn.onclick = function() {
+      if (btn && !btn._storyClickHandler) {
+        btn._storyClickHandler = function() {
           closeElement25StoryModal();
         };
+        btn.onclick = btn._storyClickHandler;
       }
     }
-  });
+    document.removeEventListener('DOMContentLoaded', element25ModalHandler);
+  };
+  
+  if (!window._storyInitialized) {
+    document.addEventListener('DOMContentLoaded', element25ModalHandler);
+    window._storyInitialized = true;
+  }
 })();
 window.showFirstDeliveryStoryModal = showFirstDeliveryStoryModal;
 window.closeFirstDeliveryStoryModal = closeFirstDeliveryStoryModal;

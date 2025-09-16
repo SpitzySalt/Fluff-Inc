@@ -2,6 +2,16 @@
 // this file contains major spoilers for the game
 // if you want to play the game without spoilers, please do not read this file
 
+// Cafeteria system timeout tracking
+if (typeof window.cafeteriaTimeouts === 'undefined') {
+  window.cafeteriaTimeouts = [];
+}
+
+// Cafeteria system initialization guard
+if (typeof window._cafeteriaInitialized === 'undefined') {
+  window._cafeteriaInitialized = false;
+}
+
 
 
 
@@ -841,6 +851,47 @@ let cafeteriaState = {
   scenarioStartTime: null,
   dialogueFinished: false
 };
+
+// Cafeteria system cleanup function
+if (typeof window.cleanupCafeteria === 'undefined') {
+  window.cleanupCafeteria = function() {
+    // Clear meal intervals
+    if (window.cafeteriaMealInterval1) {
+      clearInterval(window.cafeteriaMealInterval1);
+      window.cafeteriaMealInterval1 = null;
+    }
+    if (window.cafeteriaMealInterval2) {
+      clearInterval(window.cafeteriaMealInterval2);
+      window.cafeteriaMealInterval2 = null;
+    }
+    
+    // Clear all cafeteria timeouts
+    if (window.cafeteriaTimeouts) {
+      window.cafeteriaTimeouts.forEach(function(timeoutId) {
+        clearTimeout(timeoutId);
+      });
+      window.cafeteriaTimeouts = [];
+    }
+    
+    // Clean up any leftover dialogue containers
+    if (typeof window.cleanupCafeteriaDialogue === 'function') {
+      window.cleanupCafeteriaDialogue();
+    }
+    
+    // Reset cafeteria state
+    cafeteriaState = {
+      isMealTime: false,
+      currentScenario: null,
+      currentDialogueIndex: 0,
+      activeCharacters: [],
+      scenarioStartTime: null,
+      dialogueFinished: false
+    };
+    
+    // Reset initialization flag
+    window._cafeteriaInitialized = false;
+  };
+}
 let characterLocations = {
   peachy: "main",
   soap: "main", 
@@ -852,9 +903,24 @@ let characterLocations = {
 };
 
 function initCafeteria() {
+  // Prevent duplicate initialization
+  if (window._cafeteriaInitialized) {
+    return;
+  }
+  
+  // Clear any existing intervals first
+  if (window.cafeteriaMealInterval1) {
+    clearInterval(window.cafeteriaMealInterval1);
+  }
+  if (window.cafeteriaMealInterval2) {
+    clearInterval(window.cafeteriaMealInterval2);
+  }
+  
   window.cafeteriaMealInterval1 = setInterval(checkMealTime, 60000);
   checkMealTime();
   window.cafeteriaMealInterval2 = setInterval(checkMealTime, 10000);
+  
+  window._cafeteriaInitialized = true;
 }
 
 function checkMealTime() {
@@ -1023,7 +1089,11 @@ function showCafeteriaDialogue() {
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   `;
-  continueBtn.onclick = advanceDialogue;
+  // Use named function reference for better cleanup
+  if (!continueBtn._cafeteriaClickHandler) {
+    continueBtn._cafeteriaClickHandler = advanceDialogue;
+    continueBtn.onclick = continueBtn._cafeteriaClickHandler;
+  }
   dialogueArea.appendChild(continueBtn);
   mainContainer.appendChild(dialogueArea);
   cafeteriaMain.appendChild(mainContainer);
@@ -1372,10 +1442,16 @@ function isCharacterInCafeteria(character) {
   return characterLocations[character] === "cafeteria";
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initCafeteria);
-} else {
-  initCafeteria();
+if (!window._cafeteriaInitialized) {
+  if (document.readyState === 'loading') {
+    const cafeteriaDOMHandler = function() {
+      initCafeteria();
+      document.removeEventListener('DOMContentLoaded', cafeteriaDOMHandler);
+    };
+    document.addEventListener('DOMContentLoaded', cafeteriaDOMHandler);
+  } else {
+    initCafeteria();
+  }
 }
 window.cafeteria = {
 
@@ -1402,6 +1478,15 @@ window.cafeteria = {
   }
 
 };
+
+// Function to clean up any leftover cafeteria dialogue containers
+if (typeof window.cleanupCafeteriaDialogue === 'undefined') {
+  window.cleanupCafeteriaDialogue = function() {
+    const dialogueContainers = document.querySelectorAll('#cafeteriaDialogue');
+    dialogueContainers.forEach(container => container.remove());
+  };
+}
+
 window.testCafeteriaTime = function(timeString) {
   if (!window.daynight || typeof window.daynight.setTime !== 'function') {
     return;
@@ -1409,7 +1494,8 @@ window.testCafeteriaTime = function(timeString) {
   const [hours, minutes] = timeString.split(':').map(Number);
   const timeInMinutes = hours * 60 + minutes;
   window.daynight.setTime(timeInMinutes);
-  setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     checkMealTime();
   }, 100);
+  if (window.cafeteriaTimeouts) window.cafeteriaTimeouts.push(timeoutId);
 };

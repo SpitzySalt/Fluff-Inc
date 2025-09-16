@@ -32,6 +32,10 @@ class Boutique {
     this.apologizeCount = 0;
     this.apologizeRequired = 1000; // Need 1000 apologies
     
+    // Timer management for memory leak prevention
+    this.mainUpdateInterval = null;
+    this.isDestroyed = false;
+    
     // Boutique schedule system
     this.boutiqueOpenHour = 6; // Opens at 6:00 AM
     this.boutiqueCloseHour = 22; // Closes at 22:00 (10 PM)
@@ -66,10 +70,10 @@ class Boutique {
       this.updateLepreCharacterDisplay();
     }, 100); // Small delay to ensure DOM is ready
     
-    // Update timer every second for real-time countdown
-    setInterval(() => {
-      // Don't update if game is paused
-      if (window.isGamePaused) {
+    // Update timer every second for real-time countdown - store interval ID for cleanup
+    this.mainUpdateInterval = setInterval(() => {
+      // Don't update if destroyed or game is paused
+      if (this.isDestroyed || window.isGamePaused) {
         return;
       }
       
@@ -2274,6 +2278,36 @@ class Boutique {
 
       }
     }
+  }
+
+  // Memory leak prevention: cleanup method to properly destroy the boutique instance
+  destroy() {
+    this.isDestroyed = true;
+    
+    // Clear all timers to prevent memory leaks
+    if (this.mainUpdateInterval) {
+      clearInterval(this.mainUpdateInterval);
+      this.mainUpdateInterval = null;
+    }
+    
+    if (this.kickTimer) {
+      clearTimeout(this.kickTimer);
+      this.kickTimer = null;
+    }
+    
+    if (this.currentSpeechTimeout) {
+      clearTimeout(this.currentSpeechTimeout);
+      this.currentSpeechTimeout = null;
+    }
+    
+    // Clear speech queue
+    this.speechQueue = [];
+    this.isSpeaking = false;
+    
+    // Reset all state
+    this.currentShopItems = [];
+    this.purchaseHistory = {};
+    this.dailyStock = {};
   }
 }
 

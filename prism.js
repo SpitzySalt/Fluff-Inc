@@ -9,6 +9,9 @@ let prismGridInitialized = false;
 // Make prismGridInitialized globally accessible
 window.prismGridInitialized = prismGridInitialized;
 
+// Timeout tracking for cleanup
+window.prismTimeouts = window.prismTimeouts || [];
+
 
 
 
@@ -1838,13 +1841,18 @@ function showPrismSpeech() {
   swariaprismSpeech.textContent = quote.text;
   swariaprismSpeech.classList.add('show');
   swariaprismImage.src = getPrismLabCharacterImage(true); 
-  setTimeout(() => {
+  
+  // Track timeouts for cleanup
+  const viResponseTimeout = setTimeout(() => {
     checkViResponse(quote.text);
-  }, 2000); 
-  setTimeout(() => {
+  }, 2000);
+  window.prismTimeouts.push(viResponseTimeout);
+  
+  const speechHideTimeout = setTimeout(() => {
     swariaprismSpeech.classList.remove('show');
     swariaprismImage.src = getPrismLabCharacterImage(false); 
-  }, 10000); 
+  }, 10000);
+  window.prismTimeouts.push(speechHideTimeout); 
 }
 
 window.isViSleeping = false;
@@ -1950,7 +1958,8 @@ function checkViResponse(swariaText) {
   }
 }
 
-setInterval(() => {
+// Store speech interval for cleanup
+window.prismSpeechInterval = setInterval(() => {
   const prismSubTab = document.getElementById("prismSubTab");
   // Check if prism tab is visible AND player is not on advanced prism tab
   // Use both global variable and DOM state for reliability
@@ -2512,4 +2521,48 @@ window.testViFriendshipBuff = function(level = 1) {
     if (typeof window.renderDepartmentStatsButtons === 'function') {
         window.renderDepartmentStatsButtons();
     }
+};
+
+// Prism system cleanup function
+window.cleanupPrismSystem = function() {
+    // Clear main nerf display interval
+    if (window.prismNerfDisplayInterval) {
+        clearInterval(window.prismNerfDisplayInterval);
+        window.prismNerfDisplayInterval = null;
+    }
+    
+    // Clear speech interval
+    if (window.prismSpeechInterval) {
+        clearInterval(window.prismSpeechInterval);
+        window.prismSpeechInterval = null;
+    }
+    
+    // Clear speech timeout
+    if (window.viSpeechTimeout) {
+        clearTimeout(window.viSpeechTimeout);
+        window.viSpeechTimeout = null;
+    }
+    
+    // Clear all tracked timeouts
+    if (window.prismTimeouts) {
+        window.prismTimeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        window.prismTimeouts = [];
+    }
+    
+    // Clean up tile event listeners
+    const grid = document.getElementById('lightGrid');
+    if (grid) {
+        grid.querySelectorAll('.light-tile').forEach(tile => {
+            if (tile._tokenPatched) {
+                // Clone and replace to remove all event listeners
+                const newTile = tile.cloneNode(true);
+                tile.parentNode.replaceChild(newTile, tile);
+            }
+        });
+    }
+    
+    // Reset prism state tracking
+    window.prismGridInitialized = false;
 };

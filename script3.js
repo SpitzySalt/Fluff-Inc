@@ -213,6 +213,17 @@ window.intercomSpeechBubble = intercomSpeechBubble;
 window.intercomEventTriggered = intercomEventTriggered;
 window.intercomEvent20Triggered = intercomEvent20Triggered;
 
+// Timeout tracking for script3.js
+window.script3Timeouts = window.script3Timeouts || [];
+window.script3SpeedUpIntervals = window.script3SpeedUpIntervals || [];
+
+// Helper function to track timeouts for script3
+window.script3TrackedSetTimeout = function(callback, delay) {
+    const timeoutId = setTimeout(callback, delay);
+    window.script3Timeouts.push(timeoutId);
+    return timeoutId;
+};
+
 function initializeBoostDisplay() {
     createBoostDisplayCard();
     startBoostDisplayUpdate();
@@ -373,12 +384,12 @@ function showIntercomSpeechBubble(text, duration = 10000) {
         intercomSpeechBubble.appendChild(newArrow);
     }
     intercomSpeechBubble.style.display = 'block';
-    setTimeout(() => {
+    window.script3TrackedSetTimeout(() => {
         intercomSpeechBubble.style.opacity = '1';
     }, 100);
-    setTimeout(() => {
+    window.script3TrackedSetTimeout(() => {
         intercomSpeechBubble.style.opacity = '0';
-        setTimeout(() => {
+        window.script3TrackedSetTimeout(() => {
             intercomSpeechBubble.style.display = 'none';
         }, 500);
     }, duration);
@@ -890,11 +901,19 @@ function speedUpTimeToMorning(onDone) {
         if (mins >= 6 * 60 && mins < 22 * 60) {
 
             clearInterval(interval);
+            // Remove from tracking array
+            const index = window.script3SpeedUpIntervals.indexOf(interval);
+            if (index > -1) {
+                window.script3SpeedUpIntervals.splice(index, 1);
+            }
             if (onDone) onDone();
             return;
         }
 
     }, 50); // Slightly slower animation for better visibility
+    
+    // Track the interval for cleanup
+    window.script3SpeedUpIntervals.push(interval);
 }
 
 // Add CSS for sleep-center and button animation
@@ -958,7 +977,7 @@ if (document.readyState === 'loading') {
             injectSleepCSS();
             observeSleepButton();
             initializeDeliverButtonCooldown();
-            setTimeout(createSleepButtonIfNeeded, 1200);
+            window.script3TrackedSetTimeout(createSleepButtonIfNeeded, 1200);
             initializeElementUnlockSystem();
         });
 } else {
@@ -966,12 +985,12 @@ if (document.readyState === 'loading') {
         injectSleepCSS();
         observeSleepButton();
         initializeDeliverButtonCooldown();
-        setTimeout(createSleepButtonIfNeeded, 1200);
+        window.script3TrackedSetTimeout(createSleepButtonIfNeeded, 1200);
         initializeElementUnlockSystem();
 }
-setTimeout(initializeBoostDisplay, 1000);
-setTimeout(initializeDeliverButtonCooldown, 1500);
-setTimeout(initializeFreeGiftModal, 2000);
+window.script3TrackedSetTimeout(initializeBoostDisplay, 1000);
+window.script3TrackedSetTimeout(initializeDeliverButtonCooldown, 1500);
+window.script3TrackedSetTimeout(initializeFreeGiftModal, 2000);
 window.testBoostDisplay = function() {
     if (!window.state) window.state = {};
     window.state.mysticCookingSpeedBoost = 60000; 
@@ -1267,12 +1286,15 @@ function showFreeGiftModal() {
     modal.style.display = 'flex';
     freeGiftModalShown = true;
     
-    // Add click-outside-to-claim functionality
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            claimFreeGift();
-        }
-    });
+    // Add click-outside-to-claim functionality (only if not already added)
+    if (!modal._freeGiftClickHandler) {
+        modal._freeGiftClickHandler = function(event) {
+            if (event.target === modal) {
+                claimFreeGift();
+            }
+        };
+        modal.addEventListener('click', modal._freeGiftClickHandler);
+    }
 }
 
 function claimFreeGift() {
@@ -1399,4 +1421,66 @@ window.testFreeGiftModal = function() {
 // Debug function to test reward addition without modal
 window.testFreeGiftRewards = function() {
     awardFreeGiftRewards();
+};
+
+// Comprehensive cleanup function for script3.js
+window.cleanupScript3 = function() {
+    // Clear deliver button intervals
+    if (window.deliverButtonStateInterval) {
+        clearInterval(window.deliverButtonStateInterval);
+        window.deliverButtonStateInterval = null;
+    }
+    
+    if (deliverButtonCooldown && deliverButtonCooldown.interval) {
+        clearInterval(deliverButtonCooldown.interval);
+        deliverButtonCooldown.interval = null;
+        deliverButtonCooldown.isActive = false;
+        deliverButtonCooldown.remainingTime = 0;
+    }
+    
+    // Clear boost display interval
+    if (boostDisplayInterval) {
+        clearInterval(boostDisplayInterval);
+        boostDisplayInterval = null;
+    }
+    
+    // Clear sleep button interval
+    if (window.createSleepButtonInterval) {
+        clearInterval(window.createSleepButtonInterval);
+        window.createSleepButtonInterval = null;
+    }
+    
+    // Clear all speed-up intervals
+    if (window.script3SpeedUpIntervals) {
+        window.script3SpeedUpIntervals.forEach(intervalId => {
+            clearInterval(intervalId);
+        });
+        window.script3SpeedUpIntervals = [];
+    }
+    
+    // Clear all tracked timeouts
+    if (window.script3Timeouts) {
+        window.script3Timeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        window.script3Timeouts = [];
+    }
+    
+    // Clean up free gift modal event listener
+    const modal = document.getElementById('freeGiftModal');
+    if (modal && modal._freeGiftClickHandler) {
+        modal.removeEventListener('click', modal._freeGiftClickHandler);
+        modal._freeGiftClickHandler = null;
+    }
+    
+    // Reset state flags
+    freeGiftModalShown = false;
+    intercomEventTriggered = false;
+    intercomEvent20Triggered = false;
+    
+    // Clear display caches
+    lastBoostDisplayContent = '';
+    if (boostElementsCache) {
+        boostElementsCache.clear();
+    }
 };
