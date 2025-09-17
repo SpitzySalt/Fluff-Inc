@@ -944,6 +944,11 @@ window.anomalySystem = {
     
     // Check if an anomaly should spawn
     checkAnomalySpawn: function() {
+        // Don't spawn anomalies if the game is paused
+        if (window.isGamePaused) {
+            return;
+        }
+        
         // First, check if player has anomaly resolver and clear anomalies if not
         this.checkAndClearAnomaliesWithoutResolver();
         

@@ -1800,6 +1800,20 @@ class Boutique {
         window.state.mushroomSoup = new Decimal(window.state.mushroomSoup);
       }
       window.state.mushroomSoup = window.state.mushroomSoup.add(quantity);
+    } else if (tokenType === 'glitteringPetals') {
+      if (!window.state.glitteringPetals) {
+        window.state.glitteringPetals = new Decimal(0);
+      } else if (!DecimalUtils.isDecimal(window.state.glitteringPetals)) {
+        window.state.glitteringPetals = new Decimal(window.state.glitteringPetals);
+      }
+      window.state.glitteringPetals = window.state.glitteringPetals.add(quantity);
+    } else if (tokenType === 'chargedPrisma') {
+      if (!window.state.chargedPrisma) {
+        window.state.chargedPrisma = new Decimal(0);
+      } else if (!DecimalUtils.isDecimal(window.state.chargedPrisma)) {
+        window.state.chargedPrisma = new Decimal(window.state.chargedPrisma);
+      }
+      window.state.chargedPrisma = window.state.chargedPrisma.add(quantity);
     } else {
       // Regular tokens stored in kitchenIngredients
       if (!window.kitchenIngredients[storageKey]) {

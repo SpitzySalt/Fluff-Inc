@@ -129,6 +129,11 @@ function getPermanentlyAvailableElements() {
 function updatePermanentElementDiscovery() {
   if (!window.state.permanentElementDiscovery) return;
   
+  // Ensure permanentlyDiscoveredElements is properly initialized as a Set
+  if (!window.state.permanentElementDiscovery.permanentlyDiscoveredElements || !(window.state.permanentElementDiscovery.permanentlyDiscoveredElements instanceof Set)) {
+    window.state.permanentElementDiscovery.permanentlyDiscoveredElements = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+  }
+  
   const maxAvailable = getPermanentlyAvailableElements();
   
   // Add all elements up to max available to permanent discovery

@@ -12,31 +12,37 @@ let gameTickInProgress = false;
 
 // Enhanced validation function to check game state integrity
 function validateGameState() {
-  if (!window.state || !window.kitchenIngredients || !window.friendship) {
+  // Allow saves even if some validation fails to prevent infinity data loss
+  // Only fail validation for critical corruption that would break the game
+  if (!window.state) {
     return false;
   }
   
-  // Validate all major Decimal currencies
+  // Don't fail validation for missing non-critical objects - just log warnings
+  if (!window.kitchenIngredients || !window.friendship) {
+    console.warn('Missing non-critical game objects during validation');
+  }
+  
+  // Validate major Decimal currencies but fix corruption instead of failing
   const currencies = ['fluff', 'swaria', 'feathers', 'artifacts'];
   for (const currency of currencies) {
     if (window.state[currency] && DecimalUtils.isDecimal(window.state[currency])) {
       if (window.state[currency].lt(0) || !window.state[currency].isFinite()) {
-        return false;
+        // Fix corrupted currency values instead of failing validation
+        console.warn(`Fixing corrupted ${currency} value during validation`);
+        window.state[currency] = new Decimal(0);
       }
     }
   }
   
-  // Validate critical arrays and objects exist
-  if (!Array.isArray(window.friendship) || !window.kitchenIngredients) {
-    return false;
-  }
-  
-  // Check if generators array exists and has valid structure
+  // Validate generators array but fix corruption instead of failing
   if (window.state.generators && Array.isArray(window.state.generators)) {
     for (const gen of window.state.generators) {
       if (gen && gen.baseCost && DecimalUtils.isDecimal(gen.baseCost)) {
         if (gen.baseCost.lt(0) || !gen.baseCost.isFinite()) {
-          return false;
+          // Fix corrupted generator cost instead of failing validation
+          console.warn('Fixing corrupted generator baseCost during validation');
+          gen.baseCost = new Decimal(gen.baseCost.toString().replace(/[^0-9.]/g, '') || '10');
         }
       }
     }
@@ -4477,9 +4483,27 @@ function saveToSlot(slotNumber) {
   saveMutex = true;
   
   try {
+    // Create infinity data backup before any save operation
+    if (window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0) {
+      const infinityBackup = {
+        counts: window.infinitySystem.counts || {},
+        everReached: window.infinitySystem.everReached || {},
+        infinityPoints: window.infinitySystem.infinityPoints ? window.infinitySystem.infinityPoints.toString() : "0",
+        infinityTheorems: window.infinitySystem.infinityTheorems || 0,
+        totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems || 0,
+        theoremProgress: window.infinitySystem.theoremProgress ? window.infinitySystem.theoremProgress.toString() : "0",
+        totalInfinityEarned: window.infinitySystem.totalInfinityEarned || 0,
+        lastInfinityPointsUpdate: window.infinitySystem.lastInfinityPointsUpdate || Date.now(),
+        backupTimestamp: Date.now()
+      };
+      localStorage.setItem(`infinityBackup_slot${slotNumber}`, JSON.stringify(infinityBackup));
+    }
+    
     // Enhanced validation to prevent corrupted saves
-    if (!validateGameState()) {
-      return false;
+    // Always validate but don't fail save completely to preserve infinity data
+    const validationResult = validateGameState();
+    if (!validationResult) {
+      console.warn('Save validation had issues but continuing to preserve infinity data');
     }
     const stateCopy = { ...state };
     delete stateCopy.hardModeQuestProgress;
@@ -4594,15 +4618,17 @@ function saveToSlot(slotNumber) {
       intercomEventTriggered: (window.intercomEventTriggered !== undefined) ? window.intercomEventTriggered : false,
       intercomEvent20Triggered: (window.intercomEvent20Triggered !== undefined) ? window.intercomEvent20Triggered : false
     },
-    // Add infinity data directly to slot save
+    // Add infinity data directly to slot save with extra validation
     infinityData: window.infinitySystem ? {
       counts: window.infinitySystem.counts || {},
       everReached: window.infinitySystem.everReached || {},
-      infinityPoints: window.infinitySystem.infinityPoints.toString(),
-      infinityTheorems: window.infinitySystem.infinityTheorems,
-      totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems,
-      theoremProgress: window.infinitySystem.theoremProgress.toString(),
-      totalInfinityEarned: window.infinitySystem.totalInfinityEarned,
+      infinityPoints: (window.infinitySystem.infinityPoints && DecimalUtils.isDecimal(window.infinitySystem.infinityPoints)) ? 
+        window.infinitySystem.infinityPoints.toString() : "0",
+      infinityTheorems: window.infinitySystem.infinityTheorems || 0,
+      totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems || 0,
+      theoremProgress: (window.infinitySystem.theoremProgress && DecimalUtils.isDecimal(window.infinitySystem.theoremProgress)) ?
+        window.infinitySystem.theoremProgress.toString() : "0",
+      totalInfinityEarned: window.infinitySystem.totalInfinityEarned || 0,
       lastInfinityPointsUpdate: window.infinitySystem.lastInfinityPointsUpdate || Date.now()
     } : {
       counts: {},
@@ -5327,6 +5353,35 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
       }
       if (typeof updateInfinitySubTabVisibility === 'function') {
         updateInfinitySubTabVisibility();
+      }
+    } else if (window.infinitySystem) {
+      // Try to recover infinity data from backup if main save data is missing
+      try {
+        const infinityBackupData = localStorage.getItem(`infinityBackup_slot${slotNumber}`);
+        if (infinityBackupData) {
+          const backup = JSON.parse(infinityBackupData);
+          console.warn('Recovering infinity data from backup due to missing main data');
+          
+          // Restore from backup
+          window.infinitySystem.counts = backup.counts || {};
+          window.infinitySystem.everReached = backup.everReached || {};
+          window.infinitySystem.infinityPoints = backup.infinityPoints ? new Decimal(backup.infinityPoints) : new Decimal(0);
+          window.infinitySystem.infinityTheorems = backup.infinityTheorems || 0;
+          window.infinitySystem.totalInfinityTheorems = backup.totalInfinityTheorems || 0;
+          window.infinitySystem.theoremProgress = backup.theoremProgress ? new Decimal(backup.theoremProgress) : new Decimal(0);
+          window.infinitySystem.totalInfinityEarned = backup.totalInfinityEarned || 0;
+          window.infinitySystem.lastInfinityPointsUpdate = backup.lastInfinityPointsUpdate || Date.now();
+          
+          // Update infinity displays after recovery
+          if (typeof updateInfinityBenefits === 'function') {
+            updateInfinityBenefits();
+          }
+          if (typeof updateInfinitySubTabVisibility === 'function') {
+            updateInfinitySubTabVisibility();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to recover infinity data from backup:', error);
       }
     }
     
