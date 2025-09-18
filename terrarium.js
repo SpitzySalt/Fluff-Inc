@@ -107,7 +107,9 @@ let wateringCanActive = false;
 let terrariumPollen = new Decimal(window.terrariumPollen || 0);
 let terrariumFlowers = new Decimal(window.terrariumFlowers || 0);
 let terrariumXP = new Decimal(window.terrariumXP || 0);
+let terrariumLevel = window.terrariumLevel || 1;
 let flowerFieldExpansionUpgradeLevel = 0;
+let pollenValueUpgradeLevel = 0;
 
 // Make terrarium.js variables globally accessible
 window.fluzzerWelcomeSpeech = fluzzerWelcomeSpeech;
@@ -120,7 +122,9 @@ window.wateringCanActive = wateringCanActive;
 window.terrariumPollen = terrariumPollen;
 window.terrariumFlowers = terrariumFlowers;
 window.terrariumXP = terrariumXP;
+window.terrariumLevel = terrariumLevel;
 window.flowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
+window.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
 
 function getCurrentFlowerGridDimensions() {
   return {
@@ -306,7 +310,6 @@ if (typeof window.nectarizePostResetTokenType === 'undefined') {
   window.nectarizePostResetTokenType = 'petals';
 }
 
-let terrariumLevel = window.terrariumLevel || 1;
 let flowerGridTrollLevel = window.flowerGridTrollLevel || 100;
 
 function handleFlowerGridTroll(currentLevel) {
@@ -726,10 +729,51 @@ function showTerrariumGainPopup(id, amount, label) {
 let pollenWandCooldown = false;
 let wateringCanCooldown = false;
 let fluzzerPollenWandCooldown = false;
-const POLLEN_TOOL_SPEED_UPGRADE_ORIGINAL_INTERVAL = 1.0; 
+
+// Pollen tool speed upgrade constants
+const POLLEN_TOOL_SPEED_UPGRADE_ORIGINAL_INTERVAL = 1.0;
+const POLLEN_TOOL_SPEED_UPGRADE_INTERVAL_DECREASE = 0.01; 
+const POLLEN_TOOL_SPEED_UPGRADE_MIN_INTERVAL = 0.05;
+
+// Expose cooldown variables to global scope
+window.pollenWandCooldown = pollenWandCooldown;
+window.wateringCanCooldown = wateringCanCooldown; 
 
 function getTerriariumToolCooldown() {
-    return getPollenToolSpeedUpgradeEffect(pollenToolSpeedUpgradeLevel) * 1000;
+    // Ensure we're using the latest upgrade level from window
+    const level = window.terrariumPollenToolSpeedUpgradeLevel || pollenToolSpeedUpgradeLevel || 0;
+    const effect = getPollenToolSpeedUpgradeEffect(level);
+    
+    // Apply Terrarium friendship cursor speed bonus (8% per level)
+    const terrariumFriendshipLevel = (window.friendship && window.friendship.Terrarium && window.friendship.Terrarium.level) || 0;
+    const cursorSpeedBonus = terrariumFriendshipLevel * 0.08; // 8% per level
+    const speedMultiplier = 1 + cursorSpeedBonus;
+    
+    // Faster cursor = shorter cooldown
+    const adjustedEffect = effect / speedMultiplier;
+    
+    return adjustedEffect * 1000;
+}
+
+function updateTerriariumCursorStates() {
+    // Efficiently update cursor styles without full UI render
+    const cells = document.querySelectorAll('.terrarium-flower-cell');
+    cells.forEach((cell, i) => {
+        const flower = terrariumFlowerGrid[i];
+        if (!flower) return;
+        
+        if (
+            (pollenWandActive && flower.health > 0 && !window.pollenWandCooldown) ||
+            (wateringCanActive && !wateringCanCooldown)
+        ) {
+            cell.style.cursor = 'pointer';
+        } else if (
+            (pollenWandActive && flower.health > 0) ||
+            (wateringCanActive)
+        ) {
+            cell.style.cursor = 'default';
+        }
+    });
 }
 
 function getFluzzerToolCooldown() {
@@ -1170,7 +1214,7 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   // Apply Element 22 boost (X5 flowers multiplier) - same as pollen wand
   const elementsRef2 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
   if (elementsRef2 && elementsRef2[22]) {
-    finalFlowerGain = Math.floor(finalFlowerGain * 5);
+    finalFlowerGain = finalFlowerGain.mul(5).floor();
   }
   
   // Use EXACT same boost and final calculation logic as pollen wand
@@ -1188,8 +1232,17 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
     }
   }
   
-  terrariumPollen = terrariumPollen.add(finalPollenGain).add(boostResult.pollenBoost || 0);
-  terrariumFlowers = terrariumFlowers.add(finalFlowerGain).add(boostResult.flowerBoost || 0);
+  let totalPollenGain = finalPollenGain.add(boostResult.pollenBoost || 0);
+  let totalFlowerGain = finalFlowerGain.add(boostResult.flowerBoost || 0);
+  
+  // Apply total infinity boost
+  if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+    totalPollenGain = window.applyTotalInfinityReachedBoost(totalPollenGain);
+    totalFlowerGain = window.applyTotalInfinityReachedBoost(totalFlowerGain);
+  }
+  
+  terrariumPollen = terrariumPollen.add(totalPollenGain);
+  terrariumFlowers = terrariumFlowers.add(totalFlowerGain);
   
   if (window.debugFluzzerGain) {
   }
@@ -1709,11 +1762,17 @@ function renderTerrariumUI(force = false) {
         cell.style.borderRadius = '8px';
       }
       cell.appendChild(img);
+      // Always attach click handler, let the individual functions handle cooldown checks
       if (
-        (pollenWandActive && flower.health > 0 && !pollenWandCooldown) ||
-        (wateringCanActive && !wateringCanCooldown)
+        (pollenWandActive && flower.health > 0) ||
+        (wateringCanActive)
       ) {
-        cell.style.cursor = 'pointer';
+        // Show pointer cursor only when not on cooldown
+        cell.style.cursor = (
+          (pollenWandActive && flower.health > 0 && !window.pollenWandCooldown) ||
+          (wateringCanActive && !wateringCanCooldown)
+        ) ? 'pointer' : 'default';
+        
         cell.onclick = function() {
           if (pollenWandActive && flower.health > 0) {
             handlePollenWandClick(i, cols, rows);
@@ -2494,7 +2553,7 @@ function handleWateringCanClick(index, cols, rows) {
   wateringCanCooldown = true;
   setTimeout(() => {
     wateringCanCooldown = false;
-    renderTerrariumUI();
+    updateTerriariumCursorStates();
   }, getTerriariumToolCooldown());
   if (typeof window.trackClick === 'function') {
     window.trackClick();
@@ -2532,12 +2591,16 @@ function handleWateringCanClick(index, cols, rows) {
 }
 
 function handlePollenWandClick(index, cols, rows) {
-  if (pollenWandCooldown) return;
-  pollenWandCooldown = true;
+  if (window.pollenWandCooldown) return;
+  window.pollenWandCooldown = true;
+  pollenWandCooldown = window.pollenWandCooldown;
+  const cooldownTime = getTerriariumToolCooldown();
   setTimeout(() => {
-    pollenWandCooldown = false;
-    renderTerrariumUI();
-  }, getTerriariumToolCooldown());
+    window.pollenWandCooldown = false;
+    pollenWandCooldown = window.pollenWandCooldown;
+    // Update cursor styles without full UI render
+    updateTerriariumCursorStates();
+  }, cooldownTime);
   if (typeof window.trackClick === 'function') {
     window.trackClick();
   }
@@ -2594,7 +2657,7 @@ function handlePollenWandClick(index, cols, rows) {
   // Apply Element 22 boost (X5 flowers multiplier)
   const elementsRef4 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
   if (elementsRef4 && elementsRef4[22]) {
-    finalFlowerGain = Math.floor(finalFlowerGain * 5);
+    finalFlowerGain = finalFlowerGain.mul(5).floor();
   }
   const originalPollen = terrariumPollen;
   const originalFlowers = terrariumFlowers;
@@ -2602,8 +2665,18 @@ function handlePollenWandClick(index, cols, rows) {
   if (typeof window.applyChargerTerrariumBoost === 'function') {
     boostResult = window.applyChargerTerrariumBoost(finalPollenGain, finalFlowerGain);
   }
-  terrariumPollen = terrariumPollen.add(finalPollenGain).add(boostResult.pollenBoost || 0);
-  terrariumFlowers = terrariumFlowers.add(finalFlowerGain).add(boostResult.flowerBoost || 0);
+  
+  let totalPollenGain = finalPollenGain.add(boostResult.pollenBoost || 0);
+  let totalFlowerGain = finalFlowerGain.add(boostResult.flowerBoost || 0);
+  
+  // Apply total infinity boost
+  if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+    totalPollenGain = window.applyTotalInfinityReachedBoost(totalPollenGain);
+    totalFlowerGain = window.applyTotalInfinityReachedBoost(totalFlowerGain);
+  }
+  
+  terrariumPollen = terrariumPollen.add(totalPollenGain);
+  terrariumFlowers = terrariumFlowers.add(totalFlowerGain);
   window.terrariumPollen = terrariumPollen;
   window.terrariumFlowers = terrariumFlowers;
   if (typeof window.trackFlowerMilestone === 'function') {
@@ -2628,6 +2701,9 @@ function handlePollenWandClick(index, cols, rows) {
   window.terrariumFlowers = terrariumFlowers;
   window.terrariumXP = terrariumXP;
   window.terrariumLevel = terrariumLevel;
+  // Award friendship to Fluzzer for using pollen wand on flowers
+  awardFluzzerFriendshipForPollenWandClick();
+  
   renderTerrariumUI(true); // Force immediate update for player interaction
   checkAndUpdateFluzzerSleepState();
   updateFluzzerSleepState();
@@ -2636,6 +2712,7 @@ function handlePollenWandClick(index, cols, rows) {
     handleFlowerGridTroll(terrariumLevel);
     fluzzerLevelUpSay('Level up! You are now level ' + terrariumLevel + '!');
   }
+  
   // Check for petal slice chance (player click)
   if (shouldTriggerPetalSlice(false)) {
     triggerPetalSlice(index, cols, rows);
@@ -3484,7 +3561,6 @@ renderTerrariumUI = function() {
   updateFlowerUpgrade4CircleCost();
 };
 
-let pollenValueUpgradeLevel = 0;
 let pollenValueUpgrade2Level = 0;
 const POLLEN_VALUE_UPGRADE_CAP = 1000;
 const POLLEN_VALUE_UPGRADE2_CAP = 1000;
@@ -4585,6 +4661,8 @@ function animateFluzzerWateringCanCursor() {
 const origHandlePollenWandClick2 = handlePollenWandClick;
 
 handlePollenWandClick = function(index, cols, rows) {
+  // Check cooldown before doing anything
+  if (window.pollenWandCooldown) return;
   animatePollenWandCursor();
   origHandlePollenWandClick2(index, cols, rows);
 };
@@ -5211,9 +5289,7 @@ if (typeof window.terrariumPollenToolSpeedUpgradeLevel === 'number') {
   pollenToolSpeedUpgradeLevel = window.terrariumPollenToolSpeedUpgradeLevel;
 }
 const POLLEN_TOOL_SPEED_UPGRADE_BASE_COST = 100;
-const POLLEN_TOOL_SPEED_UPGRADE_COST_MULT = 1.4;
-const POLLEN_TOOL_SPEED_UPGRADE_INTERVAL_DECREASE = 0.01; 
-const POLLEN_TOOL_SPEED_UPGRADE_MIN_INTERVAL = 0.05; 
+const POLLEN_TOOL_SPEED_UPGRADE_COST_MULT = 1.4; 
 
 function getPollenToolSpeedUpgradeCap() {
   return 95;
@@ -6486,6 +6562,8 @@ renderTerrariumUI = function() {
   const origHandlePollenWandClick_Rustle = handlePollenWandClick;
 
   handlePollenWandClick = function(index, cols, rows) {
+    // Check cooldown before doing anything
+    if (window.pollenWandCooldown) return;
     origHandlePollenWandClick_Rustle.apply(this, arguments);
     const indices = [index];
     if (index - cols >= 0) indices.push(index - cols);
@@ -7058,6 +7136,12 @@ function nectarizeTerrarium() {
   if (typeof window.boughtElements !== 'undefined' && window.boughtElements[24]) {
     finalNectarGained = finalNectarGained.mul(2).floor();
   }
+  
+  // Apply total infinity boost
+  if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+    finalNectarGained = window.applyTotalInfinityReachedBoost(finalNectarGained);
+  }
+  
   terrariumNectar = terrariumNectar.add(finalNectarGained);
   window.terrariumNectar = terrariumNectar;
   if (typeof window.trackNectarMilestone === 'function') {
@@ -8262,4 +8346,24 @@ document.addEventListener('DOMContentLoaded', function() {
       window.updateNectarizeButtonVisibility();
     }
   }, 1000); // Small delay to ensure all systems are loaded
-}); 
+});
+
+function awardFluzzerFriendshipForPollenWandClick() {
+  if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+    return;
+  }
+
+  const currentFriendship = window.friendship.getFriendshipLevel('fluzzer');
+  if (!currentFriendship || !DecimalUtils.isDecimal(currentFriendship.points)) {
+    return;
+  }
+
+  const friendshipIncrease = currentFriendship.points.mul(0.001);
+  const minIncrease = new Decimal(0.1);
+  const finalIncrease = Decimal.max(friendshipIncrease, minIncrease);
+
+  window.friendship.addPoints('fluzzer', finalIncrease);
+}
+
+window.awardFluzzerFriendshipForPollenWandClick = awardFluzzerFriendshipForPollenWandClick;
+window.getTerriariumToolCooldown = getTerriariumToolCooldown; 

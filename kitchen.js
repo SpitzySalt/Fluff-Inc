@@ -429,6 +429,9 @@ function showIngredientGainPopup(token, amount) {
     popup.style.opacity = '0';
   }, 10);
   setTimeout(() => popup.remove(), 800);
+
+  // Award friendship to Mystic for collecting ingredient
+  awardMysticFriendshipForIngredientCollection();
 }
 
 function showTokenBurstNotification(sourceElement) {
@@ -1885,3 +1888,22 @@ window.testCookingTimeFormatting = function() {
     formatted: DecimalUtils.formatDecimal(new Decimal(time), 2)
   }));
 };
+
+function awardMysticFriendshipForIngredientCollection() {
+  if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+    return;
+  }
+
+  const currentFriendship = window.friendship.getFriendshipLevel('mystic');
+  if (!currentFriendship || !DecimalUtils.isDecimal(currentFriendship.points)) {
+    return;
+  }
+
+  const friendshipIncrease = currentFriendship.points.mul(0.05);
+  const minIncrease = new Decimal(1);
+  const finalIncrease = Decimal.max(friendshipIncrease, minIncrease);
+
+  window.friendship.addPoints('mystic', finalIncrease);
+}
+
+window.awardMysticFriendshipForIngredientCollection = awardMysticFriendshipForIngredientCollection;

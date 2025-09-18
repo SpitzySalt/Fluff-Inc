@@ -1219,8 +1219,19 @@ function completePowerRecharge() {
   if (typeof window.resetPowerMinigameFailures === 'function') {
     window.resetPowerMinigameFailures();
   }
+  
+  // Check if power was below 80 before recharge for Soap friendship reward
+  const powerBeforeRecharge = state.powerEnergy;
+  const shouldAwardSoapFriendship = powerBeforeRecharge.lt(80);
+  
   state.powerEnergy = state.powerMaxEnergy;
   state.powerStatus = 'online';
+  
+  // Award Soap friendship points if conditions are met
+  if (shouldAwardSoapFriendship) {
+    awardSoapFriendshipForPowerRecharge();
+  }
+  
   updatePowerGeneratorUI();
   closePowerMinigame();
   // Show prism grid after power is restored
@@ -1241,6 +1252,27 @@ function completePowerRecharge() {
       message.parentNode.removeChild(message);
     }
   }, 2000);
+}
+
+function awardSoapFriendshipForPowerRecharge() {
+  // Award Soap 3% friendship points based on their current amount when power recharge minigame is completed with <80 power
+  if (window.friendship && typeof window.friendship.addPoints === 'function') {
+    // Initialize Generator friendship if it doesn't exist (Soap's department)
+    if (!window.friendship.Generator) {
+      window.friendship.Generator = { level: 0, points: new Decimal(0) };
+    }
+    
+    const currentPoints = window.friendship.Generator.points || new Decimal(0);
+    
+    // Calculate 3% of current points (minimum 1 point)
+    let friendshipGain = currentPoints.mul(0.03);
+    if (friendshipGain.lt(1)) {
+      friendshipGain = new Decimal(1);
+    }
+    
+    // Add the friendship points using Soap's character name
+    window.friendship.addPoints('soap', friendshipGain);
+  }
 }
 
 function closePowerMinigame() {

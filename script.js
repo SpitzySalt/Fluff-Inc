@@ -303,6 +303,12 @@ function addCurrency(currencyName, amount) {
     amount = applyLabBoost(amount, currencyName);
   }
   
+  // Apply total infinity reached boost to pre-infinity currencies
+  const preInfinityCurrencies = ['fluff', 'swaria', 'feathers', 'artifacts', 'kp', 'charge', 'light', 'redLight', 'orangeLight', 'yellowLight', 'greenLight', 'blueLight', 'pollen', 'flowers', 'nectar'];
+  if (preInfinityCurrencies.includes(currencyName) && typeof window.applyTotalInfinityReachedBoost === 'function') {
+    amount = window.applyTotalInfinityReachedBoost(amount);
+  }
+  
   // Apply fluff infinity penalty to all cargo currencies
   if (typeof window.applyFluffInfinityPenalty === 'function') {
     amount = window.applyFluffInfinityPenalty(amount, currencyName);
@@ -1391,7 +1397,14 @@ function resetGame() {
     }
     
     const isFirstTimeKP = swariaKnowledge.kp.eq(0);
-    swariaKnowledge.kp = swariaKnowledge.kp.add(kpGain);
+    
+    // Apply total infinity boost to kp gain
+    let finalKpGain = kpGain;
+    if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+      finalKpGain = window.applyTotalInfinityReachedBoost(kpGain);
+    }
+    
+    swariaKnowledge.kp = swariaKnowledge.kp.add(finalKpGain);
     if (typeof window.trackKPMilestone === 'function') {
       window.trackKPMilestone(swariaKnowledge.kp);
     }

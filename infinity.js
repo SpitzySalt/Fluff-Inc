@@ -363,6 +363,26 @@ window.infinitySystem = {
         return new Decimal(3).pow(totalInfinityCount);
     },
     
+    // Calculate total infinity reached boost (3x per total infinity reached)
+    getTotalInfinityReachedBoost: function() {
+        // Use totalInfinityEarned which tracks how many times player has done infinity resets
+        const totalInfinityReached = this.totalInfinityEarned || 0;
+        
+        // Each total infinity reached provides 3x boost to all pre-infinity currencies
+        if (totalInfinityReached === 0) return new Decimal(1);
+        return new Decimal(3).pow(totalInfinityReached);
+    },
+    
+    // Apply total infinity reached boost to currency gain
+    applyTotalInfinityReachedBoost: function(baseCurrencyGain) {
+        if (!DecimalUtils.isDecimal(baseCurrencyGain)) {
+            baseCurrencyGain = new Decimal(baseCurrencyGain);
+        }
+        
+        const boost = this.getTotalInfinityReachedBoost();
+        return baseCurrencyGain.mul(boost);
+    },
+    
     // Infinity Tree Currencies
     infinityPoints: new Decimal(0),
     infinityTheorems: 0,
@@ -1160,6 +1180,15 @@ window.infinitySystem = {
         
         return finalGain;
     }
+};
+
+// Expose convenience functions to window for easier access
+window.getTotalInfinityReachedBoost = function() {
+    return window.infinitySystem.getTotalInfinityReachedBoost();
+};
+
+window.applyTotalInfinityReachedBoost = function(baseCurrencyGain) {
+    return window.infinitySystem.applyTotalInfinityReachedBoost(baseCurrencyGain);
 };
 
 // Add CSS animation for infinity notification

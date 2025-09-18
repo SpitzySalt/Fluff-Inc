@@ -2351,6 +2351,9 @@
       } else {
         rationMessage = `I've prepared ${rations} food ration${rations > 1 ? 's' : ''} for the workers.`;
       }
+      
+      // Award friendship to Tico for crafting food rations
+      awardTicoFriendshipForFoodRationCrafting();
       response = `Thank you for the ${amount} ${tokenType}! ${rationMessage} (Food Rations: ${this.foodRations})`;
       friendshipGain = 3 * amount;
     } else {
@@ -3714,7 +3717,13 @@
       if (typeof window.getCurrentNectarGain === 'function') {
         const currentNectarGain = window.getCurrentNectarGain();
         if (currentNectarGain && currentNectarGain.gt && currentNectarGain.gt(0)) {
-          const nectarAmount = currentNectarGain.mul(0.05).floor();
+          let nectarAmount = currentNectarGain.mul(0.05).floor();
+          
+          // Apply total infinity boost
+          if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+            nectarAmount = window.applyTotalInfinityReachedBoost(nectarAmount);
+          }
+          
           if (typeof window.terrariumNectar !== 'undefined') {
             window.terrariumNectar = (window.terrariumNectar || new Decimal(0)).add(nectarAmount);
           }
@@ -5904,5 +5913,23 @@ window.testAllTicoFoodRationBuffs = function() {
   results.forEach(result => {
     const status = result.success ? '?' : '?';
   });
-  return results;
 };
+
+function awardTicoFriendshipForFoodRationCrafting() {
+  if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+    return;
+  }
+
+  const currentFriendship = window.friendship.getFriendshipLevel('tico');
+  if (!currentFriendship || !DecimalUtils.isDecimal(currentFriendship.points)) {
+    return;
+  }
+
+  const friendshipIncrease = currentFriendship.points.mul(0.03);
+  const minIncrease = new Decimal(1);
+  const finalIncrease = Decimal.max(friendshipIncrease, minIncrease);
+
+  window.friendship.addPoints('tico', finalIncrease);
+}
+
+window.awardTicoFriendshipForFoodRationCrafting = awardTicoFriendshipForFoodRationCrafting;

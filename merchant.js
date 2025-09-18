@@ -1605,8 +1605,20 @@ class Boutique {
       this.addTokenToInventory(itemId, tokenQuantity);
     }
 
+    // Check if this purchase will deplete the stock completely
+    const stockBeforePurchase = this.dailyStock[itemId];
+    const willDepletStock = stockBeforePurchase === 1;
+    
     // Reduce stock
     this.dailyStock[itemId]--;
+
+    // Award Lepre friendship points if stock was depleted
+    if (willDepletStock) {
+      this.awardLepreFriendshipForStockDepletion();
+    }
+
+    // Award Lepre friendship for any token purchase
+    this.awardLepreFriendshipForTokenPurchase();
 
     // Track purchase
     this.purchaseHistory[itemId] = (this.purchaseHistory[itemId] || 0) + 1;
@@ -1636,6 +1648,50 @@ class Boutique {
     }
 
     return true;
+  }
+
+  awardLepreFriendshipForStockDepletion() {
+    // Award Lepre 2% friendship points based on their current amount when player buys out entire stock
+    if (window.friendship && typeof window.friendship.addPoints === 'function') {
+      // Initialize Boutique friendship if it doesn't exist
+      if (!window.friendship.Boutique) {
+        window.friendship.Boutique = { level: 0, points: new Decimal(0) };
+      }
+      
+      const currentPoints = window.friendship.Boutique.points || new Decimal(0);
+      
+      // Calculate 2% of current points (minimum 1 point)
+      let friendshipGain = currentPoints.mul(0.02);
+      if (friendshipGain.lt(1)) {
+        friendshipGain = new Decimal(1);
+      }
+      
+      // Add the friendship points using Lepre's character name
+      window.friendship.addPoints('lepre', friendshipGain);
+      
+      // Show a special message
+      this.showMessage(`Lepre appreciates you buying out the entire stock! (+${friendshipGain.toFixed(1)} friendship)`, 'success');
+      
+      // Queue a special speech from Lepre
+      this.queueSpeech("Wow, you bought everything! I really appreciate loyal customers like you!", 4000);
+    }
+  }
+
+  awardLepreFriendshipForTokenPurchase() {
+    if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+      return;
+    }
+
+    const currentFriendship = window.friendship.getFriendshipLevel('lepre');
+    if (!currentFriendship || !DecimalUtils.isDecimal(currentFriendship.points)) {
+      return;
+    }
+
+    const friendshipIncrease = currentFriendship.points.mul(0.002);
+    const minIncrease = new Decimal(0.1);
+    const finalIncrease = Decimal.max(friendshipIncrease, minIncrease);
+
+    window.friendship.addPoints('lepre', finalIncrease);
   }
 
   handlePremiumPurchase(item) {

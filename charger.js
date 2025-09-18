@@ -699,7 +699,11 @@ function chargerTick(diff) {
       }
     }
     
-    charger.charge = charger.charge.add(gain.mul(diff));
+    let finalGain = gain.mul(diff);
+    if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+      finalGain = window.applyTotalInfinityReachedBoost(finalGain);
+    }
+    charger.charge = charger.charge.add(finalGain);
     if (typeof window.trackChargeMilestone === 'function') {
       window.trackChargeMilestone(charger.charge);
     }
@@ -708,7 +712,11 @@ function chargerTick(diff) {
   // Charger Mk.2 automatic charge generation (1% of charge gain even when off)
   if (isChargerMk2()) {
     let autoGain = getChargerGain().mul(0.01); // 1% of normal charge gain
-    charger.charge = charger.charge.add(autoGain.mul(diff));
+    let finalAutoGain = autoGain.mul(diff);
+    if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+      finalAutoGain = window.applyTotalInfinityReachedBoost(finalAutoGain);
+    }
+    charger.charge = charger.charge.add(finalAutoGain);
     if (typeof window.trackChargeMilestone === 'function') {
       window.trackChargeMilestone(charger.charge);
     }

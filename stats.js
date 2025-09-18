@@ -151,6 +151,18 @@ function initFriendshipFunctions() {
       window.friendship[dept].points = new Decimal(data[dept].points || 0);
     });
   };
+
+  // Add getFriendshipLevel function that returns the department friendship data
+  window.friendship.getFriendshipLevel = function(character) {
+    const dept = charToDept[character.toLowerCase()];
+    if (!dept || !window.friendship[dept]) {
+      return { level: 0, points: new Decimal(0) };
+    }
+    return {
+      level: window.friendship[dept].level || 0,
+      points: window.friendship[dept].points || new Decimal(0)
+    };
+  };
 }
 
 // Initialize friendship functions with cleanup tracking

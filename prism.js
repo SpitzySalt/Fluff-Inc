@@ -895,10 +895,8 @@ function clickLightTile(index) {
         showPrismGainPopup('bluelightCount', actualGain, popupText);
       }
       
-      // Grant friendship points with Vi for using the prism lab
-      if (window.friendship && typeof window.friendship.addPoints === 'function') {
-        window.friendship.addPoints('vi', new Decimal(1));
-      }
+      // Award friendship to Vivien for clicking light tiles
+      awardVivienFriendshipForLightTileClick();
     }
     
     // Track prism tile click for front desk automator unlocks
@@ -2566,3 +2564,22 @@ window.cleanupPrismSystem = function() {
     // Reset prism state tracking
     window.prismGridInitialized = false;
 };
+
+function awardVivienFriendshipForLightTileClick() {
+  if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+    return;
+  }
+
+  const currentFriendship = window.friendship.getFriendshipLevel('vi');
+  if (!currentFriendship || !DecimalUtils.isDecimal(currentFriendship.points)) {
+    return;
+  }
+
+  const friendshipIncrease = currentFriendship.points.mul(0.005);
+  const minIncrease = new Decimal(0.1);
+  const finalIncrease = Decimal.max(friendshipIncrease, minIncrease);
+
+  window.friendship.addPoints('vi', finalIncrease);
+}
+
+window.awardVivienFriendshipForLightTileClick = awardVivienFriendshipForLightTileClick;
