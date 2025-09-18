@@ -6216,13 +6216,19 @@ function earnBox(type, rewardMultiplier = 1, suppressPopup = false, count = 1) {
   
   if (countDecimal.lte(0)) return { swariaGain: new Decimal(0), featherGain: new Decimal(0), artifactGain: new Decimal(0) };
   
-  state.boxesProduced = (state.boxesProduced || 0) + countDecimal.toNumber();
+  // Apply 2∞ benefit boost to box generation (3x per total infinity if 2+ total infinity)
+  let boostedCount = countDecimal;
+  if (typeof window.applyTwoInfinityBenefitBoost === 'function') {
+    boostedCount = window.applyTwoInfinityBenefitBoost(countDecimal);
+  }
+  
+  state.boxesProduced = (state.boxesProduced || 0) + boostedCount.toNumber();
   if (state.boxesProducedByType && state.boxesProducedByType[type] !== undefined) {
     // Ensure it's a Decimal before adding
     if (!DecimalUtils.isDecimal(state.boxesProducedByType[type])) {
       state.boxesProducedByType[type] = new Decimal(state.boxesProducedByType[type] || 0);
     }
-    state.boxesProducedByType[type] = state.boxesProducedByType[type].add(countDecimal);
+    state.boxesProducedByType[type] = state.boxesProducedByType[type].add(boostedCount);
   }
   let swariaGain = new Decimal(0);
   let featherGain = new Decimal(0);

@@ -383,6 +383,27 @@ window.infinitySystem = {
         return baseCurrencyGain.mul(boost);
     },
     
+    // Get 2∞ benefit boost (3x per total infinity for terrarium XP and box generation)
+    getTwoInfinityBenefitBoost: function() {
+        const totalInfinityReached = this.totalInfinityEarned || 0;
+        
+        // Only active if player has 2+ total infinity
+        if (totalInfinityReached < 2) return new Decimal(1);
+        
+        // 3x boost per total infinity reached
+        return new Decimal(3).pow(totalInfinityReached);
+    },
+    
+    // Apply 2∞ benefit boost to terrarium XP and box generation
+    applyTwoInfinityBenefitBoost: function(baseGain) {
+        if (!DecimalUtils.isDecimal(baseGain)) {
+            baseGain = new Decimal(baseGain);
+        }
+        
+        const boost = this.getTwoInfinityBenefitBoost();
+        return baseGain.mul(boost);
+    },
+    
     // Infinity Tree Currencies
     infinityPoints: new Decimal(0),
     infinityTheorems: 0,
@@ -1189,6 +1210,37 @@ window.getTotalInfinityReachedBoost = function() {
 
 window.applyTotalInfinityReachedBoost = function(baseCurrencyGain) {
     return window.infinitySystem.applyTotalInfinityReachedBoost(baseCurrencyGain);
+};
+
+// Global functions for 2∞ benefit (terrarium XP and box generation boost)
+window.getTwoInfinityBenefitBoost = function() {
+    return window.infinitySystem.getTwoInfinityBenefitBoost();
+};
+
+window.applyTwoInfinityBenefitBoost = function(baseGain) {
+    return window.infinitySystem.applyTwoInfinityBenefitBoost(baseGain);
+};
+
+// Debug function to test 2∞ benefit
+window.testTwoInfinityBenefit = function() {
+    const totalInfinity = window.infinitySystem.totalInfinityEarned || 0;
+    const boost = window.getTwoInfinityBenefitBoost();
+    
+    console.log(`Total Infinity: ${totalInfinity}`);
+    console.log(`2∞ Benefit Active: ${totalInfinity >= 2 ? 'Yes' : 'No'}`);
+    console.log(`Boost Multiplier: ${boost.toString()}x`);
+    
+    // Test with sample values
+    const sampleXP = new Decimal(100);
+    const sampleBoxes = new Decimal(5);
+    
+    const boostedXP = window.applyTwoInfinityBenefitBoost(sampleXP);
+    const boostedBoxes = window.applyTwoInfinityBenefitBoost(sampleBoxes);
+    
+    console.log(`Sample: 100 XP → ${boostedXP.toString()} XP`);
+    console.log(`Sample: 5 boxes → ${boostedBoxes.toString()} boxes`);
+    
+    return { totalInfinity, boost: boost.toString(), active: totalInfinity >= 2 };
 };
 
 // Add CSS animation for infinity notification

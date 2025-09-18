@@ -58,11 +58,19 @@ window.premiumState = window.premiumState || {
 };
 
 function initPremiumSystem() {
-  window.premiumState = {
-    bijouUnlocked: false,
-    bijouEnabled: false,
-    vrchatMirrorUnlocked: false
-  };
+  // Initialize premium state only if it doesn't exist, preserving existing values
+  if (!window.premiumState) {
+    window.premiumState = {
+      bijouUnlocked: false,
+      bijouEnabled: false,
+      vrchatMirrorUnlocked: false
+    };
+  } else {
+    // Ensure all properties exist but don't overwrite existing values
+    if (window.premiumState.bijouUnlocked === undefined) window.premiumState.bijouUnlocked = false;
+    if (window.premiumState.bijouEnabled === undefined) window.premiumState.bijouEnabled = false;
+    if (window.premiumState.vrchatMirrorUnlocked === undefined) window.premiumState.vrchatMirrorUnlocked = false;
+  }
   const currentSaveSlot = localStorage.getItem('currentSaveSlot');
   if (currentSaveSlot) {
     const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);

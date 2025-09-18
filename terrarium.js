@@ -6152,6 +6152,12 @@ function addTerrariumXP(amount) {
     
     finalTotal += xpBoost;
   }
+  
+  // Apply 2∞ benefit boost to terrarium XP (3x per total infinity if 2+ total infinity)
+  if (typeof window.applyTwoInfinityBenefitBoost === 'function') {
+    finalTotal = window.applyTwoInfinityBenefitBoost(finalTotal);
+  }
+  
   // Ensure terrariumXP is a Decimal
   if (!DecimalUtils.isDecimal(terrariumXP)) {
     terrariumXP = new Decimal(terrariumXP || 0);

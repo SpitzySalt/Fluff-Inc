@@ -2492,6 +2492,31 @@ window.resetDailyFreeBucks = function() {
   }
 };
 
+// Debug function to test premium token persistence
+window.testPremiumTokenPersistence = function() {
+  console.log('Current premium state:', window.premiumState);
+  if (window.premiumState.bijouUnlocked) {
+    console.log('✓ Bijou is unlocked');
+  } else {
+    console.log('✗ Bijou is locked');
+  }
+  if (window.premiumState.vrchatMirrorUnlocked) {
+    console.log('✓ VRChat Mirror is unlocked');
+  } else {
+    console.log('✗ VRChat Mirror is locked');
+  }
+  
+  // Test save/load cycle
+  if (typeof saveGame === 'function') {
+    saveGame();
+    console.log('✓ Game saved successfully');
+  } else {
+    console.log('✗ saveGame function not available');
+  }
+  
+  return window.premiumState;
+};
+
 // Debug function to test Lepre token giving
 window.testLepreTokens = function() {
 
