@@ -895,7 +895,10 @@ window.SaveSystem = {
       this.isImporting = false;
       
       if (loadResult) {
-        this.showSaveNotification('Save imported successfully!');
+        // Perform complete game state reload after import
+        this.performCompleteReload();
+        
+        this.showSaveNotification('Save imported and loaded successfully!');
         return true;
       } else {
         throw new Error('Failed to load imported data');
@@ -906,6 +909,100 @@ window.SaveSystem = {
       this.showSaveNotification(`Import Failed: ${error.message}`, true);
       this.isImporting = false;
       return false;
+    }
+  },
+
+  // Perform complete game state reload after import
+  performCompleteReload() {
+    try {
+      // Sync global references to the newly loaded state
+      if (typeof window.syncGlobalReferencesToState === 'function') {
+        window.syncGlobalReferencesToState();
+      }
+      
+      // Recalculate all element effects
+      if (typeof window.recalculateAllElementEffects === 'function') {
+        window.recalculateAllElementEffects();
+      }
+      
+      // Validate and fix all decimals
+      if (typeof window.validateAndFixDecimals === 'function') {
+        window.validateAndFixDecimals();
+      }
+      
+      // Reload all major game systems
+      if (typeof window.loadChargerState === 'function') {
+        window.loadChargerState();
+      }
+      
+      // Sync terrarium state
+      if (typeof window.syncStateToTerrarium === 'function') {
+        window.syncStateToTerrarium();
+      }
+      
+      // Reload front desk system
+      if (window.frontDesk && typeof window.frontDesk.loadData === 'function') {
+        window.frontDesk.loadData();
+        if (typeof window.frontDesk.renderUI === 'function') {
+          window.frontDesk.renderUI();
+        }
+      }
+      
+      // Re-initialize prism systems
+      if (typeof window.initializePrismState === 'function') {
+        window.initializePrismState();
+      }
+      if (typeof window.forceUpdateAllLightCounters === 'function') {
+        window.forceUpdateAllLightCounters();
+      }
+      if (typeof window.updateLightGeneratorButtons === 'function') {
+        window.updateLightGeneratorButtons();
+      }
+      
+      // Update all UI systems
+      if (typeof window.updateUI === 'function') {
+        window.updateUI();
+      }
+      if (typeof window.renderGenerators === 'function') {
+        window.renderGenerators();
+      }
+      if (typeof window.updateChargerUI === 'function') {
+        window.updateChargerUI(true);
+      }
+      if (typeof window.updateKitchenUI === 'function') {
+        window.updateKitchenUI();
+      }
+      if (typeof window.updateInventoryModal === 'function') {
+        window.updateInventoryModal(true);
+      }
+      if (typeof window.renderDepartmentStatsButtons === 'function') {
+        window.renderDepartmentStatsButtons();
+      }
+      if (typeof window.updatePermanentElementDiscovery === 'function') {
+        window.updatePermanentElementDiscovery();
+      }
+      
+      // Force update any visible modals or special UI states
+      if (typeof window.updateKnowledgeUI === 'function') {
+        window.updateKnowledgeUI();
+      }
+      
+      // Update boutique/merchant if it exists
+      if (window.boutique && typeof window.boutique.updateUI === 'function') {
+        window.boutique.updateUI();
+      }
+      
+      // Refresh any active tabs
+      const activeTab = document.querySelector('.tab.active');
+      if (activeTab) {
+        activeTab.click();
+      }
+      
+      console.log('Complete game reload performed after import');
+      
+    } catch (error) {
+      console.error('Error during complete reload:', error);
+      // Don't fail the import if reload has issues, just log it
     }
   },
 
