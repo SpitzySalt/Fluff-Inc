@@ -8,7 +8,7 @@ window.giveBatteriesToSoap = giveBatteriesToSoap;
 // DecimalUtils is available globally from decimal_utils.js
 
 // Performance optimization constants
-const CHARGER_UI_UPDATE_THROTTLE = 100; // 10 FPS for UI updates
+const CHARGER_UI_UPDATE_THROTTLE = 50; // 20 FPS for UI updates (more responsive)
 const CHARGER_MILESTONE_CHECK_THROTTLE = 500; // 2 FPS for milestone checks
 
 // Throttling helpers
@@ -244,6 +244,40 @@ function ensureChargerBoostElements() {
     if (chargerBoostEl && chargerBoostEl.parentNode) {
       chargerBoostEl.parentNode.insertBefore(chargerCurrencyBoostEl, chargerBoostEl.nextSibling);
     }
+  }
+}
+
+// Fast charger display update - only updates the charge number for real-time feedback
+function fastUpdateChargerDisplay() {
+  if (!chargerChargeEl || !charger) return;
+  
+  // Only update if charger exists and has charge
+  if (!DecimalUtils.isDecimal(charger.charge)) {
+    charger.charge = new Decimal(charger.charge || 0);
+  }
+  
+  const gain = getChargerGain();
+  let gainText = `+${formatNumber(gain)}/s`;
+  
+  // Show auto-generation info for Mk.2
+  if (isChargerMk2()) {
+    const autoGain = gain.mul(0.01);
+    gainText += `<br><span style="color:#2196F3;font-size:0.85em;">+${formatNumber(autoGain)}/s auto (Mk.2)</span>`;
+  }
+  
+  // Direct DOM update without any throttling
+  const currentHTML = `
+    <span style="font-size:1.3em;font-weight:bold;vertical-align:middle;">
+      <img src='assets/icons/charge.png' style='width:2.2em;height:2.2em;vertical-align:middle;margin-right:0.2em;'>
+      <span style='margin-right:0.3em;'>Charge:</span>
+      ${formatNumber(charger.charge)}
+    </span>
+    <span style="color:#3cf;font-size:0.95em;margin-left:0.7em;">${gainText}</span>
+  `;
+  
+  // Only update if content actually changed to avoid unnecessary DOM manipulation
+  if (chargerChargeEl.innerHTML !== currentHTML) {
+    chargerChargeEl.innerHTML = currentHTML;
   }
 }
 
@@ -565,7 +599,9 @@ if (chargerBtn && !chargerBtn.dataset.chargerHandlerAttached) {
 }
 
 function turnChargerOn() {
-  if (state.powerStatus !== 'online' || state.powerEnergy <= 0) return;
+  if (state.powerStatus !== 'online' || state.powerEnergy <= 0) {
+    return;
+  }
   charger.isOn = true;
   charger.lastTick = Date.now();
   updateChargerUI(true); // Force immediate update for user interaction
@@ -665,7 +701,9 @@ function chargerTick(diff) {
   // Regular charge generation when charger is on
   if (charger.isOn) {
     if (typeof state !== 'undefined' && typeof state.powerEnergy !== 'undefined') {
-      state.powerEnergy = state.powerEnergy.sub(new Decimal(10).mul(diff));
+      const powerBeforeDrain = state.powerEnergy;
+      const powerDrain = new Decimal(10).mul(diff);
+      state.powerEnergy = state.powerEnergy.sub(powerDrain);
       if (state.powerEnergy.lt(0)) state.powerEnergy = new Decimal(0);
       if (state.powerEnergy.eq(0)) {
         charger.isOn = false;
@@ -703,6 +741,7 @@ function chargerTick(diff) {
     if (typeof window.applyTotalInfinityReachedBoost === 'function') {
       finalGain = window.applyTotalInfinityReachedBoost(finalGain);
     }
+    const chargeBeforeGain = charger.charge;
     charger.charge = charger.charge.add(finalGain);
     if (typeof window.trackChargeMilestone === 'function') {
       window.trackChargeMilestone(charger.charge);
@@ -716,6 +755,7 @@ function chargerTick(diff) {
     if (typeof window.applyTotalInfinityReachedBoost === 'function') {
       finalAutoGain = window.applyTotalInfinityReachedBoost(finalAutoGain);
     }
+    const chargeBeforeAutoGain = charger.charge;
     charger.charge = charger.charge.add(finalAutoGain);
     if (typeof window.trackChargeMilestone === 'function') {
       window.trackChargeMilestone(charger.charge);
@@ -1553,3 +1593,5 @@ loadChargerState();
 window.saveChargerState = saveChargerState;
 window.loadChargerState = loadChargerState;
 window.checkChargerMilestones = checkChargerMilestones;
+window.chargerTick = chargerTick;
+window.fastUpdateChargerDisplay = fastUpdateChargerDisplay;

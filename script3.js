@@ -233,7 +233,7 @@ function initializeBoostDisplay() {
 
 function initializeIntercomSystem() {
     createIntercomSpeechBubble();
-    loadIntercomState();
+    // Intercom state is now managed by main save system - no separate loading needed
 }
 
 function createIntercomSpeechBubble() {
@@ -411,45 +411,12 @@ function triggerElement20IntercomEvent() {
     showIntercomSpeechBubble(message, 10000);
 }
 
-function saveIntercomState() {
-    const intercomState = {
-        intercomEventTriggered: intercomEventTriggered,
-        intercomEvent20Triggered: intercomEvent20Triggered
-    };
-    const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-    if (currentSaveSlot) {
-        const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
-        const save = slotData ? JSON.parse(slotData) : {};
-        save.intercomState = intercomState;
-        localStorage.setItem(`swariaSaveSlot${currentSaveSlot}`, JSON.stringify(save));
-    } else {
-        const mainSave = localStorage.getItem('swariaSave');
-        const save = mainSave ? JSON.parse(mainSave) : {};
-        save.intercomState = intercomState;
-        localStorage.setItem('swariaSave', JSON.stringify(save));
-    }
-}
-
-function loadIntercomState() {
-    const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-    let save;
-    if (currentSaveSlot) {
-        const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
-        save = slotData ? JSON.parse(slotData) : {};
-    } else {
-        const mainSave = localStorage.getItem('swariaSave');
-        save = mainSave ? JSON.parse(mainSave) : {};
-    }
-    if (save.intercomState) {
-        intercomEventTriggered = save.intercomState.intercomEventTriggered || false;
-        intercomEvent20Triggered = save.intercomState.intercomEvent20Triggered || false;
-    }
-}
+// Save/load functions removed - intercom state now managed by main save system
+// Data is automatically saved/loaded through window.state
 
 window.triggerElement10IntercomEvent = triggerElement10IntercomEvent;
 window.triggerElement20IntercomEvent = triggerElement20IntercomEvent;
-window.saveIntercomState = saveIntercomState;
-window.loadIntercomState = loadIntercomState;
+// Save/load functions removed - now managed by main save system
 window.showIntercomSpeechBubble = showIntercomSpeechBubble;
 window.testIntercomEvent = function() {
     showIntercomSpeechBubble("BZZT... These elements you're discovering... CRRRK... I've never heard or seen any of these elements, but their effects are... interesting. Keep it up Peachy. *static*", 10000);
@@ -1313,8 +1280,8 @@ function claimFreeGift() {
 
 function awardFreeGiftRewards() {
     // Award kitchen ingredient tokens using proper system
-    if (!window.kitchenIngredients) {
-        window.kitchenIngredients = {};
+    if (!window.state.tokens) {
+        window.state.tokens = {};
     }
     
     // Award ingredient tokens by adding to existing amounts
@@ -1329,11 +1296,20 @@ function awardFreeGiftRewards() {
     };
     
     for (const [type, amount] of Object.entries(ingredientRewards)) {
-        // Ensure the ingredient exists and is a Decimal
+        // Ensure the ingredient exists and is a Decimal in window.state.tokens
+        if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
+            window.state.tokens[type] = new Decimal(0);
+        }
+        // Add the reward amount to existing inventory
+        window.state.tokens[type] = window.state.tokens[type].add(amount);
+        
+        // Also update legacy kitchenIngredients for backward compatibility
+        if (!window.kitchenIngredients) {
+            window.kitchenIngredients = {};
+        }
         if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
             window.kitchenIngredients[type] = new Decimal(0);
         }
-        // Add the reward amount to existing inventory
         window.kitchenIngredients[type] = window.kitchenIngredients[type].add(amount);
     }
     

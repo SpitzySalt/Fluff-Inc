@@ -791,6 +791,144 @@ window.anomalySystem = {
             return anomaly || { isDangerous: false }; // Default to regular if not found in array
         }
         
+        // Check if it's a rustling flowers anomaly element
+        if (this.activeAnomalies.rustlingFlowersAnomaly && 
+            (element.classList?.contains('terrarium-flower-cell') || 
+             element.closest('.terrarium-flower-cell') ||
+             element.classList?.contains('terrarium-flower-grid') ||
+             element.closest('.terrarium-flower-grid') ||
+             element.id === 'terrariumFlowerGrid' ||
+             element.closest('#terrariumFlowerGrid'))) {
+            return { isDangerous: false }; // Rustling flowers are a regular (mild) anomaly
+        }
+        
+        // Check if it's a fluzzer flip anomaly element
+        if (this.activeAnomalies.fluzzerFlipAnomaly && 
+            (element.id === 'fluzzerAICursor' || 
+             element.closest('#fluzzerAICursor') ||
+             (element.tagName === 'IMG' && 
+              (element.src.includes('fluzzer') || element.alt.includes('Fluzzer') || element.alt.includes('fluzzer')) &&
+              element.hasAttribute('data-fluzzer-flip-anomaly')) ||
+             element.closest('[class*="fluzzer"], [data-character="fluzzer"]'))) {
+            return { isDangerous: false }; // Flipped fluzzer elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a box order anomaly element
+        if (this.activeAnomalies.boxOrderAnomaly && 
+            ((element.tagName === 'BUTTON' && element.getAttribute('onclick') && element.getAttribute('onclick').includes('buyBox')) ||
+             element.closest('button[onclick*="buyBox"]') ||
+             (element.closest('.card') && element.closest('.card').querySelector('h2')?.textContent.trim() === 'Boxes'))) {
+            return { isDangerous: false }; // Box order anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a soap generator anomaly element
+        if (this.activeAnomalies.soapGeneratorAnomaly && 
+            (element.closest('.power-generator[data-soap-transformed="true"]') ||
+             element.closest('.soap-generator-overlay') ||
+             element.closest('.soap-click-detector'))) {
+            return { isDangerous: false }; // Soap generator anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a shop price anomaly element
+        if (this.activeAnomalies.shopPriceAnomaly && 
+            (element.closest('.boutique-item') ||
+             element.closest('.inventory-slot') ||
+             (element.tagName === 'BUTTON' && element.textContent === 'Buy') ||
+             element.closest('button[onclick*="buyItem"]'))) {
+            return { isDangerous: false }; // Shop price anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a prism mirror anomaly element
+        if (this.activeAnomalies.prismMirrorAnomaly && 
+            (element.closest('.prism-grid') ||
+             element.closest('.prism-container') ||
+             element.closest('#prismGrid') ||
+             (element.closest('.card') && element.closest('.card').querySelector('h2')?.textContent.trim() === 'The Prism'))) {
+            return { isDangerous: false }; // Prism mirror anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a prism grey anomaly element
+        if (this.activeAnomalies.prismGreyAnomaly && 
+            (element.closest('.prism-grid') ||
+             element.closest('.prism-container') ||
+             element.closest('#prismGrid') ||
+             (element.closest('.card') && element.closest('.card').querySelector('h2')?.textContent.trim() === 'The Prism'))) {
+            return { isDangerous: false }; // Prism grey anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a cargo omega box anomaly element
+        if (this.activeAnomalies.cargoOmegaBoxAnomaly && 
+            (element.closest('.cargo-container') ||
+             element.closest('.box-container') ||
+             element.closest('.omega-box') ||
+             (element.closest('.card') && element.closest('.card').querySelector('h2')?.textContent.trim() === 'Boxes') ||
+             (element.tagName === 'BUTTON' && element.getAttribute('onclick') && element.getAttribute('onclick').includes('buyBox')))) {
+            return { isDangerous: false }; // Cargo omega box anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a blurple light anomaly element
+        if (this.activeAnomalies.blurpleLightAnomaly && 
+            ((element.closest('.card') && element.closest('.card').querySelector('h2')?.textContent.trim() === 'Light Energy') ||
+             (element.textContent && element.textContent.includes('Light Energy')) ||
+             (element.textContent && element.textContent.includes('Blurple Light')) ||
+             element.classList?.contains('blurple-light') ||
+             element.closest('.blurple-light'))) {
+            return { isDangerous: false }; // Blurple light anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a box generator freeze anomaly element
+        if (this.activeAnomalies.boxGeneratorFreezeAnomaly && 
+            (element.closest('.generator-card') ||
+             element.closest('.box-generator') ||
+             element.classList?.contains('generator-card') ||
+             element.classList?.contains('box-generator') ||
+             (element.textContent && element.textContent.includes('Box Generator')) ||
+             (element.textContent && element.textContent.includes('Common Box Generator')) ||
+             (element.textContent && element.textContent.includes('Uncommon Box')) ||
+             element.closest('[class*="generator"]'))) {
+            return { isDangerous: false }; // Box generator freeze anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a notation scramble anomaly element
+        if (this.activeAnomalies.notationScrambleAnomaly && 
+            (element.classList?.contains('scrambled-notation') ||
+             element.closest('.scrambled-notation') ||
+             element.classList?.contains('anomaly-notation') ||
+             element.closest('.anomaly-notation') ||
+             (element.textContent && /[\d.,]+[KMBTQqSsOoNnDd]?/.test(element.textContent)) ||
+             (element.textContent && /[!@#$%^&*()+=\[\]{}|;:,.<>?]/.test(element.textContent) && element.textContent.includes('.')))) {
+            return { isDangerous: false }; // Notation scramble anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a crab bucks anomaly element (shop/boutique cards)
+        if (this.activeAnomalies.crabBucksAnomaly && 
+            (element.closest('.boutique-item') ||
+             element.closest('.inventory-slot') ||
+             element.closest('.shop-card') ||
+             element.closest('.token-card') ||
+             element.classList?.contains('boutique-item') ||
+             element.classList?.contains('inventory-slot') ||
+             element.classList?.contains('shop-card') ||
+             element.classList?.contains('token-card') ||
+             (element.textContent && (element.textContent.includes('Tokens') || element.textContent.includes('Buy') || element.textContent.includes('Stock'))))) {
+            return { isDangerous: false }; // Crab bucks anomaly elements are a regular (mild) anomaly
+        }
+        
+        // Check if it's a dramatic wind anomaly element
+        if (this.activeAnomalies.dramaticWindAnomaly) {
+            // Dramatic wind affects the entire screen, so any element should trigger severe cursor
+            return { isDangerous: true }; // Dramatic wind anomaly uses severe cursor everywhere
+        }
+        
+        // Check if it's a 3-infinity enhanced fluzzer element (special case anomaly)
+        if (window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3 &&
+            ((element.id === 'fluzzerImg' || element.id === 'terrariumNectarizeCharacterImg') ||
+             (element.tagName === 'IMG' && 
+              (element.src.includes('fluzzer 1.png') || element.src.includes('fluzzer talking 1.png') || 
+               element.src.includes('fluzzer sleeping 1.png') || element.src.includes('fluzzer sleep talking 1.png'))))) {
+            return { isDangerous: false }; // Enhanced 3-infinity fluzzer elements are a regular (mild) anomaly
+        }
+        
         // Check if it's a dangerous anomaly overlay
         if (element.id === 'darkVoidOverlay' || element.id === 'darkVoidClouds' || 
             element.classList?.contains('darkVoidCloud') ||
@@ -818,6 +956,418 @@ window.anomalySystem = {
             element.addEventListener('mouseenter', this.anomalyMouseEnter);
             element.addEventListener('mouseleave', this.anomalyMouseLeave);
         });
+        
+        // Add listeners to rustling flowers anomaly elements if active
+        if (this.activeAnomalies.rustlingFlowersAnomaly) {
+            const flowerCells = document.querySelectorAll('.terrarium-flower-cell');
+            flowerCells.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Also add to the grid container itself
+            const flowerGrid = document.getElementById('terrariumFlowerGrid');
+            if (flowerGrid) {
+                flowerGrid.addEventListener('mouseenter', this.anomalyMouseEnter);
+                flowerGrid.addEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        }
+        
+        // Add listeners to fluzzer flip anomaly elements if active
+        if (this.activeAnomalies.fluzzerFlipAnomaly) {
+            // Add to fluzzer AI cursor
+            const fluzzerCursor = document.getElementById('fluzzerAICursor');
+            if (fluzzerCursor) {
+                fluzzerCursor.addEventListener('mouseenter', this.anomalyMouseEnter);
+                fluzzerCursor.addEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+            
+            // Add to flipped fluzzer images
+            const flippedFluzzerImages = document.querySelectorAll(`
+                img[src*="fluzzer.png"][data-fluzzer-flip-anomaly], 
+                img[src*="fluzzer talking.png"][data-fluzzer-flip-anomaly],
+                img[src*="fluzzer sleeping.png"][data-fluzzer-flip-anomaly], 
+                img[src*="fluzzer sleep talking.png"][data-fluzzer-flip-anomaly],
+                img[alt*="Fluzzer"][data-fluzzer-flip-anomaly], 
+                img[alt*="fluzzer"][data-fluzzer-flip-anomaly]
+            `);
+            flippedFluzzerImages.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to elements with fluzzer classes
+            const fluzzerElements = document.querySelectorAll('[class*="fluzzer"], [data-character="fluzzer"]');
+            fluzzerElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+        }
+        
+        // Add listeners to box order anomaly elements if active
+        if (this.activeAnomalies.boxOrderAnomaly) {
+            // Add to individual box buttons
+            const boxButtons = document.querySelectorAll('button[onclick*="buyBox"]');
+            boxButtons.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to the Boxes card container
+            const boxesCards = document.querySelectorAll('.card');
+            for (let card of boxesCards) {
+                const heading = card.querySelector('h2');
+                if (heading && heading.textContent.trim() === 'Boxes') {
+                    card.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    card.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    break;
+                }
+            }
+        }
+        
+        // Add listeners to soap generator anomaly elements if active
+        if (this.activeAnomalies.soapGeneratorAnomaly) {
+            // Add to transformed power generators
+            const soapGenerators = document.querySelectorAll('.power-generator[data-soap-transformed="true"]');
+            soapGenerators.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to soap generator overlays (legacy support)
+            const soapOverlays = document.querySelectorAll('.soap-generator-overlay');
+            soapOverlays.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to soap click detectors
+            const soapClickDetectors = document.querySelectorAll('.soap-click-detector');
+            soapClickDetectors.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+        }
+        
+        // Add listeners to 3-infinity enhanced fluzzer elements if active
+        if (window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3) {
+            const enhancedFluzzerElements = document.querySelectorAll('#fluzzerImg, #terrariumNectarizeCharacterImg');
+            enhancedFluzzerElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to any images with "1.png" pattern
+            const enhancedFluzzerImages = document.querySelectorAll(`
+                img[src*="fluzzer 1.png"], 
+                img[src*="fluzzer talking 1.png"],
+                img[src*="fluzzer sleeping 1.png"], 
+                img[src*="fluzzer sleep talking 1.png"]
+            `);
+            enhancedFluzzerImages.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+        }
+        
+        // Add listeners to shop price anomaly elements if active
+        if (this.activeAnomalies.shopPriceAnomaly) {
+            // Add to boutique items
+            const boutiqueItems = document.querySelectorAll('.boutique-item');
+            boutiqueItems.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to inventory slots
+            const inventorySlots = document.querySelectorAll('.inventory-slot');
+            inventorySlots.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to Buy buttons
+            const buyButtons = document.querySelectorAll('button[onclick*="buyItem"]');
+            buyButtons.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Also add to generic Buy buttons in boutique
+            const genericBuyButtons = document.querySelectorAll('button');
+            genericBuyButtons.forEach(button => {
+                if (button.textContent.trim() === 'Buy' && button.closest('.boutique-item, .inventory-slot')) {
+                    button.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    button.addEventListener('mouseleave', this.anomalyMouseLeave);
+                }
+            });
+        }
+        
+        // Add listeners to prism mirror anomaly elements if active
+        if (this.activeAnomalies.prismMirrorAnomaly) {
+            // Add to prism grid
+            const prismGrids = document.querySelectorAll('.prism-grid, #prismGrid');
+            prismGrids.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to prism container
+            const prismContainers = document.querySelectorAll('.prism-container');
+            prismContainers.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to The Prism card container
+            const prismCards = document.querySelectorAll('.card');
+            for (let card of prismCards) {
+                const heading = card.querySelector('h2');
+                if (heading && heading.textContent.trim() === 'The Prism') {
+                    card.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    card.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    break;
+                }
+            }
+        }
+        
+        // Add listeners to prism grey anomaly elements if active
+        if (this.activeAnomalies.prismGreyAnomaly) {
+            // Add to prism grid
+            const prismGrids = document.querySelectorAll('.prism-grid, #prismGrid');
+            prismGrids.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to prism container
+            const prismContainers = document.querySelectorAll('.prism-container');
+            prismContainers.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to The Prism card container
+            const prismCards = document.querySelectorAll('.card');
+            for (let card of prismCards) {
+                const heading = card.querySelector('h2');
+                if (heading && heading.textContent.trim() === 'The Prism') {
+                    card.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    card.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    break;
+                }
+            }
+        }
+        
+        // Add listeners to cargo omega box anomaly elements if active
+        if (this.activeAnomalies.cargoOmegaBoxAnomaly) {
+            // Add to cargo containers
+            const cargoContainers = document.querySelectorAll('.cargo-container');
+            cargoContainers.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to box containers
+            const boxContainers = document.querySelectorAll('.box-container');
+            boxContainers.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to omega boxes
+            const omegaBoxes = document.querySelectorAll('.omega-box');
+            omegaBoxes.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to box purchase buttons
+            const boxButtons = document.querySelectorAll('button[onclick*="buyBox"]');
+            boxButtons.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to the Boxes card container
+            const boxCards = document.querySelectorAll('.card');
+            for (let card of boxCards) {
+                const heading = card.querySelector('h2');
+                if (heading && heading.textContent.trim() === 'Boxes') {
+                    card.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    card.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    break;
+                }
+            }
+        }
+        
+        // Add listeners to blurple light anomaly elements if active
+        if (this.activeAnomalies.blurpleLightAnomaly) {
+            // Add to the Light Energy card container and its contents
+            const lightEnergyCards = document.querySelectorAll('.card');
+            for (let card of lightEnergyCards) {
+                const heading = card.querySelector('h2');
+                if (heading && heading.textContent.trim() === 'Light Energy') {
+                    // Add listener to the card itself
+                    card.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    card.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    
+                    // Add listeners to all elements inside the Light Energy card
+                    const cardElements = card.querySelectorAll('*');
+                    cardElements.forEach(element => {
+                        element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                        element.addEventListener('mouseleave', this.anomalyMouseLeave);
+                    });
+                    break;
+                }
+            }
+            
+            // Also add to any elements that contain "Light Energy" or "Blurple Light" text
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.textContent && 
+                    (element.textContent.includes('Light Energy') || element.textContent.includes('Blurple Light'))) {
+                    element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    element.addEventListener('mouseleave', this.anomalyMouseLeave);
+                }
+            });
+        }
+        
+        // Add listeners to box generator freeze anomaly elements if active
+        if (this.activeAnomalies.boxGeneratorFreezeAnomaly) {
+            // Add to generator cards
+            const generatorCards = document.querySelectorAll('.generator-card');
+            generatorCards.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to box generators
+            const boxGenerators = document.querySelectorAll('.box-generator');
+            boxGenerators.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to elements with generator in the class name
+            const generatorElements = document.querySelectorAll('[class*="generator"]');
+            generatorElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to elements containing "Box Generator" text
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.textContent && 
+                    (element.textContent.includes('Box Generator') || 
+                     element.textContent.includes('Common Box Generator') ||
+                     element.textContent.includes('Uncommon Box'))) {
+                    element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    element.addEventListener('mouseleave', this.anomalyMouseLeave);
+                }
+            });
+        }
+        
+        // Add listeners to notation scramble anomaly elements if active
+        if (this.activeAnomalies.notationScrambleAnomaly) {
+            // Add to elements with scrambled notation classes
+            const scrambledElements = document.querySelectorAll('.scrambled-notation, .anomaly-notation');
+            scrambledElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to all number elements that might be scrambled
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.textContent && 
+                    // Check for numbers with suffixes (K, M, B, T, etc.)
+                    (/[\d.,]+[KMBTQqSsOoNnDd]?/.test(element.textContent) ||
+                     // Check for special characters that might indicate scrambled notation
+                     (/[!@#$%^&*()+=\[\]{}|;:,.<>?]/.test(element.textContent) && element.textContent.includes('.')))) {
+                    element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    element.addEventListener('mouseleave', this.anomalyMouseLeave);
+                }
+            });
+            
+            // Specifically target resource displays and counters
+            const resourceDisplays = document.querySelectorAll('#fluffAmount, #swariaAmount, #featherAmount, #batteryTokenAmount, #infinityPointAmount');
+            resourceDisplays.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Target generator cost and progress displays
+            const notationGeneratorElements = document.querySelectorAll('.generator-cost, .progress-text, .cost-display');
+            notationGeneratorElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+        }
+        
+        // Add listeners to crab bucks anomaly elements if active
+        if (this.activeAnomalies.crabBucksAnomaly) {
+            // Add to boutique items and inventory slots
+            const boutiqueItems = document.querySelectorAll('.boutique-item');
+            boutiqueItems.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            const inventorySlots = document.querySelectorAll('.inventory-slot');
+            inventorySlots.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to shop cards and token cards
+            const shopCards = document.querySelectorAll('.shop-card, .token-card');
+            shopCards.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to Buy buttons in the shop
+            const shopBuyButtons = document.querySelectorAll('button[onclick*="buyItem"], button[onclick*="buyToken"]');
+            shopBuyButtons.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Add to all elements that contain token-related text
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.textContent && 
+                    (element.textContent.includes('Tokens') || 
+                     element.textContent.includes('Stock') ||
+                     (element.textContent.includes('Buy') && element.closest('.boutique-item, .inventory-slot, .shop-card, .token-card')))) {
+                    element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                    element.addEventListener('mouseleave', this.anomalyMouseLeave);
+                }
+            });
+        }
+        
+        // Dramatic wind anomaly - affects entire screen with severe cursor
+        if (this.activeAnomalies.dramaticWindAnomaly) {
+            // Add listeners to all interactive elements since dramatic wind affects everything
+            const allInteractiveElements = document.querySelectorAll('button, input, select, textarea, a, [onclick], [role="button"], .card, .generator-card, .boutique-item, .inventory-slot');
+            allInteractiveElements.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+            
+            // Also add to the body element itself to cover the entire screen
+            document.body.addEventListener('mouseenter', this.anomalyMouseEnter);
+            document.body.addEventListener('mouseleave', this.anomalyMouseLeave);
+            
+            // Add to all major containers
+            const majorContainers = document.querySelectorAll('.container, .main-content, .tab-content, .card, div, section');
+            majorContainers.forEach(element => {
+                element.addEventListener('mouseenter', this.anomalyMouseEnter);
+                element.addEventListener('mouseleave', this.anomalyMouseLeave);
+            });
+        }
         
         // Add listeners to dangerous anomaly overlays
         const darkVoidOverlay = document.getElementById('darkVoidOverlay');
@@ -909,6 +1459,163 @@ window.anomalySystem = {
             element.removeEventListener('mouseleave', this.anomalyMouseLeave);
         });
         
+        // Remove listeners from rustling flowers anomaly elements
+        const flowerCells = document.querySelectorAll('.terrarium-flower-cell');
+        flowerCells.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const flowerGrid = document.getElementById('terrariumFlowerGrid');
+        if (flowerGrid) {
+            flowerGrid.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            flowerGrid.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        }
+        
+        // Remove listeners from fluzzer flip anomaly elements
+        const fluzzerCursor = document.getElementById('fluzzerAICursor');
+        if (fluzzerCursor) {
+            fluzzerCursor.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            fluzzerCursor.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        }
+        
+        const flippedFluzzerImages = document.querySelectorAll(`
+            img[src*="fluzzer.png"][data-fluzzer-flip-anomaly], 
+            img[src*="fluzzer talking.png"][data-fluzzer-flip-anomaly],
+            img[src*="fluzzer sleeping.png"][data-fluzzer-flip-anomaly], 
+            img[src*="fluzzer sleep talking.png"][data-fluzzer-flip-anomaly],
+            img[alt*="Fluzzer"][data-fluzzer-flip-anomaly], 
+            img[alt*="fluzzer"][data-fluzzer-flip-anomaly]
+        `);
+        flippedFluzzerImages.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const fluzzerElements = document.querySelectorAll('[class*="fluzzer"], [data-character="fluzzer"]');
+        fluzzerElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from box order anomaly elements
+        const boxButtons = document.querySelectorAll('button[onclick*="buyBox"]');
+        boxButtons.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const boxesCards = document.querySelectorAll('.card');
+        for (let card of boxesCards) {
+            const heading = card.querySelector('h2');
+            if (heading && heading.textContent.trim() === 'Boxes') {
+                card.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                card.removeEventListener('mouseleave', this.anomalyMouseLeave);
+                break;
+            }
+        }
+        
+        // Remove listeners from soap generator anomaly elements
+        const soapGenerators = document.querySelectorAll('.power-generator[data-soap-transformed="true"]');
+        soapGenerators.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const soapOverlays = document.querySelectorAll('.soap-generator-overlay');
+        soapOverlays.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const soapClickDetectors = document.querySelectorAll('.soap-click-detector');
+        soapClickDetectors.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from 3-infinity enhanced fluzzer elements
+        const enhancedFluzzerElements = document.querySelectorAll('#fluzzerImg, #terrariumNectarizeCharacterImg');
+        enhancedFluzzerElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const enhancedFluzzerImages = document.querySelectorAll(`
+            img[src*="fluzzer 1.png"], 
+            img[src*="fluzzer talking 1.png"],
+            img[src*="fluzzer sleeping 1.png"], 
+            img[src*="fluzzer sleep talking 1.png"]
+        `);
+        enhancedFluzzerImages.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from shop price anomaly elements
+        const boutiqueItems = document.querySelectorAll('.boutique-item');
+        boutiqueItems.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const inventorySlots = document.querySelectorAll('.inventory-slot');
+        inventorySlots.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const buyButtons = document.querySelectorAll('button[onclick*="buyItem"]');
+        buyButtons.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const genericBuyButtons = document.querySelectorAll('button');
+        genericBuyButtons.forEach(button => {
+            if (button.textContent.trim() === 'Buy' && button.closest('.boutique-item, .inventory-slot')) {
+                button.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                button.removeEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        });
+        
+        // Remove listeners from prism mirror anomaly elements
+        const prismGridsMirror = document.querySelectorAll('.prism-grid, #prismGrid');
+        prismGridsMirror.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const prismContainersMirror = document.querySelectorAll('.prism-container');
+        prismContainersMirror.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from prism grey anomaly elements
+        const prismGridsGrey = document.querySelectorAll('.prism-grid, #prismGrid');
+        prismGridsGrey.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const prismContainersGrey = document.querySelectorAll('.prism-container');
+        prismContainersGrey.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from The Prism cards (for both anomalies)
+        const prismCards = document.querySelectorAll('.card');
+        for (let card of prismCards) {
+            const heading = card.querySelector('h2');
+            if (heading && heading.textContent.trim() === 'The Prism') {
+                card.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                card.removeEventListener('mouseleave', this.anomalyMouseLeave);
+                break;
+            }
+        }
+        
         // Remove listeners from dangerous anomaly overlays
         const darkVoidOverlay = document.getElementById('darkVoidOverlay');
         if (darkVoidOverlay) {
@@ -921,6 +1628,191 @@ window.anomalySystem = {
             labDarknessOverlay.removeEventListener('mouseenter', this.anomalyMouseEnter);
             labDarknessOverlay.removeEventListener('mouseleave', this.anomalyMouseLeave);
         }
+        
+        // Remove listeners from cargo omega box anomaly elements
+        const cargoContainers = document.querySelectorAll('.cargo-container');
+        cargoContainers.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const boxContainers = document.querySelectorAll('.box-container');
+        boxContainers.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const omegaBoxes = document.querySelectorAll('.omega-box');
+        omegaBoxes.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const cargoBoxButtons = document.querySelectorAll('button[onclick*="buyBox"]');
+        cargoBoxButtons.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from Boxes cards (for cargo omega box anomaly)
+        const cargoBoxCards = document.querySelectorAll('.card');
+        for (let card of cargoBoxCards) {
+            const heading = card.querySelector('h2');
+            if (heading && heading.textContent.trim() === 'Boxes') {
+                card.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                card.removeEventListener('mouseleave', this.anomalyMouseLeave);
+                break;
+            }
+        }
+        
+        // Remove listeners from blurple light anomaly elements
+        const blurpleLightCards = document.querySelectorAll('.card');
+        for (let card of blurpleLightCards) {
+            const heading = card.querySelector('h2');
+            if (heading && heading.textContent.trim() === 'Light Energy') {
+                // Remove listener from the card itself
+                card.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                card.removeEventListener('mouseleave', this.anomalyMouseLeave);
+                
+                // Remove listeners from all elements inside the Light Energy card
+                const cardElements = card.querySelectorAll('*');
+                cardElements.forEach(element => {
+                    element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                    element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+                });
+                break;
+            }
+        }
+        
+        // Also remove from any elements that contain "Light Energy" or "Blurple Light" text
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            if (element.textContent && 
+                (element.textContent.includes('Light Energy') || element.textContent.includes('Blurple Light'))) {
+                element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        });
+        
+        // Remove listeners from box generator freeze anomaly elements
+        const generatorCards = document.querySelectorAll('.generator-card');
+        generatorCards.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const boxGenerators = document.querySelectorAll('.box-generator');
+        boxGenerators.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const generatorElements = document.querySelectorAll('[class*="generator"]');
+        generatorElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove from elements containing "Box Generator" text
+        const allGeneratorTextElements = document.querySelectorAll('*');
+        allGeneratorTextElements.forEach(element => {
+            if (element.textContent && 
+                (element.textContent.includes('Box Generator') || 
+                 element.textContent.includes('Common Box Generator') ||
+                 element.textContent.includes('Uncommon Box'))) {
+                element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        });
+        
+        // Remove listeners from notation scramble anomaly elements
+        const scrambledElements = document.querySelectorAll('.scrambled-notation, .anomaly-notation');
+        scrambledElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove from all number elements that might be scrambled
+        const allNotationElements = document.querySelectorAll('*');
+        allNotationElements.forEach(element => {
+            if (element.textContent && 
+                // Check for numbers with suffixes (K, M, B, T, etc.)
+                (/[\d.,]+[KMBTQqSsOoNnDd]?/.test(element.textContent) ||
+                 // Check for special characters that might indicate scrambled notation
+                 (/[!@#$%^&*()+=\[\]{}|;:,.<>?]/.test(element.textContent) && element.textContent.includes('.')))) {
+                element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        });
+        
+        // Remove from specific resource displays and counters
+        const resourceDisplays = document.querySelectorAll('#fluffAmount, #swariaAmount, #featherAmount, #batteryTokenAmount, #infinityPointAmount');
+        resourceDisplays.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove from generator cost and progress displays
+        const notationGeneratorElements = document.querySelectorAll('.generator-cost, .progress-text, .cost-display');
+        notationGeneratorElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove listeners from crab bucks anomaly elements
+        const crabBoutiqueItems = document.querySelectorAll('.boutique-item');
+        crabBoutiqueItems.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const crabInventorySlots = document.querySelectorAll('.inventory-slot');
+        crabInventorySlots.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const crabShopCards = document.querySelectorAll('.shop-card, .token-card');
+        crabShopCards.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        const crabBuyButtons = document.querySelectorAll('button[onclick*="buyItem"], button[onclick*="buyToken"]');
+        crabBuyButtons.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove from all elements that contain token-related text
+        const allCrabElements = document.querySelectorAll('*');
+        allCrabElements.forEach(element => {
+            if (element.textContent && 
+                (element.textContent.includes('Tokens') || 
+                 element.textContent.includes('Stock') ||
+                 (element.textContent.includes('Buy') && element.closest('.boutique-item, .inventory-slot, .shop-card, .token-card')))) {
+                element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+                element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+            }
+        });
+        
+        // Remove listeners from dramatic wind anomaly elements
+        const dramaticInteractiveElements = document.querySelectorAll('button, input, select, textarea, a, [onclick], [role="button"], .card, .generator-card, .boutique-item, .inventory-slot');
+        dramaticInteractiveElements.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
+        
+        // Remove from body element
+        document.body.removeEventListener('mouseenter', this.anomalyMouseEnter);
+        document.body.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        
+        // Remove from all major containers
+        const dramaticContainers = document.querySelectorAll('.container, .main-content, .tab-content, .card, div, section');
+        dramaticContainers.forEach(element => {
+            element.removeEventListener('mouseenter', this.anomalyMouseEnter);
+            element.removeEventListener('mouseleave', this.anomalyMouseLeave);
+        });
         
         // Disconnect mutation observer
         if (this.anomalyMutationObserver) {
@@ -1656,6 +2548,11 @@ window.anomalySystem = {
             randomizedButtons.forEach(btn => {
                 container.appendChild(btn);
             });
+            
+            // Refresh hover detection to include the box elements in find mode
+            if (this.findModeActive) {
+                this.setupAnomalyHoverDetection();
+            }
 
         } else {
 
@@ -1974,6 +2871,11 @@ window.anomalySystem = {
         
         // Setup tab monitoring instead of aggressive maintenance
         this.setupGeneratorsTabMonitoring();
+        
+        // Refresh hover detection to include the soap generator elements in find mode
+        if (this.findModeActive) {
+            this.setupAnomalyHoverDetection();
+        }
 
     },
     
@@ -2753,9 +3655,27 @@ window.anomalySystem = {
 
         this.activeAnomalies.shopPriceAnomaly = true;
         
-        // Select one random item from the first 6 slots to affect
-        const firstSixItems = ['berries', 'mushroom', 'petals', 'water', 'stardust', 'sparks'];
-        this.anomalyAffectedItem = firstSixItems[Math.floor(Math.random() * firstSixItems.length)];
+        // Get available items from boutique instead of hardcoded list
+        let availableItems = [];
+        if (window.boutique && window.boutique.currentShopItems) {
+            availableItems = window.boutique.currentShopItems
+                .filter(item => {
+                    // Only include items that have stock and a valid price > 0
+                    const stock = window.boutique.dailyStock[item.id] || 0;
+                    const price = window.boutique.getCurrentPrice ? window.boutique.originalGetCurrentPrice ? 
+                        window.boutique.originalGetCurrentPrice(item.id) : window.boutique.getCurrentPrice(item.id) : 0;
+                    return stock > 0 && price > 0;
+                })
+                .map(item => item.id);
+        }
+        
+        // Fallback to basic items if no boutique items found
+        if (availableItems.length === 0) {
+            availableItems = ['berries', 'mushroom', 'petals', 'water'];
+        }
+        
+        // Select one random available item to affect
+        this.anomalyAffectedItem = availableItems[Math.floor(Math.random() * availableItems.length)];
 
         this.anomalies.push({
             id: this.nextId++,
@@ -2812,6 +3732,11 @@ window.anomalySystem = {
         
         // Refresh the boutique UI if it's currently open
         this.refreshBoutiqueUI();
+        
+        // Refresh hover detection for shop price anomaly elements
+        if (this.findModeActive) {
+            this.addHoverListenersToAnomalies();
+        }
 
     },
 
@@ -3686,6 +4611,11 @@ window.anomalySystem = {
         
         // Setup detection for prism tab clicks
         this.setupPrismMirrorDetection();
+        
+        // Refresh hover detection for prism mirror anomaly elements
+        if (this.findModeActive) {
+            this.addHoverListenersToAnomalies();
+        }
 
     },
 
@@ -3909,6 +4839,11 @@ window.anomalySystem = {
         
         // Setup detection for cargo tab clicks
         this.setupCargoOmegaBoxDetection();
+        
+        // Refresh hover detection for cargo omega box anomaly elements
+        if (this.findModeActive) {
+            this.addHoverListenersToAnomalies();
+        }
 
     },
 
@@ -4231,6 +5166,11 @@ window.anomalySystem = {
 
         // Find all elements that contain "Blue Light" text and replace with "Blurple Light"
         this.replaceBluelightText();
+        
+        // Refresh hover detection for blurple light anomaly elements
+        if (this.findModeActive) {
+            this.addHoverListenersToAnomalies();
+        }
 
     },
 
@@ -4583,6 +5523,11 @@ window.anomalySystem = {
         
         this.anomalies.push(anomaly);
         this.saveAnomalyState();
+        
+        // Refresh hover detection for box generator freeze anomaly elements
+        if (this.findModeActive) {
+            this.addHoverListenersToAnomalies();
+        }
         
         if (this.frozenGeneratorId === -1) {
 
@@ -6075,9 +7020,47 @@ window.anomalySystem.startPrismGreyAnomaly = function() {
                 z-index: 9999;
                 box-shadow: 0 0 10px rgba(128, 128, 128, 0.8);
             }
+            
+            /* Grey overlay for the entire screen when in Lab tab */
+            .prism-grey-anomaly-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(128, 128, 128, 0.4);
+                pointer-events: none;
+                z-index: 1000;
+                transition: opacity 0.3s ease-in-out;
+                opacity: 0;
+            }
+            
+            /* Show overlay when in Lab tab */
+            body[data-current-tab="Lab"] .prism-grey-anomaly-overlay {
+                opacity: 1;
+            }
+            
+            body:not([data-current-tab="Lab"]) .prism-grey-anomaly-overlay {
+                opacity: 0;
+            }
         `;
         document.head.appendChild(style);
     }
+    
+    // Create the grey overlay element if it doesn't exist
+    let greyOverlay = document.getElementById('prismGreyAnomalyOverlay');
+    if (!greyOverlay) {
+        greyOverlay = document.createElement('div');
+        greyOverlay.id = 'prismGreyAnomalyOverlay';
+        greyOverlay.className = 'prism-grey-anomaly-overlay';
+        document.body.appendChild(greyOverlay);
+    }
+    
+    // Update body data attribute to reflect current tab for CSS targeting
+    this.updateTabDataAttribute();
+    
+    // Set up tab change monitoring to update overlay visibility
+    this.setupTabChangeMonitoring();
     
     // Set up prism detection if in Lab tab
     if (typeof window.currentTab !== 'undefined' && window.currentTab === 'Lab') {
@@ -6085,6 +7068,179 @@ window.anomalySystem.startPrismGreyAnomaly = function() {
             this.setupPrismGreyDetection();
         }, 500);
     }
+    
+    // Refresh hover detection for prism grey anomaly elements
+    if (this.findModeActive) {
+        this.addHoverListenersToAnomalies();
+    }
+};
+
+window.anomalySystem.updateTabDataAttribute = function() {
+    // Try multiple methods to detect current tab
+    let currentTab = null;
+    
+    // Method 1: Check window.currentTab
+    if (typeof window.currentTab !== 'undefined') {
+        currentTab = window.currentTab;
+    }
+    
+    // Method 2: Check for visible specific sub tabs
+    if (!currentTab) {
+        // Check all possible sub tabs
+        const tabMappings = [
+            { id: 'boutiqueSubTab', name: 'Boutique' },
+            { id: 'cargoSubTab', name: 'Cargo' },
+            { id: 'generatorSubTab', name: 'Generators' },
+            { id: 'prismSubTab', name: 'Lab' },
+            { id: 'advancedPrismSubTab', name: 'Lab' },
+            { id: 'frontDeskSubTab', name: 'FrontDesk' },
+            { id: 'cafeteriaSubTab', name: 'Cafeteria' },
+            { id: 'controlCenterSubTab', name: 'ControlCenter' },
+            { id: 'achievementsSubTab', name: 'Achievements' },
+            { id: 'settingsSubTab', name: 'Settings' },
+            { id: 'terrariumSubTab', name: 'Terrarium' },
+            { id: 'kitchenSubTab', name: 'Kitchen' },
+            { id: 'observatorySubTab', name: 'Observatory' },
+            { id: 'expansionSubTab', name: 'Expansion' },
+            { id: 'infinitySubTab', name: 'Infinity' },
+            { id: 'premiumSubTab', name: 'Premium' }
+        ];
+        
+        for (const mapping of tabMappings) {
+            const element = document.getElementById(mapping.id);
+            if (element && element.style.display === 'block') {
+                currentTab = mapping.name;
+                break;
+            }
+        }
+    }
+    
+    // Method 3: Check for visible elements that indicate which tab we're on
+    if (!currentTab) {
+        // Look for visible content containers
+        const visibleElements = [];
+        
+        // Check each possible content area
+        const allSubTabs = document.querySelectorAll('[id*="SubTab"]');
+        allSubTabs.forEach(element => {
+            if (element.style.display === 'block' || 
+                (element.style.display !== 'none' && window.getComputedStyle(element).display === 'block')) {
+                visibleElements.push(element.id);
+            }
+        });
+        
+        // Determine tab based on visible elements with priority order
+        if (visibleElements.some(id => id.includes('boutique'))) {
+            currentTab = 'Boutique';
+        } else if (visibleElements.some(id => id.includes('cargo'))) {
+            currentTab = 'Cargo';
+        } else if (visibleElements.some(id => id.includes('generator'))) {
+            currentTab = 'Generators';
+        } else if (visibleElements.some(id => id.includes('prism'))) {
+            currentTab = 'Lab';
+        } else if (visibleElements.some(id => id.includes('frontDesk'))) {
+            currentTab = 'FrontDesk';
+        } else if (visibleElements.some(id => id.includes('cafeteria'))) {
+            currentTab = 'Cafeteria';
+        } else if (visibleElements.some(id => id.includes('controlCenter'))) {
+            currentTab = 'ControlCenter';
+        } else if (visibleElements.some(id => id.includes('achievements'))) {
+            currentTab = 'Achievements';
+        } else if (visibleElements.some(id => id.includes('settings'))) {
+            currentTab = 'Settings';
+        } else if (visibleElements.some(id => id.includes('terrarium'))) {
+            currentTab = 'Terrarium';
+        } else if (visibleElements.some(id => id.includes('kitchen'))) {
+            currentTab = 'Kitchen';
+        } else if (visibleElements.some(id => id.includes('observatory'))) {
+            currentTab = 'Observatory';
+        } else if (visibleElements.some(id => id.includes('expansion'))) {
+            currentTab = 'Expansion';
+        } else if (visibleElements.some(id => id.includes('infinity'))) {
+            currentTab = 'Infinity';
+        } else if (visibleElements.some(id => id.includes('premium'))) {
+            currentTab = 'Premium';
+        }
+    }
+    
+    // Fallback: if still no tab detected, default to NOT Lab to be safe
+    if (!currentTab) {
+        currentTab = 'Other';
+    }
+    
+    // Set the data attribute - only set to Lab if we're certain we're in Lab
+    if (currentTab === 'Lab') {
+        document.body.setAttribute('data-current-tab', 'Lab');
+    } else {
+        document.body.removeAttribute('data-current-tab');
+    }
+    
+    console.log("Tab detection - Current tab:", currentTab, "Body data-current-tab:", document.body.getAttribute('data-current-tab'));
+    return currentTab;
+};
+
+window.anomalySystem.setupTabChangeMonitoring = function() {
+    // Monitor for tab changes to update overlay visibility
+    
+    // Clear any existing interval
+    if (this.tabChangeInterval) {
+        clearInterval(this.tabChangeInterval);
+    }
+    
+    // Clear any existing listeners
+    if (this.tabClickHandler) {
+        document.removeEventListener('click', this.tabClickHandler);
+    }
+    
+    // Add click listener for all tab buttons
+    this.tabClickHandler = (event) => {
+        const target = event.target;
+        
+        // Check if clicked on any tab-related button
+        if (target.tagName === 'BUTTON' || target.classList.contains('tab-button')) {
+            const buttonText = target.textContent.trim();
+            
+            // List of all possible tab button texts
+            const tabButtons = [
+                'Prism', 'Advanced Prism', 'Lab', 'The Prism',
+                'Cargo', 'Generators', 'Boutique', 
+                'Front Desk', 'Cafeteria', 'Control center', 'Control Center',
+                'Achievements', 'Settings', 'Terrarium', 'Kitchen', 
+                'Observatory', 'Expansion', 'Infinity', 'Premium'
+            ];
+            
+            // Check if the button text matches any tab button or if it has tab-related onclick
+            const isTabButton = tabButtons.some(tabName => 
+                buttonText.includes(tabName) || buttonText === tabName
+            ) || (target.onclick && target.onclick.toString().includes('Tab'));
+            
+            if (isTabButton) {
+                // Wait a moment for the tab switch to complete, then update
+                setTimeout(() => {
+                    if (this.activeAnomalies.prismGreyAnomaly) {
+                        this.updateTabDataAttribute();
+                    }
+                }, 100);
+            }
+        }
+    };
+    
+    document.addEventListener('click', this.tabClickHandler);
+    
+    // Also set up an interval as backup
+    this.tabChangeInterval = setInterval(() => {
+        if (this.activeAnomalies.prismGreyAnomaly) {
+            this.updateTabDataAttribute();
+        } else {
+            // Clear everything if anomaly is no longer active
+            clearInterval(this.tabChangeInterval);
+            this.tabChangeInterval = null;
+            if (this.tabClickHandler) {
+                document.removeEventListener('click', this.tabClickHandler);
+                this.tabClickHandler = null;
+            }
+        }
+    }, 500); // Check every 500ms as backup
 };
 
 window.anomalySystem.setupPrismGreyDetection = function() {
@@ -6156,8 +7312,31 @@ window.anomalySystem.fixPrismGreyAnomaly = function() {
         anomalyStyles.remove();
     }
     
+    // Remove the grey overlay element
+    const greyOverlay = document.getElementById('prismGreyAnomalyOverlay');
+    if (greyOverlay) {
+        greyOverlay.remove();
+    }
+    
+    // Remove tab data attribute
+    document.body.removeAttribute('data-current-tab');
+    
+    // Clear tab change monitoring interval and click handler
+    if (this.tabChangeInterval) {
+        clearInterval(this.tabChangeInterval);
+        this.tabChangeInterval = null;
+    }
+    
+    if (this.tabClickHandler) {
+        document.removeEventListener('click', this.tabClickHandler);
+        this.tabClickHandler = null;
+    }
+    
     // Save state to persist across refreshes
     this.saveAnomalyState();
+    
+    // Show special Swaria dialogue about the grey anomaly being fixed
+    this.showSwariaGreyAnomalyDialogue();
     
     // Give reward
     this.giveAnomalyReward();
@@ -6173,6 +7352,48 @@ window.anomalySystem.fixPrismGreyAnomaly = function() {
         }
     }, 1000); // Small delay to let the fixed notification show first
 
+};
+
+window.anomalySystem.showSwariaGreyAnomalyDialogue = function() {
+    // Show Swaria's silly dialogue about the grey anomaly being fixed
+    const swariaImage = document.getElementById("prismCharacter");
+    const swariaSpeech = document.getElementById("prismSpeech");
+    
+    if (!swariaImage || !swariaSpeech) {
+        return; // Elements not found, probably not in prism tab
+    }
+    
+    const greyAnomalyDialogues = [
+        "Phew! Back to our regularly scheduled colorful programming!",
+        "Fluff Inc. Grey Edition has been discontinued! Colorful Edition is back!",
+        "Who turned down the saturation? Oh wait, that was the anomaly!",
+        "From fifty shades of grey to infinite shades of rainbow! Much better!",
+        "Grey is nice and all, but I prefer my world in full technicolor!",
+        "The anomaly made everything look like an old black and white movie!",
+        "Welcome back, colors! I missed you dearly!",
+        "That grey filter was making me feel all monochrome and sad!",
+        "Anomaly fixed! Now back to our vibrant, colorful chaos!",
+        "Grey Edition? More like... Boring Edition! Glad that's over!"
+    ];
+    
+    const randomDialogue = greyAnomalyDialogues[Math.floor(Math.random() * greyAnomalyDialogues.length)];
+    
+    // Show the dialogue
+    swariaSpeech.textContent = randomDialogue;
+    swariaSpeech.classList.add('show');
+    
+    // Change Swaria to talking sprite if the function exists
+    if (typeof getPrismLabCharacterImage === 'function') {
+        swariaImage.src = getPrismLabCharacterImage(true);
+    }
+    
+    // Hide dialogue after 8 seconds
+    setTimeout(() => {
+        swariaSpeech.classList.remove('show');
+        if (typeof getPrismLabCharacterImage === 'function') {
+            swariaImage.src = getPrismLabCharacterImage(false);
+        }
+    }, 8000);
 };
 
 window.anomalySystem.restorePrismGreyAnomaly = function(savedAnomaly) {
@@ -6267,6 +7488,12 @@ window.anomalySystem.startNotationScrambleAnomaly = function() {
     
     // Set up detection for both notation dropdown and number displays
     this.setupNotationScrambleDetection();
+    
+    // Refresh hover listeners if find mode is active
+    if (this.findModeActive) {
+        this.removeAnomalyHoverDetection();
+        this.addHoverListenersToAnomalies();
+    }
     
     // Update the UI to show the new notation
     if (typeof window.updateUI === 'function') {
@@ -6438,6 +7665,12 @@ window.anomalySystem.startCrabBucksAnomaly = function() {
     
     // Set up detection for boutique UI updates
     this.setupCrabBucksDetection();
+    
+    // Refresh hover listeners if find mode is active
+    if (this.findModeActive) {
+        this.removeAnomalyHoverDetection();
+        this.addHoverListenersToAnomalies();
+    }
 
 };
 
@@ -6735,6 +7968,11 @@ window.anomalySystem.startRustlingFlowersAnomaly = function() {
     
     // Hook the fluzzerSay function for special rustling flowers dialogue
     this.hookFluzzerSayFunction();
+    
+    // Refresh hover detection to include the rustling flowers in find mode
+    if (this.findModeActive) {
+        this.setupAnomalyHoverDetection();
+    }
 
 };
 
@@ -7117,6 +8355,11 @@ window.anomalySystem.startFluzzerFlipAnomaly = function() {
     
     // Hook the fluzzerSay function to flip dialogue text
     this.hookFluzzerSayFunction();
+    
+    // Refresh hover detection to include the fluzzer flip elements in find mode
+    if (this.findModeActive) {
+        this.setupAnomalyHoverDetection();
+    }
 
 };
 
@@ -7830,6 +9073,12 @@ window.anomalySystem.spawnDramaticWindAnomaly = function() {
     // Set up detection
     this.setupDramaticWindDetection();
     
+    // Refresh hover listeners if find mode is active
+    if (this.findModeActive) {
+        this.removeAnomalyHoverDetection();
+        this.addHoverListenersToAnomalies();
+    }
+    
     // Save state
     this.saveAnomalyState();
 
@@ -7849,6 +9098,9 @@ window.anomalySystem.startDramaticWindAnomaly = function(anomaly) {
     
     // Hook into ALL character speech for wind-related dialogue
     this.hookAllCharacterDialogue();
+    
+    // Start token loss mechanic - lose tokens every second
+    this.startTokenLossMechanic();
 
 };
 
@@ -8396,6 +9648,553 @@ window.anomalySystem.analyzeDramaticWindAnomaly = function(isTargetedClick = fal
     }, 3000);
 };
 
+// Token loss mechanic for dramatic wind anomaly
+window.anomalySystem.startTokenLossMechanic = function() {
+    // Clear any existing token loss interval
+    if (this.dramaticWindTokenLossInterval) {
+        clearInterval(this.dramaticWindTokenLossInterval);
+    }
+    
+    // Initialize active blown tokens array with size limit
+    if (!this.activeBlownTokens) {
+        this.activeBlownTokens = [];
+    }
+    
+    // Set maximum number of blown tokens to prevent memory issues
+    this.maxActiveBlownTokens = 10; // Limit to 10 tokens on screen at once
+    
+    // Start losing tokens every 500ms (twice per second)
+    this.dramaticWindTokenLossInterval = setInterval(() => {
+        if (this.activeAnomalies.dramaticWindAnomaly) {
+            // Check token limit before spawning new ones
+            if (this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
+                // Clean up oldest tokens first
+                this.cleanupOldestBlownTokens(3); // Remove 3 oldest tokens
+            }
+            this.loseRandomToken();
+        } else {
+            // Safety check - clear interval if anomaly is no longer active
+            clearInterval(this.dramaticWindTokenLossInterval);
+            this.dramaticWindTokenLossInterval = null;
+        }
+    }, 500); // Changed from 1000ms to 500ms
+    
+    // Start periodic cleanup to prevent memory leaks (runs every 30 seconds)
+    this.tokenCleanupInterval = setInterval(() => {
+        if (this.activeAnomalies.dramaticWindAnomaly) {
+            this.cleanupOrphanedTokens();
+            
+            // Emergency cleanup if we somehow exceed limits
+            if (this.activeBlownTokens && this.activeBlownTokens.length > this.maxActiveBlownTokens * 1.5) {
+                console.warn('Dramatic Wind: Emergency token cleanup triggered');
+                this.cleanupOldestBlownTokens(this.activeBlownTokens.length - this.maxActiveBlownTokens);
+            }
+        }
+    }, 30000);
+};
+
+window.anomalySystem.loseRandomToken = function() {
+    // Prevent spawning if too many tokens are already active
+    if (this.activeBlownTokens && this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
+        return;
+    }
+    
+    // Clean up any orphaned tokens (DOM elements removed but still in array)
+    this.cleanupOrphanedTokens();
+    
+    // 10% chance to lose 2 tokens instead of 1
+    const tokensToLose = Math.random() < 0.1 ? 2 : 1;
+    console.log(`[Dramatic Wind] Attempting to blow away ${tokensToLose} token(s)`);
+    
+    for (let tokenCount = 0; tokenCount < tokensToLose; tokenCount++) {
+        // Check if we've reached the max token limit
+        if (this.activeBlownTokens && this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
+            console.log(`[Dramatic Wind] Max tokens reached, stopping at ${tokenCount + 1}/${tokensToLose}`);
+            break;
+        }
+        
+        // Get available tokens from player's inventory
+        const availableTokens = this.getAvailableTokensForLoss();
+        
+        if (availableTokens.length === 0) {
+            console.warn(`[Dramatic Wind] No tokens available to blow away (attempt ${tokenCount + 1}/${tokensToLose})`);
+            break; // No tokens to lose
+        }
+        
+        // Select random token based on probabilities
+        const selectedToken = this.selectRandomTokenByProbability();
+        
+        if (!selectedToken) {
+            console.warn(`[Dramatic Wind] No valid token selected (attempt ${tokenCount + 1}/${tokensToLose})`);
+            break; // No valid token selected
+        }
+        
+        // Check if player has this token
+        const tokenAmount = this.getTokenAmount(selectedToken.type);
+        if (!tokenAmount || tokenAmount.lte(0)) {
+            console.warn(`[Dramatic Wind] Player doesn't have ${selectedToken.type} (attempt ${tokenCount + 1}/${tokensToLose})`);
+            break; // Player doesn't have this token
+        }
+        
+        // Remove one token from player's inventory
+        this.removeTokenFromInventory(selectedToken.type, new Decimal(1));
+        console.log(`[Dramatic Wind] Lost 1 ${selectedToken.type} token (${tokenCount + 1}/${tokensToLose})`);
+        
+        // Spawn blown token animation
+        this.spawnBlownToken(selectedToken);
+    }
+};
+
+// Cleanup functions to prevent memory leaks
+window.anomalySystem.cleanupOldestBlownTokens = function(count = 3) {
+    if (!this.activeBlownTokens || this.activeBlownTokens.length === 0) return;
+    
+    // Sort by spawn time to get oldest tokens
+    const sortedTokens = this.activeBlownTokens
+        .filter(tokenData => tokenData.token && tokenData.token.dataset.spawnTime)
+        .sort((a, b) => parseInt(a.token.dataset.spawnTime) - parseInt(b.token.dataset.spawnTime));
+    
+    // Remove the oldest tokens up to the specified count
+    for (let i = 0; i < Math.min(count, sortedTokens.length); i++) {
+        const tokenData = sortedTokens[i];
+        this.forceRemoveBlownToken(tokenData, true); // true = return to inventory
+    }
+};
+
+window.anomalySystem.cleanupOrphanedTokens = function() {
+    if (!this.activeBlownTokens) return;
+    
+    // Remove tokens that no longer exist in DOM
+    this.activeBlownTokens = this.activeBlownTokens.filter(tokenData => {
+        if (!tokenData.token || !tokenData.token.parentNode) {
+            // Clear timeout if it exists
+            if (tokenData.lostTimeout) {
+                clearTimeout(tokenData.lostTimeout);
+            }
+            return false; // Remove from array
+        }
+        return true; // Keep in array
+    });
+};
+
+window.anomalySystem.forceRemoveBlownToken = function(tokenData, returnToInventory = false) {
+    if (!tokenData) return;
+    
+    // Clear timeout
+    if (tokenData.lostTimeout) {
+        clearTimeout(tokenData.lostTimeout);
+    }
+    
+    // Return token to inventory if requested and not already collected
+    if (returnToInventory && tokenData.token && tokenData.token.dataset.collected !== 'true' && tokenData.tokenInfo) {
+        this.returnTokenToInventory(tokenData.tokenInfo.type, new Decimal(1));
+        
+        // Show recovery popup if token still exists
+        if (tokenData.token.parentNode) {
+            this.showTokenRecoveryPopup(tokenData.token);
+        }
+    }
+    
+    // Remove from DOM
+    if (tokenData.token && tokenData.token.parentNode) {
+        tokenData.token.style.opacity = '0';
+        tokenData.token.style.pointerEvents = 'none'; // Prevent further interactions
+        setTimeout(() => {
+            if (tokenData.token.parentNode) {
+                tokenData.token.parentNode.removeChild(tokenData.token);
+            }
+        }, 300);
+    }
+    
+    // Remove from active tokens array
+    const index = this.activeBlownTokens.indexOf(tokenData);
+    if (index !== -1) {
+        this.activeBlownTokens.splice(index, 1);
+    }
+};
+
+window.anomalySystem.getAvailableTokensForLoss = function() {
+    // Initialize state if needed
+    if (!window.state) window.state = {};
+    if (!window.state.tokens) {
+        window.state.tokens = {};
+    }
+    
+    const tokens = [];
+    
+    // Basic ingredient tokens (97% chance combined)
+    const basicTokens = ['berries', 'mushroom', 'sparks', 'prisma', 'water', 'petals', 'stardust'];
+    basicTokens.forEach(type => {
+        const amount = this.getTokenAmount(type);
+        if (amount && amount.gt(0)) {
+            tokens.push({ type, category: 'basic', probability: 97/7 }); // Split 97% among basic tokens
+        }
+    });
+    
+    // Swa bucks (2% chance)
+    const swabucksAmount = this.getTokenAmount('swabucks');
+    if (swabucksAmount && swabucksAmount.gt(0)) {
+        tokens.push({ type: 'swabucks', category: 'swabucks', probability: 2 });
+    }
+    
+    // Premium tokens (1% chance combined)
+    const premiumTokens = ['berryPlate', 'batteries', 'mushroomSoup', 'glitteringPetals', 'chargedPrisma'];
+    premiumTokens.forEach(type => {
+        const amount = this.getTokenAmount(type);
+        if (amount && amount.gt(0)) {
+            tokens.push({ type, category: 'premium', probability: 1/5 }); // Split 1% among premium tokens
+        }
+    });
+    
+    return tokens;
+};
+
+window.anomalySystem.selectRandomTokenByProbability = function() {
+    const availableTokens = this.getAvailableTokensForLoss();
+    
+    if (availableTokens.length === 0) return null;
+    
+    // Calculate total probability weight
+    const totalWeight = availableTokens.reduce((sum, token) => sum + token.probability, 0);
+    
+    // Generate random number
+    let random = Math.random() * totalWeight;
+    
+    // Select token based on probability
+    for (const token of availableTokens) {
+        random -= token.probability;
+        if (random <= 0) {
+            return token;
+        }
+    }
+    
+    // Fallback to first available token
+    return availableTokens[0];
+};
+
+window.anomalySystem.getTokenAmount = function(tokenType) {
+    if (!window.state) return new Decimal(0);
+    
+    // Handle swabucks separately (stored directly in state)
+    if (tokenType === 'swabucks') {
+        return DecimalUtils.isDecimal(window.state.swabucks) ? window.state.swabucks : new Decimal(window.state.swabucks || 0);
+    }
+    
+    // Handle premium tokens (stored in state directly)
+    const premiumTokens = ['berryPlate', 'batteries', 'mushroomSoup', 'glitteringPetals', 'chargedPrisma'];
+    if (premiumTokens.includes(tokenType)) {
+        const amount = window.state[tokenType];
+        return DecimalUtils.isDecimal(amount) ? amount : new Decimal(amount || 0);
+    }
+    
+    // Handle basic ingredient tokens (stored in state.tokens)
+    if (window.state.tokens && window.state.tokens[tokenType]) {
+        const amount = window.state.tokens[tokenType];
+        return DecimalUtils.isDecimal(amount) ? amount : new Decimal(amount || 0);
+    }
+    
+    return new Decimal(0);
+};
+
+window.anomalySystem.removeTokenFromInventory = function(tokenType, amount) {
+    if (!window.state) return;
+    
+    // Handle swabucks
+    if (tokenType === 'swabucks') {
+        if (!DecimalUtils.isDecimal(window.state.swabucks)) {
+            window.state.swabucks = new Decimal(window.state.swabucks || 0);
+        }
+        window.state.swabucks = window.state.swabucks.sub(amount);
+        if (window.state.swabucks.lt(0)) window.state.swabucks = new Decimal(0);
+        return;
+    }
+    
+    // Handle premium tokens
+    const premiumTokens = ['berryPlate', 'batteries', 'mushroomSoup', 'glitteringPetals', 'chargedPrisma'];
+    if (premiumTokens.includes(tokenType)) {
+        if (!DecimalUtils.isDecimal(window.state[tokenType])) {
+            window.state[tokenType] = new Decimal(window.state[tokenType] || 0);
+        }
+        window.state[tokenType] = window.state[tokenType].sub(amount);
+        if (window.state[tokenType].lt(0)) window.state[tokenType] = new Decimal(0);
+        return;
+    }
+    
+    // Handle basic ingredient tokens
+    if (!window.state.tokens) window.state.tokens = {};
+    if (!DecimalUtils.isDecimal(window.state.tokens[tokenType])) {
+        window.state.tokens[tokenType] = new Decimal(window.state.tokens[tokenType] || 0);
+    }
+    window.state.tokens[tokenType] = window.state.tokens[tokenType].sub(amount);
+    if (window.state.tokens[tokenType].lt(0)) window.state.tokens[tokenType] = new Decimal(0);
+};
+
+window.anomalySystem.spawnBlownToken = function(tokenInfo) {
+    // Prevent spawning if we're at the limit
+    if (this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
+        return;
+    }
+    
+    const token = document.createElement('img');
+    
+    // Get token image
+    const tokenImages = {
+        berries: 'assets/icons/berry token.png',
+        mushroom: 'assets/icons/mushroom token.png',
+        sparks: 'assets/icons/spark token.png',
+        prisma: 'assets/icons/prisma token.png',
+        water: 'assets/icons/water token.png',
+        petals: 'assets/icons/petal token.png',
+        stardust: 'assets/icons/stardust token.png',
+        swabucks: 'assets/icons/Swa Buck.png',
+        berryPlate: 'assets/icons/berry plate token.png',
+        batteries: 'assets/icons/battery token.png',
+        mushroomSoup: 'assets/icons/mushroom soup token.png',
+        glitteringPetals: 'assets/icons/glittering petal token.png',
+        chargedPrisma: 'assets/icons/charged prism token.png'
+    };
+    
+    token.src = tokenImages[tokenInfo.type] || 'assets/icons/flower.png';
+    token.className = 'blown-away-token';
+    token.style.position = 'fixed';
+    token.style.zIndex = 99999;
+    token.style.width = '48px';
+    token.style.height = '48px';
+    token.style.transition = 'transform 0.7s cubic-bezier(.4,2,.6,1), opacity 0.5s';
+    token.style.cursor = 'pointer';
+    token.dataset.type = tokenInfo.type;
+    token.dataset.spawnTime = Date.now();
+    token.dataset.collected = 'false';
+    
+    // Start from cursor position (with fallback)
+    const cursorX = this.lastCursorX || window.innerWidth / 2;
+    const cursorY = this.lastCursorY || window.innerHeight / 2;
+    
+    token.style.left = (cursorX - 24) + 'px';
+    token.style.top = (cursorY - 24) + 'px';
+    document.body.appendChild(token);
+    
+    // Calculate blow-away destination with bouncing
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 100 + Math.random() * 200;
+    const originalTargetX = cursorX + Math.cos(angle) * distance;
+    const originalTargetY = cursorY + Math.sin(angle) * distance;
+    let targetX = originalTargetX;
+    let targetY = originalTargetY;
+    
+    // Implement bouncing for tokens that go off-screen
+    const tokenSize = 48;
+    const padding = 25;
+    let tokenBounced = false;
+    
+    // Boundary checks and bouncing - only bounce if actually going off-screen
+    if (targetX < padding) {
+        const overshoot = padding - targetX;
+        targetX = padding + overshoot;
+        tokenBounced = true;
+    } else if (targetX > (window.innerWidth - tokenSize - padding)) {
+        const overshoot = targetX - (window.innerWidth - tokenSize - padding);
+        targetX = (window.innerWidth - tokenSize - padding) - overshoot;
+        tokenBounced = true;
+    }
+    
+    if (targetY < padding) {
+        const overshoot = padding - targetY;
+        targetY = padding + overshoot;
+        tokenBounced = true;
+    } else if (targetY > (window.innerHeight - tokenSize - padding)) {
+        const overshoot = targetY - (window.innerHeight - tokenSize - padding);
+        targetY = (window.innerHeight - tokenSize - padding) - overshoot;
+        tokenBounced = true;
+    }
+    
+    const finalX = Math.max(padding, Math.min(window.innerWidth - tokenSize - padding, targetX));
+    const finalY = Math.max(padding, Math.min(window.innerHeight - tokenSize - padding, targetY));
+    
+    // Create token data object first
+    const tokenData = { token, tokenInfo, lostTimeout: null };
+    
+    // Animation with bouncing effects
+    setTimeout(() => {
+        let bounceRotation = Math.random() * 360;
+        
+        // Only apply bounce effects if the token actually bounced off screen edges
+        if (tokenBounced) {
+            bounceRotation += 180 + (Math.random() * 180);
+            token.style.transition = 'transform 0.9s cubic-bezier(.68,-0.55,.265,1.55), opacity 0.5s';
+        }
+        
+        token.style.transform = `translate(${finalX - cursorX}px, ${finalY - cursorY}px) rotate(${bounceRotation}deg)`;
+    }, 10);
+    
+    // Create click handler with memory leak prevention
+    const clickHandler = (function(tokenData) {
+        return function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (token.dataset.collected === 'true') return;
+            
+            token.dataset.collected = 'true';
+            
+            // Remove click handler to prevent memory leaks
+            token.removeEventListener('click', clickHandler);
+            token.style.pointerEvents = 'none';
+            
+            // Return token to inventory
+            window.anomalySystem.returnTokenToInventory(tokenInfo.type, new Decimal(1));
+            
+            // Remove from active blown tokens
+            const index = window.anomalySystem.activeBlownTokens.indexOf(tokenData);
+            if (index !== -1) {
+                clearTimeout(tokenData.lostTimeout);
+                window.anomalySystem.activeBlownTokens.splice(index, 1);
+            }
+            
+            // Animate collection
+            token.style.transform += ' scale(0.2)';
+            token.style.opacity = '0';
+            setTimeout(() => {
+                if (token.parentNode) {
+                    token.parentNode.removeChild(token);
+                }
+            }, 400);
+            
+            // Show recovery popup
+            window.anomalySystem.showTokenRecoveryPopup(token);
+            
+            // Update UI
+            if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
+            if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true);
+        };
+    })(tokenData);
+    
+    token.addEventListener('click', clickHandler);
+    
+    // Set up 6-second timeout for token loss with improved cleanup
+    const lostTimeout = setTimeout(() => {
+        if (token.dataset.collected === 'true') return;
+        
+        // Remove click handler
+        token.removeEventListener('click', clickHandler);
+        token.style.pointerEvents = 'none';
+        
+        // Show "Lost" popup
+        this.showTokenLostPopup(token);
+        
+        // Remove from active blown tokens
+        const index = this.activeBlownTokens.indexOf(tokenData);
+        if (index !== -1) {
+            this.activeBlownTokens.splice(index, 1);
+        }
+        
+        // Fade out and remove
+        token.style.opacity = '0';
+        setTimeout(() => {
+            if (token.parentNode) {
+                token.parentNode.removeChild(token);
+            }
+        }, 600);
+    }, 6000);
+    
+    // Update token data with timeout
+    tokenData.lostTimeout = lostTimeout;
+    
+    // Add to active blown tokens tracking
+    this.activeBlownTokens.push(tokenData);
+    
+    // Update UI to reflect token loss
+    if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
+    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true);
+};
+
+window.anomalySystem.returnTokenToInventory = function(tokenType, amount) {
+    if (!window.state) window.state = {};
+    
+    // Handle swabucks
+    if (tokenType === 'swabucks') {
+        if (!DecimalUtils.isDecimal(window.state.swabucks)) {
+            window.state.swabucks = new Decimal(window.state.swabucks || 0);
+        }
+        window.state.swabucks = window.state.swabucks.add(amount);
+        return;
+    }
+    
+    // Handle premium tokens
+    const premiumTokens = ['berryPlate', 'batteries', 'mushroomSoup', 'glitteringPetals', 'chargedPrisma'];
+    if (premiumTokens.includes(tokenType)) {
+        if (!DecimalUtils.isDecimal(window.state[tokenType])) {
+            window.state[tokenType] = new Decimal(window.state[tokenType] || 0);
+        }
+        window.state[tokenType] = window.state[tokenType].add(amount);
+        return;
+    }
+    
+    // Handle basic ingredient tokens
+    if (!window.state.tokens) window.state.tokens = {};
+    if (!DecimalUtils.isDecimal(window.state.tokens[tokenType])) {
+        window.state.tokens[tokenType] = new Decimal(window.state.tokens[tokenType] || 0);
+    }
+    window.state.tokens[tokenType] = window.state.tokens[tokenType].add(amount);
+};
+
+window.anomalySystem.showTokenRecoveryPopup = function(token) {
+    const popup = document.createElement('div');
+    popup.textContent = 'Recovered!';
+    popup.className = 'token-recovery-popup';
+    popup.style.position = 'fixed';
+    popup.style.left = token.style.left;
+    popup.style.top = token.style.top;
+    popup.style.zIndex = 100000;
+    popup.style.fontWeight = 'bold';
+    popup.style.fontSize = '1.3em';
+    popup.style.color = '#3cf';
+    popup.style.pointerEvents = 'none';
+    popup.style.transition = 'transform 0.7s cubic-bezier(.4,2,.6,1), opacity 0.7s';
+    popup.style.transform = 'translateY(0)';
+    popup.style.opacity = '1';
+    document.body.appendChild(popup);
+    setTimeout(() => {
+        popup.style.transform = 'translateY(-40px)';
+        popup.style.opacity = '0';
+    }, 10);
+    setTimeout(() => popup.remove(), 800);
+};
+
+window.anomalySystem.showTokenLostPopup = function(token) {
+    const popup = document.createElement('div');
+    popup.textContent = 'Lost';
+    popup.className = 'token-lost-popup';
+    popup.style.position = 'fixed';
+    popup.style.left = token.style.left;
+    popup.style.top = token.style.top;
+    popup.style.zIndex = 100000;
+    popup.style.fontWeight = 'bold';
+    popup.style.fontSize = '1.3em';
+    popup.style.color = '#f33';
+    popup.style.pointerEvents = 'none';
+    popup.style.transition = 'transform 0.7s cubic-bezier(.4,2,.6,1), opacity 0.7s';
+    popup.style.transform = 'translateY(0)';
+    popup.style.opacity = '1';
+    document.body.appendChild(popup);
+    setTimeout(() => {
+        popup.style.transform = 'translateY(-40px)';
+        popup.style.opacity = '0';
+    }, 10);
+    setTimeout(() => popup.remove(), 800);
+};
+
+// Track cursor position for blown token spawn location
+window.anomalySystem.lastCursorX = 0;
+window.anomalySystem.lastCursorY = 0;
+
+document.addEventListener('mousemove', function(e) {
+    if (window.anomalySystem) {
+        window.anomalySystem.lastCursorX = e.clientX;
+        window.anomalySystem.lastCursorY = e.clientY;
+    }
+});
+
 window.anomalySystem.fixDramaticWindAnomaly = function() {
 
     // Remove wind styles
@@ -8476,6 +10275,9 @@ window.anomalySystem.fixDramaticWindAnomaly = function() {
 
     }
     
+    // Stop token loss mechanic
+    this.stopTokenLossMechanic();
+    
     // Remove from anomalies list
     this.anomalies = this.anomalies.filter(anomaly => anomaly.type !== 'dramaticWind');
     this.activeAnomalies.dramaticWindAnomaly = false;
@@ -8538,6 +10340,71 @@ window.anomalySystem.stopWindBackgroundAnimation = function() {
         this.windParticleInterval = null;
     }
 
+};
+
+window.anomalySystem.stopTokenLossMechanic = function() {
+    // Clear token loss interval
+    if (this.dramaticWindTokenLossInterval) {
+        clearInterval(this.dramaticWindTokenLossInterval);
+        this.dramaticWindTokenLossInterval = null;
+    }
+    
+    // Stop periodic cleanup
+    if (this.tokenCleanupInterval) {
+        clearInterval(this.tokenCleanupInterval);
+        this.tokenCleanupInterval = null;
+    }
+    
+    // Clean up any remaining blown tokens
+    if (this.activeBlownTokens) {
+        this.activeBlownTokens.forEach(tokenData => {
+            // Clear timeout
+            if (tokenData.lostTimeout) {
+                clearTimeout(tokenData.lostTimeout);
+            }
+            
+            // Return token to inventory if still available
+            if (tokenData.token && tokenData.token.dataset.collected !== 'true') {
+                this.returnTokenToInventory(tokenData.tokenInfo.type, new Decimal(1));
+                
+                // Show recovery message
+                this.showTokenRecoveryPopup(tokenData.token);
+            }
+            
+            // Remove event listeners to prevent memory leaks
+            if (tokenData.token) {
+                tokenData.token.onclick = null;
+                tokenData.token.style.pointerEvents = 'none';
+                
+                // Remove token element
+                if (tokenData.token.parentNode) {
+                    tokenData.token.style.opacity = '0';
+                    setTimeout(() => {
+                        if (tokenData.token.parentNode) {
+                            tokenData.token.parentNode.removeChild(tokenData.token);
+                        }
+                    }, 400);
+                }
+            }
+        });
+        
+        // Clear the array
+        this.activeBlownTokens = [];
+    }
+    
+    // Update UI to reflect recovered tokens
+    if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
+    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true);
+    
+    // Clean up any leftover blown token elements in DOM
+    setTimeout(() => {
+        const leftoverTokens = document.querySelectorAll('.blown-away-token');
+        leftoverTokens.forEach(token => {
+            if (token.parentNode) {
+                token.parentNode.removeChild(token);
+            }
+        });
+    }, 500);
 };
 
 window.anomalySystem.triggerDramaticWindAnomalyFixedDialogue = function() {

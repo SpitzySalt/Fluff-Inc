@@ -7,42 +7,110 @@ const INFINITY_THRESHOLD = new Decimal('1.8e308');
 const INFINITY_TREE_UPDATE_THROTTLE = 100; // ms (10 FPS)
 let lastInfinityTreeUpdateTime = 0;
 
-// Track infinity counts for each currency
-window.infinitySystem = {
-    counts: {
-        fluff: 0,
-        swaria: 0,
-        feathers: 0,
-        artifacts: 0,
-        light: 0,
-        redLight: 0,
-        orangeLight: 0,
-        yellowLight: 0,
-        greenLight: 0,
-        blueLight: 0,
-        terrariumPollen: 0,
-        terrariumFlowers: 0,
-        terrariumNectar: 0,
-        charge: 0
-    },
+// Initialize infinity system in window.state if it doesn't exist
+function initializeInfinitySystem() {
+    if (!window.state) {
+        window.state = {};
+    }
     
-    // Track which currencies have ever reached infinity (for discovery)
-    everReached: {
-        fluff: false,
-        swaria: false,
-        feathers: false,
-        artifacts: false,
-        light: false,
-        redLight: false,
-        orangeLight: false,
-        yellowLight: false,
-        greenLight: false,
-        blueLight: false,
-        terrariumPollen: false,
-        terrariumFlowers: false,
-        terrariumNectar: false,
-        charge: false
-    },
+    if (!window.state.infinitySystem) {
+        window.state.infinitySystem = {
+            counts: {
+                fluff: 0,
+                swaria: 0,
+                feathers: 0,
+                artifacts: 0,
+                light: 0,
+                redlight: 0,
+                orangelight: 0,
+                yellowlight: 0,
+                greenlight: 0,
+                bluelight: 0,
+                terrariumPollen: 0,
+                terrariumFlowers: 0,
+                terrariumNectar: 0,
+                charge: 0
+            },
+            
+            // Track which currencies have ever reached infinity (for discovery)
+            everReached: {
+                fluff: false,
+                swaria: false,
+                feathers: false,
+                artifacts: false,
+                light: false,
+                redlight: false,
+                orangelight: false,
+                yellowlight: false,
+                greenlight: false,
+                bluelight: false,
+                terrariumPollen: false,
+                terrariumFlowers: false,
+                terrariumNectar: false,
+                charge: false
+            },
+            
+            // Infinity Tree Currencies
+            infinityPoints: new Decimal(0),
+            infinityTheorems: 0,
+            totalInfinityTheorems: 0,
+            theoremProgress: new Decimal(0),
+            totalInfinityEarned: 0,
+            lastInfinityPointsUpdate: Date.now()
+        };
+    }
+    
+    // Ensure Decimal properties are properly initialized
+    if (!DecimalUtils.isDecimal(window.state.infinitySystem.infinityPoints)) {
+        window.state.infinitySystem.infinityPoints = new Decimal(window.state.infinitySystem.infinityPoints || 0);
+    }
+    if (!DecimalUtils.isDecimal(window.state.infinitySystem.theoremProgress)) {
+        window.state.infinitySystem.theoremProgress = new Decimal(window.state.infinitySystem.theoremProgress || 0);
+    }
+}
+
+// Call initialization
+initializeInfinitySystem();
+
+// Migration function to move existing infinity data to window.state
+function migrateInfinitySystemToState() {
+    // Check if there's existing infinity data outside of window.state that needs migration
+    const legacyKeys = ['infinityPoints', 'infinityTheorems', 'totalInfinityTheorems', 'theoremProgress', 'totalInfinityEarned', 'lastInfinityPointsUpdate'];
+    
+    legacyKeys.forEach(key => {
+        if (window.infinitySystem[key] !== undefined && window.state.infinitySystem[key] !== window.infinitySystem[key]) {
+            window.state.infinitySystem[key] = window.infinitySystem[key];
+        }
+    });
+    
+    // Also check for any legacy counts or everReached data
+    if (window.infinitySystem.counts && typeof window.infinitySystem.counts === 'object') {
+        Object.assign(window.state.infinitySystem.counts, window.infinitySystem.counts);
+    }
+    
+    if (window.infinitySystem.everReached && typeof window.infinitySystem.everReached === 'object') {
+        Object.assign(window.state.infinitySystem.everReached, window.infinitySystem.everReached);
+    }
+}
+
+// Create reference to infinity system for backwards compatibility
+window.infinitySystem = {
+    get counts() { return window.state.infinitySystem.counts; },
+    set counts(value) { window.state.infinitySystem.counts = value; },
+    get everReached() { return window.state.infinitySystem.everReached; },
+    set everReached(value) { window.state.infinitySystem.everReached = value; },
+    get infinityPoints() { return window.state.infinitySystem.infinityPoints; },
+    set infinityPoints(value) { window.state.infinitySystem.infinityPoints = value; },
+    get infinityTheorems() { return window.state.infinitySystem.infinityTheorems; },
+    set infinityTheorems(value) { window.state.infinitySystem.infinityTheorems = value; },
+    get totalInfinityTheorems() { return window.state.infinitySystem.totalInfinityTheorems; },
+    set totalInfinityTheorems(value) { window.state.infinitySystem.totalInfinityTheorems = value; },
+    get theoremProgress() { return window.state.infinitySystem.theoremProgress; },
+    set theoremProgress(value) { window.state.infinitySystem.theoremProgress = value; },
+    get totalInfinityEarned() { return window.state.infinitySystem.totalInfinityEarned; },
+    set totalInfinityEarned(value) { window.state.infinitySystem.totalInfinityEarned = value; },
+    get lastInfinityPointsUpdate() { return window.state.infinitySystem.lastInfinityPointsUpdate; },
+    set lastInfinityPointsUpdate(value) { window.state.infinitySystem.lastInfinityPointsUpdate = value; },
     
     // Check if a currency should go infinity
     checkInfinity: function(currencyName, currentValue) {
@@ -145,30 +213,39 @@ window.infinitySystem = {
                 if (typeof window.state !== 'undefined') window.state.artifacts = one;
                 break;
             case 'light':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.light = one;
                 if (typeof window.prismState !== 'undefined') window.prismState.light = one;
                 break;
-            case 'redLight':
-                if (typeof window.prismState !== 'undefined') window.prismState.redLight = one;
+            case 'redlight':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.redlight = one;
+                if (typeof window.prismState !== 'undefined') window.prismState.redlight = one;
                 break;
-            case 'orangeLight':
-                if (typeof window.prismState !== 'undefined') window.prismState.orangeLight = one;
+            case 'orangelight':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.orangelight = one;
+                if (typeof window.prismState !== 'undefined') window.prismState.orangelight = one;
                 break;
-            case 'yellowLight':
-                if (typeof window.prismState !== 'undefined') window.prismState.yellowLight = one;
+            case 'yellowlight':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.yellowlight = one;
+                if (typeof window.prismState !== 'undefined') window.prismState.yellowlight = one;
                 break;
-            case 'greenLight':
-                if (typeof window.prismState !== 'undefined') window.prismState.greenLight = one;
+            case 'greenlight':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.greenlight = one;
+                if (typeof window.prismState !== 'undefined') window.prismState.greenlight = one;
                 break;
-            case 'blueLight':
-                if (typeof window.prismState !== 'undefined') window.prismState.blueLight = one;
+            case 'bluelight':
+                if (typeof window.state !== 'undefined' && window.state.prismState) window.state.prismState.bluelight = one;
+                if (typeof window.prismState !== 'undefined') window.prismState.bluelight = one;
                 break;
             case 'terrariumPollen':
+                if (typeof window.state !== 'undefined' && window.state.terrarium) window.state.terrarium.pollen = one;
                 if (typeof window.terrariumPollen !== 'undefined') window.terrariumPollen = one;
                 break;
             case 'terrariumFlowers':
+                if (typeof window.state !== 'undefined' && window.state.terrarium) window.state.terrarium.flowers = one;
                 if (typeof window.terrariumFlowers !== 'undefined') window.terrariumFlowers = one;
                 break;
             case 'terrariumNectar':
+                if (typeof window.state !== 'undefined' && window.state.terrarium) window.state.terrarium.nectar = one;
                 if (typeof window.terrariumNectar !== 'undefined') window.terrariumNectar = one;
                 break;
             case 'charge':
@@ -244,11 +321,11 @@ window.infinitySystem = {
             'feathers': 'assets/icons/infinity feather.png',
             'artifacts': 'assets/icons/infinity wing artifact.png',
             'light': 'assets/icons/light-infinity.png',
-            'redLight': 'assets/icons/red-light-infinity.png',
-            'orangeLight': 'assets/icons/orange-light-infinity.png',
-            'yellowLight': 'assets/icons/yellow-light-infinity.png',
-            'greenLight': 'assets/icons/green-light-infinity.png',
-            'blueLight': 'assets/icons/blue-light-infinity.png',
+            'redlight': 'assets/icons/red-light-infinity.png',
+            'orangelight': 'assets/icons/orange-light-infinity.png',
+            'yellowlight': 'assets/icons/yellow-light-infinity.png',
+            'greenlight': 'assets/icons/green-light-infinity.png',
+            'bluelight': 'assets/icons/blue-light-infinity.png',
             'terrariumPollen': 'assets/icons/pollen-infinity.png',
             'terrariumFlowers': 'assets/icons/flower-infinity.png',
             'terrariumNectar': 'assets/icons/nectar-infinity.png',
@@ -284,11 +361,11 @@ window.infinitySystem = {
             'feathers': 'feather.png',
             'artifacts': 'artifact.png',
             'light': 'light.png',
-            'redLight': 'red light.png',
-            'orangeLight': 'orange light.png',
-            'yellowLight': 'yellow light.png',
-            'greenLight': 'green light.png',
-            'blueLight': 'blue light.png',
+            'redlight': 'red light.png',
+            'orangelight': 'orange light.png',
+            'yellowlight': 'yellow light.png',
+            'greenlight': 'green light.png',
+            'bluelight': 'blue light.png',
             'terrariumPollen': 'pollen.png',
             'terrariumFlowers': 'flower.png',
             'terrariumNectar': 'nectar.png',
@@ -308,25 +385,21 @@ window.infinitySystem = {
         
         if (typeof window.prismState !== 'undefined') {
             this.checkInfinity('light', window.prismState.light);
-            this.checkInfinity('redLight', window.prismState.redLight);
-            this.checkInfinity('orangeLight', window.prismState.orangeLight);
-            this.checkInfinity('yellowLight', window.prismState.yellowLight);
-            this.checkInfinity('greenLight', window.prismState.greenLight);
-            this.checkInfinity('blueLight', window.prismState.blueLight);
+            this.checkInfinity('redlight', window.prismState.redlight);
+            this.checkInfinity('orangelight', window.prismState.orangelight);
+            this.checkInfinity('yellowlight', window.prismState.yellowlight);
+            this.checkInfinity('greenlight', window.prismState.greenlight);
+            this.checkInfinity('bluelight', window.prismState.bluelight);
         }
         
-        if (typeof window.terrariumPollen !== 'undefined') {
-            this.checkInfinity('terrariumPollen', window.terrariumPollen);
+        // Check terrarium currencies in window.state.terrarium
+        if (typeof window.state !== 'undefined' && typeof window.state.terrarium !== 'undefined') {
+            this.checkInfinity('terrariumPollen', window.state.terrarium.pollen);
+            this.checkInfinity('terrariumFlowers', window.state.terrarium.flowers);
+            this.checkInfinity('terrariumNectar', window.state.terrarium.nectar);
         }
         
-        if (typeof window.terrariumFlowers !== 'undefined') {
-            this.checkInfinity('terrariumFlowers', window.terrariumFlowers);
-        }
-        
-        if (typeof window.terrariumNectar !== 'undefined') {
-            this.checkInfinity('terrariumNectar', window.terrariumNectar);
-        }
-        
+        // Check charger currency in window.charger
         if (typeof window.charger !== 'undefined' && window.charger.charge) {
             this.checkInfinity('charge', window.charger.charge);
         }
@@ -404,13 +477,6 @@ window.infinitySystem = {
         return baseGain.mul(boost);
     },
     
-    // Infinity Tree Currencies
-    infinityPoints: new Decimal(0),
-    infinityTheorems: 0,
-    totalInfinityTheorems: 0, // Track total theorems ever earned
-    theoremProgress: new Decimal(0),
-    lastInfinityPointsUpdate: Date.now(),
-    
     // Calculate infinity points per second
     getInfinityPointsPerSecond: function() {
         const totalInfinity = this.getTotalInfinityCurrency();
@@ -485,6 +551,14 @@ window.infinitySystem = {
     
     // Update infinity tree currencies - simplified to use the exact same calculation as display
     updateInfinityTree: function(deltaTime) {
+        // Ensure infinityPoints and theoremProgress are Decimal objects
+        if (!DecimalUtils.isDecimal(this.infinityPoints)) {
+            this.infinityPoints = new Decimal(this.infinityPoints || 0);
+        }
+        if (!DecimalUtils.isDecimal(this.theoremProgress)) {
+            this.theoremProgress = new Decimal(this.theoremProgress || 0);
+        }
+        
         const effectiveRatePerSecond = this.getEffectiveInfinityPointsPerSecond();
         
         if (effectiveRatePerSecond.gt(0)) {
@@ -549,6 +623,11 @@ window.infinitySystem = {
     
     // Get KP (swabucks) gain multiplier based on total infinity currency
     getKpInfinityMultiplier: function() {
+        // During infinity challenges, don't apply infinity multipliers
+        if (typeof window.activeChallenge !== 'undefined' && window.activeChallenge > 0) {
+            return new Decimal(1); // No multiplier during challenges
+        }
+        
         const totalInfinities = this.getTotalInfinityCurrency();
         if (totalInfinities === 0) {
             return new Decimal(1); // No multiplier if no infinities
@@ -609,9 +688,6 @@ window.infinitySystem = {
         return totalGain;
     },
     
-    // Track total infinity currency earned across all resets
-    totalInfinityEarned: 0,
-    
     // Reset challenge state to default
     resetChallengeState: function() {
         if (typeof window.infinityChallenges !== 'undefined') {
@@ -665,7 +741,7 @@ window.infinitySystem = {
         const isFirstInfinityReset = !window.state.seenInfinityResetStory;
         if (isFirstInfinityReset) {
             window.state.pendingInfinityResetStory = true;
-            if (typeof saveGame === 'function') saveGame();
+            // Save system disabled
         }
 
         // Check for pending story modals after reset
@@ -740,10 +816,20 @@ window.infinitySystem = {
                 window.advancedPrismState.calibration.stable[lightType] = new Decimal(0);
             });
             
+            // Initialize nerfs object if it doesn't exist
+            if (!window.advancedPrismState.calibration.nerfs) {
+                window.advancedPrismState.calibration.nerfs = {};
+            }
+            
             // Reset all light nerfs back to 1 (no nerf)
             lightTypes.forEach(lightType => {
                 window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
             });
+            
+            // Initialize totalTimeAccumulated object if it doesn't exist
+            if (!window.advancedPrismState.calibration.totalTimeAccumulated) {
+                window.advancedPrismState.calibration.totalTimeAccumulated = {};
+            }
             
             // Reset total time accumulated in minigames
             lightTypes.forEach(lightType => {
@@ -889,45 +975,93 @@ window.infinitySystem = {
     resetTerrariumForInfinity: function() {
         const zero = new Decimal(0);
         
-        // Reset terrarium currencies
-        window.terrariumPollen = zero;
-        window.terrariumFlowers = zero;
-        window.terrariumXP = zero;
-        window.terrariumLevel = 1;
-        window.terrariumNectar = 0;
+        // Reset terrarium currencies in centralized state
+        if (window.state && window.state.terrarium) {
+            window.state.terrarium.pollen = zero;
+            window.state.terrarium.flowers = zero;
+            window.state.terrarium.xp = zero;
+            window.state.terrarium.nectar = zero;
+            window.state.terrarium.level = 1;
+            
+            // Reset upgrade levels in centralized state
+            window.state.terrarium.flowerFieldExpansionUpgradeLevel = 0;
+            window.state.terrarium.pollenValueUpgradeLevel = 0;
+            window.state.terrarium.pollenValueUpgrade2Level = 0;
+            window.state.terrarium.flowerValueUpgradeLevel = 0;
+            window.state.terrarium.pollenFlowerNectarUpgradeLevel = 0;
+            window.state.terrarium.terrariumFlowerUpgrade1Level = 0;
+            window.state.terrarium.terrariumFlowerUpgrade2Level = 0;
+            window.state.terrarium.terrariumFlowerUpgrade3Level = 0;
+            window.state.terrarium.terrariumFlowerUpgrade4Level = 0;
+            window.state.terrarium.terrariumFlowerUpgrade5Level = 0;
+            
+            // Reset nectarize system in centralized state
+            window.state.terrarium.nectarizeMachineLevel = 1;
+            window.state.terrarium.nectarizeResets = 0;
+            window.state.terrarium.nectarizeMachineRepaired = false;
+            window.state.terrarium.nectarizeQuestActive = false;
+            window.state.terrarium.nectarizeQuestProgress = 0;
+            window.state.terrarium.nectarizeQuestGivenBattery = 0;
+            window.state.terrarium.nectarizeQuestGivenSparks = 0;
+            window.state.terrarium.nectarizeQuestGivenPetals = 0;
+            window.state.terrarium.nectarizePostResetTokenRequirement = 0;
+            window.state.terrarium.nectarizePostResetTokensGiven = 0;
+            window.state.terrarium.nectarizePostResetTokenType = 'petals';
+            
+            // Reset tool states in centralized state
+            window.state.terrarium.pollenWandActive = false;
+            window.state.terrarium.wateringCanActive = false;
+            window.state.terrarium.pollenWandCooldown = false;
+            window.state.terrarium.wateringCanCooldown = false;
+            window.state.terrarium.fluzzerClickCount = 0;
+            
+            // Reset flower grid health
+            if (window.state.terrarium.flowerGrid) {
+                window.state.terrarium.flowerGrid.forEach(flower => {
+                    flower.health = 5;
+                });
+            }
+        }
         
-        // Reset terrarium upgrades
-        window.terrariumPollenValueUpgradeLevel = 0;
-        window.terrariumPollenValueUpgrade2Level = 0;
-        window.terrariumFlowerValueUpgradeLevel = 0;
-        window.terrariumPollenToolSpeedUpgradeLevel = 0;
-        window.terrariumFlowerXPUpgradeLevel = 0;
-        window.terrariumExtraChargeUpgradeLevel = 0;
-        window.terrariumXpMultiplierUpgradeLevel = 0;
-        window.terrariumFlowerFieldExpansionUpgradeLevel = 0;
-        window.terrariumKpNectarUpgradeLevel = 0;
-        window.terrariumPollenFlowerNectarUpgradeLevel = 0;
-        window.terrariumNectarXpUpgradeLevel = 0;
-        window.terrariumNectarValueUpgradeLevel = 0;
-        window.terrariumFlowerUpgrade4Level = 0;
-        window.terrariumFlowerUpgrade5Level = 0;
-        window.terrariumNectarInfinityUpgradeLevel = 0;
+        // Reset legacy global variables for backwards compatibility
+        if (typeof window.terrariumPollen !== 'undefined') window.terrariumPollen = zero;
+        if (typeof window.terrariumFlowers !== 'undefined') window.terrariumFlowers = zero;
+        if (typeof window.terrariumXP !== 'undefined') window.terrariumXP = zero;
+        if (typeof window.terrariumLevel !== 'undefined') window.terrariumLevel = 1;
+        if (typeof window.terrariumNectar !== 'undefined') window.terrariumNectar = 0;
         
-        // Reset flower grid health
+        // Reset legacy terrarium upgrades
+        if (typeof window.terrariumPollenValueUpgradeLevel !== 'undefined') window.terrariumPollenValueUpgradeLevel = 0;
+        if (typeof window.terrariumPollenValueUpgrade2Level !== 'undefined') window.terrariumPollenValueUpgrade2Level = 0;
+        if (typeof window.terrariumFlowerValueUpgradeLevel !== 'undefined') window.terrariumFlowerValueUpgradeLevel = 0;
+        if (typeof window.terrariumPollenToolSpeedUpgradeLevel !== 'undefined') window.terrariumPollenToolSpeedUpgradeLevel = 0;
+        if (typeof window.terrariumFlowerXPUpgradeLevel !== 'undefined') window.terrariumFlowerXPUpgradeLevel = 0;
+        if (typeof window.terrariumExtraChargeUpgradeLevel !== 'undefined') window.terrariumExtraChargeUpgradeLevel = 0;
+        if (typeof window.terrariumXpMultiplierUpgradeLevel !== 'undefined') window.terrariumXpMultiplierUpgradeLevel = 0;
+        if (typeof window.terrariumFlowerFieldExpansionUpgradeLevel !== 'undefined') window.terrariumFlowerFieldExpansionUpgradeLevel = 0;
+        if (typeof window.terrariumKpNectarUpgradeLevel !== 'undefined') window.terrariumKpNectarUpgradeLevel = 0;
+        if (typeof window.terrariumPollenFlowerNectarUpgradeLevel !== 'undefined') window.terrariumPollenFlowerNectarUpgradeLevel = 0;
+        if (typeof window.terrariumNectarXpUpgradeLevel !== 'undefined') window.terrariumNectarXpUpgradeLevel = 0;
+        if (typeof window.terrariumNectarValueUpgradeLevel !== 'undefined') window.terrariumNectarValueUpgradeLevel = 0;
+        if (typeof window.terrariumFlowerUpgrade4Level !== 'undefined') window.terrariumFlowerUpgrade4Level = 0;
+        if (typeof window.terrariumFlowerUpgrade5Level !== 'undefined') window.terrariumFlowerUpgrade5Level = 0;
+        if (typeof window.terrariumNectarInfinityUpgradeLevel !== 'undefined') window.terrariumNectarInfinityUpgradeLevel = 0;
+        
+        // Reset legacy flower grid health
         if (window.terrariumFlowerGrid) {
             window.terrariumFlowerGrid.forEach(flower => {
                 flower.health = 5;
             });
         }
         
-        // Reset nectarize system
-        window.nectarizeResets = 0;
-        window.nectarizeMachineLevel = 1;
-        window.nectarizePostResetTokenRequirement = 0;
-        window.nectarizePostResetTokensGiven = 0;
-        window.nectarizePostResetTokenType = 'petals';
+        // Reset legacy nectarize system
+        if (typeof window.nectarizeResets !== 'undefined') window.nectarizeResets = 0;
+        if (typeof window.nectarizeMachineLevel !== 'undefined') window.nectarizeMachineLevel = 1;
+        if (typeof window.nectarizePostResetTokenRequirement !== 'undefined') window.nectarizePostResetTokenRequirement = 0;
+        if (typeof window.nectarizePostResetTokensGiven !== 'undefined') window.nectarizePostResetTokensGiven = 0;
+        if (typeof window.nectarizePostResetTokenType !== 'undefined') window.nectarizePostResetTokenType = 'petals';
         
-        // Reset terrarium tools and states
+        // Reset legacy terrarium tools and states
         if (typeof window.pollenWandActive !== 'undefined') window.pollenWandActive = false;
         if (typeof window.wateringCanActive !== 'undefined') window.wateringCanActive = false;
         if (typeof window.pollenWandCooldown !== 'undefined') window.pollenWandCooldown = false;
@@ -944,6 +1078,18 @@ window.infinitySystem = {
         if (typeof window.stopFluzzerRandomSpeechTimer === 'function') window.stopFluzzerRandomSpeechTimer();
         if (typeof window.stopFlowerRegrowthTimer === 'function') window.stopFlowerRegrowthTimer();
         
+        // Sync global references to centralized state
+        if (typeof window.syncGlobalReferencesToState === 'function') {
+            window.syncGlobalReferencesToState();
+        }
+        
+        // Update terrarium UI if function exists
+        if (typeof window.updateTerrariumDisplay === 'function') {
+            window.updateTerrariumDisplay();
+        }
+        if (typeof window.updateTerrariumUI === 'function') {
+            window.updateTerrariumUI();
+        }
 
     },
     
@@ -997,6 +1143,21 @@ window.infinitySystem = {
                 imgElement.src = `assets/icons/${currencyImageMap[currencyName]}`;
 
             }
+        }
+    },
+    
+    // Restore infinity images for currencies that have ever reached infinity
+    restoreInfinityImages: function() {
+        // Check everReached flags and update images accordingly
+        for (const currencyName in this.everReached) {
+            if (this.everReached[currencyName]) {
+                this.updateCurrencyImage(currencyName);
+            }
+        }
+        
+        // Force UI update to ensure images are displayed immediately
+        if (typeof updateUI === 'function') {
+            updateUI();
         }
     },
     
@@ -1288,6 +1449,43 @@ function testInfinity(currencyName = 'fluff') {
   } else {
   }
 }
+
+// Test function to set currency to infinity threshold for testing
+function testInfinityThreshold(currencyName = 'fluff') {
+  const threshold = new Decimal('1.8e308');
+  if (currencyName === 'fluff' || currencyName === 'swaria' || currencyName === 'feathers' || currencyName === 'artifacts') {
+    window.state[currencyName] = threshold;
+  } else if (currencyName === 'light' || currencyName === 'redlight' || currencyName === 'orangelight' || 
+             currencyName === 'yellowlight' || currencyName === 'greenlight' || currencyName === 'bluelight') {
+    window.state.prismState[currencyName] = threshold;
+  } else if (currencyName === 'charge' && window.charger) {
+    window.charger.charge = threshold;
+  } else if (currencyName === 'terrariumPollen' && window.state.terrarium) {
+    window.state.terrarium.pollen = threshold;
+  } else if (currencyName === 'terrariumFlowers' && window.state.terrarium) {
+    window.state.terrarium.flowers = threshold;
+  } else if (currencyName === 'terrariumNectar' && window.state.terrarium) {
+    window.state.terrarium.nectar = threshold;
+  }
+  
+  // Force an infinity check
+  if (window.infinitySystem && typeof window.infinitySystem.checkAllCurrencies === 'function') {
+    window.infinitySystem.checkAllCurrencies();
+  }
+}
+
+// Make test functions globally accessible
+window.testInfinity = testInfinity;
+window.testInfinityThreshold = testInfinityThreshold;
+
+// Debug function to check and restore infinity images
+window.testInfinityImageRestore = function() {
+  
+  if (typeof window.infinitySystem.restoreInfinityImages === 'function') {
+    window.infinitySystem.restoreInfinityImages();
+  } else {
+  }
+};
 
 
 
@@ -2324,7 +2522,7 @@ function forceInfinityResetWithGain(infinityGain = 1) {
     const isFirstInfinityReset = !window.state.seenInfinityResetStory;
     if (isFirstInfinityReset) {
         window.state.pendingInfinityResetStory = true;
-        if (typeof saveGame === 'function') saveGame();
+        // Save system disabled
 
     }
     
@@ -3689,23 +3887,47 @@ function performInfinityChallengeReset() {
             mythic: new Decimal(0)
         };
         
+        // Reset infinity counts to 0 for challenge
+        state.fluffInfinityCount = new Decimal(0);
+        state.swariaInfinityCount = new Decimal(0);
+        state.feathersInfinityCount = new Decimal(0);
+        state.artifactsInfinityCount = new Decimal(0);
+        
         // Reset power system
         state.powerEnergy = new Decimal(100);
         state.powerMaxEnergy = new Decimal(100);
         state.powerStatus = 'online';
     }
     
-    // Reset Knowledge Points (ensure it's reset)
-    if (swariaKnowledge) {
+    // Reset Knowledge Points (ensure it's reset properly)
+    if (window.state && typeof window.state.kp !== 'undefined') {
+        window.state.kp = new Decimal(0);
+    }
+    if (typeof swariaKnowledge !== 'undefined' && swariaKnowledge) {
         swariaKnowledge.kp = new Decimal(0);
     }
     
     // Reset all element upgrades except 7 and 8
-    if (boughtElements) {
-        const preservedElements = {
-            7: boughtElements[7] || false,
-            8: boughtElements[8] || false
-        };
+    const preservedElements = {};
+    if (window.boughtElements && (window.boughtElements[7] || window.boughtElements["7"])) {
+        preservedElements[7] = true;
+        preservedElements["7"] = true;
+    }
+    if (window.boughtElements && (window.boughtElements[8] || window.boughtElements["8"])) {
+        preservedElements[8] = true;
+        preservedElements["8"] = true;
+    }
+    
+    // Reset window.boughtElements
+    window.boughtElements = preservedElements;
+    
+    // Reset state.boughtElements if it exists
+    if (window.state && window.state.boughtElements) {
+        window.state.boughtElements = preservedElements;
+    }
+    
+    // Reset global boughtElements if it exists
+    if (typeof boughtElements !== 'undefined') {
         boughtElements = preservedElements;
     }
     
@@ -3740,6 +3962,14 @@ function performInfinityChallengeReset() {
             }
         });
         
+        // Also reset fractional accumulators
+        prismProps.forEach(prop => {
+            const fractionalKey = prop + 'Fractional';
+            if (window.prismState[fractionalKey]) {
+                window.prismState[fractionalKey] = new Decimal(0);
+            }
+        });
+        
         // Reset prism generator unlocks
         if (window.prismState.generatorUnlocked) {
             for (let key in window.prismState.generatorUnlocked) {
@@ -3759,6 +3989,82 @@ function performInfinityChallengeReset() {
             };
         }
     }
+    
+    // CRITICAL: Also reset state.prismState (this is where addCurrency operates!)
+    if (window.state && window.state.prismState) {
+        const prismProps = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight', 
+                           'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
+                           'greenlightparticle', 'bluelightparticle'];
+        
+        prismProps.forEach(prop => {
+            if (typeof window.state.prismState[prop] !== 'undefined') {
+                window.state.prismState[prop] = new Decimal(0);
+            }
+        });
+        
+        // Also reset fractional accumulators in state.prismState
+        prismProps.forEach(prop => {
+            const fractionalKey = prop + 'Fractional';
+            if (typeof window.state.prismState[fractionalKey] !== 'undefined') {
+                window.state.prismState[fractionalKey] = new Decimal(0);
+            }
+        });
+        
+        // Reset prism generator unlocks in state
+        if (window.state.prismState.generatorUnlocked) {
+            for (let key in window.state.prismState.generatorUnlocked) {
+                window.state.prismState.generatorUnlocked[key] = false;
+            }
+        }
+        
+        // Reset prism generator upgrades in state
+        if (window.state.prismState.generatorUpgrades) {
+            window.state.prismState.generatorUpgrades = {
+                light: 0,
+                redlight: 0,
+                orangelight: 0,
+                yellowlight: 0,
+                greenlight: 0,
+                bluelight: 0
+            };
+        }
+    }
+    
+    // Ensure prism state synchronization after reset
+    if (window.prismState && window.state && window.state.prismState) {
+        // Sync window.prismState to match window.state.prismState (which addCurrency uses)
+        const prismProps = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight', 
+                           'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
+                           'greenlightparticle', 'bluelightparticle'];
+        
+        prismProps.forEach(prop => {
+            if (typeof window.state.prismState[prop] !== 'undefined') {
+                window.prismState[prop] = window.state.prismState[prop];
+            }
+            
+            const fractionalKey = prop + 'Fractional';
+            if (typeof window.state.prismState[fractionalKey] !== 'undefined') {
+                window.prismState[fractionalKey] = window.state.prismState[fractionalKey];
+            }
+        });
+        
+        // Sync generator states
+        if (window.state.prismState.generatorUnlocked) {
+            window.prismState.generatorUnlocked = window.state.prismState.generatorUnlocked;
+        }
+        if (window.state.prismState.generatorUpgrades) {
+            window.prismState.generatorUpgrades = window.state.prismState.generatorUpgrades;
+        }
+    }
+    
+    // Reset global light currency variables (for backward compatibility)
+    const zero = new Decimal(0);
+    if (typeof window.light !== 'undefined') window.light = zero;
+    if (typeof window.redLight !== 'undefined') window.redLight = zero;
+    if (typeof window.orangeLight !== 'undefined') window.orangeLight = zero;
+    if (typeof window.yellowLight !== 'undefined') window.yellowLight = zero;
+    if (typeof window.greenLight !== 'undefined') window.greenLight = zero;
+    if (typeof window.blueLight !== 'undefined') window.blueLight = zero;
     
     // Reset charger state
     if (window.charger) {
@@ -3821,10 +4127,13 @@ function performInfinityChallengeReset() {
     // Recalculate element effects with only preserved elements
     if (typeof recalculateAllElementEffects === 'function') recalculateAllElementEffects();
     
-    // Save the game state after reset
-    if (typeof saveGame === 'function') saveGame();
+    // Force element synchronization
+    if (typeof window.syncElementsToState === 'function') window.syncElementsToState();
+    if (typeof window.updateElementVisibility === 'function') window.updateElementVisibility();
     
-
+    // Save the game state after reset
+    // Save system disabled
+    
 }
 
 // Challenge-specific nerf system
@@ -4006,9 +4315,24 @@ function canCompleteCurrentChallenge() {
     const difficulty = challenge.difficulties[activeDifficulty];
     if (!difficulty) return false;
     
-    // Check if current difficulty target is reached
-    const totalInfinity = window.infinitySystem.getTotalInfinityCurrency();
-    return totalInfinity >= difficulty.infinityTarget;
+    // Check if any currency has actually reached infinity in this challenge run
+    // We need to check the actual current infinity counts, not total earned from previous resets
+    let currentInfinityCount = 0;
+    if (window.state && window.state.fluffInfinityCount) {
+        currentInfinityCount += window.state.fluffInfinityCount.toNumber();
+    }
+    if (window.state && window.state.swariaInfinityCount) {
+        currentInfinityCount += window.state.swariaInfinityCount.toNumber();
+    }
+    if (window.state && window.state.feathersInfinityCount) {
+        currentInfinityCount += window.state.feathersInfinityCount.toNumber();
+    }
+    if (window.state && window.state.artifactsInfinityCount) {
+        currentInfinityCount += window.state.artifactsInfinityCount.toNumber();
+    }
+    
+    // For challenge IC:1-1, we need at least 1 total infinity from current run
+    return currentInfinityCount >= difficulty.infinityTarget;
 }
 
 // Update the challenge button text based on current state
@@ -4063,11 +4387,11 @@ function updateInfinityChallengeFilter() {
     }
 }
 
-// Add individual floating symbols to the filter
+// Add individual floating symbols to the filter - optimized with fewer symbols
 function addFloatingSymbols(filterEl) {
-    const symbols = ['∧', '∧', '∧', '∧', '∞', '∞', '∞', '∞']; // Mix of carets and infinity symbols
+    const symbols = ['∧', '∞', '∧', '∞']; // Reduced from 8 to 4 symbols
     
-    for (let i = 1; i <= 8; i++) {
+    for (let i = 1; i <= 4; i++) {
         const symbol = document.createElement('div');
         symbol.className = `infinity-symbol-${i}`;
         symbol.textContent = symbols[i - 1];
@@ -4075,8 +4399,12 @@ function addFloatingSymbols(filterEl) {
         // Make infinity symbols slightly larger
         if (symbols[i - 1] === '∞') {
             symbol.style.fontSize = '22px';
-            symbol.style.color = 'rgba(123, 104, 238, 0.45)'; // Slightly different purple shade
+            symbol.style.color = 'rgba(123, 104, 238, 0.45)';
         }
+        
+        // Add performance optimizations
+        symbol.style.willChange = 'transform';
+        symbol.style.transform = 'translate3d(0, 0, 0)';
         
         filterEl.appendChild(symbol);
     }
@@ -4103,7 +4431,35 @@ function forceInfinityResetForChallenge() {
         window.state.grade = currentExpansion;
     }
     
-
+    // Re-enforce challenge-specific resets that may have been overridden
+    // Reset KP to 0 (instead of 1 from regular infinity reset)
+    if (window.state && typeof window.state.kp !== 'undefined') {
+        window.state.kp = new Decimal(0);
+    }
+    if (typeof swariaKnowledge !== 'undefined' && swariaKnowledge) {
+        swariaKnowledge.kp = new Decimal(0);
+    }
+    
+    // Re-enforce element reset (keep only 7 and 8)
+    const preservedElements = {};
+    if (window.boughtElements && (window.boughtElements[7] || window.boughtElements["7"])) {
+        preservedElements[7] = true;
+        preservedElements["7"] = true;
+    }
+    if (window.boughtElements && (window.boughtElements[8] || window.boughtElements["8"])) {
+        preservedElements[8] = true;
+        preservedElements["8"] = true;
+    }
+    
+    // Reset all element references again
+    window.boughtElements = preservedElements;
+    if (window.state && window.state.boughtElements) {
+        window.state.boughtElements = preservedElements;
+    }
+    if (typeof boughtElements !== 'undefined') {
+        boughtElements = preservedElements;
+    }
+    
 }
 
 // Update challenge UI
@@ -4407,3 +4763,32 @@ span[id*="NerfValue"] {
 }
 `;
 document.head.appendChild(infinityCounterStyle);
+
+// Run migration when file loads
+migrateInfinitySystemToState();
+
+// Console command to verify the integration
+window.testInfinityIntegration = function() {
+  console.log('✓ Infinity system initialized in window.state');
+  console.log('window.state.infinitySystem:', window.state.infinitySystem);
+  console.log('window.infinitySystem (reference):', {
+    counts: window.infinitySystem.counts,
+    everReached: window.infinitySystem.everReached,
+    infinityPoints: window.infinitySystem.infinityPoints?.toString() || '0',
+    totalInfinityEarned: window.infinitySystem.totalInfinityEarned
+  });
+  
+  // Test that modifications work through the reference
+  const oldFluffCount = window.infinitySystem.counts.fluff;
+  window.infinitySystem.counts.fluff = 999;
+  const newStateValue = window.state.infinitySystem.counts.fluff;
+  window.infinitySystem.counts.fluff = oldFluffCount; // restore
+  
+  if (newStateValue === 999) {
+    console.log('✓ Reference system working correctly');
+    return { success: true, message: 'Infinity system successfully integrated with window.state' };
+  } else {
+    console.log('✗ Reference system failed');
+    return { success: false, message: 'Integration failed' };
+  }
+};

@@ -2903,9 +2903,9 @@
           const cost = DecimalUtils.multiply(gen.baseCost, new Decimal(gen.costMultiplier).pow(gen.upgrades));
           let canAfford = false;
           if (genInfo.currency === 'kp') {
-            canAfford = window.swariaKnowledge && window.swariaKnowledge.kp &&
-                       DecimalUtils.isDecimal(window.swariaKnowledge.kp) &&
-                       window.swariaKnowledge.kp.gte(cost);
+            canAfford = window.state && window.state.kp &&
+                       DecimalUtils.isDecimal(window.state.kp) &&
+                       window.state.kp.gte(cost);
           } else if (genInfo.currency === 'swaria') {
             canAfford = window.state && window.state.swaria &&
                        DecimalUtils.isDecimal(window.state.swaria) &&
@@ -5344,9 +5344,7 @@
     window.state.frontDesk.foodRations = this.foodRations;
     window.state.frontDesk.tokensGivenToTico = this.tokensGivenToTico;
     window.state.frontDesk.lastHungerTick = this.lastHungerTick;
-    if (typeof window.saveGame === 'function') {
-      window.saveGame();
-    }
+    // Save system disabled
   }
   loadData() {
     if (window.state.frontDesk) {
@@ -5666,9 +5664,17 @@ function testBuyboxIntegration() {
   } else {
   }
 }
+
+// Debug function for front desk state
+function debugFrontDeskState(context) {
+  
+}
+window.debugFrontDeskState = debugFrontDeskState;
+
 window.FrontDesk = FrontDesk;
 function initializeFrontDesk() {
   window.frontDesk = new FrontDesk();
+  debugFrontDeskState('After FrontDesk creation');
   window.frontDeskManager = window.frontDesk;
   window.onGeneratorCompleted = function(generatorType) {
     if (window.frontDesk) {

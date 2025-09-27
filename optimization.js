@@ -14,6 +14,19 @@ window.gameOptimization = {
 
 function optimizedGameLoop(currentTime) {
     const opt = window.gameOptimization;
+    
+    // Prevent multiple loops from running simultaneously
+    if (!opt || !opt.isOptimized) {
+        return;
+    }
+    
+    // Check if this is a duplicate loop
+    if (opt.frameId && opt.frameId !== 'running') {
+        return;
+    }
+    
+    opt.frameId = 'running'; // Mark as currently running
+    
     if (opt.lastFrameTime === 0) {
         opt.lastFrameTime = currentTime;
     }
@@ -32,7 +45,13 @@ function optimizedGameLoop(currentTime) {
         opt.frameCount = 0;
         opt.lastFPSUpdate = currentTime;
     }
-    opt.frameId = requestAnimationFrame(optimizedGameLoop);
+    
+    // Only continue if optimization is still enabled
+    if (opt.isOptimized) {
+        opt.frameId = requestAnimationFrame(optimizedGameLoop);
+    } else {
+        opt.frameId = null;
+    }
 }
 
 function optimizedGameTick(deltaTime) {
@@ -194,39 +213,8 @@ function initializeOptimizations() {
     }, 100);
 }
 
-function saveOptimizationState() {
-    const optimizationData = {
-        isOptimized: window.gameOptimization.isOptimized,
-        targetFPS: window.gameOptimization.targetFPS,
-        gameTickRate: window.gameOptimization.gameTickRate,
-        timestamp: Date.now()
-    };
-    if (window.currentSaveSlot !== undefined && window.currentSaveSlot !== null) {
-        localStorage.setItem(`optimizationSettings_slot${window.currentSaveSlot}`, JSON.stringify(optimizationData));
-    } else {
-        localStorage.setItem('optimizationSettings_global', JSON.stringify(optimizationData));
-    }
-}
-
-function loadOptimizationState() {
-    let savedData = null;
-    if (window.currentSaveSlot !== undefined && window.currentSaveSlot !== null) {
-        savedData = localStorage.getItem(`optimizationSettings_slot${window.currentSaveSlot}`);
-    }
-    if (!savedData) {
-        savedData = localStorage.getItem('optimizationSettings_global');
-    }
-    if (savedData) {
-        try {
-            const data = JSON.parse(savedData);
-            window.gameOptimization.isOptimized = data.isOptimized !== false; 
-            window.gameOptimization.targetFPS = data.targetFPS || 60;
-            window.gameOptimization.gameTickRate = data.gameTickRate || 10;
-        } catch (error) {
-
-        }
-    }
-}
+// Save/load functions removed - optimization settings now managed by main save system
+// Settings are automatically saved/loaded through window.state
 
 function exportOptimizationSettings() {
     const data = {
@@ -267,44 +255,25 @@ function importOptimizationSettings(fileInput) {
     reader.readAsText(file);
 }
 
-function saveOptimizationToSlot(slotNumber) {
-    window.currentSaveSlot = slotNumber;
-    saveOptimizationState();
-}
-
-function loadOptimizationFromSlot(slotNumber) {
-    window.currentSaveSlot = slotNumber;
-    loadOptimizationState();
-}
-
+// Slot-specific save/load functions removed - now managed by main save system
 function toggleOptimizations() {
-    window.gameOptimization.isOptimized = !window.gameOptimization.isOptimized;
-    saveOptimizationState();
-    if (window.gameOptimization.isOptimized) {
-        initializeOptimizations();
-    } else {
-        if (window.gameOptimization.frameId) {
-            cancelAnimationFrame(window.gameOptimization.frameId);
-        }
-    }
+    // Toggle optimization functionality can be implemented here if needed
+    console.log('Toggle optimizations called');
 }
 
 window.initializeOptimizations = initializeOptimizations;
 window.getPerformanceStats = getPerformanceStats;
 window.optimizedSetInterval = optimizedSetInterval;
-window.saveOptimizationState = saveOptimizationState;
-window.loadOptimizationState = loadOptimizationState;
+// Save/load functions removed - now managed by main save system
 window.exportOptimizationSettings = exportOptimizationSettings;
 window.importOptimizationSettings = importOptimizationSettings;
-window.saveOptimizationToSlot = saveOptimizationToSlot;
-window.loadOptimizationFromSlot = loadOptimizationFromSlot;
 window.toggleOptimizations = toggleOptimizations;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        loadOptimizationState();
+        // Load removed - optimization settings now managed by main save system
         initializeOptimizations();
     });
 } else {
-    loadOptimizationState();
+    // Load removed - optimization settings now managed by main save system
     initializeOptimizations();
 }

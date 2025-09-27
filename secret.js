@@ -361,47 +361,8 @@ function updateSecretAchievementProgress(achievementId, value) {
   }
 }
 
-function loadSecretAchievements() {
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-  const saveKey = currentSaveSlot ? `fluffIncSecretAchievementsSlot${currentSaveSlot}` : 'fluffIncSecretAchievements';
-  const saved = localStorage.getItem(saveKey);
-  if (saved) {
-    const savedData = JSON.parse(saved);
-    Object.keys(savedData.achievements).forEach(id => {
-      if (secretAchievements[id]) {
-        secretAchievements[id].unlocked = savedData.achievements[id].unlocked;
-        secretAchievements[id].progress = new Decimal(savedData.achievements[id].progress || 0);
-        secretAchievements[id].rewarded = savedData.achievements[id].rewarded || false;
-        if (secretAchievements[id].unlocked) {
-          updateSecretAchievementDescription(id);
-        }
-      }
-    });
-  } else {
-    Object.values(secretAchievements).forEach(achievement => {
-      achievement.unlocked = false;
-      achievement.progress = new Decimal(0);
-      achievement.rewarded = false;
-      achievement.description = '???';
-    });
-  }
-}
-
-function saveSecretAchievements() {
-  const saveData = {
-    achievements: {}
-  };
-  Object.keys(secretAchievements).forEach(id => {
-    saveData.achievements[id] = {
-      unlocked: secretAchievements[id].unlocked,
-      progress: (secretAchievements[id].progress || new Decimal(0)).toString(),
-      rewarded: secretAchievements[id].rewarded
-    };
-  });
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-  const saveKey = currentSaveSlot ? `fluffIncSecretAchievementsSlot${currentSaveSlot}` : 'fluffIncSecretAchievements';
-  localStorage.setItem(saveKey, JSON.stringify(saveData));
-}
+// Save/load functions removed - secret achievements now managed by main save system
+// Data is automatically saved/loaded through window.state
 
 function initSecretAchievements() {
   // Initialize all secret achievements with proper Decimal values
@@ -416,30 +377,38 @@ function initSecretAchievements() {
       achievement.progress = new Decimal(0);
     }
   });
-  loadSecretAchievements();
+  // Secret achievements are now loaded by main save system - no separate loading needed
 }
 
 function resetSecretAchievementsForNewSlot(slotNumber) {
-  const freshSecretAchievements = {};
+  // Reset logic only - save removed as achievements are now managed by main save system
   Object.keys(secretAchievements).forEach(id => {
-    freshSecretAchievements[id] = {
+    secretAchievements[id] = {
       unlocked: false,
-      progress: 0,
-      rewarded: false
+      progress: new Decimal(0),
+      rewarded: false,
+      description: '???'
     };
   });
-  const saveData = {
-    achievements: freshSecretAchievements
-  };
-  localStorage.setItem(`fluffIncSecretAchievementsSlot${slotNumber}`, JSON.stringify(saveData));
 }
 
-window.secretAchievements = secretAchievements;
+// Initialize state secret achievements if they don't exist
+if (!window.state) window.state = {};
+if (!window.state.secretAchievements) window.state.secretAchievements = {};
+
+// Merge default secret achievements with state secret achievements
+Object.keys(secretAchievements).forEach(key => {
+  if (!window.state.secretAchievements[key]) {
+    window.state.secretAchievements[key] = {...secretAchievements[key]};
+  }
+});
+
+// Make secret achievements globally accessible (reference centralized state)
+window.secretAchievements = window.state.secretAchievements;
 window.unlockSecretAchievement = unlockSecretAchievement;
 window.handleSecretAchievementClick = handleSecretAchievementClick;
 window.updateSecretAchievementProgress = updateSecretAchievementProgress;
-window.loadSecretAchievements = loadSecretAchievements;
-window.saveSecretAchievements = saveSecretAchievements;
+// Save/load functions removed - now managed by main save system
 window.resetSecretAchievementsForNewSlot = resetSecretAchievementsForNewSlot;
 window.initSecretAchievements = initSecretAchievements;
 window.trackPrismLabClick = trackPrismLabClick;

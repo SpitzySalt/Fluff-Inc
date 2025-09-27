@@ -66,7 +66,9 @@ window.getFriendshipPointsForLevel = getFriendshipPointsForLevel;
 window.charToDept = charToDept;
 
 function initFriendshipFunctions() {
-  window.friendship = window.friendship || {
+  // Ensure window.state.friendship exists with proper initialization
+  if (!window.state) window.state = {};
+  window.state.friendship = window.state.friendship || {
     Cargo: { level: 0, points: new Decimal(0) },
     Generator: { level: 0, points: new Decimal(0) },
     Lab: { level: 0, points: new Decimal(0) },
@@ -77,42 +79,62 @@ function initFriendshipFunctions() {
   };
   
   // Convert existing numeric points to Decimals for backwards compatibility
-  Object.keys(window.friendship).forEach(dept => {
-    if (window.friendship[dept] && typeof window.friendship[dept] === 'object') {
-      if (typeof window.friendship[dept].points === 'number') {
-        window.friendship[dept].points = new Decimal(window.friendship[dept].points);
-      } else if (typeof window.friendship[dept].points === 'string') {
-        window.friendship[dept].points = new Decimal(window.friendship[dept].points);
-      } else if (!window.friendship[dept].points) {
-        window.friendship[dept].points = new Decimal(0);
+  Object.keys(window.state.friendship).forEach(dept => {
+    if (window.state.friendship[dept] && typeof window.state.friendship[dept] === 'object') {
+      if (typeof window.state.friendship[dept].points === 'number') {
+        window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points);
+      } else if (typeof window.state.friendship[dept].points === 'string') {
+        window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points);
+      } else if (!window.state.friendship[dept].points) {
+        window.state.friendship[dept].points = new Decimal(0);
       }
     }
   });
-  window.friendship.getPoints = function(character) {
+  window.state.friendship.getPoints = function(character) {
     const dept = charToDept[character.toLowerCase()];
-    if (!dept || !window.friendship[dept]) return new Decimal(0);
-    const f = window.friendship[dept];
+    if (!dept || !window.state.friendship[dept]) return new Decimal(0);
+    const f = window.state.friendship[dept];
     let totalPoints = new Decimal(0);
     for (let i = 0; i < f.level; i++) {
       totalPoints = totalPoints.add(getFriendshipPointsForLevel(i));
     }
-    totalPoints = totalPoints.add(f.points || new Decimal(0));
+    // Ensure points is a Decimal before adding
+    const currentPoints = DecimalUtils.isDecimal(f.points) ? f.points : new Decimal(f.points || 0);
+    totalPoints = totalPoints.add(currentPoints);
     return totalPoints;
   };
-  window.friendship.addPoints = function(character, points) {
+  window.state.friendship.addPoints = function(character, points) {
   const dept = charToDept[character.toLowerCase()];
   if (!dept) return;
-  // Always initialize department if missing
-  window.friendship[dept] = window.friendship[dept] || { level: 0, points: new Decimal(0) };
-  window.friendship[dept].points = (window.friendship[dept].points || new Decimal(0)).add(points);
-    let lvl = window.friendship[dept].level;
-    let needed = getFriendshipPointsForLevel(lvl);
-    while (window.friendship[dept].points.gte(needed) && lvl < MAX_FRIENDSHIP_LEVEL) {
-      window.friendship[dept].points = window.friendship[dept].points.sub(needed);
-      lvl++;
-      needed = getFriendshipPointsForLevel(lvl);
+  
+  try {
+    // Always initialize department if missing
+    window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
+    
+    // Ensure existing points is a Decimal
+    if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
+      window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
     }
-    window.friendship[dept].level = lvl;
+    
+    // Ensure points parameter is a Decimal
+    const pointsToAdd = DecimalUtils.isDecimal(points) ? points : new Decimal(points || 0);
+    
+    window.state.friendship[dept].points = window.state.friendship[dept].points.add(pointsToAdd);
+      let lvl = window.state.friendship[dept].level;
+      let needed = getFriendshipPointsForLevel(lvl);
+      while (window.state.friendship[dept].points.gte(needed) && lvl < MAX_FRIENDSHIP_LEVEL) {
+        window.state.friendship[dept].points = window.state.friendship[dept].points.sub(needed);
+        lvl++;
+        needed = getFriendshipPointsForLevel(lvl);
+      }
+      window.state.friendship[dept].level = lvl;
+  } catch (error) {
+    console.warn(`Error in friendship.addPoints for ${character}:`, error);
+    // Try to recover by ensuring decimal conversion
+    if (typeof window.validateAndFixDecimals === 'function') {
+      window.validateAndFixDecimals();
+    }
+  }
 
     if (typeof window.renderDepartmentStatsButtons === 'function') {
       window.renderDepartmentStatsButtons();
@@ -129,11 +151,11 @@ function initFriendshipFunctions() {
   };
   
   // Serialization functions for friendship system
-  window.friendship.serialize = function() {
+  window.state.friendship.serialize = function() {
     const serialized = {};
-    Object.keys(window.friendship).forEach(dept => {
-      if (dept !== 'getPoints' && dept !== 'addPoints' && dept !== 'serialize' && dept !== 'deserialize') {
-        const f = window.friendship[dept];
+    Object.keys(window.state.friendship).forEach(dept => {
+      if (dept !== 'getPoints' && dept !== 'addPoints' && dept !== 'serialize' && dept !== 'deserialize' && dept !== 'getFriendshipLevel') {
+        const f = window.state.friendship[dept];
         serialized[dept] = {
           level: f.level,
           points: f.points ? f.points.toString() : "0"
@@ -143,26 +165,29 @@ function initFriendshipFunctions() {
     return serialized;
   };
   
-  window.friendship.deserialize = function(data) {
+  window.state.friendship.deserialize = function(data) {
     if (!data) return;
     Object.keys(data).forEach(dept => {
-      window.friendship[dept] = window.friendship[dept] || { level: 0, points: new Decimal(0) };
-      window.friendship[dept].level = data[dept].level || 0;
-      window.friendship[dept].points = new Decimal(data[dept].points || 0);
+      window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
+      window.state.friendship[dept].level = data[dept].level || 0;
+      window.state.friendship[dept].points = new Decimal(data[dept].points || 0);
     });
   };
 
   // Add getFriendshipLevel function that returns the department friendship data
-  window.friendship.getFriendshipLevel = function(character) {
+  window.state.friendship.getFriendshipLevel = function(character) {
     const dept = charToDept[character.toLowerCase()];
-    if (!dept || !window.friendship[dept]) {
+    if (!dept || !window.state.friendship[dept]) {
       return { level: 0, points: new Decimal(0) };
     }
     return {
-      level: window.friendship[dept].level || 0,
-      points: window.friendship[dept].points || new Decimal(0)
+      level: window.state.friendship[dept].level || 0,
+      points: window.state.friendship[dept].points || new Decimal(0)
     };
   };
+  
+  // Create backward compatibility alias for existing code that uses window.friendship
+  window.friendship = window.state.friendship;
 }
 
 // Initialize friendship functions with cleanup tracking

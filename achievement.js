@@ -390,26 +390,46 @@ const achievements = {
   },
 };
 
-// Make achievements globally accessible
-window.achievements = achievements;
+// Initialize state achievements if they don't exist
+if (!window.state) window.state = {};
+if (!window.state.achievements) window.state.achievements = {};
+if (!window.state.achievementStats) window.state.achievementStats = {};
 
-let achievementStats = {
+// Merge default achievements with state achievements
+Object.keys(achievements).forEach(key => {
+  if (!window.state.achievements[key]) {
+    window.state.achievements[key] = {...achievements[key]};
+  }
+});
+
+// Make achievements globally accessible (reference centralized state)
+window.achievements = window.state.achievements;
+
+// Initialize default achievement stats if not in state
+const defaultAchievementStats = {
   totalClicks: 0,
   totalPlayTime: 0,
   totalUpgrades: 0,
   lastSaveTime: Date.now()
 };
+
+Object.keys(defaultAchievementStats).forEach(key => {
+  if (window.state.achievementStats[key] === undefined) {
+    window.state.achievementStats[key] = defaultAchievementStats[key];
+  }
+});
+
 let achievementPopupQueue = [];
 let isShowingPopup = false;
 
 // Make achievement variables globally accessible
-window.achievementStats = achievementStats;
+window.achievementStats = window.state.achievementStats;
 window.achievementPopupQueue = achievementPopupQueue;
 window.isShowingPopup = isShowingPopup;
 
 // Initialize all achievements with proper Decimal values
 function initializeAchievementDecimals() {
-  Object.values(achievements).forEach(achievement => {
+  Object.values(window.state.achievements).forEach(achievement => {
     if (typeof achievement.requirement === 'number') {
       achievement.requirement = new Decimal(achievement.requirement);
     }
@@ -478,9 +498,7 @@ function saveAchievements() {
   const currentSaveSlot = localStorage.getItem('currentSaveSlot');
   const saveKey = currentSaveSlot ? `fluffIncAchievementsSlot${currentSaveSlot}` : 'fluffIncAchievements';
   localStorage.setItem(saveKey, JSON.stringify(saveData));
-  if (typeof window.saveSecretAchievements === 'function') {
-    window.saveSecretAchievements();
-  }
+  // Secret achievements save removed - now managed by main save system
 }
 
 function updateAchievementProgress(type, value) {

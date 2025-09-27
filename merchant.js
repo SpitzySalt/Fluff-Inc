@@ -1871,7 +1871,19 @@ class Boutique {
       }
       window.state.chargedPrisma = window.state.chargedPrisma.add(quantity);
     } else {
-      // Regular tokens stored in kitchenIngredients
+      // Regular tokens stored in window.state.tokens
+      if (!window.state.tokens) {
+        window.state.tokens = {};
+      }
+      
+      if (!window.state.tokens[storageKey]) {
+        window.state.tokens[storageKey] = new Decimal(0);
+      } else if (!DecimalUtils.isDecimal(window.state.tokens[storageKey])) {
+        window.state.tokens[storageKey] = new Decimal(window.state.tokens[storageKey]);
+      }
+      window.state.tokens[storageKey] = window.state.tokens[storageKey].add(quantity);
+      
+      // Also update the legacy kitchenIngredients for backward compatibility
       if (!window.kitchenIngredients[storageKey]) {
         window.kitchenIngredients[storageKey] = new Decimal(0);
       } else if (!DecimalUtils.isDecimal(window.kitchenIngredients[storageKey])) {
@@ -2516,6 +2528,8 @@ window.testPremiumTokenPersistence = function() {
   
   return window.premiumState;
 };
+
+
 
 // Debug function to test Lepre token giving
 window.testLepreTokens = function() {

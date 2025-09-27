@@ -24,33 +24,13 @@ class Observatory {
   }
 
   loadState() {
-    // Load saved state from localStorage if available
-    try {
-      const saved = localStorage.getItem('observatoryState');
-      if (saved) {
-        const data = JSON.parse(saved);
-        this.isRepaired = data.isRepaired || false;
-        this.telescopeCalibration = data.telescopeCalibration || 0;
-        this.starMapProgress = data.starMapProgress || 0;
-        this.celestialDiscoveries = data.celestialDiscoveries || 0;
-        this.repairProgress = data.repairProgress || 0;
-        this.discoveries = data.discoveries || [];
-      }
-    } catch (error) {
-
-    }
+    // Load function removed - observatory state now managed by main save system
+    // State is automatically loaded through window.state
   }
 
   saveState() {
-    const state = {
-      isRepaired: this.isRepaired,
-      telescopeCalibration: this.telescopeCalibration,
-      starMapProgress: this.starMapProgress,
-      celestialDiscoveries: this.celestialDiscoveries,
-      repairProgress: this.repairProgress,
-      discoveries: this.discoveries
-    };
-    localStorage.setItem('observatoryState', JSON.stringify(state));
+    // Save function removed - observatory state now managed by main save system
+    // State is automatically saved through window.state
   }
 
   setupUI() {

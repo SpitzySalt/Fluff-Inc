@@ -419,7 +419,7 @@ body {
   <!-- Infinity Challenge Visual Filter -->
   <div id="infinityChallengeFilter" class="infinity-challenge-filter"></div>
   
-  <div id="autosaveIndicator" style="position:fixed;top:12px;left:16px;z-index:99999;font-size:1.3em;font-weight:bold;color:#3cf;background:rgba(0,0,0,0.10);padding:0.3em 1.2em;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:none;pointer-events:none;">Saved</div>
+  <!-- Autosave indicator removed - save system disabled -->
 <div id="knowledgeSubTabBar" style="display: none;">
   <div id="knowledgeSubTabNav">
     <button onclick="switchKnowledgeSubTab('elementsMain')" class="active">Elements</button>
@@ -993,16 +993,20 @@ body {
             <span style="font-size: 0.9em; color: #ff6b6b; font-weight: bold; margin-left: 10px; margin-bottom: 10px; display: block;">Very important to avoid data corruption</span>
             <label><input type="checkbox" id="confirmResetToggle"> Confirm delivery reset</label>
             <label id="confirmNectarizeResetLabel" style="display:none;"><input type="checkbox" id="confirmNectarizeResetToggle"> Confirm nectarize reset</label>
-            <label><input type="checkbox" id="autosaveToggle" span style="display:none;"></label>
           </div>
           <div class="card">
-            <h2>Save System</h2>
-            <button onclick="exportSave()">Export</button>
-            <button onclick="importSave()">Import</button>
-            <div style="margin-top: 1em;" class="save-slots-group" id="saveSlotsGroup">
-              <div class="save-slots-label"><b>Save Slots:</b></div>
-              <button id="openSaveSlotModalBtn" style="margin-bottom:1em;">Save Files</button>
-              <button id="manualSaveBtn" style="margin-bottom:1em;">Save Game</button>
+            <h2>Save Options</h2>
+            <button onclick="saveGame()">Save</button>
+            <button onclick="exportSave()">Export Save</button>
+            <button onclick="showImportDialog()">Import Save</button>
+            <br>
+            <button id="openSaveSlotModalBtn">Manage Save Slots</button>
+            <br>
+            <label><input type="checkbox" id="autosaveToggle"> Autosave</label>
+            <div id="autosaveSliderContainer" style="margin-top: 10px; text-align: center;">
+              <label for="autosaveIntervalSlider" style="display: block; margin-bottom: 5px; font-size: 12px;">Autosave Interval</label>
+              <input type="range" id="autosaveIntervalSlider" min="15" max="120" value="30" step="15" style="width: 80%; margin-bottom: 5px;">
+              <div id="autosaveIntervalDisplay" style="font-size: 11px; color: #666;">30 seconds</div>
             </div>
           </div>
         </div>
@@ -2223,7 +2227,9 @@ body {
 <div id="dimOverlay"></div>
 <div id="blackoutOverlay"></div>
 <script src="break_eternity.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <script src="decimal_utils.js"></script>
+<script src="save.js"></script>
 <script src="script.js"></script>
 <script src="script2.js"></script>
 <script src="script3.js"></script>
@@ -2255,11 +2261,7 @@ body {
   <span class="grade-old"></span>
   <span class="grade-new"></span>
 </div>
-<div id="saveSlotModal" ...>
-  <div id="saveSlotModalCard" ...>
-    <div id="modalSaveSlotCards"></div> 
-  </div>
-</div>
+<!-- Save slot modal removed - save system disabled -->
 <div id="mixModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; align-items:center; justify-content:center; background:rgba(0,0,0,0.55);">
   <div class="mix-modal-main" style="background:#fff; border-radius:32px; box-shadow:0 8px 32px #000a; width:600px; height:600px; min-width:320px; min-height:320px; max-width:90vw; max-height:90vh; margin:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
     <button id="mixModalLeftArrow" style="position:absolute; left:-60px; top:50%; transform:translateY(-50%); background:#fff; border:2px solid #ff4444; border-radius:50%; width:50px; height:50px; font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:10000; color:#ff4444;">‹</button>
@@ -2670,4 +2672,27 @@ body {
     </button>
   </div>
 </div>
+
+<!-- Save Slot Modal -->
+<div id="saveSlotModal">
+  <div id="saveSlotModalCard">
+    <h2 style="margin-top: 0; text-align: center;">Manage Save Slots</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 1.5em;">Current Slot: <span id="modalCurrentSlotDisplay">1</span></p>
+    <p style="text-align: center; color: #ff6b6b; margin-bottom: 1.5em; font-style: italic;">Save slots are disabled for now</p>
+    <div id="modalSaveSlotContainer">
+      <!-- Save slots will be populated by JavaScript -->
+    </div>
+    <button onclick="closeSaveSlotModal()" style="
+      margin-top: 1em;
+      padding: 0.6em 2em;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    ">Close</button>
+  </div>
+</div>
+
 </body>

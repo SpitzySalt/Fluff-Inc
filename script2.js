@@ -73,6 +73,108 @@ window.setCriticalOperation = setCriticalOperation;
 window.setGameTickInProgress = setGameTickInProgress;
 window.isSafeToPersist = isSafeToPersist;
 
+// Force tab visibility update - fix for missing tabs bug
+function forceTabVisibilityUpdate() {
+  try {
+    // Debug logging
+    const currentGrade = window.state && window.state.grade ? 
+      (DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : window.state.grade) : 0;
+    
+    // Ensure boughtElements references are consistent
+    if (window.state && window.state.boughtElements && !window.boughtElements) {
+      window.boughtElements = window.state.boughtElements;
+    }
+    
+    // Force generator tab visibility if power generator is unlocked
+    if ((window.state && window.state.boughtElements && window.state.boughtElements[7]) || 
+        (window.boughtElements && window.boughtElements[7])) {
+      const genBtn = document.getElementById("generatorSubTabBtn");
+      if (genBtn) {
+        if (window.currentFloor === 2) {
+          genBtn.style.display = "none";
+        } else {
+          genBtn.style.display = "inline-block";
+        }
+        const subTabNav = document.getElementById("subTabNav");
+        if (subTabNav) {
+          subTabNav.style.display = "flex";
+        }
+      }
+    }
+    
+    // Force kitchen tab visibility if grade >= 3 or permanently unlocked
+    if (currentGrade >= 3 || (window.permanentTabUnlocks && window.permanentTabUnlocks.kitchen)) {
+      const kitchenBtn = document.getElementById('kitchenTabBtn');  // Correct ID
+      if (kitchenBtn) {
+        kitchenBtn.style.display = 'inline-block';
+      }
+    }
+    
+    // Force lab tab visibility if grade >= 2 or infinity unlock or permanently unlocked
+    const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 1;
+    if (currentGrade >= 2 || hasInfinityUnlock || (window.permanentTabUnlocks && window.permanentTabUnlocks.prism)) {
+      const labBtn = document.getElementById("prismSubTabBtn");
+      if (labBtn) {
+        if (window.currentFloor === 2) {
+          labBtn.style.display = "none";
+          labBtn.textContent = "Observatory";
+        } else {
+          labBtn.style.display = "inline-block";
+          labBtn.textContent = "Lab";
+        }
+      }
+    }
+    
+    // Force boutique tab visibility if grade >= 4 or permanently unlocked
+    if (currentGrade >= 4 || (window.permanentTabUnlocks && window.permanentTabUnlocks.boutique)) {
+      const boutiqueBtn = document.getElementById('boutiqueSubTabBtn');
+      if (boutiqueBtn) {
+        if (window.currentFloor === 2) {
+          boutiqueBtn.style.setProperty('display', 'none', 'important');
+        } else {
+          boutiqueBtn.style.setProperty('display', 'inline-block', 'important');
+          
+          // Apply night-time restrictions if applicable
+          const isNightTime = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+            const mins = window.daynight.getTime();
+            return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360); // 22:00 - 6:00
+          })();
+          
+          if (isNightTime) {
+            boutiqueBtn.style.setProperty('opacity', '0.5', 'important');
+            boutiqueBtn.style.setProperty('filter', 'grayscale(100%)', 'important');
+            boutiqueBtn.disabled = true;
+          } else {
+            boutiqueBtn.style.removeProperty('opacity');
+            boutiqueBtn.style.removeProperty('filter');
+            boutiqueBtn.disabled = false;
+          }
+        }
+      }
+    }
+    
+    // Force graduation tab visibility if element 8 is unlocked
+    if ((window.state && window.state.boughtElements && window.state.boughtElements[8]) || 
+        (window.boughtElements && window.boughtElements[8])) {
+      const gradBtn = document.getElementById("graduationSubTabBtn");
+      if (gradBtn) {
+        gradBtn.style.display = "inline-block";
+      }
+      const knowledgeSubTabNav = document.getElementById("knowledgeSubTabNav");
+      if (knowledgeSubTabNav) {
+        knowledgeSubTabNav.style.display = "flex";
+      }
+    }
+    
+  } catch (error) {
+    // Silently handle any errors to prevent breaking the game
+    console.warn('Tab visibility update error:', error);
+  }
+}
+
+// Make function globally available
+window.forceTabVisibilityUpdate = forceTabVisibilityUpdate;
+
 // Unified game tick system to reduce memory overhead from multiple intervals
 function unifiedGameTick() {
   // Check if game is paused - if so, don't execute
@@ -86,7 +188,7 @@ function unifiedGameTick() {
   try {
     const now = Date.now();
     if (!window.lastUnifiedTick) window.lastUnifiedTick = now;
-    const diff = (now - window.lastUnifiedTick) / 1000;
+    const diff = (now - window.lastUnifiedTick) / 100;
     window.lastUnifiedTick = now;
     
     // Sanity check currencies (from gameTick)
@@ -111,7 +213,7 @@ function unifiedGameTick() {
     }
     
     // Power generator tick (from both functions)
-    if (boughtElements && boughtElements[7] && !(window.isTabHidden || document.hidden)) {
+    if (state.boughtElements && state.boughtElements[7] && !(window.isTabHidden || document.hidden)) {
       if (typeof tickPowerGenerator === 'function') {
         tickPowerGenerator(diff);
       }
@@ -122,10 +224,15 @@ function unifiedGameTick() {
       window.tickLightGenerators(diff);
     }
     
+    // Charger system is handled by charger.js - removed duplicate implementation
+    
     // Charger milestone effects (from gameTick)
     if (window.charger && typeof window.applyChargerMilestoneEffects === 'function') {
       window.applyChargerMilestoneEffects();
     }
+    
+    // Force tab visibility check - fix missing tabs bug
+    forceTabVisibilityUpdate();
     
     // Mystic cooking speed boost (from mainGameTick)
     if (window.state && window.state.mysticCookingSpeedBoost && window.state.mysticCookingSpeedBoost > 0) {
@@ -213,8 +320,75 @@ function unifiedGameTick() {
   }
 }
 
+// Direct fluff display update function (bypasses UI throttling)
+function updateFluffDisplayDirect() {
+  // Only update fluff display and fluff rate display, nothing else
+  const fluffEl = document.getElementById("fluff");
+  if (fluffEl && window.state && window.state.fluff) {
+    if (typeof formatNumber === 'function') {
+      fluffEl.textContent = formatNumber(window.state.fluff);
+    } else {
+      fluffEl.textContent = window.state.fluff.toString();
+    }
+  }
+  
+  // Update fluff rate display
+  const fluffRateEl = document.getElementById("fluffRate");
+  if (fluffRateEl && typeof getFluffRate === 'function') {
+    let rawFluffGain = getFluffRate().floor();
+    let finalFluffGain = rawFluffGain;
+    
+    // Apply the EXACT same order of operations as addCurrency for accurate display
+    // This ensures the displayed rate matches what's actually gained per tick
+    
+    // Apply infinity upgrade boosts BEFORE penalties (same as addCurrency)
+    if (typeof applyCargoBoost === 'function') {
+      finalFluffGain = applyCargoBoost(finalFluffGain, 'fluff');
+    }
+    if (typeof applyLabBoost === 'function') {
+      finalFluffGain = applyLabBoost(finalFluffGain, 'fluff');
+    }
+    
+    // Apply total infinity reached boost to pre-infinity currencies
+    if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+      finalFluffGain = window.applyTotalInfinityReachedBoost(finalFluffGain);
+    }
+    
+    // Apply fluff infinity penalty to all cargo currencies
+    if (typeof window.applyFluffInfinityPenalty === 'function') {
+      finalFluffGain = window.applyFluffInfinityPenalty(finalFluffGain, 'fluff');
+    }
+    
+    // Apply infinity nerfs to main currencies
+    if (typeof window.infinitySystem !== 'undefined' && window.infinitySystem.applyInfinityNerfs) {
+      finalFluffGain = window.infinitySystem.applyInfinityNerfs(finalFluffGain, 'fluff');
+    }
+    
+    // Apply infinity challenge nerfs (square root for IC:1)
+    if (typeof window.applyChallengeNerfs === 'function') {
+      finalFluffGain = window.applyChallengeNerfs(finalFluffGain, 'fluff');
+    }
+    
+    // Apply anomaly debuff to main currencies
+    if (typeof window.getAnomalyDebuff === 'function') {
+      const anomalyDebuff = window.getAnomalyDebuff();
+      finalFluffGain = finalFluffGain.mul(anomalyDebuff);
+    }
+    
+    // Floor the final result
+    finalFluffGain = finalFluffGain.floor();
+    
+    if (typeof formatNumber === 'function') {
+      fluffRateEl.textContent = formatNumber(finalFluffGain);
+    } else {
+      fluffRateEl.textContent = finalFluffGain.toString();
+    }
+  }
+}
+
 // Make unified tick globally accessible
 window.unifiedGameTick = unifiedGameTick;
+window.updateFluffDisplayDirect = updateFluffDisplayDirect;
 
 // Memory optimization helper functions for generator operations
 const GeneratorUtils = {
@@ -770,7 +944,7 @@ window.secondaryTickInterval = setInterval(() => {
   const diff = (now - window.lastTick) / 1000;
   window.lastTick = now;
   tickGenerators(diff);
-  if (boughtElements[7]) {
+  if (state.boughtElements[7]) {
     tickPowerGenerator(diff);
   }
   if (window.tickLightGenerators) {
@@ -795,9 +969,7 @@ function unlockGraduationForTesting() {
 
 // Development function to test infinity research
 function unlockInfinityResearchForTesting() {
-  // Set the proper unlock flag instead of bypassing the system
-  const unlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  localStorage.setItem(unlockKey, 'true');
+  // Save system disabled - unlock functionality disabled
   
   // Then run the proper unlock check
   if (typeof checkInfinityResearchUnlock === 'function') {
@@ -812,7 +984,7 @@ window.testRegalBackground = testRegalBackground;
 window.unlockGraduationForTesting = unlockGraduationForTesting;
 
 function testElement9() {
-  swariaKnowledge.kp = 2000000;
+  state.kp = new Decimal(2000000);
   tryBuyElement(9);
   switchHomeSubTab('generatorMainTab');
 }
@@ -820,10 +992,10 @@ function testElement9() {
 window.testElement9 = testElement9;
 
 function updateGeneratorUpgradesUI() {
-  if (!boughtElements[9]) return;
+  if (!state.boughtElements[9]) return;
   const boxTypes = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
   boxTypes.forEach(type => {
-    const upgradeLevel = generatorUpgrades[type] || new Decimal(0);
+    const upgradeLevel = state.generatorUpgrades[type] || new Decimal(0);
     const upgradeLevelDecimal = DecimalUtils.isDecimal(upgradeLevel) ? upgradeLevel : new Decimal(upgradeLevel);
     const cost = getGeneratorUpgradeCost(type);
     // Ensure boxesProducedByType value is a Decimal
@@ -849,19 +1021,39 @@ function updateGeneratorUpgradesUI() {
 
 function getGeneratorUpgradeCost(type) {
   const baseCost = new Decimal(25); 
-  const level = generatorUpgrades[type] || new Decimal(0);
+  let level = state.generatorUpgrades[type] || new Decimal(0);
+  
+  // Ensure level is a Decimal object
+  if (!DecimalUtils.isDecimal(level)) {
+    level = new Decimal(level);
+    state.generatorUpgrades[type] = level; // Update state with proper Decimal
+  }
+  
   return baseCost.mul(new Decimal(5).pow(level)).floor();
 }
 
 function buyGeneratorUpgrade(type) {
   const cost = getGeneratorUpgradeCost(type);
+  
+  // Ensure boxesProducedByType[type] is a Decimal
+  if (!DecimalUtils.isDecimal(state.boxesProducedByType[type])) {
+    state.boxesProducedByType[type] = new Decimal(state.boxesProducedByType[type] || 0);
+  }
+  
   if (state.boxesProducedByType[type].lt(cost)) return;
+  
   state.boxesProducedByType[type] = state.boxesProducedByType[type].sub(cost);
-  generatorUpgrades[type] = (generatorUpgrades[type] || new Decimal(0)).add(1);
+  
+  // Ensure generatorUpgrades[type] is a Decimal
+  if (!DecimalUtils.isDecimal(state.generatorUpgrades[type])) {
+    state.generatorUpgrades[type] = new Decimal(state.generatorUpgrades[type] || 0);
+  }
+  
+  state.generatorUpgrades[type] = state.generatorUpgrades[type].add(1);
   
   // Keep window reference synced
   if (window.generatorUpgrades) {
-    window.generatorUpgrades[type] = generatorUpgrades[type];
+    window.generatorUpgrades[type] = state.generatorUpgrades[type];
   }
   
   updateUI();
@@ -1220,6 +1412,14 @@ function completePowerRecharge() {
     window.resetPowerMinigameFailures();
   }
   
+  // Ensure power values are Decimals
+  if (!DecimalUtils.isDecimal(state.powerEnergy)) {
+    state.powerEnergy = new Decimal(state.powerEnergy || 0);
+  }
+  if (!DecimalUtils.isDecimal(state.powerMaxEnergy)) {
+    state.powerMaxEnergy = new Decimal(state.powerMaxEnergy || 100);
+  }
+  
   // Check if power was below 80 before recharge for Soap friendship reward
   const powerBeforeRecharge = state.powerEnergy;
   const shouldAwardSoapFriendship = powerBeforeRecharge.lt(80);
@@ -1262,7 +1462,12 @@ function awardSoapFriendshipForPowerRecharge() {
       window.friendship.Generator = { level: 0, points: new Decimal(0) };
     }
     
-    const currentPoints = window.friendship.Generator.points || new Decimal(0);
+    // Ensure points is a Decimal object
+    if (!DecimalUtils.isDecimal(window.friendship.Generator.points)) {
+      window.friendship.Generator.points = new Decimal(window.friendship.Generator.points || 0);
+    }
+    
+    const currentPoints = window.friendship.Generator.points;
     
     // Calculate 3% of current points (minimum 1 point)
     let friendshipGain = currentPoints.mul(0.03);
@@ -1714,7 +1919,7 @@ function initializeGeneratorTab() {
 }
 
 function testGeneratorSystem() {
-  swariaKnowledge.kp = new Decimal(10000000);
+  state.kp = new Decimal(10000000);
   tryBuyElement(7);
   tryBuyElement(8);
   tryBuyElement(9);
@@ -1722,7 +1927,7 @@ function testGeneratorSystem() {
   state.swaria = new Decimal("1e9"); 
   state.feathers = new Decimal("1e11"); 
   state.artifacts = new Decimal("1e13"); 
-  swariaKnowledge.kp = new Decimal("1e16"); 
+  state.kp = new Decimal("1e16"); 
   switchHomeSubTab('generatorMainTab');
 }
 
@@ -1783,7 +1988,7 @@ const _origTryBuyElement = tryBuyElement;
 tryBuyElement = function(index) {
   // Store state before purchase for debugging
   const beforePurchase = boughtElements[index];
-  const beforeKP = swariaKnowledge ? new Decimal(swariaKnowledge.kp) : new Decimal(0);
+  const beforeKP = state ? new Decimal(state.kp) : new Decimal(0);
   
   // Call original function
   _origTryBuyElement.apply(this, arguments);
@@ -1795,7 +2000,7 @@ tryBuyElement = function(index) {
   if (index >= 21 && index <= 24) {
     // Verify the purchase was successful
     const afterPurchase = boughtElements[index];
-    const afterKP = swariaKnowledge ? new Decimal(swariaKnowledge.kp) : new Decimal(0);
+    const afterKP = state ? new Decimal(state.kp) : new Decimal(0);
     const kpChanged = beforeKP.gt(afterKP);
     
     // If KP was deducted but element wasn't purchased, fix it
@@ -2273,47 +2478,10 @@ switchHomeSubTab = function(subTabId) {
 
             }
             
-            // Set up charger toggle button
+            // Charger toggle button is handled by charger.js - don't duplicate the handler
             const chargerToggleBtn = document.getElementById('chargerToggleBtn');
             if (chargerToggleBtn && typeof window.charger !== 'undefined') {
-              chargerToggleBtn.onclick = function() {
-                window.charger.isOn = !window.charger.isOn;
-                
-                // Update button text
-                chargerToggleBtn.textContent = window.charger.isOn ? 'Turn OFF' : 'Turn ON';
-                
-                // Update gain rate display - always show but with different styling
-                const chargerGainRateEl = document.getElementById('chargerGainRate');
-                if (chargerGainRateEl) {
-                  // Calculate actual gain rate
-                  let gainRate = 1;
-                  if (typeof getChargerGain === 'function') {
-                    try {
-                      gainRate = getChargerGain();
-                    } catch (error) {
-                      gainRate = new Decimal(1);
-                    }
-                  } else {
-                    gainRate = new Decimal(1);
-                  }
-                  
-                  if (typeof DecimalUtils !== 'undefined' && typeof DecimalUtils.formatDecimal === 'function') {
-                    chargerGainRateEl.textContent = '+' + DecimalUtils.formatDecimal(gainRate) + '/s';
-                  } else {
-                    chargerGainRateEl.textContent = '+' + gainRate.toString() + '/s';
-                  }
-                  
-                  // Change opacity based on state
-                  chargerGainRateEl.style.opacity = window.charger.isOn ? '1' : '0.6';
-                }
-                
-                if (typeof updateChargerUI === 'function') {
-                  updateChargerUI();
-                }
-
-              };
-
-              // Update button text immediately
+              // Only update button text, don't add conflicting event handler
               chargerToggleBtn.textContent = window.charger.isOn ? 'Turn OFF' : 'Turn ON';
             }
             
@@ -2415,25 +2583,10 @@ switchHomeSubTab = function(subTabId) {
           // Clear the tab completely
           prismTab.innerHTML = '';
           
-          // Ensure prismState exists
+          // Ensure prismState exists - now handled by state migration
           if (typeof window.prismState === 'undefined') {
-
-            window.prismState = {
-              light: new Decimal(0),
-              redlight: new Decimal(0),
-              orangelight: new Decimal(0),
-              yellowlight: new Decimal(0),
-              greenlight: new Decimal(0),
-              bluelight: new Decimal(0),
-              lightparticle: new Decimal(0),
-              redlightparticle: new Decimal(0),
-              orangelightparticle: new Decimal(0),
-              yellowlightparticle: new Decimal(0),
-              greenlightparticle: new Decimal(0),
-              bluelightparticle: new Decimal(0),
-              activeTileIndex: null,
-              activeTileColor: null,
-            };
+            // Reference the state object instead of creating a new one
+            window.prismState = state.prismState;
           }
           
           // Load prism state from save if it exists
@@ -4028,7 +4181,7 @@ function applyKpSoftcap(kp) {
 }
 
 function getBoxGeneratorBoost() {
-  if (!boughtElements[12]) return new Decimal(1);
+  if (!state.boughtElements[12]) return new Decimal(1);
   let count = 0;
   if (typeof generators !== 'undefined') {
     count = GeneratorUtils.countUnlocked(generators);
@@ -4037,14 +4190,22 @@ function getBoxGeneratorBoost() {
 }
 
 function getBoxTypeBoost(type) {
-  if (!boughtElements[11]) return new Decimal(1);
+  if (!state.boughtElements[11]) return new Decimal(1);
   return new Decimal(1).add(new Decimal(state.boxesProducedByType[type] || 0).mul(0.01));
 }
 
 window.generators = generators;
-window.autosaveInterval = setInterval(() => {
-  if (settings.autosave && typeof saveGame === "function") saveGame();
-}, 20000); 
+// Legacy autosave disabled - using SaveSystem autosave instead
+// window.autosaveInterval = setInterval(() => {
+//   if (settings.autosave && typeof saveGame === "function") saveGame();
+// }, (window.settings && window.settings.autosaveInterval ? window.settings.autosaveInterval : 30) * 1000); 
+
+// Function to restart legacy autosave with new interval - DISABLED
+window.restartLegacyAutosave = function() {
+  // Legacy autosave disabled - main SaveSystem handles autosaving
+  console.log('Legacy autosave restart disabled - using SaveSystem autosave');
+};
+
 window.addEventListener("beforeunload", () => {
   if (typeof saveGame === "function") saveGame();
 });
@@ -4073,19 +4234,19 @@ if (settings.disableOfflineProgress && typeof window.setupOfflineProgressPrevent
 }
 
 function getKpGainPreview() {
-  const ps = (typeof window.prismState !== 'undefined' && window.prismState) ? window.prismState : {light:0};
+  const ps = (typeof state.prismState !== 'undefined' && state.prismState) ? state.prismState : {light:0};
   let baseResource;
-  if (boughtElements[30]) {
+  if (state.boughtElements[30]) {
     baseResource = state.fluff;
-  } else if (boughtElements[20]) {
+  } else if (state.boughtElements[20]) {
     baseResource = state.swaria;
-  } else if (boughtElements[10]) {
+  } else if (state.boughtElements[10]) {
     baseResource = state.feathers;
   } else {
     baseResource = state.artifacts;
   }
   let preview = new Decimal(baseResource).mul(10).sqrt().mul(new Decimal(1).add(new Decimal(ps.light || 0).mul(0.01))).floor();
-  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.eq(0)) preview = new Decimal(10);
   let kpMultiplier = new Decimal(1).add(new Decimal(ps.light || 0).mul(0.01));
   preview = preview.mul(kpMultiplier);
@@ -4108,6 +4269,11 @@ function getKpGainPreview() {
     if (milestoneBonus.kpExponent && milestoneBonus.kpExponent.gt(0)) {
       preview = preview.pow(new Decimal(1).add(milestoneBonus.kpExponent));
     }
+  }
+  
+  // Apply total infinity reached boost to KP gain preview
+  if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+    preview = window.applyTotalInfinityReachedBoost(preview);
   }
   
   return preview;
@@ -4173,6 +4339,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function updateSaveSlotModal() {
+  // OLD UI FUNCTION - DISABLED - NEW SAVE SYSTEM HAS ITS OWN UI
+  console.warn('updateSaveSlotModal() is deprecated. New save system manages its own UI.');
+  return; // Disabled - new save system handles this
+  
   const modalCard = document.getElementById('saveSlotModalCard');
   if (!modalCard) return;
   const closeBtn = modalCard.querySelector('#closeSaveSlotModalBtn');
@@ -4209,7 +4379,7 @@ function updateSaveSlotModal() {
         
         summary.innerHTML = `
           <div>${displayText}</div>
-          <div>KP: ${formatNumber(data.swariaKnowledge?.kp || 0)}</div>
+          <div>KP: ${formatNumber(data.state?.kp || 0)}</div>
         `;
         slotContent.appendChild(summary);
         const buttonRow = document.createElement('div');
@@ -4506,6 +4676,10 @@ function updateSaveSlotModal() {
 }
 
 function saveToSlot(slotNumber) {
+  // OLD SAVE FUNCTION - DISABLED - USE NEW SAVE SYSTEM INSTEAD
+  console.warn('saveToSlot() is deprecated. Use window.SaveSystem.saveGame() instead.');
+  return false; // Disabled
+  
   // Check if save is already in progress
   if (saveMutex) {
     return false;
@@ -4612,7 +4786,7 @@ function saveToSlot(slotNumber) {
     timestamp: Date.now(),
     berryCookingState: localStorage.getItem('berryCookingState') || null,
     friendship: window.friendship || {},
-    kitchenIngredients: window.kitchenIngredients || {},
+
     berryPlate: (window.state && typeof window.state.berryPlate === 'number') ? window.state.berryPlate : 0,
     mushroomSoup: (window.state && typeof window.state.mushroomSoup === 'number') ? window.state.mushroomSoup : 0,
     batteries: (window.state && typeof window.state.batteries === 'number') ? window.state.batteries : 0,
@@ -4650,28 +4824,7 @@ function saveToSlot(slotNumber) {
       intercomEventTriggered: (window.intercomEventTriggered !== undefined) ? window.intercomEventTriggered : false,
       intercomEvent20Triggered: (window.intercomEvent20Triggered !== undefined) ? window.intercomEvent20Triggered : false
     },
-    // Add infinity data directly to slot save with extra validation
-    infinityData: window.infinitySystem ? {
-      counts: window.infinitySystem.counts || {},
-      everReached: window.infinitySystem.everReached || {},
-      infinityPoints: (window.infinitySystem.infinityPoints && DecimalUtils.isDecimal(window.infinitySystem.infinityPoints)) ? 
-        window.infinitySystem.infinityPoints.toString() : "0",
-      infinityTheorems: window.infinitySystem.infinityTheorems || 0,
-      totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems || 0,
-      theoremProgress: (window.infinitySystem.theoremProgress && DecimalUtils.isDecimal(window.infinitySystem.theoremProgress)) ?
-        window.infinitySystem.theoremProgress.toString() : "0",
-      totalInfinityEarned: window.infinitySystem.totalInfinityEarned || 0,
-      lastInfinityPointsUpdate: window.infinitySystem.lastInfinityPointsUpdate || Date.now()
-    } : {
-      counts: {},
-      everReached: {},
-      infinityPoints: "0",
-      infinityTheorems: 0,
-      totalInfinityTheorems: 0,
-      theoremProgress: "0",
-      totalInfinityEarned: 0,
-      lastInfinityPointsUpdate: Date.now()
-    },
+    // Infinity data is now saved as part of window.state,
     
     // Add infinity upgrades and caps
     infinityUpgrades: window.infinityUpgrades || {},
@@ -4730,6 +4883,10 @@ function saveToSlot(slotNumber) {
 }
 
 function loadFromSlot(slotNumber) {
+  // OLD LOAD FUNCTION - DISABLED - USE NEW SAVE SYSTEM INSTEAD
+  console.warn('loadFromSlot() is deprecated. Use window.SaveSystem.setCurrentSlot() and window.SaveSystem.loadGame() instead.');
+  return false; // Disabled
+  
   const slotData = localStorage.getItem(`swariaSaveSlot${slotNumber}`);
   
   // Reset permanent tab unlocks when switching save slots
@@ -5356,65 +5513,14 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
     window.activeChallenge = 0;
     window.activeDifficulty = 0;
     
-    // Load infinity data directly from slot save data
-    if (data.infinityData && window.infinitySystem) {
-      // Restore infinity counts
-      if (data.infinityData.counts) {
-        window.infinitySystem.counts = { ...window.infinitySystem.counts, ...data.infinityData.counts };
-      }
-      
-      // Restore ever reached tracking
-      if (data.infinityData.everReached) {
-        window.infinitySystem.everReached = { ...window.infinitySystem.everReached, ...data.infinityData.everReached };
-      }
-      
-      // Restore infinity points and theorems
-      window.infinitySystem.infinityPoints = data.infinityData.infinityPoints ? new Decimal(data.infinityData.infinityPoints) : new Decimal(0);
-      window.infinitySystem.infinityTheorems = data.infinityData.infinityTheorems || 0;
-      window.infinitySystem.totalInfinityTheorems = data.infinityData.totalInfinityTheorems || 0;
-      window.infinitySystem.theoremProgress = data.infinityData.theoremProgress ? new Decimal(data.infinityData.theoremProgress) : new Decimal(0);
-      window.infinitySystem.totalInfinityEarned = data.infinityData.totalInfinityEarned || 0;
-      
-      if (typeof data.infinityData.lastInfinityPointsUpdate === 'number') {
-        window.infinitySystem.lastInfinityPointsUpdate = data.infinityData.lastInfinityPointsUpdate;
-      }
-      
-      // Update infinity displays after loading
-      if (typeof updateInfinityBenefits === 'function') {
-        updateInfinityBenefits();
-      }
-      if (typeof updateInfinitySubTabVisibility === 'function') {
-        updateInfinitySubTabVisibility();
-      }
-    } else if (window.infinitySystem) {
-      // Try to recover infinity data from backup if main save data is missing
-      try {
-        const infinityBackupData = localStorage.getItem(`infinityBackup_slot${slotNumber}`);
-        if (infinityBackupData) {
-          const backup = JSON.parse(infinityBackupData);
-          console.warn('Recovering infinity data from backup due to missing main data');
-          
-          // Restore from backup
-          window.infinitySystem.counts = backup.counts || {};
-          window.infinitySystem.everReached = backup.everReached || {};
-          window.infinitySystem.infinityPoints = backup.infinityPoints ? new Decimal(backup.infinityPoints) : new Decimal(0);
-          window.infinitySystem.infinityTheorems = backup.infinityTheorems || 0;
-          window.infinitySystem.totalInfinityTheorems = backup.totalInfinityTheorems || 0;
-          window.infinitySystem.theoremProgress = backup.theoremProgress ? new Decimal(backup.theoremProgress) : new Decimal(0);
-          window.infinitySystem.totalInfinityEarned = backup.totalInfinityEarned || 0;
-          window.infinitySystem.lastInfinityPointsUpdate = backup.lastInfinityPointsUpdate || Date.now();
-          
-          // Update infinity displays after recovery
-          if (typeof updateInfinityBenefits === 'function') {
-            updateInfinityBenefits();
-          }
-          if (typeof updateInfinitySubTabVisibility === 'function') {
-            updateInfinitySubTabVisibility();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to recover infinity data from backup:', error);
-      }
+    // Infinity data is now loaded as part of window.state
+    
+    // Update infinity displays after loading
+    if (typeof updateInfinityBenefits === 'function') {
+      updateInfinityBenefits();
+    }
+    if (typeof updateInfinitySubTabVisibility === 'function') {
+      updateInfinitySubTabVisibility();
     }
     
     // Load infinity upgrades from slot save data
@@ -5476,7 +5582,7 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
     if (typeof initializeGeneratorTab === 'function') initializeGeneratorTab();
     if (typeof renderPowerGenerator === 'function') renderPowerGenerator();
     currentHomeSubTab = 'gamblingMain';
-    currentKnowledgeSubTab = 'elementsMain';
+    state.currentKnowledgeSubTab = 'elementsMain';
     if (data.berryCookingState) {
       localStorage.setItem('berryCookingState', data.berryCookingState);
     } else {
@@ -5510,7 +5616,31 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
     if (typeof data.terrariumExtraChargeUpgradeLevel !== 'undefined') {
       window.terrariumExtraChargeUpgradeLevel = data.terrariumExtraChargeUpgradeLevel;
     }
-    window.kitchenIngredients = data.kitchenIngredients || {};
+    // Migrate old kitchenIngredients to window.state.tokens if present
+    if (data.kitchenIngredients) {
+      // Initialize tokens section if it doesn't exist
+      if (!window.state.tokens) {
+        window.state.tokens = {
+          berries: new Decimal(0),
+          sparks: new Decimal(0),
+          petals: new Decimal(0),
+          mushroom: new Decimal(0),
+          water: new Decimal(0),
+          prisma: new Decimal(0),
+          stardust: new Decimal(0)
+        };
+      }
+      
+      // Migrate basic ingredient tokens from kitchenIngredients to state.tokens
+      const basicTokenTypes = ['mushroom', 'sparks', 'berries', 'petals', 'water', 'prisma', 'stardust'];
+      for (const type of basicTokenTypes) {
+        if (data.kitchenIngredients[type] !== undefined) {
+          const value = data.kitchenIngredients[type];
+          window.state.tokens[type] = DecimalUtils.isDecimal(value) ? value : new Decimal(value || 0);
+        }
+      }
+    }
+    
     if (typeof updateKitchenUI === 'function') updateKitchenUI();
     if (data.friendship) {
       window.friendship = data.friendship;
@@ -5636,34 +5766,7 @@ function deleteSlot(slotNumber) {
     localStorage.removeItem(`swariaSaveSlot${slotNumber}`);
     
     // Clean up all slot-specific data
-    if (typeof getSaveSlotSpecificKey === 'function') {
-      // Temporarily set the current save slot to the one being deleted
-      const originalSlot = localStorage.getItem('currentSaveSlot');
-      localStorage.setItem('currentSaveSlot', slotNumber.toString());
-      
-      // Remove infinity system data for this slot
-      const infinityKey = getSaveSlotSpecificKey('infinitySystemData');
-      localStorage.removeItem(infinityKey);
-      
-      // Remove infinity research unlock status for this slot
-      const infinityUnlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-      localStorage.removeItem(infinityUnlockKey);
-      
-      // Remove control center unlock status for this slot
-      const controlUnlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-      localStorage.removeItem(controlUnlockKey);
-      
-      // Remove infinity caps data for this slot
-      const infinityCapsKey = getSaveSlotSpecificKey('infinityCaps');
-      localStorage.removeItem(infinityCapsKey);
-      
-      // Restore original save slot
-      if (originalSlot) {
-        localStorage.setItem('currentSaveSlot', originalSlot);
-      } else {
-        localStorage.removeItem('currentSaveSlot');
-      }
-    }
+    // Save system disabled - slot-specific data removal disabled
     
     // Remove achievement data for this slot
     localStorage.removeItem(`fluffIncAchievementsSlot${slotNumber}`);
@@ -5673,17 +5776,7 @@ function deleteSlot(slotNumber) {
     localStorage.removeItem(`element25StoryShown_${slotNumber}`);
     
     // Remove permanent tab unlock data for this slot
-    if (typeof getSaveSlotSpecificKey === 'function') {
-      const originalSlot = localStorage.getItem('currentSaveSlot');
-      localStorage.setItem('currentSaveSlot', slotNumber.toString());
-      const permTabKey = getSaveSlotSpecificKey('permanentTabUnlocks');
-      localStorage.removeItem(permTabKey);
-      if (originalSlot) {
-        localStorage.setItem('currentSaveSlot', originalSlot);
-      } else {
-        localStorage.removeItem('currentSaveSlot');
-      }
-    }
+    // Save system disabled - permanent tab unlock data removal disabled
 
     // If we deleted the currently active slot, reset the session to default state
     if (isCurrentSlot) {
@@ -5919,24 +6012,31 @@ function deleteSlot(slotNumber) {
   }
 }
 
-window.slotAutosaveInterval = setInterval(() => {
-  if (settings.autosave && currentSaveSlot) {
-    // Enhanced safety check using the new critical operation tracking
-    try {
-      if (isSafeToPersist() && 
-          window.state && 
-          window.kitchenIngredients !== undefined && 
-          window.friendship !== undefined) {
-        saveToSlot(currentSaveSlot);
-        showAutosaveIndicator();
-      } else {
-        // Skip save due to critical operation or unsafe conditions
-      }
-    } catch (error) {
-      console.warn('Autosave failed safely:', error);
-    }
-  }
-}, 30000);
+// Slot autosave disabled - using main SaveSystem autosave instead to prevent redundant saves
+// window.slotAutosaveInterval = setInterval(() => {
+//   if (settings.autosave && window.SaveSystem) {
+//     // Enhanced safety check using the new critical operation tracking
+//     try {
+//       if (isSafeToPersist() && 
+//           window.state && 
+//           window.kitchenIngredients !== undefined && 
+//           window.friendship !== undefined) {
+//         window.SaveSystem.saveGame(); // Use new save system
+//         showAutosaveIndicator();
+//       } else {
+//         // Skip save due to critical operation or unsafe conditions
+//       }
+//     } catch (error) {
+//       console.warn('Autosave failed safely:', error);
+//     }
+//   }
+// }, (window.settings && window.settings.autosaveInterval ? window.settings.autosaveInterval : 30) * 1000);
+
+// Function to restart slot autosave with new interval - DISABLED
+window.restartSlotAutosave = function() {
+  // Slot autosave disabled - main SaveSystem handles autosaving
+  console.log('Slot autosave restart disabled - using SaveSystem autosave');
+};
 
 // Emergency backup system - saves every 5 minutes to a separate key
 window.emergencyBackupInterval = setInterval(() => {
@@ -5983,8 +6083,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const manualSaveBtn = document.getElementById('manualSaveBtn');
   if (manualSaveBtn) {
     manualSaveBtn.onclick = function() {
-      if (currentSaveSlot) {
-        saveToSlot(currentSaveSlot);
+      if (window.SaveSystem) {
+        window.SaveSystem.saveGame(); // Use new save system
         const indicator = document.getElementById('autosaveIndicator');
         if (indicator) {
           indicator.style.display = 'block';
@@ -6038,11 +6138,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const manualSaveBtn = document.getElementById('manualSaveBtn');
   if (manualSaveBtn) {
     manualSaveBtn.onclick = function() {
-      if (currentSaveSlot) {
-        saveToSlot(currentSaveSlot);
+      if (window.SaveSystem) {
+        window.SaveSystem.saveGame(); // Use new save system
         showAutosaveIndicator();
       } else {
-        alert('No save slot selected! Please select a slot first.');
+        alert('Save system not available!');
       }
     };
   }
@@ -6200,6 +6300,11 @@ function soapGetsMad() {
       clearInterval(window._unifiedGameTickInterval);
       pausedIntervals.push('_unifiedGameTickInterval');
     }
+    // Also pause fluff display interval
+    if (window._fluffDisplayInterval) {
+      clearInterval(window._fluffDisplayInterval);
+      pausedIntervals.push('_fluffDisplayInterval');
+    }
     // Legacy interval handling for compatibility
     if (tickInterval) {
       clearInterval(tickInterval);
@@ -6231,6 +6336,9 @@ function soapGetsMad() {
     // Resume unified game tick interval
     if (pausedIntervals.includes('_unifiedGameTickInterval')) {
       window._unifiedGameTickInterval = setInterval(unifiedGameTick, 100);
+      // Also resume fluff display interval
+      if (window._fluffDisplayInterval) clearInterval(window._fluffDisplayInterval);
+      window._fluffDisplayInterval = setInterval(updateFluffDisplayDirect, 200);
     }
     // Legacy interval handling for compatibility
     if (pausedIntervals.includes('tickInterval')) {
@@ -6241,11 +6349,16 @@ function soapGetsMad() {
     }
     if (pausedIntervals.includes('_autosaveInterval')) {
       window._autosaveInterval = setInterval(() => {
-        if (currentSaveSlot) {
-          saveToSlot(currentSaveSlot);
+        if (window.SaveSystem) {
+          window.SaveSystem.saveGame(); // Use new save system
           showAutosaveIndicator();
         }
       }, 30000);
+    }
+    // Resume fluff display interval independently if needed
+    if (pausedIntervals.includes('_fluffDisplayInterval')) {
+      if (window._fluffDisplayInterval) clearInterval(window._fluffDisplayInterval);
+      window._fluffDisplayInterval = setInterval(updateFluffDisplayDirect, 200);
     }
     window.isTabHidden = wasTabHidden;
     document.body.style.overflow = '';
@@ -6361,6 +6474,17 @@ if (window._gameTickInterval) clearInterval(window._gameTickInterval);
 // Use unified tick system to reduce memory overhead
 window._unifiedGameTickInterval = setInterval(unifiedGameTick, 100);
 
+// Separate interval for fluff display updates (200ms = 5 FPS)
+if (window._fluffDisplayInterval) clearInterval(window._fluffDisplayInterval);
+window._fluffDisplayInterval = setInterval(updateFluffDisplayDirect, 200);
+
+// Periodic tab visibility check to ensure tabs don't disappear (every 5 seconds)
+setInterval(() => {
+  if (typeof forceTabVisibilityUpdate === 'function') {
+    forceTabVisibilityUpdate();
+  }
+}, 5000);
+
 // Keep references for compatibility
 window.mainGameTick = mainGameTick;
 window.gameTick = gameTick;
@@ -6395,11 +6519,11 @@ function gradeUp() {
   const currentGrade = DecimalUtils.isDecimal(state.grade) ? state.grade.toNumber() : (state.grade || 1);
   const nextGrade = currentGrade + 1;
   const nextCost = getGradeKPCost(nextGrade);
-  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.lt(nextCost)) return;
   const oldGrade = currentGrade;
   showGradeUpAnimation(oldGrade, nextGrade);
-  swariaKnowledge.kp = new Decimal(1);
+  state.kp = new Decimal(1);
   state.grade = new Decimal(nextGrade);
   state.powerMaxEnergy = calculatePowerGeneratorCap();
   state.powerEnergy = state.powerMaxEnergy; 
@@ -6444,7 +6568,10 @@ function gradeUp() {
   state.fluffRateInfinityCount = 0;
   resetChargerWhenAvailable();
   if (typeof saveGame === "function") saveGame();
-  if (typeof currentSaveSlot !== 'undefined' && currentSaveSlot && typeof saveToSlot === 'function') saveToSlot(currentSaveSlot);
+  // Save using new save system if available
+  if (window.SaveSystem) {
+    window.SaveSystem.saveGame();
+  }
   if (window.prismState) {
     [
       'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
@@ -6491,12 +6618,12 @@ function formatLargeInt(num) {
   return DecimalUtils.formatDecimal(num);
 }
 
-if (swariaKnowledge.kp > 0) {
+if (state.kp > 0) {
   document.getElementById("kpLine").style.display = "block";
-  document.getElementById("kp").textContent = formatLargeInt(swariaKnowledge.kp);
+  document.getElementById("kp").textContent = formatLargeInt(state.kp);
 }
 document.querySelectorAll('#kp').forEach(kpEl => {
-  kpEl.textContent = formatLargeInt(swariaKnowledge.kp);
+  kpEl.textContent = formatLargeInt(state.kp);
 });
 const kpPreview = document.getElementById("kpPreview");
 if (kpPreview) {
@@ -6558,39 +6685,22 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 });
+// Fallback prism state initialization - now references the state object
 if (!window.prismState) {
-  window.prismState = {
-    light: new Decimal(0),
-    redlight: new Decimal(0),
-    orangelight: new Decimal(0),
-    yellowlight: new Decimal(0),
-    greenlight: new Decimal(0),
-    bluelight: new Decimal(0),
-    lightparticle: new Decimal(0),
-    redlightparticle: new Decimal(0),
-    orangelightparticle: new Decimal(0),
-    yellowlightparticle: new Decimal(0),
-    greenlightparticle: new Decimal(0),
-    bluelightparticle: new Decimal(0),
-    activeTileIndex: null,
-    activeTileColor: null,
-    generatorUpgrades: {
-      light: 0,
-      redlight: 0,
-      orangelight: 0,
-      yellowlight: 0,
-      greenlight: 0,
-      bluelight: 0
-    },
-    generatorUnlocked: {
-      light: false,
-      redlight: false,
-      orangelight: false,
-      yellowlight: false,
-      greenlight: false,
-      bluelight: false
-    }
+  window.prismState = state.prismState;
+}
+
+// Ensure generatorUnlocked exists in prism state
+if (!state.prismState.generatorUnlocked) {
+  state.prismState.generatorUnlocked = {
+    light: false,
+    redlight: false,
+    orangelight: false,
+    yellowlight: false,
+    greenlight: false,
+    bluelight: false
   };
+  window.prismState.generatorUnlocked = state.prismState.generatorUnlocked;
 }
 const soapChargerQuotes = [
   "While charging, we will lose power, so watch out!",
@@ -6742,10 +6852,15 @@ const _origUpdateUI_Stairs = updateUI;
 updateUI = function() {
   _origUpdateUI_Stairs.apply(this, arguments);
   updateStairsCardVisibility();
+  
+  // Force tab visibility update to fix missing tabs
+  if (typeof forceTabVisibilityUpdate === 'function') {
+    forceTabVisibilityUpdate();
+  }
 };
 
 function unlockAllTabs() {
-  swariaKnowledge.kp = 1000000;
+  state.kp = new Decimal(1000000);
   if (!boughtElements[7]) {
     tryBuyElement(7);
   }
@@ -7284,9 +7399,9 @@ function tickCafeteria(diff) {
       consumedResources.push(`${formatNumber(state.artifacts)} Wing Artifacts`);
       state.artifacts = 0;
     }
-    if (swariaKnowledge.kp > 0) {
-      consumedResources.push(`${formatLargeInt(swariaKnowledge.kp)} Knowledge Points`);
-      swariaKnowledge.kp = 0;
+    if (state.kp > 0) {
+      consumedResources.push(`${formatLargeInt(state.kp)} Knowledge Points`);
+      state.kp = new Decimal(0);
     }
     if (window.prismState) {
       const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
@@ -8124,8 +8239,22 @@ function showCharacterSpeech(characterName, tokenType) {
       available = (window.state && window.state[stateKey]) ? 
         (typeof window.state[stateKey].toNumber === 'function' ? window.state[stateKey].toNumber() : Number(window.state[stateKey])) : 0;
     } else {
-      available = counts[storageKey] ? 
-        (typeof counts[storageKey].toNumber === 'function' ? counts[storageKey].toNumber() : Number(counts[storageKey])) : 0;
+      // Regular tokens are now stored in window.state.tokens, not window.kitchenIngredients
+      const tokenValue = window.state && window.state.tokens && window.state.tokens[storageKey];
+      
+      if (tokenValue !== undefined && tokenValue !== null) {
+        if (typeof tokenValue === 'object' && tokenValue.toNumber) {
+          available = tokenValue.toNumber();
+        } else if (typeof tokenValue === 'object' && tokenValue.toString) {
+          available = parseFloat(tokenValue.toString());
+        } else {
+          available = Number(tokenValue);
+        }
+      } else {
+        // Fallback to kitchenIngredients for backward compatibility
+        available = counts[storageKey] ? 
+          (typeof counts[storageKey].toNumber === 'function' ? counts[storageKey].toNumber() : Number(counts[storageKey])) : 0;
+      }
     }
 
     // Update button visibility based on available amounts
@@ -8185,26 +8314,31 @@ function showCharacterSpeech(characterName, tokenType) {
       // Use dedicated quest functions for Soap's sparks and batteries (accept both singular and plural)
       if (characterName === 'Soap' && (tokenType === 'spark' || tokenType === 'sparks') && typeof window.giveSparksToSoap === 'function') {
 
-        // Deduct sparks from inventory (always use Decimal)
-        if (window.state) {
-
+        // Deduct sparks from inventory (check both new and old locations)
+        if (window.state && window.state.tokens && window.state.tokens.sparks) {
+          // New location: window.state.tokens.sparks
+          if (typeof Decimal !== 'undefined') {
+            window.state.tokens.sparks = DecimalUtils.toDecimal(window.state.tokens.sparks).minus(amount);
+            if (window.state.tokens.sparks.lt(0)) window.state.tokens.sparks = new Decimal(0);
+          } else {
+            window.state.tokens.sparks = Math.max(0, Number(window.state.tokens.sparks) - amount);
+          }
+        } else if (window.state && window.state.sparks) {
+          // Legacy location: window.state.sparks
           if (typeof Decimal !== 'undefined') {
             window.state.sparks = DecimalUtils.toDecimal(window.state.sparks).minus(amount);
             if (window.state.sparks.lt(0)) window.state.sparks = new Decimal(0);
           } else {
             window.state.sparks = Math.max(0, Number(window.state.sparks) - amount);
           }
-
-        }
-        if (window.kitchenIngredients && window.kitchenIngredients.sparks !== undefined) {
-
+        } else if (window.kitchenIngredients && window.kitchenIngredients.sparks !== undefined) {
+          // Fallback location: window.kitchenIngredients.sparks
           if (typeof Decimal !== 'undefined') {
             window.kitchenIngredients.sparks = DecimalUtils.toDecimal(window.kitchenIngredients.sparks).minus(amount);
             if (window.kitchenIngredients.sparks.lt(0)) window.kitchenIngredients.sparks = new Decimal(0);
           } else {
             window.kitchenIngredients.sparks = Math.max(0, Number(window.kitchenIngredients.sparks) - amount);
           }
-
         }
         window.giveSparksToSoap(amount);
         if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
@@ -8268,7 +8402,49 @@ function showCharacterSpeech(characterName, tokenType) {
         if (tokenType === 'glitteringPetal') stateKey = 'glitteringPetals';
         window.state[stateKey] = available - amount;
       } else {
-        window.kitchenIngredients[storageKey] = available - amount;
+        // Regular tokens stored in window.state.tokens, not kitchenIngredients
+        // Ensure window.state.tokens exists and is properly initialized
+        if (!window.state) window.state = {};
+        if (!window.state.tokens) {
+          window.state.tokens = {
+            berries: new Decimal(0),
+            sparks: new Decimal(0),
+            petals: new Decimal(0),
+            mushroom: new Decimal(0),
+            water: new Decimal(0),
+            prisma: new Decimal(0),
+            stardust: new Decimal(0)
+          };
+        }
+
+        // Deduct from window.state.tokens[storageKey] instead of kitchenIngredients
+        if (window.state.tokens[storageKey] !== undefined) {
+          // Ensure the token value is a Decimal
+          if (!DecimalUtils.isDecimal(window.state.tokens[storageKey])) {
+            window.state.tokens[storageKey] = new Decimal(window.state.tokens[storageKey] || 0);
+          }
+          
+          // Perform deduction
+          window.state.tokens[storageKey] = window.state.tokens[storageKey].minus(amount);
+          
+          // Ensure no negative values
+          if (window.state.tokens[storageKey].lt(0)) {
+            window.state.tokens[storageKey] = new Decimal(0);
+          }
+        } else {
+          // Fallback to kitchenIngredients for backward compatibility
+          if (!window.kitchenIngredients[storageKey]) {
+            window.kitchenIngredients[storageKey] = new Decimal(0);
+          } else if (!DecimalUtils.isDecimal(window.kitchenIngredients[storageKey])) {
+            window.kitchenIngredients[storageKey] = new Decimal(window.kitchenIngredients[storageKey] || 0);
+          }
+          
+          window.kitchenIngredients[storageKey] = window.kitchenIngredients[storageKey].minus(amount);
+          
+          if (window.kitchenIngredients[storageKey].lt(0)) {
+            window.kitchenIngredients[storageKey] = new Decimal(0);
+          }
+        }
       }
       if (characterName === 'Swaria') {
         if (tokenType === 'berryPlate') {
@@ -8656,16 +8832,30 @@ function showCharacterSpeech(characterName, tokenType) {
 
       }
       
+      // Update all relevant UIs after token deduction
       if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token usage
+      if (typeof window.updateInventoryDisplay === 'function') window.updateInventoryDisplay();
+      if (typeof window.updateKitchenUI === 'function') window.updateKitchenUI();
+      if (typeof renderInventoryTokens === 'function') renderInventoryTokens();
+      
       if (characterName === 'Swaria' && typeof updateSwariaHungerUI === 'function') {
         updateSwariaHungerUI();
       }
       if (characterName === 'Soap' && (tokenType === 'sparks' || tokenType === 'batteries') && typeof window.updateChargerUI === 'function') {
         window.updateChargerUI();
       }
+      
+      // Save the game to persist changes
+      if (typeof window.saveGame === 'function') {
+        window.saveGame();
+      }
+      
       modal.style.display = 'none';
     }
   }
+  
+  // Make showGiveTokenModal globally available immediately after definition
+  window.showGiveTokenModal = showGiveTokenModal;
 
   // Cache for smart inventory updates
   let lastInventorySnapshot = null;
@@ -8678,11 +8868,11 @@ function showCharacterSpeech(characterName, tokenType) {
       snapshot.swabucks = window.state.swabucks.toString();
     }
     
-    // Add kitchen ingredients
-    if (window.kitchenIngredients) {
+    // Add basic ingredient tokens from window.state.tokens
+    if (window.state && window.state.tokens) {
       const ingredientKeys = ['berries', 'petals', 'stardust', 'prisma', 'sparks', 'water', 'mushroom'];
       ingredientKeys.forEach(key => {
-        const value = window.kitchenIngredients[key];
+        const value = window.state.tokens[key];
         if (value !== undefined && value !== null) {
           snapshot[key] = typeof value === 'object' ? value.toString() : value.toString();
         }
@@ -8766,8 +8956,8 @@ function showCharacterSpeech(characterName, tokenType) {
     ];
     
     ingredientTokens.forEach(token => {
-      
-      const value = window.kitchenIngredients[token.key];
+      // Read from window.state.tokens instead of window.kitchenIngredients
+      const value = window.state && window.state.tokens && window.state.tokens[token.key];
       if (value !== undefined && value !== null) {
         let count = 0;
         if (typeof value === 'object' && value.toString) {
@@ -8776,7 +8966,6 @@ function showCharacterSpeech(characterName, tokenType) {
           count = value;
         }
         
-       
         if (count > 0) {
           allTokens.push({
             name: token.name,
@@ -9149,10 +9338,12 @@ function showCharacterSpeech(characterName, tokenType) {
     }
   }
   
+  // Make closeGiveTokenModal globally available immediately after definition
+  window.closeGiveTokenModal = closeGiveTokenModal;
+  
   function giveTokenAmount(amount) {
     const modal = document.getElementById('giveTokenModal');
     if (!modal || !modal._currentTokenType || !modal._currentCharacterName) {
-
       return;
     }
 
@@ -9228,12 +9419,16 @@ function showCharacterSpeech(characterName, tokenType) {
     // Map token names to storage keys (some tokens have different names for display vs storage)
     const tokenToStorageKey = {
       'berry': 'berries',
-      'petal': 'petals',
+      'petal': 'petals', 
       'spark': 'sparks',
       'mushroom': 'mushroom',
       'water': 'water',
       'stardust': 'stardust',
-      'prisma': 'prisma'
+      'prisma': 'prisma',
+      // Also handle cases where tokens are already plural
+      'berries': 'berries',
+      'petals': 'petals',
+      'sparks': 'sparks'
     };
     
     let storageKey = tokenToStorageKey[tokenType] || tokenType;
@@ -9245,8 +9440,22 @@ function showCharacterSpeech(characterName, tokenType) {
       available = (window.state && window.state[tokenType]) ? 
         (typeof window.state[tokenType].toNumber === 'function' ? window.state[tokenType].toNumber() : Number(window.state[tokenType])) : 0;
     } else {
-      available = counts[storageKey] ? 
-        (typeof counts[storageKey].toNumber === 'function' ? counts[storageKey].toNumber() : Number(counts[storageKey])) : 0;
+      // Regular tokens are now stored in window.state.tokens, not window.kitchenIngredients
+      const tokenValue = window.state && window.state.tokens && window.state.tokens[storageKey];
+      
+      if (tokenValue !== undefined && tokenValue !== null) {
+        if (typeof tokenValue === 'object' && tokenValue.toNumber) {
+          available = tokenValue.toNumber();
+        } else if (typeof tokenValue === 'object' && tokenValue.toString) {
+          available = parseFloat(tokenValue.toString());
+        } else {
+          available = Number(tokenValue);
+        }
+      } else {
+        // Fallback to kitchenIngredients for backward compatibility
+        available = counts[storageKey] ? 
+          (typeof counts[storageKey].toNumber === 'function' ? counts[storageKey].toNumber() : Number(counts[storageKey])) : 0;
+      }
     }
 
     if (amount > available) amount = available;
@@ -9274,13 +9483,29 @@ function showCharacterSpeech(characterName, tokenType) {
 
     // Always use quest logic for Soap's spark and battery tokens
     if (characterName === 'Soap' && tokenType === 'sparks' && typeof window.giveSparksToSoap === 'function') {
-
+      // Deduct sparks from tokens before calling quest function
+      if (window.state && window.state.tokens && window.state.tokens.sparks) {
+        if (typeof window.state.tokens.sparks.minus === 'function') {
+          window.state.tokens.sparks = window.state.tokens.sparks.minus(amount);
+        } else {
+          window.state.tokens.sparks = new Decimal(window.state.tokens.sparks).minus(amount);
+        }
+        if (window.state.tokens.sparks.lt(0)) window.state.tokens.sparks = new Decimal(0);
+      }
       window.giveSparksToSoap(amount);
       if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
       return;
     }
     if (characterName === 'Soap' && tokenType === 'batteries' && typeof window.giveBatteriesToSoap === 'function') {
-
+      // Deduct batteries from state before calling quest function
+      if (window.state && window.state.batteries) {
+        if (typeof window.state.batteries.minus === 'function') {
+          window.state.batteries = window.state.batteries.minus(amount);
+        } else {
+          window.state.batteries = new Decimal(window.state.batteries).minus(amount);
+        }
+        if (window.state.batteries.lt(0)) window.state.batteries = new Decimal(0);
+      }
       window.giveBatteriesToSoap(amount);
       if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
       return;
@@ -9309,14 +9534,54 @@ function showCharacterSpeech(characterName, tokenType) {
 
       }
     } else {
-      if (window.kitchenIngredients[storageKey]) {
-        const oldAmount = window.kitchenIngredients[storageKey];
-        if (typeof window.kitchenIngredients[storageKey].minus === 'function') {
-          window.kitchenIngredients[storageKey] = window.kitchenIngredients[storageKey].minus(amount);
-        } else {
-          window.kitchenIngredients[storageKey] = new Decimal(window.kitchenIngredients[storageKey]).minus(amount);
-        }
+      // Regular tokens are stored in window.state.tokens (primary) with fallback to kitchenIngredients
+      // Ensure window.state.tokens is initialized
+      if (!window.state) window.state = {};
+      if (!window.state.tokens) {
+        window.state.tokens = {
+          berries: new Decimal(0),
+          sparks: new Decimal(0),
+          petals: new Decimal(0),
+          mushroom: new Decimal(0),
+          water: new Decimal(0),
+          prisma: new Decimal(0),
+          stardust: new Decimal(0)
+        };
+      }
 
+      if (window.state.tokens[storageKey] !== undefined) {
+        const oldAmount = window.state.tokens[storageKey];
+        
+        // Ensure the token value is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.tokens[storageKey])) {
+          window.state.tokens[storageKey] = new Decimal(window.state.tokens[storageKey] || 0);
+        }
+        
+        // Perform deduction
+        window.state.tokens[storageKey] = window.state.tokens[storageKey].minus(amount);
+        
+        // Ensure no negative values
+        if (window.state.tokens[storageKey].lt(0)) {
+          window.state.tokens[storageKey] = new Decimal(0);
+        }
+      } else if (window.kitchenIngredients && window.kitchenIngredients[storageKey] !== undefined) {
+        // Fallback to kitchenIngredients for backward compatibility
+        const oldAmount = window.kitchenIngredients[storageKey];
+        
+        // Ensure the token value is a Decimal
+        if (!DecimalUtils.isDecimal(window.kitchenIngredients[storageKey])) {
+          window.kitchenIngredients[storageKey] = new Decimal(window.kitchenIngredients[storageKey] || 0);
+        }
+        
+        // Perform deduction
+        window.kitchenIngredients[storageKey] = window.kitchenIngredients[storageKey].minus(amount);
+        
+        // Ensure no negative values
+        if (window.kitchenIngredients[storageKey].lt(0)) {
+          window.kitchenIngredients[storageKey] = new Decimal(0);
+        }
+      } else {
+        // No tokens found - fail silently
       }
     }
 
@@ -9482,13 +9747,21 @@ function showCharacterSpeech(characterName, tokenType) {
     if (typeof renderInventoryTokens === 'function') {
       renderInventoryTokens();
     }
+    if (typeof window.updateInventoryModal === 'function') {
+      window.updateInventoryModal(true); // Force update
+    }
 
     // Save the game to persist changes
     if (typeof window.saveGame === 'function') {
       window.saveGame();
     }
 
-  }  setupCharacterDropTargets();
+  }
+  
+  // Make giveTokenAmount globally available immediately after definition
+  window.giveTokenAmount = giveTokenAmount;
+  
+  setupCharacterDropTargets();
   initializeGiveTokenModal();
   
   // Setup character drop targets on tab switches
@@ -9939,7 +10212,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to save complete game state before delivery reset
 function saveDeliveryResetBackup() {
   try {
-
     // Get current complete game state using the same logic as saveGame()
     const completeGameState = createCompleteGameState();
     
@@ -9949,21 +10221,22 @@ function saveDeliveryResetBackup() {
       timestamp: Date.now(),
       grade: state.grade ? state.grade.toString() : "1",
       artifacts: state.artifacts ? state.artifacts.toString() : "0",
-      kp: swariaKnowledge.kp ? swariaKnowledge.kp.toString() : "0"
+      kp: state.kp ? state.kp.toString() : "0"
     };
     
     // Use save slot specific key if using save slots
-    const saveSlotNumber = localStorage.getItem('currentSaveSlot');
+    const saveSlotNumber = (window.SaveSystem && window.SaveSystem.currentSlot) || localStorage.getItem('currentSaveSlot');
     const backupKey = saveSlotNumber ? 
       `deliveryResetBackup_slot${saveSlotNumber}` : 
       'deliveryResetBackup';
+    
     
     localStorage.setItem(backupKey, JSON.stringify(backupData));
 
     updateLastDeliveryInfo(backupData);
     
   } catch (error) {
-
+    console.error('saveDeliveryResetBackup error:', error);
   }
 }
 
@@ -9992,7 +10265,8 @@ function createCompleteGameState() {
   const gameState = {
     state,
     settings,
-    swariaKnowledge,
+    // swariaKnowledge is no longer used - KP is now in state.kp
+    swariaKnowledge: {}, // Keep empty for backwards compatibility
     boughtElements,
     elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
     permanentElementDiscovery: state.permanentElementDiscovery ? {
@@ -10132,24 +10406,24 @@ function createCompleteGameState() {
     } : { employees: {}, totalHired: 0 },
     
     // Add advanced prism calibration state
-    advancedPrismCalibration: window.advancedPrismState ? {
+    advancedPrismCalibration: (window.advancedPrismState && window.advancedPrismState.calibration) ? {
       stable: {
-        light: window.advancedPrismState.calibration.stable.light ? window.advancedPrismState.calibration.stable.light.toString() : "0",
-        redlight: window.advancedPrismState.calibration.stable.redlight ? window.advancedPrismState.calibration.stable.redlight.toString() : "0",
-        orangelight: window.advancedPrismState.calibration.stable.orangelight ? window.advancedPrismState.calibration.stable.orangelight.toString() : "0",
-        yellowlight: window.advancedPrismState.calibration.stable.yellowlight ? window.advancedPrismState.calibration.stable.yellowlight.toString() : "0",
-        greenlight: window.advancedPrismState.calibration.stable.greenlight ? window.advancedPrismState.calibration.stable.greenlight.toString() : "0",
-        bluelight: window.advancedPrismState.calibration.stable.bluelight ? window.advancedPrismState.calibration.stable.bluelight.toString() : "0"
+        light: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.light) ? window.advancedPrismState.calibration.stable.light.toString() : "0",
+        redlight: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.redlight) ? window.advancedPrismState.calibration.stable.redlight.toString() : "0",
+        orangelight: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.orangelight) ? window.advancedPrismState.calibration.stable.orangelight.toString() : "0",
+        yellowlight: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.yellowlight) ? window.advancedPrismState.calibration.stable.yellowlight.toString() : "0",
+        greenlight: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.greenlight) ? window.advancedPrismState.calibration.stable.greenlight.toString() : "0",
+        bluelight: (window.advancedPrismState.calibration.stable && window.advancedPrismState.calibration.stable.bluelight) ? window.advancedPrismState.calibration.stable.bluelight.toString() : "0"
       },
       nerfs: {
-        light: window.advancedPrismState.calibration.nerfs.light ? window.advancedPrismState.calibration.nerfs.light.toString() : "1",
-        redlight: window.advancedPrismState.calibration.nerfs.redlight ? window.advancedPrismState.calibration.nerfs.redlight.toString() : "1",
-        orangelight: window.advancedPrismState.calibration.nerfs.orangelight ? window.advancedPrismState.calibration.nerfs.orangelight.toString() : "1",
-        yellowlight: window.advancedPrismState.calibration.nerfs.yellowlight ? window.advancedPrismState.calibration.nerfs.yellowlight.toString() : "1",
-        greenlight: window.advancedPrismState.calibration.nerfs.greenlight ? window.advancedPrismState.calibration.nerfs.greenlight.toString() : "1",
-        bluelight: window.advancedPrismState.calibration.nerfs.bluelight ? window.advancedPrismState.calibration.nerfs.bluelight.toString() : "1"
+        light: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.light) ? window.advancedPrismState.calibration.nerfs.light.toString() : "1",
+        redlight: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.redlight) ? window.advancedPrismState.calibration.nerfs.redlight.toString() : "1",
+        orangelight: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.orangelight) ? window.advancedPrismState.calibration.nerfs.orangelight.toString() : "1",
+        yellowlight: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.yellowlight) ? window.advancedPrismState.calibration.nerfs.yellowlight.toString() : "1",
+        greenlight: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.greenlight) ? window.advancedPrismState.calibration.nerfs.greenlight.toString() : "1",
+        bluelight: (window.advancedPrismState.calibration.nerfs && window.advancedPrismState.calibration.nerfs.bluelight) ? window.advancedPrismState.calibration.nerfs.bluelight.toString() : "1"
       },
-      totalTimeAccumulated: window.advancedPrismState.calibration.totalTimeAccumulated || {
+      totalTimeAccumulated: (window.advancedPrismState.calibration && window.advancedPrismState.calibration.totalTimeAccumulated) ? window.advancedPrismState.calibration.totalTimeAccumulated : {
         light: 0,
         redlight: 0,
         orangelight: 0,
@@ -10206,42 +10480,47 @@ function createCompleteGameState() {
 
 // Function to export the last delivery reset backup as a code
 function exportLastDeliveryReset() {
-  try {
-    const saveSlotNumber = localStorage.getItem('currentSaveSlot');
-    const backupKey = saveSlotNumber ? 
-      `deliveryResetBackup_slot${saveSlotNumber}` : 
-      'deliveryResetBackup';
-    
-    const backupDataString = localStorage.getItem(backupKey);
-    
-    if (!backupDataString) {
-      showRecoveryExportStatus('No delivery reset backup found. You need to perform at least one delivery reset first.', 'error');
-      return;
-    }
-    
-    const backupData = JSON.parse(backupDataString);
-    
-    // Serialize the game state for export
-    const serializedGameState = DecimalUtils.serializeGameState(backupData.gameState);
-    const exportCode = btoa(JSON.stringify(serializedGameState));
-    
-    // Copy to clipboard
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(exportCode).then(() => {
-        showRecoveryExportStatus('Export code copied to clipboard! This code contains your complete game state from your last delivery reset.', 'success');
-      }).catch(() => {
+  // Use the new SaveSystem export functionality
+  if (window.SaveSystem && typeof window.SaveSystem.exportDeliveryResetBackup === 'function') {
+    return window.SaveSystem.exportDeliveryResetBackup();
+  } else {
+    // Fallback to old system if SaveSystem not available
+    try {
+      const saveSlotNumber = localStorage.getItem('currentSaveSlot');
+      const backupKey = saveSlotNumber ? 
+        `deliveryResetBackup_slot${saveSlotNumber}` : 
+        'deliveryResetBackup';
+      
+      const backupDataString = localStorage.getItem(backupKey);
+      
+      if (!backupDataString) {
+        showRecoveryExportStatus('No delivery reset backup found. You need to perform at least one delivery reset first.', 'error');
+        return;
+      }
+      
+      const backupData = JSON.parse(backupDataString);
+      
+      // Serialize the game state for export
+      const serializedGameState = DecimalUtils.serializeGameState(backupData.gameState);
+      const exportCode = btoa(JSON.stringify(serializedGameState));
+      
+      // Copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(exportCode).then(() => {
+          showRecoveryExportStatus('Export code copied to clipboard! This code contains your complete game state from your last delivery reset.', 'success');
+        }).catch(() => {
+          fallbackCopyToClipboard(exportCode);
+        });
+      } else {
         fallbackCopyToClipboard(exportCode);
-      });
-    } else {
-      fallbackCopyToClipboard(exportCode);
+      }
+      
+      // Show backup info
+      updateLastDeliveryInfo(backupData);
+      
+    } catch (error) {
+      showRecoveryExportStatus('Failed to export backup. Please try again.', 'error');
     }
-    
-    // Show backup info
-    updateLastDeliveryInfo(backupData);
-    
-  } catch (error) {
-
-    showRecoveryExportStatus('Failed to export backup. Please try again.', 'error');
   }
 }
 
@@ -10268,6 +10547,13 @@ function fallbackCopyToClipboard(text) {
 
 // Function to show export status
 function showRecoveryExportStatus(message, type) {
+  // If SaveSystem is available, use its notification system first
+  if (window.SaveSystem && typeof window.SaveSystem.showSaveNotification === 'function') {
+    const isError = (type === 'error');
+    window.SaveSystem.showSaveNotification(message, isError);
+  }
+  
+  // Also show in the recovery tab status div for consistency
   const statusDiv = document.getElementById('recoveryExportStatus');
   if (!statusDiv) return;
   
@@ -10326,7 +10612,7 @@ function updateLastDeliveryInfo(backupData) {
 
 // Function to check and display last delivery info on page load
 function checkLastDeliveryInfo() {
-  const saveSlotNumber = localStorage.getItem('currentSaveSlot');
+  const saveSlotNumber = (window.SaveSystem && window.SaveSystem.currentSlot) || localStorage.getItem('currentSaveSlot');
   const backupKey = saveSlotNumber ? 
     `deliveryResetBackup_slot${saveSlotNumber}` : 
     'deliveryResetBackup';
@@ -10349,6 +10635,37 @@ window.exportLastDeliveryReset = exportLastDeliveryReset;
 window.checkLastDeliveryInfo = checkLastDeliveryInfo;
 window.showSoapDisappointedSpeech = showSoapDisappointedSpeech;
 // restoreSwariaImage is already assigned to window earlier at line 6733
+// showGiveTokenModal is exported immediately after its definition
+// closeGiveTokenModal is exported immediately after its definition  
+// giveTokenAmount is exported immediately after its definition
+
+// Debug function to test the give token modal
+window.debugGiveTokenModal = function(tokenType = 'berries', characterName = 'Mystic') {
+  if (typeof window.showGiveTokenModal === 'function') {
+    window.showGiveTokenModal(tokenType, characterName);
+  } else {
+    console.error('showGiveTokenModal function not found!');
+  }
+};
+
+// Debug function to test both token types
+window.testBothModals = function() {
+  window.debugGiveTokenModal('berry', 'Soap');
+  
+  setTimeout(() => {
+    const modal = document.getElementById('giveTokenModal');
+    if (modal) modal.style.display = 'none';
+    
+    window.debugGiveTokenModal('battery', 'Soap');
+  }, 2000);
+};
+
+// Debug function to check token storage locations
+window.debugTokenStorage = function() {
+  if (window.state?.tokens) {
+    console.log('Available token types:', Object.keys(window.state.tokens));
+  }
+};
 
 // Initialize on page load
 if (document.readyState === 'loading') {
@@ -10395,6 +10712,11 @@ window.cleanupScript2 = function() {
   if (window._mainGameTickInterval) {
     clearInterval(window._mainGameTickInterval);
     window._mainGameTickInterval = null;
+  }
+  
+  if (window._fluffDisplayInterval) {
+    clearInterval(window._fluffDisplayInterval);
+    window._fluffDisplayInterval = null;
   }
   
   if (window.observatoryWatchdogInterval) {

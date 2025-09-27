@@ -488,7 +488,7 @@ function simulatePlayerClick(index, cols, rows) {
   // Apply missing multipliers that Fluzzer was not getting
   pollenGained = pollenGained.mul(window.getPollenFlowerNectarUpgradeEffect?.(window.pollenFlowerNectarUpgradeLevel || 0) || 1).floor();
   // Apply Element 21 boost (X10 pollen multiplier) if owned
-  const elementsRef = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef = window.state.boughtElements || {};
   if (elementsRef && elementsRef[21]) {
     pollenGained = pollenGained.mul(10).floor();
   }
@@ -503,7 +503,7 @@ function simulatePlayerClick(index, cols, rows) {
   
   // Apply Element 22 boost to final flower gain (X5 flowers multiplier) if owned
   let finalFlowerGain = flowerGainFinal;
-  const elementsRef2 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef2 = window.state.boughtElements || {};
   if (elementsRef2 && elementsRef2[22]) {
     finalFlowerGain = finalFlowerGain.mul(5).floor();
   }

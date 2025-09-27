@@ -133,24 +133,8 @@ function initPremiumSystem() {
   }, 1000);
 }
 
-function savePremiumState() {
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-  if (currentSaveSlot) {
-    const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
-    if (slotData) {
-      try {
-        const save = JSON.parse(slotData);
-        save.premiumState = window.premiumState;
-        localStorage.setItem(`swariaSaveSlot${currentSaveSlot}`, JSON.stringify(save));
-      } catch (e) {
-
-      }
-    } else {
-    }
-  } else {
-    localStorage.setItem('premiumState', JSON.stringify(window.premiumState));
-  }
-}
+// Save function removed - premium state now managed by main save system
+// Data is automatically saved/loaded through window.state
 
 function updatePremiumUI() {
   document.querySelectorAll('.card').forEach(card => {
@@ -227,7 +211,7 @@ function buyBijou() {
     window.state.swabucks = currentSwabucks.sub(cost);
     window.premiumState.bijouUnlocked = true;
     window.premiumState.bijouEnabled = true; 
-    savePremiumState();
+    // Save removed - premium state now managed by main save system
     saveGame();
     updatePremiumUI();
     updateUI(); 
@@ -266,7 +250,7 @@ function buyVrchatMirror() {
   if (confirm(`Are you sure you want to unlock VRChat Mirror for ${DecimalUtils.formatDecimal(cost)} Swa Bucks?`)) {
     window.state.swabucks = currentSwabucks.sub(cost);
     window.premiumState.vrchatMirrorUnlocked = true;
-    savePremiumState();
+    // Save removed - premium state now managed by main save system
     saveGame();
     updatePremiumUI();
     updateUI(); 
@@ -288,7 +272,7 @@ function toggleBijou() {
   } else {
     window.premiumState.bijouEnabled = !window.premiumState.bijouEnabled;
   }
-  savePremiumState();
+  // Save removed - premium state now managed by main save system
   const status = window.premiumState.bijouEnabled ? 'enabled' : 'disabled';
   updateBijouUIVisibility();
   if (typeof window.cafeteria?.refreshCharacterCards === 'function') {
@@ -618,7 +602,18 @@ function collectTokenManually(type, token) {
     showIngredientGainPopup(token, tokenGainAmount);
     return;
   }
+  
+  // Add to window.state.tokens instead of kitchenIngredients
+  if (!window.state) window.state = {};
+  if (!window.state.tokens) window.state.tokens = {};
+  if (!window.state.tokens[type]) {
+    window.state.tokens[type] = new Decimal(0);
+  }
+  window.state.tokens[type] = new Decimal(window.state.tokens[type]).add(tokenGainAmount);
+  
+  // Also update legacy kitchenIngredients for backward compatibility
   window.kitchenIngredients[type] = new Decimal(window.kitchenIngredients[type] || 0).add(tokenGainAmount);
+  
   showIngredientGainPopup(token, tokenGainAmount);
   if (typeof updateKitchenUI === 'function') updateKitchenUI();
 }
@@ -814,7 +809,7 @@ window.showPage = function(pageId) {
 };
 window.premiumSystem = {
   initPremiumSystem,
-  savePremiumState,
+  // Save function removed - now managed by main save system
   updatePremiumUI,
   buyBijou,
   buyVrchatMirror,

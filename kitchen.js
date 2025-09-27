@@ -366,7 +366,20 @@ function collectIngredientToken(type, token) {
   token.style.transform += ' scale(0.2)';
   token.style.opacity = '0';
   setTimeout(() => token.remove(), 400);
-  if (!window.kitchenIngredients) window.kitchenIngredients = {};
+  
+  // Initialize state if needed
+  if (!window.state) window.state = {};
+  if (!window.state.tokens) {
+    window.state.tokens = {
+      berries: new Decimal(0),
+      sparks: new Decimal(0),
+      petals: new Decimal(0),
+      mushroom: new Decimal(0),
+      water: new Decimal(0),
+      prisma: new Decimal(0),
+      stardust: new Decimal(0)
+    };
+  }
 
   // Calculate token gain amount with green stable light buff
   let tokenGainAmount = new Decimal(1);
@@ -375,7 +388,6 @@ function collectIngredientToken(type, token) {
   }
   
   if (type === 'swabucks') {
-    if (!window.state) window.state = {};
     if (!DecimalUtils.isDecimal(window.state.swabucks)) window.state.swabucks = new Decimal(0);
     window.state.swabucks = window.state.swabucks.add(tokenGainAmount);
 
@@ -388,11 +400,12 @@ function collectIngredientToken(type, token) {
     if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token collection
     return;
   }
-  if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
-    window.kitchenIngredients[type] = new Decimal(0);
-
+  
+  // Store basic ingredient tokens in window.state.tokens
+  if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
+    window.state.tokens[type] = new Decimal(0);
   }
-  window.kitchenIngredients[type] = window.kitchenIngredients[type].add(tokenGainAmount);
+  window.state.tokens[type] = window.state.tokens[type].add(tokenGainAmount);
 
   showIngredientGainPopup(token, tokenGainAmount);
   
@@ -476,17 +489,39 @@ function updateKitchenUI(forceUpdate = false) {
   }
   lastKitchenUIUpdate = now;
 
-  if (!window.kitchenIngredients) window.kitchenIngredients = {};
-  const types = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'swabucks'];
-  types.forEach(type => {
-    if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
-      window.kitchenIngredients[type] = new Decimal(0);
+  // Initialize state.tokens if needed
+  if (!window.state) window.state = {};
+  if (!window.state.tokens) {
+    window.state.tokens = {
+      berries: new Decimal(0),
+      sparks: new Decimal(0),
+      petals: new Decimal(0),
+      mushroom: new Decimal(0),
+      water: new Decimal(0),
+      prisma: new Decimal(0),
+      stardust: new Decimal(0)
+    };
+  }
+  
+  const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust'];
+  basicTokenTypes.forEach(type => {
+    if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
+      window.state.tokens[type] = new Decimal(0);
     }
     const el = document.getElementById('ingredientCount-' + type);
     if (el) {
-      el.textContent = formatNumber(window.kitchenIngredients[type]);
+      el.textContent = formatNumber(window.state.tokens[type]);
     }
   });
+  
+  // Handle swabucks separately since it's stored directly in window.state
+  if (!DecimalUtils.isDecimal(window.state.swabucks)) {
+    window.state.swabucks = new Decimal(0);
+  }
+  const swabucksEl = document.getElementById('ingredientCount-swabucks');
+  if (swabucksEl) {
+    swabucksEl.textContent = formatNumber(window.state.swabucks);
+  }
 }
 
 const mysticIdleSpeeches = [
@@ -726,34 +761,10 @@ if (window.daynight && typeof window.daynight.onTimeChange === 'function') {
 // Remove duplicate kitchen visibility interval - functionality merged with first interval
 // (The first interval now handles both speech management AND night state updates)
 
-function saveCookingState() {
-  if (!window.kitchenCooking || (!window.kitchenCooking.cooking && !window.kitchenCooking.pausedForNight)) return;
-  localStorage.setItem('berryCookingState', JSON.stringify({
-    endTime: window.kitchenCooking.cookingEndTime,
-    amount: window.kitchenCooking.cookingAmount,
-    recipeId: window.kitchenCooking.cookingRecipeId,
-    startTime: Date.now(),
-    duration: window.kitchenCooking.cookingEndTime ? (window.kitchenCooking.cookingEndTime - Date.now()) : 0,
-    pausedForNight: window.kitchenCooking.pausedForNight,
-    pausedRemainingMs: window.kitchenCooking.pausedRemainingMs
-  }));
-}
+// Save/load functions removed - cooking state now managed by main save system
+// Data is automatically saved/loaded through window.state
 
-function clearCookingState() {
-  localStorage.removeItem('berryCookingState');
-}
-
-function loadCookingState() {
-  const data = localStorage.getItem('berryCookingState');
-  if (!data) return null;
-  try {
-    return JSON.parse(data);
-  } catch (e) { return null; }
-}
-
-window.addEventListener('beforeunload', function() {
-  saveCookingState();
-});
+// Save on unload removed - cooking state now managed by main save system
 window.addEventListener('load', function() {
   (function() {
     const mixModal = document.getElementById('mixModal');
@@ -1128,21 +1139,21 @@ window.addEventListener('load', function() {
         }, pausedHiddenRemainingMs);
         updateGlobals();
       };
-    window.addEventListener('beforeunload', function() {
-      saveCookingState();
-    });
+    // Save state handled by centralized save system
+    // window.addEventListener('beforeunload', function() {
+    //   saveCookingState();
+    // });
 
     function clearCookingState() {
       localStorage.removeItem('berryCookingState');
     }
 
-    function loadCookingState() {
-      const data = localStorage.getItem('berryCookingState');
-      if (!data) return null;
-      try {
-        return JSON.parse(data);
-      } catch (e) { return null; }
+    // Stub function - cooking state now managed by centralized save system
+    function saveCookingState() {
+      // No-op: State is automatically saved by centralized save system
     }
+
+    // Load function removed - cooking state now managed by main save system
 
     function isNightTime() {
       if (!window.daynight || typeof window.daynight.getTime !== 'function') return false;
@@ -1221,10 +1232,10 @@ window.addEventListener('load', function() {
       if (mixModalActions) {
         mixModalActions.innerHTML = '';
         const cookBtn = document.createElement('button');
-        const kitchenIngredients = window.kitchenIngredients || {};
+        // Check availability from window.state.tokens
         let hasAllIngredients = true;
         for (const [ingredient, amount] of Object.entries(totalCosts)) {
-          const available = kitchenIngredients[ingredient] || new Decimal(0);
+          const available = (window.state && window.state.tokens && window.state.tokens[ingredient]) || new Decimal(0);
           if (DecimalUtils.isDecimal(available) ? available.lt(amount) : new Decimal(available).lt(amount)) {
             hasAllIngredients = false;
             break;
@@ -1284,11 +1295,12 @@ window.addEventListener('load', function() {
             if (night) return;
             if (cooking) return;
             if (!hasAllIngredients) return;
+            // Deduct ingredients from window.state.tokens
             for (const [ingredient, amount] of Object.entries(totalCosts)) {
-              if (!DecimalUtils.isDecimal(window.kitchenIngredients[ingredient])) {
-                window.kitchenIngredients[ingredient] = new Decimal(0);
+              if (!DecimalUtils.isDecimal(window.state.tokens[ingredient])) {
+                window.state.tokens[ingredient] = new Decimal(0);
               }
-              window.kitchenIngredients[ingredient] = window.kitchenIngredients[ingredient].sub(amount);
+              window.state.tokens[ingredient] = window.state.tokens[ingredient].sub(amount);
             }
             if (typeof updateKitchenUI === 'function') updateKitchenUI();
             startCooking(bulkAmount, time.toNumber(), recipe.id);
@@ -1545,17 +1557,7 @@ window.addEventListener('load', function() {
   let cookingInterval = null;
   let cookingTimeout = null;
 
-  function loadCookingState() {
-    const data = localStorage.getItem('berryCookingState');
-    if (!data) return null;
-    try {
-      return JSON.parse(data);
-    } catch (e) { return null; }
-  }
-
-  function clearCookingState() {
-    localStorage.removeItem('berryCookingState');
-  }
+  // Load/clear functions removed - cooking state now managed by main save system
 
   function isNightTime() {
     if (!window.daynight || typeof window.daynight.getTime !== 'function') return false;
@@ -1564,7 +1566,8 @@ window.addEventListener('load', function() {
   }
 
   window.addEventListener('DOMContentLoaded', function() {
-    const saved = loadCookingState();
+    // Cooking state is now managed by main save system - no separate loading needed
+    const saved = null; // Remove loadCookingState() call
     if (saved && saved.amount) {
       const now = Date.now();
       if (saved.pausedForNight) {

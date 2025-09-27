@@ -101,15 +101,169 @@ function getFluzzerFirstTimeSpeech() {
 
 const fluzzerWelcomeSpeech = "Oh! Hello! Welcome back to the terrarium!";
 const fluzzerFirstTimeSpeech = "Oh! A new face! Welcome to my terrarium!";
+// Initialize terrarium variables from state or defaults
 let terrariumFlowerGrid = null;
 let pollenWandActive = false;
 let wateringCanActive = false;
-let terrariumPollen = new Decimal(window.terrariumPollen || 0);
-let terrariumFlowers = new Decimal(window.terrariumFlowers || 0);
-let terrariumXP = new Decimal(window.terrariumXP || 0);
-let terrariumLevel = window.terrariumLevel || 1;
-let flowerFieldExpansionUpgradeLevel = 0;
-let pollenValueUpgradeLevel = 0;
+
+// Function to ensure terrarium state exists and get references
+function getTerrariumState() {
+  if (!window.state || !window.state.terrarium) {
+    // Initialize default state if it doesn't exist
+    if (!window.state) window.state = {};
+    if (!window.state.terrarium) {
+      window.state.terrarium = {
+        pollen: new Decimal(0),
+        flowers: new Decimal(0),
+        xp: new Decimal(0),
+        nectar: new Decimal(0),
+        level: 1,
+        flowerGrid: null,
+        pollenWandActive: false,
+        wateringCanActive: false,
+        flowerFieldExpansionUpgradeLevel: 0,
+        pollenValueUpgradeLevel: 0
+      };
+    }
+  }
+  return window.state.terrarium;
+}
+
+// Get initial values from state
+let terrarium = getTerrariumState();
+let terrariumPollen = terrarium.pollen;
+let terrariumFlowers = terrarium.flowers;
+let terrariumXP = terrarium.xp;
+let terrariumLevel = terrarium.level;
+let flowerFieldExpansionUpgradeLevel = terrarium.flowerFieldExpansionUpgradeLevel || 0;
+let pollenValueUpgradeLevel = terrarium.pollenValueUpgradeLevel || 0;
+
+// Helper functions to sync local variables with state
+function syncTerrariumToState() {
+  if (!window.state || !window.state.terrarium) return;
+  
+  // Sync core currencies
+  window.state.terrarium.pollen = terrariumPollen;
+  window.state.terrarium.flowers = terrariumFlowers;
+  window.state.terrarium.xp = terrariumXP;
+  window.state.terrarium.nectar = terrariumNectar;
+  window.state.terrarium.level = terrariumLevel;
+  
+  // Sync upgrade levels
+  window.state.terrarium.flowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
+  window.state.terrarium.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
+  window.state.terrarium.pollenValueUpgrade2Level = pollenValueUpgrade2Level;
+  window.state.terrarium.flowerValueUpgradeLevel = flowerValueUpgradeLevel;
+  window.state.terrarium.pollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+  window.state.terrarium.pollenToolSpeedUpgradeLevel = pollenToolSpeedUpgradeLevel;
+  window.state.terrarium.flowerXPUpgradeLevel = flowerXPUpgradeLevel;
+  window.state.terrarium.extraChargeUpgradeLevel = extraChargeUpgradeLevel;
+  
+  // Sync terrarium flower upgrade levels from window variables
+  window.state.terrarium.terrariumFlowerUpgrade1Level = window.terrariumFlowerUpgrade1Level || 0;
+  window.state.terrarium.terrariumFlowerUpgrade2Level = window.terrariumFlowerUpgrade2Level || 0;
+  window.state.terrarium.terrariumFlowerUpgrade3Level = window.terrariumFlowerUpgrade3Level || 0;
+  window.state.terrarium.terrariumFlowerUpgrade4Level = window.terrariumFlowerUpgrade4Level || 0;
+  window.state.terrarium.terrariumFlowerUpgrade5Level = window.terrariumFlowerUpgrade5Level || 0;
+  
+  // Sync nectar upgrade levels
+  window.state.terrarium.nectarXpUpgradeLevel = nectarXpUpgradeLevel;
+  window.state.terrarium.nectarValueUpgradeLevel = nectarValueUpgradeLevel;
+  window.state.terrarium.nectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
+  
+  // Sync nectarize system
+  window.state.terrarium.nectarizeMachineRepaired = nectarizeMachineRepaired;
+  window.state.terrarium.nectarizeMachineLevel = nectarizeMachineLevel;
+  window.state.terrarium.nectarizeQuestActive = nectarizeQuestActive;
+  window.state.terrarium.nectarizeQuestProgress = nectarizeQuestProgress;
+  window.state.terrarium.nectarizeQuestGivenBattery = nectarizeQuestGivenBattery;
+  window.state.terrarium.nectarizeQuestGivenSparks = nectarizeQuestGivenSparks;
+  window.state.terrarium.nectarizeQuestGivenPetals = nectarizeQuestGivenPetals;
+  window.state.terrarium.nectarizeMilestones = nectarizeMilestones;
+  window.state.terrarium.nectarizeMilestoneLevel = nectarizeMilestoneLevel;
+  window.state.terrarium.nectarizeResets = nectarizeResets;
+  window.state.terrarium.nectarizeTier = nectarizeTier;
+  window.state.terrarium.nectarizePostResetTokenRequirement = nectarizePostResetTokenRequirement;
+  window.state.terrarium.nectarizePostResetTokensGiven = nectarizePostResetTokensGiven;
+  window.state.terrarium.nectarizePostResetTokenType = nectarizePostResetTokenType;
+  
+  // Sync flower grid troll
+  window.state.terrarium.flowerGridTrollLevel = flowerGridTrollLevel;
+  
+  // Also update window variables for backward compatibility
+  window.terrariumPollen = terrariumPollen;
+  window.terrariumFlowers = terrariumFlowers;
+  window.terrariumXP = terrariumXP;  
+  window.terrariumNectar = terrariumNectar;
+  window.terrariumLevel = terrariumLevel;
+  window.flowerGridTrollLevel = flowerGridTrollLevel;
+  window.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
+  window.pollenValueUpgrade2Level = pollenValueUpgrade2Level;
+  window.flowerValueUpgradeLevel = flowerValueUpgradeLevel;
+  window.pollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+  window.terrariumPollenToolSpeedUpgradeLevel = pollenToolSpeedUpgradeLevel;
+  window.terrariumFlowerXPUpgradeLevel = flowerXPUpgradeLevel;
+  window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+  window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
+  window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
+  window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
+  window.nectarizeMachineRepaired = nectarizeMachineRepaired;
+  window.nectarizeMachineLevel = nectarizeMachineLevel;
+  window.nectarizeQuestActive = nectarizeQuestActive;
+  window.nectarizeQuestProgress = nectarizeQuestProgress;
+  window.nectarizeResets = nectarizeResets;
+  window.nectarizeTier = nectarizeTier;
+}
+
+function syncStateToTerrarium() {
+  if (!window.state || !window.state.terrarium) return;
+  
+  // Sync from state to local variables
+  terrariumPollen = window.state.terrarium.pollen;
+  terrariumFlowers = window.state.terrarium.flowers;
+  terrariumXP = window.state.terrarium.xp;
+  terrariumNectar = window.state.terrarium.nectar;
+  terrariumLevel = window.state.terrarium.level;
+  flowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel || 0;
+  pollenValueUpgradeLevel = window.state.terrarium.pollenValueUpgradeLevel || 0;
+  pollenValueUpgrade2Level = window.state.terrarium.pollenValueUpgrade2Level || 0;
+  flowerValueUpgradeLevel = window.state.terrarium.flowerValueUpgradeLevel || 0;
+  pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel || 0;
+  pollenToolSpeedUpgradeLevel = window.state.terrarium.pollenToolSpeedUpgradeLevel || 0;
+  flowerXPUpgradeLevel = window.state.terrarium.flowerXPUpgradeLevel || 0;
+  extraChargeUpgradeLevel = window.state.terrarium.extraChargeUpgradeLevel || 0;
+  flowerGridTrollLevel = window.state.terrarium.flowerGridTrollLevel || 100;
+  
+  // Sync all terrarium upgrade levels to window variables
+  window.terrariumFlowerUpgrade1Level = window.state.terrarium.terrariumFlowerUpgrade1Level || 0;
+  window.terrariumFlowerUpgrade2Level = window.state.terrarium.terrariumFlowerUpgrade2Level || 0;
+  window.terrariumFlowerUpgrade3Level = window.state.terrarium.terrariumFlowerUpgrade3Level || 0;
+  window.terrariumFlowerUpgrade4Level = window.state.terrarium.terrariumFlowerUpgrade4Level || 0;
+  window.terrariumFlowerUpgrade5Level = window.state.terrarium.terrariumFlowerUpgrade5Level || 0;
+  window.pollenValueUpgrade2Level = window.state.terrarium.pollenValueUpgrade2Level || 0;
+  window.flowerValueUpgradeLevel = window.state.terrarium.flowerValueUpgradeLevel || 0;
+  window.pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel || 0;
+  
+  // Sync nectar upgrade levels to local variables and window variables
+  nectarXpUpgradeLevel = window.state.terrarium.nectarXpUpgradeLevel || 0;
+  nectarValueUpgradeLevel = window.state.terrarium.nectarValueUpgradeLevel || 0;
+  nectarInfinityUpgradeLevel = window.state.terrarium.nectarInfinityUpgradeLevel || 0;
+  window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
+  window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
+  window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
+  
+  // Sync nectarize system
+  nectarizeMachineRepaired = window.state.terrarium.nectarizeMachineRepaired || false;
+  nectarizeMachineLevel = window.state.terrarium.nectarizeMachineLevel || 1;
+  nectarizeQuestActive = window.state.terrarium.nectarizeQuestActive || false;
+  nectarizeQuestProgress = window.state.terrarium.nectarizeQuestProgress || 0;
+  nectarizeResets = window.state.terrarium.nectarizeResets || 0;
+  nectarizeTier = window.state.terrarium.nectarizeTier || 0;
+}
+
+// Make sync functions globally accessible
+window.syncTerrariumToState = syncTerrariumToState;
+window.syncStateToTerrarium = syncStateToTerrarium;
 
 // Make terrarium.js variables globally accessible
 window.fluzzerWelcomeSpeech = fluzzerWelcomeSpeech;
@@ -133,8 +287,9 @@ function getCurrentFlowerGridDimensions() {
   };
 }
 
-let terrariumNectar = new Decimal(window.terrariumNectar || 0);
-let nectarizeMachineRepaired = window.nectarizeMachineRepaired || false;
+// Get nectar and nectarize machine state from centralized state
+let terrariumNectar = terrarium.nectar;
+let nectarizeMachineRepaired = terrarium.nectarizeMachineRepaired || false;
 
 // Helper function to get the appropriate fluzzer image based on infinity total
 function getFluzzerImagePath(imageType = 'normal') {
@@ -244,12 +399,13 @@ window.getFluzzerImagePath = getFluzzerImagePath;
 window.updateAllFluzzerImages = updateAllFluzzerImages;
 window.addDizzyModifier = addDizzyModifier;
 window.triggerFluzzerEnhancedTransformation = triggerFluzzerEnhancedTransformation;
-let nectarizeMachineLevel = window.nectarizeMachineLevel || 1;
-let nectarizeQuestActive = window.nectarizeQuestActive || false;
-let nectarizeQuestProgress = window.nectarizeQuestProgress || 0;
-let nectarizeQuestGivenBattery = window.nectarizeQuestGivenBattery || 0;
-let nectarizeQuestGivenSparks = window.nectarizeQuestGivenSparks || 0;
-let nectarizeQuestGivenPetals = window.nectarizeQuestGivenPetals || 0;
+// Get nectarize quest variables from state
+let nectarizeMachineLevel = terrarium.nectarizeMachineLevel || 1;
+let nectarizeQuestActive = terrarium.nectarizeQuestActive || false;
+let nectarizeQuestProgress = terrarium.nectarizeQuestProgress || 0;
+let nectarizeQuestGivenBattery = terrarium.nectarizeQuestGivenBattery || 0;
+let nectarizeQuestGivenSparks = terrarium.nectarizeQuestGivenSparks || 0;
+let nectarizeQuestGivenPetals = terrarium.nectarizeQuestGivenPetals || 0;
 
 // Initialize flower upgrade levels from window variables
 if (typeof window.terrariumFlowerUpgrade5Level === 'number') {
@@ -277,13 +433,14 @@ window.nectarizeQuestGivenSparks = nectarizeQuestGivenSparks;
 window.nectarizeQuestGivenPetals = nectarizeQuestGivenPetals;
 window.nectarizeQuestRequirements = nectarizeQuestRequirements;
 
-let nectarizeMilestones = window.nectarizeMilestones || [];
-let nectarizeMilestoneLevel = window.nectarizeMilestoneLevel || 0;
-let nectarizeResets = window.nectarizeResets || 0;
-let nectarizeTier = window.nectarizeTier || 0; 
-let nectarizePostResetTokenRequirement = window.nectarizePostResetTokenRequirement || 0; 
-let nectarizePostResetTokensGiven = window.nectarizePostResetTokensGiven || 0; 
-let nectarizePostResetTokenType = window.nectarizePostResetTokenType || 'petals'; 
+// Get nectarize milestone and reset variables from state
+let nectarizeMilestones = terrarium.nectarizeMilestones || [];
+let nectarizeMilestoneLevel = terrarium.nectarizeMilestoneLevel || 0;
+let nectarizeResets = terrarium.nectarizeResets || 0;
+let nectarizeTier = terrarium.nectarizeTier || 0; 
+let nectarizePostResetTokenRequirement = terrarium.nectarizePostResetTokenRequirement || 0; 
+let nectarizePostResetTokensGiven = terrarium.nectarizePostResetTokensGiven || 0; 
+let nectarizePostResetTokenType = terrarium.nectarizePostResetTokenType || 'petals'; 
 
 if (nectarizeMilestones.length === 0) {
   nectarizeMilestones = [
@@ -310,7 +467,8 @@ if (typeof window.nectarizePostResetTokenType === 'undefined') {
   window.nectarizePostResetTokenType = 'petals';
 }
 
-let flowerGridTrollLevel = window.flowerGridTrollLevel || 100;
+// Get flower grid troll level from state
+let flowerGridTrollLevel = terrarium.flowerGridTrollLevel || 100;
 
 function handleFlowerGridTroll(currentLevel) {
   // Start trolling when player gets to level 96 or above
@@ -444,7 +602,7 @@ window.checkTrollStatus = function() {
 window.resetFlowerGridTrollLevel = function() {
   flowerGridTrollLevel = 100;
   window.flowerGridTrollLevel = 100;
-  localStorage.setItem('flowerGridTrollLevel', '100');
+  // Direct save removed - terrarium state now managed by main save system
   updateFlowerGridButtonState();
 };
 
@@ -494,22 +652,28 @@ function getNectarizeTierRequirement(tier) {
 }
 
 function syncTerrariumVarsFromWindow() {
-  terrariumPollen = new Decimal(window.terrariumPollen || 0);
-  terrariumFlowers = new Decimal(window.terrariumFlowers || 0);
-  terrariumXP = new Decimal(window.terrariumXP || 0);
-  terrariumLevel = window.terrariumLevel || 1;
-  terrariumNectar = new Decimal(window.terrariumNectar || 0);
-  nectarizeMachineRepaired = window.nectarizeMachineRepaired || false;
-  nectarizeMachineLevel = window.nectarizeMachineLevel || 1;
-  nectarizeQuestActive = window.nectarizeQuestActive || false;
-  nectarizeQuestProgress = window.nectarizeQuestProgress || 0;
-  nectarizeQuestGivenBattery = window.nectarizeQuestGivenBattery || 0;
-  nectarizeQuestGivenSparks = window.nectarizeQuestGivenSparks || 0;
-  nectarizeQuestGivenPetals = window.nectarizeQuestGivenPetals || 0;
-  nectarizeMilestones = window.nectarizeMilestones || [];
-  nectarizeMilestoneLevel = window.nectarizeMilestoneLevel || 0;
-  nectarizeResets = window.nectarizeResets || 0;
-  nectarizeTier = window.nectarizeTier || 0;
+  // Use state-first approach, fallback to window variables for backward compatibility
+  if (window.state && window.state.terrarium) {
+    syncStateToTerrarium();
+  } else {
+    // Fallback to old window variables if state doesn't exist yet
+    terrariumPollen = new Decimal(window.terrariumPollen || 0);
+    terrariumFlowers = new Decimal(window.terrariumFlowers || 0);
+    terrariumXP = new Decimal(window.terrariumXP || 0);
+    terrariumLevel = window.terrariumLevel || 1;
+    terrariumNectar = new Decimal(window.terrariumNectar || 0);
+    nectarizeMachineRepaired = window.nectarizeMachineRepaired || false;
+    nectarizeMachineLevel = window.nectarizeMachineLevel || 1;
+    nectarizeQuestActive = window.nectarizeQuestActive || false;
+    nectarizeQuestProgress = window.nectarizeQuestProgress || 0;
+    nectarizeQuestGivenBattery = window.nectarizeQuestGivenBattery || 0;
+    nectarizeQuestGivenSparks = window.nectarizeQuestGivenSparks || 0;
+    nectarizeQuestGivenPetals = window.nectarizeQuestGivenPetals || 0;
+    nectarizeMilestones = window.nectarizeMilestones || [];
+    nectarizeMilestoneLevel = window.nectarizeMilestoneLevel || 0;
+    nectarizeResets = window.nectarizeResets || 0;
+    nectarizeTier = window.nectarizeTier || 0;
+  }
   
   // Only reset flowerGridTrollLevel if it's not already been set by the troll system
   if (typeof window.flowerGridTrollLevel === 'number' && window.flowerGridTrollLevel > 100) {
@@ -1186,7 +1350,7 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   pollenGained = pollenGained.mul(getPollenFlowerNectarUpgradeEffect(pollenFlowerNectarUpgradeLevel)).floor();
   
   // Apply Element 21 boost (X10 pollen multiplier) - same as pollen wand
-  const elementsRef = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef = window.state.boughtElements || {};
   if (elementsRef && elementsRef[21]) {
     pollenGained = pollenGained.mul(10).floor();
   }
@@ -1212,7 +1376,7 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   let finalFlowerGain = flowerGainFinal;
   
   // Apply Element 22 boost (X5 flowers multiplier) - same as pollen wand
-  const elementsRef2 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef2 = window.state.boughtElements || {};
   if (elementsRef2 && elementsRef2[22]) {
     finalFlowerGain = finalFlowerGain.mul(5).floor();
   }
@@ -1232,8 +1396,8 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
     }
   }
   
-  let totalPollenGain = finalPollenGain.add(boostResult.pollenBoost || 0);
-  let totalFlowerGain = finalFlowerGain.add(boostResult.flowerBoost || 0);
+  let totalPollenGain = finalPollenGain.add(DecimalUtils.toDecimal(boostResult.pollenBoost || 0));
+  let totalFlowerGain = finalFlowerGain.add(DecimalUtils.toDecimal(boostResult.flowerBoost || 0));
   
   // Apply total infinity boost
   if (typeof window.applyTotalInfinityReachedBoost === 'function') {
@@ -1247,8 +1411,8 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   if (window.debugFluzzerGain) {
   }
   
-  window.terrariumPollen = terrariumPollen;
-  window.terrariumFlowers = terrariumFlowers;
+  // Sync with state and window variables
+  syncTerrariumToState();
   
   // Use EXACT same tracking logic as pollen wand
   if (typeof window.trackFlowerMilestone === 'function') {
@@ -1272,8 +1436,8 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   // Update terrarium XP to the new value after leveling
   if (leveledUp) {
     terrariumXP = currentXP;
-    window.terrariumXP = terrariumXP;
-    window.terrariumLevel = terrariumLevel;
+    // Sync with state and window variables
+    syncTerrariumToState();
     if (typeof window.showTerrariumLevelUpModal === 'function') {
       window.showTerrariumLevelUpModal(terrariumLevel);
     }
@@ -1899,26 +2063,20 @@ function updateNectarizeButtonVisibility() {
     ? (DecimalUtils.isDecimal(state.grade) ? state.grade.toNumber() : state.grade)
     : 1;
   
-  // Get save-slot-specific key for highest grade reached
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-  const highestGradeKey = `highestGradeReached_${currentSaveSlot}`;
+  // Track highest grade reached using main save system only
+  let highestGradeReached = 1;
   
-  // Track highest grade reached in both localStorage and game state for persistence
-  let highestGradeReached = parseInt(localStorage.getItem(highestGradeKey) || '1');
-  
-  // Also check game state if available
+  // Check game state for highest grade reached
   if (typeof state !== 'undefined' && state.highestGradeReached) {
-    const stateHighest = DecimalUtils.isDecimal(state.highestGradeReached) 
+    highestGradeReached = DecimalUtils.isDecimal(state.highestGradeReached) 
       ? state.highestGradeReached.toNumber() 
       : state.highestGradeReached;
-    highestGradeReached = Math.max(highestGradeReached, stateHighest);
   }
   
   // Update highest grade if current is higher
   if (currentGrade > highestGradeReached) {
     highestGradeReached = currentGrade;
-    localStorage.setItem(highestGradeKey, highestGradeReached.toString());
-    // Also store in game state
+    // Store in game state only - managed by main save system
     if (typeof state !== 'undefined') {
       state.highestGradeReached = highestGradeReached;
     }
@@ -2633,7 +2791,7 @@ function handlePollenWandClick(index, cols, rows) {
   }
   pollenGained = pollenGained.mul(getPollenFlowerNectarUpgradeEffect(pollenFlowerNectarUpgradeLevel)).floor();
   // Apply Element 21 boost (X10 pollen multiplier)
-  const elementsRef3 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef3 = window.state.boughtElements || {};
   if (elementsRef3 && elementsRef3[21]) {
     pollenGained = pollenGained.mul(10).floor();
   }
@@ -2655,7 +2813,7 @@ function handlePollenWandClick(index, cols, rows) {
   let finalPollenGain = pollenGained;
   let finalFlowerGain = flowerGainFinal;
   // Apply Element 22 boost (X5 flowers multiplier)
-  const elementsRef4 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef4 = window.state.boughtElements || {};
   if (elementsRef4 && elementsRef4[22]) {
     finalFlowerGain = finalFlowerGain.mul(5).floor();
   }
@@ -2677,8 +2835,9 @@ function handlePollenWandClick(index, cols, rows) {
   
   terrariumPollen = terrariumPollen.add(totalPollenGain);
   terrariumFlowers = terrariumFlowers.add(totalFlowerGain);
-  window.terrariumPollen = terrariumPollen;
-  window.terrariumFlowers = terrariumFlowers;
+  
+  // Sync with state and window variables
+  syncTerrariumToState();
   if (typeof window.trackFlowerMilestone === 'function') {
     window.trackFlowerMilestone(terrariumFlowers);
   }
@@ -2697,10 +2856,9 @@ function handlePollenWandClick(index, cols, rows) {
     leveledUp = true;
   }
   terrariumXP = currentXP;
-  window.terrariumPollen = terrariumPollen;
-  window.terrariumFlowers = terrariumFlowers;
-  window.terrariumXP = terrariumXP;
-  window.terrariumLevel = terrariumLevel;
+  
+  // Sync with state and window variables
+  syncTerrariumToState();
   // Award friendship to Fluzzer for using pollen wand on flowers
   awardFluzzerFriendshipForPollenWandClick();
   
@@ -3710,7 +3868,9 @@ function buyPollenValueUpgrade(count) {
       window.trackUpgrade();
     }
   }
-  window.terrariumPollen = terrariumPollen;
+  
+  // Sync with state and window variables
+  syncTerrariumToState();
   updatePollenUpgradeModal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -3756,6 +3916,9 @@ function buyFlowerUpgrade3(count) {
   }
   window.terrariumFlowers = terrariumFlowers;
   window.terrariumPollenValueUpgrade2Level = pollenValueUpgrade2Level;
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateFlowerUpgrade3Modal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -4338,6 +4501,9 @@ function buyFlowerValueUpgrade(count) {
     }
   }
   window.terrariumFlowers = terrariumFlowers;
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateFlowerUpgradeModal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -4721,6 +4887,9 @@ function updateExtraChargeUpgradeModal() {
         pollen -= currentCost;
         extraChargeUpgradeLevel++;
         window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+        
+        // Sync with state after upgrade
+        syncTerrariumToState();
         updateExtraChargeUpgradeModal();
         updateDisplay();
       }
@@ -4735,6 +4904,9 @@ function updateExtraChargeUpgradeModal() {
           extraChargeUpgradeLevel++;
         }
         window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+        
+        // Sync with state after upgrade
+        syncTerrariumToState();
         updateExtraChargeUpgradeModal();
         updateDisplay();
       }
@@ -4828,6 +5000,9 @@ function buyExtraChargeUpgrade(count) {
   }
   window.terrariumPollen = terrariumPollen;
   window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateExtraChargeUpgradeModal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -5383,6 +5558,9 @@ function buyPollenToolSpeedUpgrade(count) {
     }
   }
   window.terrariumPollen = terrariumPollen;
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updatePollenToolSpeedUpgradeModal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -5728,6 +5906,9 @@ function buyFlowerXPUpgrade(count) {
     }
   }
   window.terrariumFlowers = terrariumFlowers;
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateFlowerXPUpgradeModal();
   updateTerrariumUpgradeCurrencyCounts();
 }
@@ -5906,19 +6087,14 @@ function buyFlowerUpgrade4(count) {
   }
   window.terrariumFlowers = terrariumFlowers;
   window.terrariumFlowerUpgrade4Level = flowerUpgrade4Level;
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-  if (currentSaveSlot) {
-    const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
-    if (slotData) {
-      const save = JSON.parse(slotData);
-      save.terrariumFlowerUpgrade4Level = flowerUpgrade4Level;
-      localStorage.setItem(`swariaSaveSlot${currentSaveSlot}`, JSON.stringify(save));
-    }
-  }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
+  // Direct save removed - terrarium state now managed by main save system
   updateFlowerUpgrade4Modal();
   updateFlowerUpgrade4CircleCost();
   updateTerrariumUpgradeCurrencyCounts();
-  if (typeof saveGame === 'function') saveGame();
+  // Save system disabled
 }
 
 function updateFlowerUpgrade4CircleCost() {
@@ -6001,19 +6177,14 @@ function buyFlowerUpgrade5(count) {
   }
   window.terrariumFlowers = terrariumFlowers;
   // No need to reassign since we're already using window.terrariumFlowerUpgrade5Level directly
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-  if (currentSaveSlot) {
-    const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
-    if (slotData) {
-      const save = JSON.parse(slotData);
-      save.terrariumFlowerUpgrade5Level = window.terrariumFlowerUpgrade5Level;
-      localStorage.setItem(`swariaSaveSlot${currentSaveSlot}`, JSON.stringify(save));
-    }
-  }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
+  // Direct save removed - terrarium state now managed by main save system
   updateFlowerUpgrade5Modal();
   updateFlowerUpgrade5CircleCost();
   updateTerrariumUpgradeCurrencyCounts();
-  if (typeof saveGame === 'function') saveGame();
+  // Save system disabled
 }
 
 function buyMaxFlowerUpgrade5() {
@@ -6142,7 +6313,7 @@ function addTerrariumXP(amount) {
   const nectarXpEffect = getNectarXpUpgradeEffect(nectarXpUpgradeLevel);
   let total = Math.floor(amount * flowerEffect * xpMultiplierEffect * nectarXpEffect);
   // Apply Element 23 boost (X3 terrarium XP multiplier)
-  const elementsRef5 = (typeof boughtElements !== 'undefined') ? boughtElements : window.boughtElements;
+  const elementsRef5 = window.state.boughtElements || {};
   if (elementsRef5 && elementsRef5[23]) {
     total = Math.floor(total * 3);
   }
@@ -7487,6 +7658,9 @@ function buyPollenFlowerNectarUpgrade(count = 1) {
     window.terrariumNectar = terrariumNectar;
     window.terrariumPollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
   }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateNectarUpgradeSection();
   updateTerrariumUpgradeCurrencyCounts();
   updatePollenFlowerNectarUpgradeModal();
@@ -7557,6 +7731,9 @@ function buyNectarXpUpgrade(count = 1) {
     window.terrariumNectar = terrariumNectar;
     window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
   }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateNectarUpgradeSection();
   updateTerrariumUpgradeCurrencyCounts();
   updateNectarXpUpgradeModal();
@@ -7627,6 +7804,9 @@ function buyNectarValueUpgrade(count = 1) {
     window.terrariumNectar = terrariumNectar;
     window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
   }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateNectarUpgradeSection();
   updateTerrariumUpgradeCurrencyCounts();
   updateNectarValueUpgradeModal();
@@ -7695,6 +7875,9 @@ function buyNectarInfinityUpgrade(count = 1) {
     window.terrariumNectar = terrariumNectar;
     window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
   }
+  
+  // Sync with state after upgrade
+  syncTerrariumToState();
   updateNectarUpgradeSection();
   updateTerrariumUpgradeCurrencyCounts();
   updateNectarInfinityUpgradeModal();

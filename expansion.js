@@ -118,8 +118,9 @@ function getPermanentlyAvailableElements() {
     }
   }
   
-  // Add infinity upgrade bonus
-  const swalementLevel = (window.infinityUpgrades && window.infinityUpgrades.swalementDiscovery) || 0;
+  // Add infinity upgrade bonus - check both global reference and centralized state
+  const swalementLevel = (window.infinityUpgrades && window.infinityUpgrades.swalementDiscovery) || 
+                         (window.state && window.state.infinityUpgrades && window.state.infinityUpgrades.swalementDiscovery) || 0;
   const maxWithBonus = Math.min(118, baseMax + swalementLevel);
   
   return maxWithBonus;
@@ -179,7 +180,7 @@ function updateGradeUI() {
   
   const nextGrade = currentGrade + 1;
   const nextCost = getGradeKPCost(nextGrade);
-  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.gte(nextCost)) {
     gradeUpBtn.disabled = false;
     gradeUpBtn.classList.add("glow");
@@ -375,11 +376,11 @@ function gradeUp() {
   const currentGrade = DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1);
   const nextGrade = currentGrade + 1;
   const nextCost = getGradeKPCost(nextGrade);
-  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.lt(nextCost)) return;
   const oldGrade = currentGrade;
   showGradeUpAnimation(oldGrade, nextGrade);
-  swariaKnowledge.kp = new Decimal(1);
+  state.kp = new Decimal(1);
   window.state.grade = new Decimal(nextGrade);
   
   // Update highest grade achieved - no permanent element discovery during expansion reset

@@ -277,10 +277,7 @@ function closeInfinityFluffStoryModal() {
   }
   window.state.seenInfinityFluffStory = true;
   
-  // Save the game to persist the flag
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
+  // Save system disabled
 }
 
 (function() {
@@ -315,10 +312,7 @@ function showElement25StoryModal() {
     }
     window.state.seenElement25StoryModal = true;
     
-    // Save the game to persist the flag
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
+    // Save system disabled
     
     // Check for advanced prism unlock
     if (typeof window.checkAdvancedPrismUnlock === 'function') {
@@ -340,10 +334,7 @@ function closeElement25StoryModal() {
   }
   window.state.seenElement25StoryModal = true;
   
-  // Save the game to persist the flag
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
+  // Save system disabled
   
   // Check for advanced prism unlock
   if (typeof window.checkAdvancedPrismUnlock === 'function') {
@@ -381,10 +372,7 @@ function closeInfinityResetStoryModal() {
   }
   window.state.seenInfinityResetStory = true;
   
-  // Save the game to persist the flag
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
+  // Save system disabled
 }
 
 (function() {

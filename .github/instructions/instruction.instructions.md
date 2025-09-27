@@ -17,3 +17,5 @@ Coding Guidelines:
 9. When modifying existing code, ensure that the original functionality is preserved unless explicitly changing it.
 10. Make sure there is no trace of ai involvement in the codebase.
 11. Never revert every files to the last git commit.
+12. When adding new currencies, ensure they are stored in window.state
+13. Do not create new debug files.

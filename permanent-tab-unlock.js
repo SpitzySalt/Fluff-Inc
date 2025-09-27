@@ -1,55 +1,64 @@
 // Permanent Tab Unlock System
 // Keeps department tab buttons visible permanently after first unlock
 
-// Track which department tabs have been permanently unlocked
-window.permanentTabUnlocks = {
-  prism: false,      // Lab - unlocks at grade 2
-  kitchen: false,    // Kitchen - unlocks at grade 3  
-  frontDesk: false,  // Front Desk - unlocks at grade 2
-  boutique: false,   // Boutique - unlocks at grade 4
-  terrarium: false   // Terrarium - unlocks at grade 6
-};
-
-// Save/load permanent tab unlock data
-function savePermanentTabUnlocks() {
-  if (typeof getSaveSlotSpecificKey === 'function') {
-    const key = getSaveSlotSpecificKey('permanentTabUnlocks');
-    localStorage.setItem(key, JSON.stringify(window.permanentTabUnlocks));
-  } else {
-    localStorage.setItem('permanentTabUnlocks', JSON.stringify(window.permanentTabUnlocks));
-  }
+// Initialize state permanent tab unlocks if they don't exist
+if (!window.state) window.state = {};
+if (!window.state.permanentTabUnlocks) {
+  window.state.permanentTabUnlocks = {
+    prism: false,           // Lab - unlocks at grade 2
+    kitchen: false,         // Kitchen - unlocks at grade 3  
+    frontDesk: false,       // Front Desk - unlocks at grade 2
+    boutique: false,        // Boutique - unlocks at grade 4
+    terrarium: false,       // Terrarium - unlocks at grade 6
+    controlCenter: false,   // Control Center - unlocks after first delivery reset
+    infinityResearch: false // Infinity Research - unlocks after first infinity
+  };
 }
 
+// Make permanent tab unlocks globally accessible (reference centralized state)
+window.permanentTabUnlocks = window.state.permanentTabUnlocks;
+
+// Save/load functions removed - permanent tab unlocks now managed by main save system
+// Data is automatically saved/loaded through window.state
+
+// Load permanent tab unlocks from saved state and apply tab visibility
 function loadPermanentTabUnlocks() {
-  try {
-    let saved;
-    if (typeof getSaveSlotSpecificKey === 'function') {
-      const key = getSaveSlotSpecificKey('permanentTabUnlocks');
-      saved = localStorage.getItem(key);
-    } else {
-      saved = localStorage.getItem('permanentTabUnlocks');
-    }
-    
-    if (saved) {
-      const data = JSON.parse(saved);
-      window.permanentTabUnlocks = {
-        ...window.permanentTabUnlocks,
-        ...data
-      };
-    }
-  } catch (error) {
-
+  // Ensure state exists and has permanent tab unlocks
+  if (!window.state) window.state = {};
+  if (!window.state.permanentTabUnlocks) {
+    window.state.permanentTabUnlocks = {
+      prism: false,
+      kitchen: false,
+      frontDesk: false,
+      boutique: false,
+      terrarium: false,
+      controlCenter: false,
+      infinityResearch: false
+    };
+  }
+  
+  // Update global reference to point to loaded state
+  window.permanentTabUnlocks = window.state.permanentTabUnlocks;
+  
+  // Apply tab visibility based on loaded permanent unlocks
+  if (typeof updateAllTabVisibility === 'function') {
+    updateAllTabVisibility();
   }
 }
+window.loadPermanentTabUnlocks = loadPermanentTabUnlocks;
 
 function resetPermanentTabUnlocks() {
-  window.permanentTabUnlocks = {
+  window.state.permanentTabUnlocks = {
     prism: false,
     kitchen: false,
     frontDesk: false,
     boutique: false,
-    terrarium: false
+    terrarium: false,
+    controlCenter: false,
+    infinityResearch: false
   };
+  // Update the global reference
+  window.permanentTabUnlocks = window.state.permanentTabUnlocks;
 }
 
 // Check if a tab should be permanently unlocked based on current grade
@@ -94,8 +103,25 @@ function checkPermanentTabUnlocks() {
 
   }
   
+  // Control Center unlocks after first delivery reset (when seenFirstDeliveryStory is true)
+  if (window.state && window.state.seenFirstDeliveryStory && !window.permanentTabUnlocks.controlCenter) {
+    window.permanentTabUnlocks.controlCenter = true;
+    hasNewUnlock = true;
+
+  }
+  
+  // Infinity Research unlocks when player has 1+ total infinity
+  const hasTotalInfinity = window.infinitySystem && 
+    ((typeof window.infinitySystem.getTotalInfinityCurrency === 'function' && window.infinitySystem.getTotalInfinityCurrency() >= 1) ||
+     window.infinitySystem.totalInfinityEarned >= 1);
+  if (hasTotalInfinity && !window.permanentTabUnlocks.infinityResearch) {
+    window.permanentTabUnlocks.infinityResearch = true;
+    hasNewUnlock = true;
+
+  }
+  
   if (hasNewUnlock) {
-    savePermanentTabUnlocks();
+    // Save removed - permanent tab unlocks now managed by main save system
     updateAllTabVisibility();
   }
 }
@@ -170,6 +196,27 @@ function updateAllTabVisibility() {
     const stairsCardFloor1 = document.getElementById('stairsCardFloor1');
     if (stairsCard) stairsCard.style.display = 'flex';
     if (stairsCardFloor1) stairsCardFloor1.style.display = 'flex';
+  }
+  
+  // Control Center tab (Knowledge tab)
+  if (window.permanentTabUnlocks.controlCenter) {
+    const knowledgeTab = document.getElementById('knowledgeTab');
+    if (knowledgeTab) {
+      knowledgeTab.style.display = 'inline-block';
+    }
+  }
+  
+  // Infinity Research tab (within Knowledge tab)
+  if (window.permanentTabUnlocks.infinityResearch) {
+    const infinityResearchBtn = document.getElementById('infinityResearchSubTabBtn');
+    if (infinityResearchBtn) {
+      infinityResearchBtn.style.display = 'inline-block';
+    }
+    
+    // Also update the sub-tab visibility
+    if (typeof window.updateInfinitySubTabVisibility === 'function') {
+      window.updateInfinitySubTabVisibility();
+    }
   }
 }
 
@@ -322,6 +369,69 @@ function enhanceStairsCardVisibility() {
   waitForStairsFunction();
 }
 
+// Override the control center unlock check to respect permanent unlocks
+function enhanceControlCenterUnlockFunction() {
+  const waitForControlCenterFunction = () => {
+    if (typeof window.checkControlCenterUnlock === 'function') {
+      const originalCheckControlCenterUnlock = window.checkControlCenterUnlock;
+      
+      window.checkControlCenterUnlock = function() {
+        // Check if permanently unlocked first
+        if (window.permanentTabUnlocks && window.permanentTabUnlocks.controlCenter) {
+          const knowledgeTab = document.getElementById('knowledgeTab');
+          if (knowledgeTab) {
+            knowledgeTab.style.display = 'inline-block';
+          }
+          return;
+        }
+        
+        // Otherwise use original logic
+        originalCheckControlCenterUnlock.apply(this, arguments);
+      };
+
+    } else {
+      // Wait longer if function not ready yet
+      setTimeout(waitForControlCenterFunction, 500);
+    }
+  };
+  
+  waitForControlCenterFunction();
+}
+
+// Override the infinity research unlock check to respect permanent unlocks
+function enhanceInfinityResearchUnlockFunction() {
+  const waitForInfinityResearchFunction = () => {
+    if (typeof window.checkInfinityResearchUnlock === 'function') {
+      const originalCheckInfinityResearchUnlock = window.checkInfinityResearchUnlock;
+      
+      window.checkInfinityResearchUnlock = function() {
+        // Check if permanently unlocked first
+        if (window.permanentTabUnlocks && window.permanentTabUnlocks.infinityResearch) {
+          const infinityResearchBtn = document.getElementById('infinityResearchSubTabBtn');
+          if (infinityResearchBtn) {
+            infinityResearchBtn.style.display = 'inline-block';
+          }
+          
+          // Also update the sub-tab visibility
+          if (typeof window.updateInfinitySubTabVisibility === 'function') {
+            window.updateInfinitySubTabVisibility();
+          }
+          return;
+        }
+        
+        // Otherwise use original logic
+        originalCheckInfinityResearchUnlock.apply(this, arguments);
+      };
+
+    } else {
+      // Wait longer if function not ready yet
+      setTimeout(waitForInfinityResearchFunction, 500);
+    }
+  };
+  
+  waitForInfinityResearchFunction();
+}
+
 // Hook into the grade up function to check for new permanent unlocks
 function hookIntoGradeUp() {
   if (typeof window.gradeUp === 'function') {
@@ -374,17 +484,89 @@ function hookIntoSaveSlotLoading() {
     const originalSaveToSlot = window.saveToSlot;
     
     window.saveToSlot = function() {
-      // Save permanent unlocks before saving slot
-      savePermanentTabUnlocks();
+      // Save removed - permanent tab unlocks now managed by main save system
       return originalSaveToSlot.apply(this, arguments);
     };
   }
 }
 
+// Hook into the reset game function to check for control center unlock after delivery reset
+function hookIntoResetGame() {
+  if (typeof window.resetGame === 'function') {
+    const originalResetGame = window.resetGame;
+    
+    window.resetGame = function() {
+      const result = originalResetGame.apply(this, arguments);
+      
+      // Small delay to let state changes settle, then check for control center unlock
+      setTimeout(() => {
+        checkPermanentTabUnlocks();
+        updateAllTabVisibility();
+      }, 100);
+      
+      return result;
+    };
+  }
+}
+
+// Hook into the story modal close functions to check for control center unlock
+function hookIntoStoryModals() {
+  const waitForStoryFunctions = () => {
+    if (typeof window.closeFirstDeliveryStoryModal === 'function') {
+      const originalCloseFirstDeliveryStoryModal = window.closeFirstDeliveryStoryModal;
+      
+      window.closeFirstDeliveryStoryModal = function() {
+        const result = originalCloseFirstDeliveryStoryModal.apply(this, arguments);
+        
+        // Check for control center unlock after closing first delivery story modal
+        setTimeout(() => {
+          checkPermanentTabUnlocks();
+          updateAllTabVisibility();
+        }, 100);
+        
+        return result;
+      };
+
+    } else {
+      // Wait longer if function not ready yet
+      setTimeout(waitForStoryFunctions, 500);
+    }
+  };
+  
+  waitForStoryFunctions();
+}
+
+// Hook into infinity reset to check for infinity research unlock
+function hookIntoInfinityReset() {
+  // Hook into the infinity system's reset method
+  const waitForInfinitySystem = () => {
+    if (window.infinitySystem && typeof window.infinitySystem.performInfinityReset === 'function') {
+      const originalPerformInfinityReset = window.infinitySystem.performInfinityReset;
+      
+      window.infinitySystem.performInfinityReset = function() {
+        const result = originalPerformInfinityReset.apply(this, arguments);
+        
+        // Small delay to let state changes settle, then check for infinity research unlock
+        setTimeout(() => {
+          checkPermanentTabUnlocks();
+          updateAllTabVisibility();
+        }, 100);
+        
+        return result;
+      };
+
+    } else {
+      // Wait longer if infinity system not ready yet
+      setTimeout(waitForInfinitySystem, 500);
+    }
+  };
+  
+  waitForInfinitySystem();
+}
+
 // Initialize the permanent tab unlock system
 function initializePermanentTabUnlocks() {
-  // Load existing permanent unlocks
-  loadPermanentTabUnlocks();
+  // Permanent tab unlocks are now loaded by main save system - no separate loading needed
   
   // Check current state for any unlocks
   checkPermanentTabUnlocks();
@@ -397,9 +579,14 @@ function initializePermanentTabUnlocks() {
   enhanceBoutiqueVisibilityFunction();
   enhanceFrontDeskUnlockFunction();
   enhanceStairsCardVisibility();
+  enhanceControlCenterUnlockFunction();
+  enhanceInfinityResearchUnlockFunction();
   hookIntoGradeUp();
   hookIntoLoadGame();
   hookIntoSaveSlotLoading();
+  hookIntoResetGame();
+  hookIntoStoryModals();
+  hookIntoInfinityReset();
 
 
 }
@@ -428,8 +615,7 @@ setInterval(() => {
 // Expose functions globally for debugging
 window.checkPermanentTabUnlocks = checkPermanentTabUnlocks;
 window.updateAllTabVisibility = updateAllTabVisibility;
-window.savePermanentTabUnlocks = savePermanentTabUnlocks;
-window.loadPermanentTabUnlocks = loadPermanentTabUnlocks;
+// Save/load functions removed - now managed by main save system
 
 // Debug function to manually unlock all tabs
 window.debugUnlockAllTabsPermanently = function() {
@@ -438,9 +624,11 @@ window.debugUnlockAllTabsPermanently = function() {
     kitchen: true,
     frontDesk: true,
     boutique: true,
-    terrarium: true
+    terrarium: true,
+    controlCenter: true,
+    infinityResearch: true
   };
-  savePermanentTabUnlocks();
+  // Save removed - permanent tab unlocks now managed by main save system
   updateAllTabVisibility();
 
 };
@@ -452,9 +640,11 @@ window.debugResetPermanentTabUnlocks = function() {
     kitchen: false,
     frontDesk: false,
     boutique: false,
-    terrarium: false
+    terrarium: false,
+    controlCenter: false,
+    infinityResearch: false
   };
-  savePermanentTabUnlocks();
+  // Save removed - permanent tab unlocks now managed by main save system
 
 };
 

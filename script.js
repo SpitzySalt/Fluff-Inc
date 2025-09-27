@@ -95,6 +95,7 @@ let state = {
   swaria: new Decimal(0),
   feathers: new Decimal(0),
   artifacts: new Decimal(0),
+  kp: new Decimal(0),
   hasUnlockedSwariaKnowledge: true, 
   grade: new Decimal(1),
   boxesProduced: new Decimal(0), 
@@ -129,24 +130,34 @@ let state = {
   glitteringPetals: new Decimal(0),
   chargedPrisma: new Decimal(0),
   swabucks: new Decimal(0),
+  tokens: {
+    berries: new Decimal(0),
+    sparks: new Decimal(0),
+    petals: new Decimal(0),
+    mushroom: new Decimal(0),
+    water: new Decimal(0),
+    prisma: new Decimal(0),
+    stardust: new Decimal(0)
+  },
+  friendship: {
+    Cargo: { level: 0, points: new Decimal(0) },
+    Generator: { level: 0, points: new Decimal(0) },
+    Lab: { level: 0, points: new Decimal(0) },
+    Kitchen: { level: 0, points: new Decimal(0) },
+    Terrarium: { level: 0, points: new Decimal(0) },
+    Boutique: { level: 0, points: new Decimal(0) },
+    FrontDesk: { level: 0, points: new Decimal(0) }
+  },
   mysticCookingSpeedBoost: new Decimal(0), 
   soapBatteryBoost: new Decimal(0), 
   fluzzerGlitteringPetalsBoost: new Decimal(0), 
   peachyHungerBoost: new Decimal(0), 
   characterHunger: {
     swaria: new Decimal(100),
-    soap: new Decimal(100),
-    fluzzer: new Decimal(100),
-    mystic: new Decimal(100),
-    vi: new Decimal(100)
   },
   lastHungerTick: Date.now(),
   characterFullStatus: {
     swaria: new Decimal(0), 
-    soap: new Decimal(0),
-    fluzzer: new Decimal(0),
-    mystic: new Decimal(0),
-    vi: new Decimal(0)
   },
   hardModeQuestActive: true,
   hardModeQuestProgress: {
@@ -160,6 +171,230 @@ let state = {
     powerRefills: new Decimal(0),
     soapPokes: new Decimal(0),
     ingredientsCooked: new Decimal(0)
+  },
+  // Game state variables moved from individual let declarations
+  boughtElements: {},
+  currentKnowledgeSubTab: 'elementsMain',
+  tickSpeedMultiplier: 1,
+  generatorUpgrades: {
+    common: new Decimal(0),
+    uncommon: new Decimal(0),
+    rare: new Decimal(0),
+    legendary: new Decimal(0),
+    mythic: new Decimal(0)
+  },
+  // Prism system state
+  prismState: {
+    light: new Decimal(0),
+    redlight: new Decimal(0),
+    orangelight: new Decimal(0),
+    yellowlight: new Decimal(0),
+    greenlight: new Decimal(0),
+    bluelight: new Decimal(0),
+    lightparticle: new Decimal(0),
+    redlightparticle: new Decimal(0),
+    orangelightparticle: new Decimal(0),
+    yellowlightparticle: new Decimal(0),
+    greenlightparticle: new Decimal(0),
+    bluelightparticle: new Decimal(0),
+    // Fractional light amounts for accumulation
+    lightFractional: new Decimal(0),
+    redlightFractional: new Decimal(0),
+    orangelightFractional: new Decimal(0),
+    yellowlightFractional: new Decimal(0),
+    greenlightFractional: new Decimal(0),
+    bluelightFractional: new Decimal(0),
+    activeTileIndex: null,
+    activeTileColor: null,
+    generatorUpgrades: {
+      light: new Decimal(0),
+      redlight: new Decimal(0),
+      orangelight: new Decimal(0),
+      yellowlight: new Decimal(0),
+      greenlight: new Decimal(0),
+      bluelight: new Decimal(0)
+    },
+    generatorUnlocked: {
+      light: false,
+      redlight: false,
+      orangelight: false,
+      yellowlight: false,
+      greenlight: false,
+      bluelight: false
+    }
+  },
+  // Advanced prism system state
+  advancedPrismState: {
+    unlocked: false,
+    calibration: {
+      isActive: false,
+      currentLightType: 'light',
+      progress: 0,
+      stable: {
+        light: new Decimal(0),
+        redlight: new Decimal(0),
+        orangelight: new Decimal(0),
+        yellowlight: new Decimal(0),
+        greenlight: new Decimal(0),
+        bluelight: new Decimal(0)
+      },
+      nerfs: {
+        light: new Decimal(1),
+        redlight: new Decimal(1),
+        orangelight: new Decimal(1),
+        yellowlight: new Decimal(1),
+        greenlight: new Decimal(1),
+        bluelight: new Decimal(1)
+      },
+      totalTimeAccumulated: {
+        light: 0,
+        redlight: 0,
+        orangelight: 0,
+        yellowlight: 0,
+        greenlight: 0,
+        bluelight: 0
+      },
+      activeMinigame: null,
+      minigameStartTime: 0,
+      waveFrequency: 1,
+      optimalFrequency: 1,
+      wavePhase: 0,
+      lastAnimationTime: 0,
+      minigameInterval: null,
+      drainInterval: null
+    }
+  },
+  // Front desk system state
+  frontDesk: {
+    availableWorkers: [],
+    assignedWorkers: {},
+    unlockedSlots: 1,
+    nextArrivalTime: null,
+    isUnlocked: false,
+    autobuyerProgress: {},
+    autobuyerUnlocks: {},
+    generatorAutomatorProgress: {},
+    generatorAutomatorUnlocks: {},
+    deliveryProgress: {},
+    deliveryAutomatorUnlocks: {},
+    prismTileProgress: {},
+    prismTileAutomatorUnlocks: {},
+    lightGeneratorAutomatorProgress: {},
+    lightGeneratorAutomatorUnlocks: {},
+    lightGeneratorAutomatorShown: {},
+    tokenFinderAutomatorProgress: {},
+    tokenFinderAutomatorUnlocks: {},
+    totalPollenUpgradesBought: 0,
+    totalFlowerUpgradesBought: 0,
+    totalNectarUpgradesBought: 0,
+    previousUpgradeLevels: {
+      pollen: {},
+      flower: {},
+      nectar: {}
+    },
+    workerHunger: {},
+    foodRations: 0,
+    tokensGivenToTico: 0,
+    lastHungerTick: 0
+  },
+  // Terrarium system state
+  terrarium: {
+    // Core currencies
+    pollen: new Decimal(0),
+    flowers: new Decimal(0),
+    xp: new Decimal(0),
+    nectar: new Decimal(0),
+    level: 1,
+    
+    // Flower grid system
+    flowerGrid: null,
+    
+    // Tool states
+    pollenWandActive: false,
+    wateringCanActive: false,
+    pollenWandCooldown: false,
+    wateringCanCooldown: false,
+    
+    // Fluzzer AI system
+    fluzzerAITimer: null,
+    fluzzerAICursor: null,
+    fluzzerPollenWandActive: false,
+    fluzzerWateringCanActive: false,
+    fluzzerPollenWandCooldown: false,
+    fluzzerClickCount: 0,
+    fluzzerClickTimer: null,
+    fluzzerSpeedBoostActive: false,
+    fluzzerSpeedBoostTimer: null,
+    fluzzerOriginalInterval: 5000,
+    fluzzerTimeoutActive: false,
+    fluzzerTimeoutEndTime: null,
+    fluzzerClickTimestamps: [],
+    fluzzerSpeechTimer: null,
+    fluzzerIsTalking: false,
+    
+    // Flower regrowth system
+    flowerRegrowthTimer: null,
+    lastRegrowthTime: 0,
+    
+    // Upgrade levels
+    flowerFieldExpansionUpgradeLevel: 0,
+    pollenValueUpgradeLevel: 0,
+    pollenValueUpgrade2Level: 0,
+    flowerValueUpgradeLevel: 0,
+    pollenFlowerNectarUpgradeLevel: 0,
+    terrariumFlowerUpgrade1Level: 0,
+    terrariumFlowerUpgrade2Level: 0,
+    terrariumFlowerUpgrade3Level: 0,
+    terrariumFlowerUpgrade4Level: 0,
+    terrariumFlowerUpgrade5Level: 0,
+    
+    // Nectarize system
+    nectarizeMachineRepaired: false,
+    nectarizeMachineLevel: 1,
+    nectarizeQuestActive: false,
+    nectarizeQuestProgress: 0,
+    nectarizeQuestGivenBattery: 0,
+    nectarizeQuestGivenSparks: 0,
+    nectarizeQuestGivenPetals: 0,
+    nectarizeQuestPermanentlyCompleted: false,
+    nectarizeQuestRequirements: {
+      battery: 1,
+      sparks: 20,
+      petals: 20,
+      upgrade: false
+    },
+    nectarizeMilestones: [],
+    nectarizeMilestoneLevel: 0,
+    nectarizeResets: 0,
+    nectarizeTier: 0,
+    nectarizePostResetTokenRequirement: 0,
+    nectarizePostResetTokensGiven: 0,
+    nectarizePostResetTokenType: 'petals',
+    
+    // Flower grid troll system
+    flowerGridTrollLevel: 100,
+    
+    // Hard mode system
+    hardModePermanentlyUnlocked: false,
+    seenNectarizeResetStory: false
+  },
+  
+  // Achievement system state
+  achievements: {},
+  achievementStats: {},
+  
+  // Secret achievement system state
+  secretAchievements: {},
+  
+  // Permanent tab unlock system state
+  permanentTabUnlocks: {
+    prism: false,
+    frontDesk: false,
+    kitchen: false,
+    boutique: false,
+    terrarium: false,
+    controlCenter: false,
+    infinityResearch: false
   }
 };
 let settings = {
@@ -170,44 +405,1003 @@ let settings = {
   disableOfflineProgress: false,
   confirmReset: true,
   confirmNectarizeReset: true,
-  autosave: true,
+  autosave: false,
 };
 window.settings = settings;
 window.applySettings = applySettings;
 // Make state available globally for other scripts
 window.state = state;
-// Initialize kitchen ingredients if not already set
+
+// Migration function to move kitchenIngredients to window.state.tokens
+function migrateKitchenIngredientsToState() {
+  if (!window.kitchenIngredients) return;
+  
+  const tokenTypes = ['berries', 'sparks', 'petals', 'mushroom', 'water', 'prisma', 'stardust'];
+  let needsMigration = false;
+  
+  // Check if any tokens exist in kitchenIngredients
+  for (const tokenType of tokenTypes) {
+    if (window.kitchenIngredients[tokenType] && (
+        (DecimalUtils.isDecimal(window.kitchenIngredients[tokenType]) && window.kitchenIngredients[tokenType].gt(0)) ||
+        (typeof window.kitchenIngredients[tokenType] === 'number' && window.kitchenIngredients[tokenType] > 0)
+      )) {
+      needsMigration = true;
+      break;
+    }
+  }
+  
+  if (needsMigration) {
+    // Initialize tokens section if it doesn't exist
+    if (!window.state.tokens) {
+      window.state.tokens = {
+        berries: new Decimal(0),
+        sparks: new Decimal(0),
+        petals: new Decimal(0),
+        mushroom: new Decimal(0),
+        water: new Decimal(0),
+        prisma: new Decimal(0),
+        stardust: new Decimal(0)
+      };
+    }
+    
+    // Migrate each token type
+    for (const tokenType of tokenTypes) {
+      if (window.kitchenIngredients[tokenType]) {
+        const existingValue = window.kitchenIngredients[tokenType];
+        if (DecimalUtils.isDecimal(existingValue)) {
+          window.state.tokens[tokenType] = existingValue;
+        } else {
+          window.state.tokens[tokenType] = new Decimal(existingValue || 0);
+        }
+      }
+    }
+    
+    // Clear the old kitchenIngredients data to prevent double migration
+    for (const tokenType of tokenTypes) {
+      delete window.kitchenIngredients[tokenType];
+    }
+  }
+}
+
+// Migration function to move window.friendship to window.state.friendship
+function migrateFriendshipToState() {
+  if (window.friendship) {
+    // Initialize friendship section if it doesn't exist
+    if (!window.state.friendship) {
+      window.state.friendship = {
+        Cargo: { level: 0, points: new Decimal(0) },
+        Generator: { level: 0, points: new Decimal(0) },
+        Lab: { level: 0, points: new Decimal(0) },
+        Kitchen: { level: 0, points: new Decimal(0) },
+        Terrarium: { level: 0, points: new Decimal(0) },
+        Boutique: { level: 0, points: new Decimal(0) },
+        FrontDesk: { level: 0, points: new Decimal(0) }
+      };
+    }
+    
+    // Migrate each department's friendship data
+    const departments = ['Cargo', 'Generator', 'Lab', 'Kitchen', 'Terrarium', 'Boutique', 'FrontDesk'];
+    for (const dept of departments) {
+      if (window.friendship[dept]) {
+        // Migrate level
+        if (typeof window.friendship[dept].level === 'number') {
+          window.state.friendship[dept].level = window.friendship[dept].level;
+        }
+        
+        // Migrate points (convert to Decimal if needed)
+        if (window.friendship[dept].points !== undefined) {
+          if (DecimalUtils.isDecimal(window.friendship[dept].points)) {
+            window.state.friendship[dept].points = window.friendship[dept].points;
+          } else {
+            window.state.friendship[dept].points = new Decimal(window.friendship[dept].points || 0);
+          }
+        }
+      }
+    }
+    
+    // Clear the old friendship data to prevent conflicts
+    delete window.friendship;
+  }
+}
+
+// Migrate KP from swariaKnowledge to window.state
+function migrateKpToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // If swariaKnowledge.kp exists and state.kp doesn't, migrate it
+  if (window.swariaKnowledge && window.swariaKnowledge.kp !== undefined && !window.state.kp) {
+    if (DecimalUtils.isDecimal(window.swariaKnowledge.kp)) {
+      window.state.kp = window.swariaKnowledge.kp;
+    } else {
+      window.state.kp = new Decimal(window.swariaKnowledge.kp || 0);
+    }
+    // Remove from old location
+    delete window.swariaKnowledge.kp;
+  }
+  
+  // Ensure state.kp is always a Decimal
+  if (!DecimalUtils.isDecimal(window.state.kp)) {
+    window.state.kp = new Decimal(window.state.kp || 0);
+  }
+}
+
+// Migrate other game state variables to window.state
+function migrateGameStateVariables() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Migrate boughtElements if it exists as a separate variable
+  if (typeof boughtElements !== 'undefined' && !window.state.boughtElements) {
+    window.state.boughtElements = boughtElements;
+  }
+  
+  // Ensure boughtElements is always an object
+  if (!window.state.boughtElements) {
+    window.state.boughtElements = {};
+  }
+  
+  // Migrate currentKnowledgeSubTab if it exists
+  if (typeof currentKnowledgeSubTab !== 'undefined' && !window.state.currentKnowledgeSubTab) {
+    window.state.currentKnowledgeSubTab = currentKnowledgeSubTab;
+  }
+  
+  // Ensure currentKnowledgeSubTab has a default value
+  if (!window.state.currentKnowledgeSubTab) {
+    window.state.currentKnowledgeSubTab = 'elementsMain';
+  }
+  
+  // Migrate tickSpeedMultiplier if it exists
+  if (typeof tickSpeedMultiplier !== 'undefined' && !window.state.tickSpeedMultiplier) {
+    window.state.tickSpeedMultiplier = tickSpeedMultiplier;
+  }
+  
+  // Ensure tickSpeedMultiplier has a default value
+  if (!window.state.tickSpeedMultiplier) {
+    window.state.tickSpeedMultiplier = 1;
+  }
+  
+  // Migrate generatorUpgrades if it exists
+  if (typeof generatorUpgrades !== 'undefined' && !window.state.generatorUpgrades) {
+    window.state.generatorUpgrades = generatorUpgrades;
+  }
+  
+  // Ensure generatorUpgrades is properly initialized
+  if (!window.state.generatorUpgrades) {
+    window.state.generatorUpgrades = {
+      common: new Decimal(0),
+      uncommon: new Decimal(0),
+      rare: new Decimal(0),
+      legendary: new Decimal(0),
+      mythic: new Decimal(0)
+    };
+  }
+  
+  // Ensure all generatorUpgrades are Decimals
+  const boxTypes = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+  for (const type of boxTypes) {
+    if (!DecimalUtils.isDecimal(window.state.generatorUpgrades[type])) {
+      window.state.generatorUpgrades[type] = new Decimal(window.state.generatorUpgrades[type] || 0);
+    }
+  }
+}
+
+// Migrate prism state to window.state
+function migratePrismStateToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Migrate existing window.prismState if it exists
+  if (typeof window.prismState !== 'undefined' && window.prismState) {
+    // Merge existing prismState data into state.prismState
+    if (!window.state.prismState) {
+      window.state.prismState = {};
+    }
+    
+    // Copy over light currencies
+    const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+    const particleTypes = ['lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'];
+    
+    [...lightTypes, ...particleTypes].forEach(type => {
+      if (window.prismState[type] !== undefined) {
+        window.state.prismState[type] = DecimalUtils.isDecimal(window.prismState[type]) ? 
+          window.prismState[type] : new Decimal(window.prismState[type] || 0);
+      }
+    });
+    
+    // Copy fractional amounts
+    lightTypes.forEach(type => {
+      const fractionalKey = type + 'Fractional';
+      if (window.prismState[fractionalKey] !== undefined) {
+        window.state.prismState[fractionalKey] = DecimalUtils.isDecimal(window.prismState[fractionalKey]) ? 
+          window.prismState[fractionalKey] : new Decimal(window.prismState[fractionalKey] || 0);
+      }
+    });
+    
+    // Copy other properties
+    if (window.prismState.activeTileIndex !== undefined) {
+      window.state.prismState.activeTileIndex = window.prismState.activeTileIndex;
+    }
+    if (window.prismState.activeTileColor !== undefined) {
+      window.state.prismState.activeTileColor = window.prismState.activeTileColor;
+    }
+    
+    // Copy generator upgrades
+    if (window.prismState.generatorUpgrades) {
+      if (!window.state.prismState.generatorUpgrades) {
+        window.state.prismState.generatorUpgrades = {};
+      }
+      lightTypes.forEach(type => {
+        if (window.prismState.generatorUpgrades[type] !== undefined) {
+          window.state.prismState.generatorUpgrades[type] = DecimalUtils.isDecimal(window.prismState.generatorUpgrades[type]) ? 
+            window.prismState.generatorUpgrades[type] : new Decimal(window.prismState.generatorUpgrades[type] || 0);
+        }
+      });
+    }
+    
+    // Copy generator unlocked status
+    if (window.prismState.generatorUnlocked) {
+      if (!window.state.prismState.generatorUnlocked) {
+        window.state.prismState.generatorUnlocked = {};
+      }
+      lightTypes.forEach(type => {
+        if (window.prismState.generatorUnlocked[type] !== undefined) {
+          window.state.prismState.generatorUnlocked[type] = window.prismState.generatorUnlocked[type];
+        }
+      });
+    }
+  }
+  
+  // Ensure all prism state properties are properly initialized
+  if (!window.state.prismState) {
+    window.state.prismState = {};
+  }
+  
+  const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+  const particleTypes = ['lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'];
+  
+  // Ensure all light currencies are Decimals
+  [...lightTypes, ...particleTypes].forEach(type => {
+    if (!DecimalUtils.isDecimal(window.state.prismState[type])) {
+      window.state.prismState[type] = new Decimal(window.state.prismState[type] || 0);
+    }
+  });
+  
+  // Ensure all fractional amounts are Decimals
+  lightTypes.forEach(type => {
+    const fractionalKey = type + 'Fractional';
+    if (!DecimalUtils.isDecimal(window.state.prismState[fractionalKey])) {
+      window.state.prismState[fractionalKey] = new Decimal(window.state.prismState[fractionalKey] || 0);
+    }
+  });
+  
+  // Ensure generator upgrades are Decimals
+  if (!window.state.prismState.generatorUpgrades) {
+    window.state.prismState.generatorUpgrades = {};
+  }
+  lightTypes.forEach(type => {
+    if (!DecimalUtils.isDecimal(window.state.prismState.generatorUpgrades[type])) {
+      window.state.prismState.generatorUpgrades[type] = new Decimal(window.state.prismState.generatorUpgrades[type] || 0);
+    }
+  });
+  
+  // Ensure generator unlocked status exists
+  if (!window.state.prismState.generatorUnlocked) {
+    window.state.prismState.generatorUnlocked = {};
+  }
+  lightTypes.forEach(type => {
+    if (window.state.prismState.generatorUnlocked[type] === undefined) {
+      window.state.prismState.generatorUnlocked[type] = false;
+    }
+  });
+  
+  // Migrate existing window.advancedPrismState if it exists
+  if (typeof window.advancedPrismState !== 'undefined' && window.advancedPrismState) {
+    if (!window.state.advancedPrismState) {
+      window.state.advancedPrismState = {};
+    }
+    
+    // Copy unlock status
+    if (window.advancedPrismState.unlocked !== undefined) {
+      window.state.advancedPrismState.unlocked = window.advancedPrismState.unlocked;
+    }
+    
+    // Copy calibration data
+    if (window.advancedPrismState.calibration) {
+      if (!window.state.advancedPrismState.calibration) {
+        window.state.advancedPrismState.calibration = {};
+      }
+      
+      const calibrationProps = ['isActive', 'currentLightType', 'progress', 'waveFrequency', 'optimalFrequency', 'wavePhase', 'lastAnimationTime'];
+      calibrationProps.forEach(prop => {
+        if (window.advancedPrismState.calibration[prop] !== undefined) {
+          window.state.advancedPrismState.calibration[prop] = window.advancedPrismState.calibration[prop];
+        }
+      });
+      
+      // Copy stable light data
+      if (window.advancedPrismState.calibration.stable) {
+        if (!window.state.advancedPrismState.calibration.stable) {
+          window.state.advancedPrismState.calibration.stable = {};
+        }
+        lightTypes.forEach(type => {
+          if (window.advancedPrismState.calibration.stable[type] !== undefined) {
+            window.state.advancedPrismState.calibration.stable[type] = DecimalUtils.isDecimal(window.advancedPrismState.calibration.stable[type]) ? 
+              window.advancedPrismState.calibration.stable[type] : new Decimal(window.advancedPrismState.calibration.stable[type] || 0);
+          }
+        });
+      }
+      
+      // Don't migrate intervals - they should be recreated
+    }
+  }
+  
+  // Ensure advanced prism state is properly initialized
+  if (!window.state.advancedPrismState) {
+    window.state.advancedPrismState = {
+      unlocked: false,
+      calibration: {
+        isActive: false,
+        currentLightType: 'light',
+        progress: 0,
+        stable: {},
+        waveFrequency: 1,
+        optimalFrequency: 1,
+        wavePhase: 0,
+        lastAnimationTime: 0,
+        minigameInterval: null,
+        drainInterval: null
+      }
+    };
+  }
+  
+  // Ensure stable light amounts are Decimals
+  if (!window.state.advancedPrismState.calibration.stable) {
+    window.state.advancedPrismState.calibration.stable = {};
+  }
+  lightTypes.forEach(type => {
+    if (!DecimalUtils.isDecimal(window.state.advancedPrismState.calibration.stable[type])) {
+      window.state.advancedPrismState.calibration.stable[type] = new Decimal(window.state.advancedPrismState.calibration.stable[type] || 0);
+    }
+  });
+}
+
+// Migrate front desk state to window.state
+function migrateFrontDeskStateToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize front desk state if it doesn't exist
+  if (!window.state.frontDesk) {
+    window.state.frontDesk = {
+      availableWorkers: [],
+      assignedWorkers: {},
+      unlockedSlots: 1,
+      nextArrivalTime: null,
+      isUnlocked: false,
+      autobuyerProgress: {},
+      autobuyerUnlocks: {},
+      generatorAutomatorProgress: {},
+      generatorAutomatorUnlocks: {},
+      deliveryProgress: {},
+      deliveryAutomatorUnlocks: {},
+      prismTileProgress: {},
+      prismTileAutomatorUnlocks: {},
+      lightGeneratorAutomatorProgress: {},
+      lightGeneratorAutomatorUnlocks: {},
+      lightGeneratorAutomatorShown: {},
+      tokenFinderAutomatorProgress: {},
+      tokenFinderAutomatorUnlocks: {},
+      totalPollenUpgradesBought: 0,
+      totalFlowerUpgradesBought: 0,
+      totalNectarUpgradesBought: 0,
+      previousUpgradeLevels: {
+        pollen: {},
+        flower: {},
+        nectar: {}
+      },
+      workerHunger: {},
+      foodRations: 0,
+      tokensGivenToTico: 0,
+      lastHungerTick: Date.now()
+    };
+  }
+  
+  // Ensure numeric values are properly initialized
+  if (typeof window.state.frontDesk.unlockedSlots !== 'number') {
+    window.state.frontDesk.unlockedSlots = 1;
+  }
+  if (typeof window.state.frontDesk.foodRations !== 'number') {
+    window.state.frontDesk.foodRations = 0;
+  }
+  if (typeof window.state.frontDesk.tokensGivenToTico !== 'number') {
+    window.state.frontDesk.tokensGivenToTico = 0;
+  }
+  if (typeof window.state.frontDesk.totalPollenUpgradesBought !== 'number') {
+    window.state.frontDesk.totalPollenUpgradesBought = 0;
+  }
+  if (typeof window.state.frontDesk.totalFlowerUpgradesBought !== 'number') {
+    window.state.frontDesk.totalFlowerUpgradesBought = 0;
+  }
+  if (typeof window.state.frontDesk.totalNectarUpgradesBought !== 'number') {
+    window.state.frontDesk.totalNectarUpgradesBought = 0;
+  }
+  if (typeof window.state.frontDesk.lastHungerTick !== 'number') {
+    window.state.frontDesk.lastHungerTick = Date.now();
+  }
+  
+  // Ensure object properties exist
+  if (!window.state.frontDesk.availableWorkers) {
+    window.state.frontDesk.availableWorkers = [];
+  }
+  if (!window.state.frontDesk.assignedWorkers) {
+    window.state.frontDesk.assignedWorkers = {};
+  }
+  if (!window.state.frontDesk.autobuyerProgress) {
+    window.state.frontDesk.autobuyerProgress = {};
+  }
+  if (!window.state.frontDesk.workerHunger) {
+    window.state.frontDesk.workerHunger = {};
+  }
+  if (!window.state.frontDesk.previousUpgradeLevels) {
+    window.state.frontDesk.previousUpgradeLevels = {
+      pollen: {},
+      flower: {},
+      nectar: {}
+    };
+  }
+}
+
+// Migrate terrarium state to window.state
+function migrateTerrariumStateToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize terrarium state if it doesn't exist
+  if (!window.state.terrarium) {
+    window.state.terrarium = {
+      // Core currencies
+      pollen: new Decimal(0),
+      flowers: new Decimal(0),
+      xp: new Decimal(0),
+      nectar: new Decimal(0),
+      level: 1,
+      
+      // Flower grid system
+      flowerGrid: null,
+      
+      // Tool states
+      pollenWandActive: false,
+      wateringCanActive: false,
+      pollenWandCooldown: false,
+      wateringCanCooldown: false,
+      
+      // Fluzzer AI system
+      fluzzerAITimer: null,
+      fluzzerAICursor: null,
+      fluzzerPollenWandActive: false,
+      fluzzerWateringCanActive: false,
+      fluzzerPollenWandCooldown: false,
+      fluzzerClickCount: 0,
+      fluzzerClickTimer: null,
+      fluzzerSpeedBoostActive: false,
+      fluzzerSpeedBoostTimer: null,
+      fluzzerOriginalInterval: 5000,
+      fluzzerTimeoutActive: false,
+      fluzzerTimeoutEndTime: null,
+      fluzzerClickTimestamps: [],
+      fluzzerSpeechTimer: null,
+      fluzzerIsTalking: false,
+      
+      // Flower regrowth system
+      flowerRegrowthTimer: null,
+      lastRegrowthTime: 0,
+      
+      // Upgrade levels
+      flowerFieldExpansionUpgradeLevel: 0,
+      pollenValueUpgradeLevel: 0,
+      pollenValueUpgrade2Level: 0,
+      flowerValueUpgradeLevel: 0,
+      pollenFlowerNectarUpgradeLevel: 0,
+      terrariumFlowerUpgrade1Level: 0,
+      terrariumFlowerUpgrade2Level: 0,
+      terrariumFlowerUpgrade3Level: 0,
+      terrariumFlowerUpgrade4Level: 0,
+      terrariumFlowerUpgrade5Level: 0,
+      
+      // Nectarize system
+      nectarizeMachineRepaired: false,
+      nectarizeMachineLevel: 1,
+      nectarizeQuestActive: false,
+      nectarizeQuestProgress: 0,
+      nectarizeQuestGivenBattery: 0,
+      nectarizeQuestGivenSparks: 0,
+      nectarizeQuestGivenPetals: 0,
+      nectarizeQuestPermanentlyCompleted: false,
+      nectarizeQuestRequirements: {
+        battery: 1,
+        sparks: 20,
+        petals: 20,
+        upgrade: false
+      },
+      nectarizeMilestones: [],
+      nectarizeMilestoneLevel: 0,
+      nectarizeResets: 0,
+      nectarizeTier: 0,
+      nectarizePostResetTokenRequirement: 0,
+      nectarizePostResetTokensGiven: 0,
+      nectarizePostResetTokenType: 'petals',
+      
+      // Flower grid troll system
+      flowerGridTrollLevel: 100,
+      
+      // Hard mode system
+      hardModePermanentlyUnlocked: false,
+      seenNectarizeResetStory: false
+    };
+  }
+  
+  // Migrate existing terrarium data from window variables
+  const terrariumVars = {
+    // Core currencies
+    terrariumPollen: 'pollen',
+    terrariumFlowers: 'flowers', 
+    terrariumXP: 'xp',
+    terrariumNectar: 'nectar',
+    terrariumLevel: 'level',
+    
+    // Flower grid
+    terrariumFlowerGrid: 'flowerGrid',
+    
+    // Tool states (these are runtime states, don't migrate)
+    
+    // Upgrade levels
+    flowerFieldExpansionUpgradeLevel: 'flowerFieldExpansionUpgradeLevel',
+    pollenValueUpgradeLevel: 'pollenValueUpgradeLevel',
+    pollenValueUpgrade2Level: 'pollenValueUpgrade2Level',
+    flowerValueUpgradeLevel: 'flowerValueUpgradeLevel',
+    pollenFlowerNectarUpgradeLevel: 'pollenFlowerNectarUpgradeLevel',
+    terrariumFlowerUpgrade1Level: 'terrariumFlowerUpgrade1Level',
+    terrariumFlowerUpgrade2Level: 'terrariumFlowerUpgrade2Level',
+    terrariumFlowerUpgrade3Level: 'terrariumFlowerUpgrade3Level',
+    terrariumFlowerUpgrade4Level: 'terrariumFlowerUpgrade4Level',
+    terrariumFlowerUpgrade5Level: 'terrariumFlowerUpgrade5Level',
+    
+    // Nectarize system
+    nectarizeMachineRepaired: 'nectarizeMachineRepaired',
+    nectarizeMachineLevel: 'nectarizeMachineLevel',
+    nectarizeQuestActive: 'nectarizeQuestActive',
+    nectarizeQuestProgress: 'nectarizeQuestProgress',
+    nectarizeQuestGivenBattery: 'nectarizeQuestGivenBattery',
+    nectarizeQuestGivenSparks: 'nectarizeQuestGivenSparks',
+    nectarizeQuestGivenPetals: 'nectarizeQuestGivenPetals',
+    nectarizeQuestPermanentlyCompleted: 'nectarizeQuestPermanentlyCompleted',
+    nectarizeMilestones: 'nectarizeMilestones',
+    nectarizeMilestoneLevel: 'nectarizeMilestoneLevel',
+    nectarizeResets: 'nectarizeResets',
+    nectarizeTier: 'nectarizeTier',
+    nectarizePostResetTokenRequirement: 'nectarizePostResetTokenRequirement',
+    nectarizePostResetTokensGiven: 'nectarizePostResetTokensGiven',
+    nectarizePostResetTokenType: 'nectarizePostResetTokenType',
+    
+    // Flower grid troll system
+    flowerGridTrollLevel: 'flowerGridTrollLevel',
+    
+    // Hard mode system
+    hardModePermanentlyUnlocked: 'hardModePermanentlyUnlocked',
+    seenNectarizeResetStory: 'seenNectarizeResetStory'
+  };
+  
+  // Migrate each terrarium variable if it exists
+  for (const [windowVar, stateVar] of Object.entries(terrariumVars)) {
+    if (window[windowVar] !== undefined) {
+      const value = window[windowVar];
+      
+      // Handle Decimal values
+      if (DecimalUtils.isDecimal(value)) {
+        window.state.terrarium[stateVar] = value;
+      } else if (['pollen', 'flowers', 'xp', 'nectar'].includes(stateVar)) {
+        // Ensure currency values are Decimals
+        window.state.terrarium[stateVar] = new Decimal(value || 0);
+      } else {
+        // Copy other values directly
+        window.state.terrarium[stateVar] = value;
+      }
+    }
+  }
+  
+  // Ensure all Decimal values are properly initialized
+  const decimalVars = ['pollen', 'flowers', 'xp', 'nectar'];
+  decimalVars.forEach(varName => {
+    if (!DecimalUtils.isDecimal(window.state.terrarium[varName])) {
+      window.state.terrarium[varName] = new Decimal(window.state.terrarium[varName] || 0);
+    }
+  });
+  
+  // Ensure numeric values are properly initialized
+  if (typeof window.state.terrarium.level !== 'number') {
+    window.state.terrarium.level = 1;
+  }
+  
+  // Ensure arrays are properly initialized
+  if (!Array.isArray(window.state.terrarium.nectarizeMilestones)) {
+    window.state.terrarium.nectarizeMilestones = [];
+  }
+  if (!Array.isArray(window.state.terrarium.fluzzerClickTimestamps)) {
+    window.state.terrarium.fluzzerClickTimestamps = [];
+  }
+  
+  // Ensure nectarize quest requirements object exists
+  if (!window.state.terrarium.nectarizeQuestRequirements) {
+    window.state.terrarium.nectarizeQuestRequirements = {
+      battery: 1,
+      sparks: 20,
+      petals: 20,
+      upgrade: false
+    };
+  }
+}
+
+// Migrate achievement system state to window.state
+function migrateAchievementsToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize achievement state if it doesn't exist
+  if (!window.state.achievements) {
+    window.state.achievements = {};
+  }
+  if (!window.state.achievementStats) {
+    window.state.achievementStats = {};
+  }
+  
+  // Migrate existing window.achievements if it exists
+  if (typeof window.achievements !== 'undefined' && window.achievements) {
+    Object.assign(window.state.achievements, window.achievements);
+  }
+  
+  // Migrate existing window.achievementStats if it exists
+  if (typeof window.achievementStats !== 'undefined' && window.achievementStats) {
+    Object.assign(window.state.achievementStats, window.achievementStats);
+  }
+}
+
+// Migrate secret achievement system state to window.state
+function migrateSecretAchievementsToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize secret achievement state if it doesn't exist
+  if (!window.state.secretAchievements) {
+    window.state.secretAchievements = {};
+  }
+  
+  // Migrate existing window.secretAchievements if it exists
+  if (typeof window.secretAchievements !== 'undefined' && window.secretAchievements) {
+    Object.assign(window.state.secretAchievements, window.secretAchievements);
+  }
+}
+
+// Migrate permanent tab unlock system state to window.state
+function migratePermanentTabUnlocksToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize permanent tab unlocks state if it doesn't exist
+  if (!window.state.permanentTabUnlocks) {
+    window.state.permanentTabUnlocks = {
+      prism: false,
+      frontDesk: false,
+      kitchen: false,
+      boutique: false,
+      terrarium: false,
+      controlCenter: false,
+      infinityResearch: false
+    };
+  }
+  
+  // Migrate existing window.permanentTabUnlocks if it exists
+  if (typeof window.permanentTabUnlocks !== 'undefined' && window.permanentTabUnlocks) {
+    Object.assign(window.state.permanentTabUnlocks, window.permanentTabUnlocks);
+  }
+}
+
+function migrateInfinityUpgradesToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize infinity upgrades state if it doesn't exist
+  if (!window.state.infinityUpgrades) {
+    window.state.infinityUpgrades = {
+      // Tier 1
+      multiplier: 0,
+      
+      // Tier 2
+      currency: 0,
+      generator: 0,
+      
+      // Tier 3
+      infinity: 0,
+      
+      // Special tier for Swalemnt Research
+      swalementDiscovery: 0
+    };
+  }
+  
+  // Migrate existing window.infinityUpgrades if it exists
+  if (typeof window.infinityUpgrades !== 'undefined' && window.infinityUpgrades) {
+    Object.assign(window.state.infinityUpgrades, window.infinityUpgrades);
+  }
+}
+
+// Sync global references to centralized state
+function syncGlobalReferencesToState() {
+  // Sync boughtElements reference
+  window.boughtElements = state.boughtElements;
+  
+  // Sync prism state reference
+  if (state.prismState) {
+    window.prismState = state.prismState;
+    // Re-initialize prism state to ensure Decimal values
+    if (typeof window.initializePrismState === 'function') {
+      window.initializePrismState();
+    }
+    // Update prism UI after syncing state
+    if (typeof window.forceUpdateAllLightCounters === 'function') {
+      window.forceUpdateAllLightCounters();
+    }
+    if (typeof window.updateLightGeneratorButtons === 'function') {
+      window.updateLightGeneratorButtons();
+    }
+  }
+  if (state.advancedPrismState) {
+    window.advancedPrismState = state.advancedPrismState;
+  }
+  
+  // Sync front desk state
+  if (state.frontDesk && window.frontDesk && typeof window.frontDesk.loadData === 'function') {
+    if (typeof window.debugFrontDeskState === 'function') {
+      window.debugFrontDeskState('Before sync loadData');
+    }
+    window.frontDesk.loadData();
+    // Update front desk UI after syncing state
+    if (typeof window.frontDesk.renderUI === 'function') {
+      window.frontDesk.renderUI();
+    }
+    if (typeof window.debugFrontDeskState === 'function') {
+      window.debugFrontDeskState('After sync loadData');
+    }
+  }
+  
+  // Sync terrarium state
+  if (typeof window.syncStateToTerrarium === 'function') {
+    window.syncStateToTerrarium();
+  }
+  
+  // Sync achievements references
+  if (state.achievements) {
+    window.achievements = state.achievements;
+  }
+  if (state.achievementStats) {
+    window.achievementStats = state.achievementStats;
+  }
+  if (state.secretAchievements) {
+    window.secretAchievements = state.secretAchievements;
+  }
+  if (state.permanentTabUnlocks) {
+    window.permanentTabUnlocks = state.permanentTabUnlocks;
+  }
+  if (state.infinityUpgrades) {
+    window.infinityUpgrades = state.infinityUpgrades;
+    // Update permanent element discovery when infinity upgrades are synced
+    if (typeof window.updatePermanentElementDiscovery === 'function') {
+      window.updatePermanentElementDiscovery();
+    }
+  }
+  
+  // Sync other state references
+  window.currentKnowledgeSubTab = state.currentKnowledgeSubTab;
+  window.tickSpeedMultiplier = state.tickSpeedMultiplier;
+  
+  // Sync friendship system for backward compatibility
+  if (state.friendship) {
+    // Ensure all friendship departments have proper Decimal points
+    const departments = ['Cargo', 'Generator', 'Lab', 'Kitchen', 'Terrarium', 'Boutique', 'FrontDesk'];
+    
+    departments.forEach(dept => {
+      if (state.friendship[dept]) {
+        // Ensure points is always a Decimal
+        if (!DecimalUtils.isDecimal(state.friendship[dept].points)) {
+          state.friendship[dept].points = new Decimal(state.friendship[dept].points || 0);
+        }
+        
+        // Ensure level is a number
+        if (typeof state.friendship[dept].level !== 'number') {
+          state.friendship[dept].level = Number(state.friendship[dept].level) || 0;
+        }
+      }
+    });
+    
+    // Create friendship functions if they don't exist
+    if (!state.friendship.addPoints) {
+      state.friendship.addPoints = function(character, points) {
+        try {
+          // Character name to department mapping
+          const charToDept = {
+            'swaria': 'Cargo',
+            'soap': 'Generator', 
+            'vi': 'Lab',
+            'vivien': 'Lab',
+            'mystic': 'Kitchen',
+            'fluzzer': 'Terrarium',
+            'lepre': 'Boutique',
+            'tico': 'FrontDesk'
+          };
+          
+          const dept = charToDept[character.toLowerCase()];
+          if (!dept) {
+            console.warn(`Unknown character: ${character}`);
+            return;
+          }
+          
+          // Initialize department if needed
+          state.friendship[dept] = state.friendship[dept] || { level: 0, points: new Decimal(0) };
+          
+          // Ensure points is a Decimal
+          if (!DecimalUtils.isDecimal(state.friendship[dept].points)) {
+            state.friendship[dept].points = new Decimal(state.friendship[dept].points || 0);
+          }
+          
+          // Add points
+          const pointsToAdd = DecimalUtils.isDecimal(points) ? points : new Decimal(points);
+          state.friendship[dept].points = state.friendship[dept].points.add(pointsToAdd);
+          
+          // Check for level ups
+          let lvl = state.friendship[dept].level || 0;
+          const MAX_FRIENDSHIP_LEVEL = 100;
+          
+          // Simple level calculation - each level needs 100 points for now
+          while (state.friendship[dept].points.gte(100) && lvl < MAX_FRIENDSHIP_LEVEL) {
+            state.friendship[dept].points = state.friendship[dept].points.sub(100);
+            lvl++;
+          }
+          state.friendship[dept].level = lvl;
+          
+        } catch (error) {
+          console.error(`Error adding friendship points to ${character}:`, error);
+        }
+      };
+    }
+    
+    if (!state.friendship.getPoints) {
+      state.friendship.getPoints = function(character) {
+        const charToDept = {
+          'swaria': 'Cargo',
+          'soap': 'Generator', 
+          'vi': 'Lab',
+          'vivien': 'Lab',
+          'mystic': 'Kitchen',
+          'fluzzer': 'Terrarium',
+          'lepre': 'Boutique',
+          'tico': 'FrontDesk'
+        };
+        
+        const dept = charToDept[character.toLowerCase()];
+        if (!dept || !state.friendship[dept]) return new Decimal(0);
+        
+        const points = state.friendship[dept].points;
+        return DecimalUtils.isDecimal(points) ? points : new Decimal(points || 0);
+      };
+    }
+    
+    if (!state.friendship.getFriendshipLevel) {
+      state.friendship.getFriendshipLevel = function(character) {
+        const charToDept = {
+          'swaria': 'Cargo',
+          'soap': 'Generator', 
+          'vi': 'Lab',
+          'vivien': 'Lab',
+          'mystic': 'Kitchen',
+          'fluzzer': 'Terrarium',
+          'lepre': 'Boutique',
+          'tico': 'FrontDesk'
+        };
+        
+        const dept = charToDept[character.toLowerCase()];
+        if (!dept || !state.friendship[dept]) {
+          return { level: 0, points: new Decimal(0) };
+        }
+        
+        const f = state.friendship[dept];
+        return {
+          level: Number(f.level) || 0,
+          points: DecimalUtils.isDecimal(f.points) ? f.points : new Decimal(f.points || 0)
+        };
+      };
+    }
+    
+    // Sync to window.friendship for backward compatibility
+    window.friendship = state.friendship;
+    
+    // Ensure friendship functions are available at both locations
+    if (state.friendship.addPoints && typeof state.friendship.addPoints === 'function') {
+      window.friendship.addPoints = state.friendship.addPoints;
+    }
+    if (state.friendship.getPoints && typeof state.friendship.getPoints === 'function') {
+      window.friendship.getPoints = state.friendship.getPoints;
+    }
+    if (state.friendship.getFriendshipLevel && typeof state.friendship.getFriendshipLevel === 'function') {
+      window.friendship.getFriendshipLevel = state.friendship.getFriendshipLevel;
+    }
+  }
+}
+
+// Run migrations
+migrateKitchenIngredientsToState();
+migrateFriendshipToState();
+migrateKpToState();
+migrateGameStateVariables();
+migratePrismStateToState();
+migrateFrontDeskStateToState();
+migrateTerrariumStateToState();
+migrateAchievementsToState();
+migrateSecretAchievementsToState();
+migratePermanentTabUnlocksToState();
+migrateInfinityUpgradesToState();
+
+// Make sync function globally accessible
+window.syncGlobalReferencesToState = syncGlobalReferencesToState;
+
+// Debug function to check element persistence
+window.debugElementPersistence = function() {
+  
+  // Show first few bought elements for comparison
+  const stateElements = [];
+  const globalElements = [];
+  for (let i = 1; i <= 10; i++) {
+    if (window.state.boughtElements && window.state.boughtElements[i]) stateElements.push(i);
+    if (window.boughtElements && window.boughtElements[i]) globalElements.push(i);
+  }
+};
+
+// Debug function for infinity upgrades persistence
+window.debugInfinityUpgrades = function() {
+  if (window.infinityUpgrades) {
+    console.log('Upgrade levels:', {
+      multiplier: window.infinityUpgrades.multiplier,
+      currency: window.infinityUpgrades.currency,
+      generator: window.infinityUpgrades.generator,
+      infinity: window.infinityUpgrades.infinity,
+      swalementDiscovery: window.infinityUpgrades.swalementDiscovery
+    });
+  }
+};
+
+// Sync global references after migration
+syncGlobalReferencesToState();
+
+// Initialize kitchen ingredients if not already set (for backward compatibility)
 if (!window.kitchenIngredients) {
   window.kitchenIngredients = {};
 }
 let swariaKnowledge = {
-  kp: new Decimal(0)
+  // KP moved to window.state.kp for save compatibility
 };
-let boughtElements = {};
-// Make boughtElements available globally
-window.boughtElements = boughtElements;
 // Make swariaKnowledge globally accessible
 window.swariaKnowledge = swariaKnowledge;
 // Initialize permanent prism advanced lab unlock flag
 window.prismAdvancedLabUnlocked = false;
-let currentKnowledgeSubTab = 'elementsMain'; 
-let tickSpeedMultiplier = 1;
-let tickInterval = setInterval(gameTick, 1000);
+let tickInterval = setInterval(gameTick, 100);
 
-// Make knowledge and tick variables globally accessible
-window.currentKnowledgeSubTab = currentKnowledgeSubTab;
-window.tickSpeedMultiplier = tickSpeedMultiplier;
+// Global references are now handled by syncGlobalReferencesToState()
 window.tickInterval = tickInterval;
-let generatorUpgrades = {
-  common: new Decimal(0),
-  uncommon: new Decimal(0),
-  rare: new Decimal(0),
-  legendary: new Decimal(0),
-  mythic: new Decimal(0)
-};
 
 // Expose to window so other files can access it
-window.generatorUpgrades = generatorUpgrades;
+window.generatorUpgrades = state.generatorUpgrades;
+
+// Make prism states accessible to other files
+window.prismState = state.prismState;
+window.advancedPrismState = state.advancedPrismState;
 
 // Box generators array
 const generators = [
@@ -232,6 +1426,7 @@ window.visibilityChangeHandler = function() {
 };
 document.addEventListener('visibilitychange', window.visibilityChangeHandler);
 let currentSaveSlot = null;
+// Old unstable save slot loading removed - localStorage is available for new save system
 if (localStorage.getItem('currentSaveSlot')) {
   currentSaveSlot = parseInt(localStorage.getItem('currentSaveSlot'), 10);
 }
@@ -255,9 +1450,9 @@ function sanityCheckCurrencies() {
   if (!DecimalUtils.isDecimal(state.fluff)) state.fluff = new Decimal(state.fluff || 0);
   if (!DecimalUtils.isDecimal(state.swaria)) state.swaria = new Decimal(state.swaria || 0);
   
-  // Ensure swariaKnowledge.kp is always a Decimal
-  if (!DecimalUtils.isDecimal(swariaKnowledge.kp)) {
-    swariaKnowledge.kp = new Decimal(swariaKnowledge.kp || 0);
+  // Ensure state.kp is always a Decimal
+  if (!DecimalUtils.isDecimal(state.kp)) {
+    state.kp = new Decimal(state.kp || 0);
   }
   
   // Ensure swabucks is always a Decimal
@@ -279,6 +1474,107 @@ function sanityCheckCurrencies() {
 // Make these functions globally accessible
 window.toggleFluffGainLogging = toggleFluffGainLogging;
 window.sanityCheckCurrencies = sanityCheckCurrencies;
+
+// Function to validate and fix Decimal objects across the game state
+window.validateAndFixDecimals = function() {
+  // Fix main currencies
+  const currencies = ['fluff', 'swaria', 'feathers', 'artifacts', 'kp'];
+  currencies.forEach(currency => {
+    if (!DecimalUtils.isDecimal(window.state[currency])) {
+      window.state[currency] = new Decimal(window.state[currency] || 0);
+    }
+  });
+  
+  // Fix boxes produced by type
+  const boxTypes = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+  boxTypes.forEach(boxType => {
+    if (!DecimalUtils.isDecimal(window.state.boxesProducedByType[boxType])) {
+      window.state.boxesProducedByType[boxType] = new Decimal(window.state.boxesProducedByType[boxType] || 0);
+    }
+    if (!DecimalUtils.isDecimal(window.state.generatorUpgrades[boxType])) {
+      window.state.generatorUpgrades[boxType] = new Decimal(window.state.generatorUpgrades[boxType] || 0);
+    }
+  });
+  
+  // Fix prism state currencies
+  if (window.state.prismState) {
+    const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+    lightTypes.forEach(lightType => {
+      if (!DecimalUtils.isDecimal(window.state.prismState[lightType])) {
+        window.state.prismState[lightType] = new Decimal(window.state.prismState[lightType] || 0);
+      }
+      if (!DecimalUtils.isDecimal(window.state.prismState.generatorUpgrades[lightType])) {
+        window.state.prismState.generatorUpgrades[lightType] = new Decimal(window.state.prismState.generatorUpgrades[lightType] || 0);
+      }
+    });
+  }
+  
+  // Fix prismcore level
+  if (window.prismState && window.prismState.prismcore && !DecimalUtils.isDecimal(window.prismState.prismcore.level)) {
+    window.prismState.prismcore.level = new Decimal(window.prismState.prismcore.level || 1);
+  }
+  if (window.prismState && window.prismState.prismcore && !DecimalUtils.isDecimal(window.prismState.prismcore.potential)) {
+    window.prismState.prismcore.potential = new Decimal(window.prismState.prismcore.potential || 0);
+  }
+  
+  // Fix terrarium currencies
+  if (window.state.terrarium) {
+    const terrariumCurrencies = ['pollen', 'flowers', 'xp', 'nectar'];
+    terrariumCurrencies.forEach(currency => {
+      if (!DecimalUtils.isDecimal(window.state.terrarium[currency])) {
+        window.state.terrarium[currency] = new Decimal(window.state.terrarium[currency] || 0);
+      }
+    });
+  }
+  
+  // Fix infinity system currencies
+  if (window.state.infinitySystem) {
+    if (!DecimalUtils.isDecimal(window.state.infinitySystem.infinityPoints)) {
+      window.state.infinitySystem.infinityPoints = new Decimal(window.state.infinitySystem.infinityPoints || 0);
+    }
+    if (!DecimalUtils.isDecimal(window.state.infinitySystem.theoremProgress)) {
+      window.state.infinitySystem.theoremProgress = new Decimal(window.state.infinitySystem.theoremProgress || 0);
+    }
+  }
+  
+  // Fix power system values
+  if (window.state.powerEnergy && !DecimalUtils.isDecimal(window.state.powerEnergy)) {
+    window.state.powerEnergy = new Decimal(window.state.powerEnergy || 0);
+  }
+  if (window.state.powerMaxEnergy && !DecimalUtils.isDecimal(window.state.powerMaxEnergy)) {
+    window.state.powerMaxEnergy = new Decimal(window.state.powerMaxEnergy || 100);
+  }
+  
+  // Fix friendship system points
+  if (window.state.friendship) {
+    const departments = ['Cargo', 'Generator', 'Lab', 'Kitchen', 'Terrarium'];
+    departments.forEach(dept => {
+      if (window.state.friendship[dept] && window.state.friendship[dept].points) {
+        if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
+          window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
+        }
+      }
+    });
+  }
+  
+  // Fix grade value
+  if (!DecimalUtils.isDecimal(window.state.grade)) {
+    window.state.grade = new Decimal(window.state.grade || 1);
+  }
+
+};
+
+// Debug function to test infinity system with current fluff value
+window.testInfinitySystemNow = function() {
+  if (!window.infinitySystem) {
+    return;
+  }
+  
+  
+  // Force check
+  const result = window.infinitySystem.checkInfinity('fluff', window.state.fluff);
+  
+};
 
 function addCurrency(currencyName, amount) {
   // Check if game is paused - if so, don't add any currency
@@ -342,7 +1638,7 @@ function addCurrency(currencyName, amount) {
   // Handle light currencies (stored in prismState)
   const lightCurrencies = ['light', 'redLight', 'orangeLight', 'yellowLight', 'greenLight', 'blueLight'];
   if (lightCurrencies.includes(currencyName)) {
-    if (typeof window.prismState !== 'undefined') {
+    if (typeof state.prismState !== 'undefined') {
       // Map currency names to prismState property names
       const prismStateName = currencyName === 'redLight' ? 'redlight' : 
                             currencyName === 'orangeLight' ? 'orangelight' :
@@ -351,25 +1647,29 @@ function addCurrency(currencyName, amount) {
                             currencyName === 'blueLight' ? 'bluelight' : 
                             currencyName; // 'light' stays as 'light'
       
-      if (!DecimalUtils.isDecimal(window.prismState[prismStateName])) {
-        window.prismState[prismStateName] = new Decimal(0);
+      if (!DecimalUtils.isDecimal(state.prismState[prismStateName])) {
+        state.prismState[prismStateName] = new Decimal(0);
       }
       
       // Initialize fractional accumulator for any light currency
       const fractionalKey = prismStateName + 'Fractional';
-      if (typeof window.prismState[fractionalKey] === 'undefined') {
-        window.prismState[fractionalKey] = new Decimal(0);
+      if (typeof state.prismState[fractionalKey] === 'undefined') {
+        state.prismState[fractionalKey] = new Decimal(0);
       }
       
       // Add to fractional accumulator
-      window.prismState[fractionalKey] = window.prismState[fractionalKey].add(amount);
+      state.prismState[fractionalKey] = state.prismState[fractionalKey].add(amount);
       
       // If we have accumulated at least 1 full unit, add it to the main counter
-      if (window.prismState[fractionalKey].gte(1)) {
-        const wholeAmount = window.prismState[fractionalKey].floor();
-        window.prismState[prismStateName] = window.prismState[prismStateName].add(wholeAmount);
-        window.prismState[fractionalKey] = window.prismState[fractionalKey].sub(wholeAmount);
+      if (state.prismState[fractionalKey].gte(1)) {
+        const wholeAmount = state.prismState[fractionalKey].floor();
+        state.prismState[prismStateName] = state.prismState[prismStateName].add(wholeAmount);
+        state.prismState[fractionalKey] = state.prismState[fractionalKey].sub(wholeAmount);
       }
+      
+      // Update window.prismState reference for backward compatibility
+      window.prismState[prismStateName] = state.prismState[prismStateName];
+      window.prismState[fractionalKey] = state.prismState[fractionalKey];
     }
     return amount; // Return the final amount that was added
   }
@@ -497,8 +1797,8 @@ window.checkArtifactMultiplier = function() {
 
   }
   
-  if (boughtElements[6]) {
-    const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  if (state.boughtElements[6]) {
+    const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
     const kpBonus = kpDecimal.mul(0.1).floor();
 
   } else {
@@ -510,8 +1810,8 @@ window.checkArtifactMultiplier = function() {
   const baseArtifacts = 4; // Average of 3-5
   let totalArtifacts = baseArtifacts;
   
-  if (boughtElements[6]) {
-    const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  if (state.boughtElements[6]) {
+    const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
     totalArtifacts += kpDecimal.mul(0.1).floor().toNumber();
   }
   
@@ -541,19 +1841,19 @@ window.checkKitchenIngredients = function() {
 // Function to recalculate all element effects (should be called on load)
 function recalculateAllElementEffects() {
   // Reset tick speed multiplier
-  tickSpeedMultiplier = 1;
+  state.tickSpeedMultiplier = 1;
   
   // Apply tick speed effects
-  if (boughtElements[1]) tickSpeedMultiplier *= 1.25;
-  if (boughtElements[5]) tickSpeedMultiplier *= 1.25;
+  if (state.boughtElements[1]) state.tickSpeedMultiplier *= 1.25;
+  if (state.boughtElements[5]) state.tickSpeedMultiplier *= 1.25;
   
   // Update the game tick interval
   clearInterval(window.tickInterval);
-  window.tickInterval = setInterval(gameTick, 1000 / tickSpeedMultiplier);
+  window.tickInterval = setInterval(gameTick, 1000 / state.tickSpeedMultiplier);
   
   // Apply other element effects that aren't tick-speed related
-  for (let index in boughtElements) {
-    if (boughtElements[index] && index != 1 && index != 5) {
+  for (let index in state.boughtElements) {
+    if (state.boughtElements[index] && index != 1 && index != 5) {
       applyElementEffect(parseInt(index));
     }
   }
@@ -587,8 +1887,16 @@ function gameTick() {
     window.trackFluffMilestone(state.fluff);
   }
   tickGenerators(diff);
-  if (boughtElements[7] && !(window.isTabHidden || document.hidden)) tickPowerGenerator(diff);
-  // Removed duplicate call to window.chargerTick(diff) to prevent double power drain.
+  if (state.boughtElements[7] && !(window.isTabHidden || document.hidden)) tickPowerGenerator(diff);
+  // Call charger tick for proper charge generation and power consumption
+  if (window.charger && typeof window.chargerTick === 'function') {
+    window.chargerTick(diff);
+  }
+  // Fast charger display update for real-time feedback
+  if (window.charger && typeof window.fastUpdateChargerDisplay === 'function') {
+    window.fastUpdateChargerDisplay();
+  }
+  // Note: Charger state is now saved through the regular save system, not on every tick
   if (window.charger && typeof window.applyChargerMilestoneEffects === 'function') {
     window.applyChargerMilestoneEffects();
   }
@@ -620,6 +1928,11 @@ function gameTick() {
   // Check infinity challenge completion
   if (typeof checkChallengeCompletion === 'function') {
     checkChallengeCompletion();
+  }
+
+  // Check all currencies for infinity threshold
+  if (window.infinitySystem && typeof window.infinitySystem.checkAllCurrencies === 'function') {
+    window.infinitySystem.checkAllCurrencies();
   }
 
     // Make key functions globally accessible
@@ -1168,7 +2481,7 @@ function renderElementGrid() {
 `;
     tile.title = `${data.name || "Unknown"} (Tier: ${data.category || "?"})`;
     tile.dataset.index = i;
-    if (boughtElements[i]) {
+    if (state.boughtElements[i]) {
       tile.classList.add("bought");
     }
     tile.onmouseenter = (() => {
@@ -1248,18 +2561,18 @@ function buyBox(type) {
   let swariaGain = 0;
   if (["common", "uncommon", "rare", "legendary", "mythic"].includes(type)) {
     swariaGain = rng(...box.swaria);
-    if (boughtElements[2]) swariaGain += 3;
-    if (boughtElements[3]) swariaGain += state.feathers.mul(0.1).floor().toNumber();
+    if (state.boughtElements[2]) swariaGain += 3;
+    if (state.boughtElements[3]) swariaGain += state.feathers.mul(0.1).floor().toNumber();
     swariaGain = getSwariaCoinGain(swariaGain);
   }
   let featherGain = new Decimal(0);
   if (["rare", "legendary", "mythic"].includes(type)) {
     featherGain = new Decimal(rng(...box.feather));
-    if (boughtElements[4]) {
+    if (state.boughtElements[4]) {
       featherGain = featherGain.add(state.artifacts.mul(0.1).floor());
     }
-    if (typeof state !== 'undefined' && typeof prismState !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(4)) {
-      featherGain = featherGain.add(prismState.redlight || 0);
+    if (typeof state !== 'undefined' && typeof state.prismState !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(4)) {
+      featherGain = featherGain.add(state.prismState.redlight || 0);
     }
     // Apply expansion multiplier using the proper function
     if (typeof getFeatherGain === 'function') {
@@ -1269,19 +2582,19 @@ function buyBox(type) {
   let artifactGain = 0;
   if (["legendary", "mythic"].includes(type)) {
     artifactGain = rng(...box.artifact);
-    if (boughtElements[6]) {
-      const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+    if (state.boughtElements[6]) {
+      const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
       artifactGain += kpDecimal.mul(0.1).floor().toNumber();
     }
     if (typeof state !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(5)) {
       const grade = DecimalUtils.toDecimal(state.grade || 1);
       artifactGain *= new Decimal(2).pow(grade.sub(4)).toNumber();
     }
-    if (typeof prismState !== 'undefined' && prismState.orangelight) {
-      artifactGain *= (1 + prismState.orangelight);
+    if (typeof state.prismState !== 'undefined' && state.prismState.orangelight) {
+      artifactGain *= (1 + state.prismState.orangelight);
     }
   }
-  if (boughtElements[11]) {
+  if (state.boughtElements[11]) {
     if (type === "uncommon") {
       // Ensure uncommon boxes produced is a Decimal
       if (!DecimalUtils.isDecimal(state.boxesProducedByType.uncommon)) {
@@ -1314,50 +2627,11 @@ function buyBox(type) {
   featherGain = featherGain.floor();
   artifactGain = Math.floor(artifactGain);
   
-  // Calculate popup amounts - apply same nerfs as addCurrency to show correct values
-  let popupSwariaGain = swariaGain;
-  let popupFeatherGain = featherGain.toNumber();
-  let popupArtifactGain = artifactGain;
+  // Use actual addCurrency return values for accurate popup amounts
+  const actualSwariaGain = addCurrency('swaria', swariaGain);
+  const actualFeatherGain = addCurrency('feathers', featherGain);
+  const actualArtifactGain = addCurrency('artifacts', artifactGain);
   
-  // Apply cargo boost first (same order as addCurrency)
-  if (typeof applyCargoBoost === 'function') {
-    popupSwariaGain = applyCargoBoost(new Decimal(popupSwariaGain), 'swaria').floor().toNumber();
-    popupFeatherGain = applyCargoBoost(new Decimal(popupFeatherGain), 'feathers').floor().toNumber();
-    popupArtifactGain = applyCargoBoost(new Decimal(popupArtifactGain), 'artifacts').floor().toNumber();
-  }
-  
-  // Apply fluff infinity penalty first (same order as addCurrency)
-  if (typeof window.applyFluffInfinityPenalty === 'function') {
-    popupSwariaGain = window.applyFluffInfinityPenalty(new Decimal(popupSwariaGain), 'swaria').floor().toNumber();
-    popupFeatherGain = window.applyFluffInfinityPenalty(new Decimal(popupFeatherGain), 'feathers').floor().toNumber();
-    popupArtifactGain = window.applyFluffInfinityPenalty(new Decimal(popupArtifactGain), 'artifacts').floor().toNumber();
-  }
-  
-  // Apply same nerfs that addCurrency applies to show accurate popup amounts
-  if (typeof window.infinitySystem !== 'undefined' && window.infinitySystem.applyInfinityNerfs) {
-    popupSwariaGain = window.infinitySystem.applyInfinityNerfs(new Decimal(popupSwariaGain), 'swaria').floor().toNumber();
-    popupFeatherGain = window.infinitySystem.applyInfinityNerfs(new Decimal(popupFeatherGain), 'feathers').floor().toNumber();
-    popupArtifactGain = window.infinitySystem.applyInfinityNerfs(new Decimal(popupArtifactGain), 'artifacts').floor().toNumber();
-  }
-  
-  // Apply challenge nerfs if active
-  if (typeof window.applyChallengeNerfs === 'function') {
-    popupSwariaGain = window.applyChallengeNerfs(new Decimal(popupSwariaGain), 'swaria').floor().toNumber();
-    popupFeatherGain = window.applyChallengeNerfs(new Decimal(popupFeatherGain), 'feathers').floor().toNumber();
-    popupArtifactGain = window.applyChallengeNerfs(new Decimal(popupArtifactGain), 'artifacts').floor().toNumber();
-  }
-  
-  // Apply anomaly debuff to popup amounts (same as addCurrency)
-  if (typeof window.getAnomalyDebuff === 'function') {
-    const anomalyDebuff = window.getAnomalyDebuff();
-    popupSwariaGain = new Decimal(popupSwariaGain).mul(anomalyDebuff).floor().toNumber();
-    popupFeatherGain = new Decimal(popupFeatherGain).mul(anomalyDebuff).floor().toNumber();
-    popupArtifactGain = new Decimal(popupArtifactGain).mul(anomalyDebuff).floor().toNumber();
-  }
-  
-  addCurrency('swaria', swariaGain);
-  addCurrency('feathers', featherGain);
-  addCurrency('artifacts', artifactGain);
   if (typeof window.trackSwariaMilestone === 'function') {
     window.trackSwariaMilestone(state.swaria);
   }
@@ -1367,9 +2641,11 @@ function buyBox(type) {
   if (typeof window.trackArtifactMilestone === 'function') {
     window.trackArtifactMilestone(state.artifacts);
   }
-  if (popupSwariaGain > 0) showGainPopup("swariaGain", popupSwariaGain, "Swaria Coins");
-  if (popupFeatherGain > 0) showGainPopup("featherGain", popupFeatherGain, "Feathers");
-  if (popupArtifactGain > 0) showGainPopup("artifactGain", popupArtifactGain, "Artifacts");
+  
+  // Show popups with actual gain amounts
+  if (actualSwariaGain > 0) showGainPopup("swariaGain", actualSwariaGain, "Swaria Coins");
+  if (actualFeatherGain > 0) showGainPopup("featherGain", actualFeatherGain, "Feathers");
+  if (actualArtifactGain > 0) showGainPopup("artifactGain", actualArtifactGain, "Artifacts");
   updateUI();
   if (window.spawnIngredientToken) {
     let btn = null;
@@ -1396,17 +2672,14 @@ function resetGame() {
       window.frontDesk.onDeliveryClicked();
     }
     
-    const isFirstTimeKP = swariaKnowledge.kp.eq(0);
+    const isFirstTimeKP = state.kp.eq(0);
     
-    // Apply total infinity boost to kp gain
+    // KP gain already includes all boosts from getKpGainPreview()
     let finalKpGain = kpGain;
-    if (typeof window.applyTotalInfinityReachedBoost === 'function') {
-      finalKpGain = window.applyTotalInfinityReachedBoost(kpGain);
-    }
     
-    swariaKnowledge.kp = swariaKnowledge.kp.add(finalKpGain);
+    state.kp = state.kp.add(finalKpGain);
     if (typeof window.trackKPMilestone === 'function') {
-      window.trackKPMilestone(swariaKnowledge.kp);
+      window.trackKPMilestone(state.kp);
     }
     state.fluff = new Decimal(0);
     state.swaria = new Decimal(0);
@@ -1448,11 +2721,9 @@ function resetGame() {
     }
     if (isFirstTimeKP && !state.seenFirstDeliveryStory) {
       state.seenFirstDeliveryStory = true;
-      if (typeof saveGame === 'function') saveGame();
+      // Save system disabled
       
-      // Permanently unlock control center after first delivery reset
-      const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-      localStorage.setItem(unlockKey, 'true');
+      // Control center unlock disabled - save system removed
 
       if (typeof showFirstDeliveryStoryModal === 'function') {
         showFirstDeliveryStoryModal();
@@ -1461,7 +2732,7 @@ function resetGame() {
       }
     }
     const gradTab = document.getElementById("graduationSubTab");
-    if (gradTab && currentKnowledgeSubTab !== 'graduationSubTab') {
+    if (gradTab && state.currentKnowledgeSubTab !== 'graduationSubTab') {
       gradTab.style.display = "none";
     }
     if (typeof window.trackDeliveryReset === 'function') {
@@ -1472,8 +2743,8 @@ function resetGame() {
 
 function getFluffRate() {
   let base = new Decimal(1);
-  if (boughtElements["1"]) base = base.mul(1.25);
-  if (boughtElements["5"]) base = base.mul(1.25);
+  if (state.boughtElements["1"]) base = base.mul(1.25);
+  if (state.boughtElements["5"]) base = base.mul(1.25);
   const grade = DecimalUtils.toDecimal(state.grade || 1);
   if (grade.gte(2)) {
     const gradeBoost = new Decimal(2).pow(grade.sub(1));
@@ -1483,7 +2754,7 @@ function getFluffRate() {
   // Apply Swaria boost additively
   let swariaBoost = new Decimal(0);
   if (state.swaria.gt(0)) {
-    if (boughtElements[12]) {
+    if (state.boughtElements[12]) {
       swariaBoost = state.swaria.mul(100);
     } else {
       swariaBoost = state.swaria.mul(3);
@@ -1506,13 +2777,13 @@ function getFluffRate() {
   base = base.add(swariaBoost).add(featherBoost).add(artifactBoost);
   
   // Apply blue light boost to fluff gain
-  if (window.prismState && window.prismState.bluelight && window.prismState.bluelight.gt(0)) {
-    base = base.mul(window.prismState.bluelight);
+  if (state.prismState && state.prismState.bluelight && state.prismState.bluelight.gt(0)) {
+    base = base.mul(state.prismState.bluelight);
   }
   
   // Apply common box boost multiplicatively
   let commonBoxBoost = new Decimal(1);
-  if (boughtElements[11]) {
+  if (state.boughtElements[11]) {
     // Ensure common boxes produced is a Decimal
     if (!DecimalUtils.isDecimal(state.boxesProducedByType.common)) {
       state.boxesProducedByType.common = new Decimal(state.boxesProducedByType.common || 0);
@@ -1613,8 +2884,8 @@ function getHighestElementDiscovery() {
 
 function getHighestBoughtElement() {
   let highest = new Decimal(0);
-  for (let key in boughtElements) {
-    if (boughtElements[key] && new Decimal(key).gt(highest)) {
+  for (let key in state.boughtElements) {
+    if (state.boughtElements[key] && new Decimal(key).gt(highest)) {
       highest = new Decimal(key);
     }
   }
@@ -1624,7 +2895,7 @@ function getHighestBoughtElement() {
 function shouldShowElementDescription(index) {
   const highestBought = getHighestBoughtElement();
   const highestDiscovery = getHighestElementDiscovery();
-  if (boughtElements[index]) return true;
+  if (state.boughtElements[index]) return true;
   const effectiveHighest = Math.max(highestBought, highestDiscovery);
   return index <= effectiveHighest + 3;
 }
@@ -1642,7 +2913,7 @@ function getElementEffectText(index) {
   
   // Special case for element 25 - different description based on whether it's bought
   if (index === 25) {
-    if (boughtElements[25]) {
+    if (state.boughtElements[25]) {
       return "<del>Gain ^999 more fluff</del> Used to blow up a door instead";
     } else {
       return "Gain ^999 more fluff";
@@ -1683,15 +2954,15 @@ function getElementEffectText(index) {
 function applyElementEffect(index) {
   // Calculate proper tick speed multiplier based on owned elements
   let newTickSpeedMultiplier = 1;
-  if (boughtElements[1]) newTickSpeedMultiplier *= 1.25;
-  if (boughtElements[5]) newTickSpeedMultiplier *= 1.25;
+  if (state.boughtElements[1]) newTickSpeedMultiplier *= 1.25;
+  if (state.boughtElements[5]) newTickSpeedMultiplier *= 1.25;
   
   if (index === 1 || index === 5) {
     // Update tick speed only if it changed
-    if (tickSpeedMultiplier !== newTickSpeedMultiplier) {
-      tickSpeedMultiplier = newTickSpeedMultiplier;
+    if (state.tickSpeedMultiplier !== newTickSpeedMultiplier) {
+      state.tickSpeedMultiplier = newTickSpeedMultiplier;
       clearInterval(window.tickInterval);
-      window.tickInterval = setInterval(gameTick, 1000 / tickSpeedMultiplier);
+      window.tickInterval = setInterval(gameTick, 1000 / state.tickSpeedMultiplier);
     }
   }
   if (index === 17) {
@@ -1737,7 +3008,7 @@ function applyElementEffect(index) {
 }
 
 function tryBuyElement(index) {
-  if (boughtElements[index]) return;
+  if (state.boughtElements[index]) return;
   
   // Check if element costs infinity points
   if (elementCostsInfinityPoints(index)) {
@@ -1750,9 +3021,9 @@ function tryBuyElement(index) {
     // Normal KP cost
     const cost = getElementCost(index);
     // Ensure KP is a Decimal and use proper Decimal comparison
-    const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+    const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
     if (kpDecimal.lt(cost)) return;
-    swariaKnowledge.kp = kpDecimal.sub(cost);
+    state.kp = kpDecimal.sub(cost);
   }
   if (index === 7) {
     const genBtn = document.getElementById("generatorSubTabBtn");
@@ -1765,7 +3036,7 @@ function tryBuyElement(index) {
     initializeGeneratorTab();
     if (!state.seenGeneratorUnlockStory) {
       state.seenGeneratorUnlockStory = true;
-      if (typeof saveGame === 'function') saveGame();
+      // Save system disabled
       window.trackedSetTimeout(() => {
         if (typeof showGeneratorUnlockStoryModal === 'function') {
           showGeneratorUnlockStoryModal();
@@ -1787,42 +3058,36 @@ function tryBuyElement(index) {
     }
   }
   if (index === 10) {
-    const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-    const flagKey = `element10SpeechShown_${currentSaveSlot}`;
-    if (!localStorage.getItem(flagKey) && typeof window.triggerElement10IntercomEvent === 'function') {
+    // Speech tracking removed - save system disabled
+    if (typeof window.triggerElement10IntercomEvent === 'function') {
       window.trackedSetTimeout(() => {
         window.triggerElement10IntercomEvent();
-        localStorage.setItem(flagKey, '1');
       }, 500);
     }
   }
   if (index === 20) {
-    const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-    const flagKey = `element20SpeechShown_${currentSaveSlot}`;
-    if (!localStorage.getItem(flagKey) && typeof window.triggerElement20IntercomEvent === 'function') {
+    // Speech tracking removed - save system disabled  
+    if (typeof window.triggerElement20IntercomEvent === 'function') {
       window.trackedSetTimeout(() => {
         window.triggerElement20IntercomEvent();
-        localStorage.setItem(flagKey, '1');
       }, 500);
     }
   }
   if (index === 25) {
-    const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-    const flagKey = `element25StoryShown_${currentSaveSlot}`;
-    if (!localStorage.getItem(flagKey) && typeof window.showElement25StoryModal === 'function') {
+    // Story tracking removed - save system disabled
+    if (typeof window.showElement25StoryModal === 'function') {
       window.trackedSetTimeout(() => {
         window.showElement25StoryModal();
-        localStorage.setItem(flagKey, '1');
       }, 500);
     }
   }
   
-  boughtElements[index] = true;
-  window.boughtElements = boughtElements; 
+  state.boughtElements[index] = true;
+  window.boughtElements = state.boughtElements; 
   applyElementEffect(index);
   updateElementDiscoveryProgress(index);
-  if (typeof window.trackElementDiscovery === 'function' && boughtElements) {
-    window.trackElementDiscovery(boughtElements);
+  if (typeof window.trackElementDiscovery === 'function' && state.boughtElements) {
+    window.trackElementDiscovery(state.boughtElements);
   }
   updateUI();
   updateKnowledgeUI();
@@ -1835,10 +3100,45 @@ function updateUI() {
   let rawFluffGain = getFluffRate().floor();
   let finalFluffGain = rawFluffGain;
   
-  // Apply challenge nerfs to display rate when in IC:1
-  if (typeof window.activeChallenge !== 'undefined' && window.activeChallenge === 1 && typeof window.applyChallengeNerfs === 'function') {
-    finalFluffGain = window.applyChallengeNerfs(new Decimal(rawFluffGain), 'fluff').floor();
+  // Apply the EXACT same order of operations as addCurrency for accurate display
+  // This ensures the displayed rate matches what's actually gained per tick
+  
+  // Apply infinity upgrade boosts BEFORE penalties (same as addCurrency)
+  if (typeof applyCargoBoost === 'function') {
+    finalFluffGain = applyCargoBoost(finalFluffGain, 'fluff');
   }
+  if (typeof applyLabBoost === 'function') {
+    finalFluffGain = applyLabBoost(finalFluffGain, 'fluff');
+  }
+  
+  // Apply total infinity reached boost to pre-infinity currencies
+  if (typeof window.applyTotalInfinityReachedBoost === 'function') {
+    finalFluffGain = window.applyTotalInfinityReachedBoost(finalFluffGain);
+  }
+  
+  // Apply fluff infinity penalty to all cargo currencies
+  if (typeof window.applyFluffInfinityPenalty === 'function') {
+    finalFluffGain = window.applyFluffInfinityPenalty(finalFluffGain, 'fluff');
+  }
+  
+  // Apply infinity nerfs to main currencies
+  if (typeof window.infinitySystem !== 'undefined' && window.infinitySystem.applyInfinityNerfs) {
+    finalFluffGain = window.infinitySystem.applyInfinityNerfs(finalFluffGain, 'fluff');
+  }
+  
+  // Apply infinity challenge nerfs (square root for IC:1)
+  if (typeof window.applyChallengeNerfs === 'function') {
+    finalFluffGain = window.applyChallengeNerfs(finalFluffGain, 'fluff');
+  }
+  
+  // Apply anomaly debuff to main currencies
+  if (typeof window.getAnomalyDebuff === 'function') {
+    const anomalyDebuff = window.getAnomalyDebuff();
+    finalFluffGain = finalFluffGain.mul(anomalyDebuff);
+  }
+  
+  // Floor the final result
+  finalFluffGain = finalFluffGain.floor();
   
   const fluffEl = document.getElementById("fluff");
   if (fluffEl) {
@@ -1929,15 +3229,15 @@ function updateUI() {
     let isMildcapped = preview.gte(new Decimal("1e40"));
     let capLabel = isMildcapped ? ' (mildcap)' : (isSoftcapped ? ' (softcap)' : '');
     kpPreview.textContent = `Gain ${formatNumber(preview)} KP on reset` + capLabel;
-    kpPreview.style.display = (boughtElements[10] ? state.feathers.gte(50) : state.artifacts.gte(50)) ? "block" : "none";
+    kpPreview.style.display = (state.boughtElements[10] ? state.feathers.gte(50) : state.artifacts.gte(50)) ? "block" : "none";
     if (isSoftcapped && !state.seenKpSoftcapStory) {
       state.seenKpSoftcapStory = true;
-      if (typeof saveGame === 'function') saveGame();
+      // Save system disabled
       if (typeof showKpSoftcapModal === 'function') showKpSoftcapModal();
     }
     if (isMildcapped && !state.seenKpMildcapStory) {
       state.seenKpMildcapStory = true;
-      if (typeof saveGame === 'function') saveGame();
+      // Save system disabled
       if (typeof showKpMildcapModal === 'function') showKpMildcapModal();
     }
   }
@@ -1947,7 +3247,7 @@ function updateUI() {
   const artifactsDecimal = DecimalUtils.isDecimal(state.artifacts) ? state.artifacts : new Decimal(state.artifacts || 0);
   
   document.getElementById("resetBtn").style.display = artifactsDecimal.gte(50) ? "block" : "none";
-  const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+  const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.gt(0)) {
     document.getElementById("kpLine").style.display = "block";
     document.getElementById("kp").textContent = formatLargeInt(kpDecimal);
@@ -2010,37 +3310,12 @@ function updateUI() {
   }
 }
 
-function getSaveSlotSpecificKey(baseKey) {
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-  return `${baseKey}_${currentSaveSlot}`;
-}
+// getSaveSlotSpecificKey function removed - save system disabled
 
 // Function to clear unlock states for fresh saves ONLY
 function clearUnlockStatesForFreshSave() {
-  const infinityUnlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  const controlCenterUnlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-  
-  // Only clear unlock states if this is truly a fresh save with no progress at all
-  const hasKp = swariaKnowledge && DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp.gt(0) : (swariaKnowledge && swariaKnowledge.kp > 0);
-  const hasElements = boughtElements && Object.keys(boughtElements).length > 0;
-  const hasSeenStory = state.seenFirstDeliveryStory;
-  const hasAnyFluff = state && state.fluff && (DecimalUtils.isDecimal(state.fluff) ? state.fluff.gt(0) : state.fluff > 0);
-  const hasAnySwaria = state && state.swaria && (DecimalUtils.isDecimal(state.swaria) ? state.swaria.gt(0) : state.swaria > 0);
-  
-  let totalInfinityCount = 0;
-  if (window.infinitySystem && typeof window.infinitySystem.getTotalInfinityCurrency === 'function') {
-    totalInfinityCount = window.infinitySystem.getTotalInfinityCurrency();
-  }
-  
-  // Only clear if this is a completely fresh save with no progress whatsoever
-  const isFreshSave = !hasKp && !hasElements && !hasSeenStory && !hasAnyFluff && !hasAnySwaria && totalInfinityCount < 1;
-  
-  if (isFreshSave) {
-    // This appears to be a truly fresh save - clear unlock states
-    localStorage.removeItem(infinityUnlockKey);
-    localStorage.removeItem(controlCenterUnlockKey);
-
-  }
+  // Unlock state clearing disabled - save system removed
+  return;
 }
 
 // Make the function available globally
@@ -2048,9 +3323,8 @@ window.clearUnlockStatesForFreshSave = clearUnlockStatesForFreshSave;
 
 // Debug function to test unlock state clearing
 window.debugUnlockStates = function() {
-  const currentSlot = localStorage.getItem('currentSaveSlot') || 'default';
-  const infinityKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  const controlKey = getSaveSlotSpecificKey('controlCenterUnlocked');
+  // Debug function disabled - save system removed
+  return { disabled: true };
 
 
 
@@ -2123,39 +3397,14 @@ window.debugUnlockStates = function() {
 
 // Debug function to manually clear unlock states and recheck
 window.forceUnlockCheck = function() {
-
-  clearUnlockStatesForFreshSave();
-  checkControlCenterUnlock();
-  checkInfinityResearchUnlock();
-  
-  // Update infinity sub-tab visibility
-  if (typeof updateInfinitySubTabVisibility === 'function') {
-    updateInfinitySubTabVisibility();
-  }
-  
-  // Also update infinity reset info
-  if (typeof updateInfinityResetInfo === 'function') {
-    updateInfinityResetInfo();
-  }
-
-  return debugUnlockStates();
+  // Force unlock check disabled - save system removed
+  return { disabled: true };
 };
 
 // Debug function to manually reset unlock states (for testing only)
 window.debugClearUnlockStates = function() {
-  const infinityKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  const controlKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-
-  localStorage.removeItem(infinityKey);
-  localStorage.removeItem(controlKey);
-  
-  // Hide the tabs
-  const knowledgeTab = document.getElementById('knowledgeTab');
-  const infinityBtn = document.getElementById('infinityResearchSubTabBtn');
-  if (knowledgeTab) knowledgeTab.style.display = 'none';
-  if (infinityBtn) infinityBtn.style.display = 'none';
-
-  return debugUnlockStates();
+  // Clear unlock states disabled - save system removed
+  return { disabled: true };
 };
 
 // Debug function to check infinity reset availability
@@ -2302,14 +3551,8 @@ window.debugSubTabVisibility = function() {
 
 // Debug function to test save slot isolation for infinity data
 window.debugInfinitySaveSlots = function() {
-  if (!window.infinitySystem) {
-
-    return { error: 'Infinity system not found' };
-  }
-  
-  const currentSlot = localStorage.getItem('currentSaveSlot') || 'unknown';
-  const saveKey = getSaveSlotSpecificKey('infinitySystemData');
-  const savedData = localStorage.getItem(saveKey);
+  // Debug infinity save slots disabled - save system removed
+  return { disabled: true };
 
 
 
@@ -2398,7 +3641,7 @@ window.debugInfinityResetState = function() {
   }
   
   // Check generator upgrades
-  if (window.generatorUpgrades) {
+  if (state.generatorUpgrades) {
 
   }
   
@@ -2585,10 +3828,10 @@ window.cleanupInfinityCountsStorage = function() {
 function checkInfinityResearchUnlock() {
   // Check if any currency has reached infinity for the first time
   // IMPORTANT: Once unlocked, this tab stays unlocked PERMANENTLY for this save slot
-  const unlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
+  // Save system disabled - unlocking based on runtime state only
   
-  // Check if already permanently unlocked for this save slot
-  if (localStorage.getItem(unlockKey)) {
+  // Save system disabled - check runtime state instead
+  if (false) {
     // Already unlocked permanently - just ensure tab is visible
     const infinityResearchBtn = document.getElementById("infinityResearchSubTabBtn");
     if (infinityResearchBtn) {
@@ -2630,10 +3873,10 @@ function checkInfinityResearchUnlock() {
       hasAnyInfinity = totalInfinityCount >= 1;
     }
     
-    // If conditions are met, unlock permanently
+    // If conditions are met, show the tab (runtime only since save system is disabled)
     if (hasAnyInfinity) {
-      localStorage.setItem(unlockKey, 'true');
-
+      // Save system disabled - no localStorage saving
+      
       // Show notification
       if (typeof showNotification === 'function') {
         showNotification('Infinity Research Unlocked!', 'You can now access the Infinity Research tab in Knowledge.', 'success');
@@ -2662,10 +3905,10 @@ function checkInfinityResearchUnlock() {
 function checkControlCenterUnlock() {
   // Check if control center should be unlocked after first delivery reset
   // IMPORTANT: Once unlocked, this tab stays unlocked PERMANENTLY for this save slot
-  const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
+  // Save system disabled - unlocking based on runtime state only
   
-  // Check if already permanently unlocked for this save slot
-  if (localStorage.getItem(unlockKey)) {
+  // Save system disabled - check runtime state instead
+  if (false) {
     // Already unlocked permanently - just ensure tab is visible
     const knowledgeTab = document.getElementById("knowledgeTab");
     if (knowledgeTab) {
@@ -2676,15 +3919,15 @@ function checkControlCenterUnlock() {
   
   try {
     // Check if any of the unlock conditions are met for THIS save slot
-    const hasKp = swariaKnowledge && DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp.gt(0) : (swariaKnowledge && swariaKnowledge.kp > 0);
+    const hasKp = state && DecimalUtils.isDecimal(state.kp) ? state.kp.gt(0) : (state && state.kp > 0);
     const hasElements = boughtElements && Object.keys(boughtElements).length > 0;
     const hasSeenStory = state.seenFirstDeliveryStory;
     
     const shouldBeUnlocked = hasSeenStory || hasKp || hasElements;
     
-    // If conditions are met, unlock permanently
+    // If conditions are met, show the tab (runtime only since save system is disabled)
     if (shouldBeUnlocked) {
-      localStorage.setItem(unlockKey, 'true');
+      // Save system disabled - no localStorage saving
 
       // Show the tab
       const knowledgeTab = document.getElementById("knowledgeTab");
@@ -2705,7 +3948,7 @@ function checkControlCenterUnlock() {
 
 function updateKnowledgeUI() {
   document.querySelectorAll('#kp').forEach(kpEl => {
-    kpEl.textContent = formatLargeInt(swariaKnowledge.kp);
+    kpEl.textContent = formatLargeInt(state.kp);
   });
 }
 
@@ -2727,7 +3970,7 @@ function applySettings() {
   } else {
     nectarizeResetLabel.style.display = "none";
   }
-  document.getElementById("autosaveToggle").checked = settings.autosave;
+  // Autosave toggle removed - save system disabled
 }
 
 document.getElementById("themeSelect").onchange = e => {
@@ -2748,7 +3991,6 @@ document.getElementById("styleSelect").onchange = e => {
 document.getElementById("notationSelect").onchange = e => {
   settings.notation = e.target.value;
   localStorage.setItem('notationPreference', e.target.value);
-  saveSettings();
   // Trigger a UI update to refresh all number displays
   updateUI();
 };
@@ -2767,1915 +4009,15 @@ document.getElementById("confirmResetToggle").onchange = e => {
   settings.confirmReset = e.target.checked;
   saveSettings();
 };
-document.getElementById("autosaveToggle").onchange = e => {
-  settings.autosave = e.target.checked;
-  saveSettings();
-};
+// Autosave toggle handler removed - save system disabled
 document.getElementById("confirmNectarizeResetToggle").onchange = e => {
   settings.confirmNectarizeReset = e.target.checked;
   saveSettings();
 };
 
-function saveGame() {
-  if (window.kitchenIngredients) {
-    ['mushroom', 'sparks', 'berries', 'petals', 'water', 'prisma', 'stardust', 'swabucks', 'berryPlate',].forEach(type => {
-      if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
-        window.kitchenIngredients[type] = new Decimal(window.kitchenIngredients[type] || 0);
-      }
-    });
-  }
-  if (typeof window.savePremiumState === 'function') {
-    window.savePremiumState();
-  }
-  if (typeof window.saveAchievements === 'function') {
-    window.saveAchievements();
-  }
-  if (window.kitchenCooking && typeof window.kitchenCooking.updateGlobals === 'function') {
-    window.kitchenCooking.updateGlobals();
-  }
-  if (typeof saveCookingState === 'function') saveCookingState();
-  const berryCookingState = localStorage.getItem('berryCookingState') || null;
-  const generatorSpeedUpgrades = {};
-  const generatorSpeedMultipliers = {};
-  const generatorUpgradeLevels = {};
-  generators.forEach(gen => {
-    generatorSpeedUpgrades[gen.reward] = gen.speedUpgrades || 0;
-    generatorSpeedMultipliers[gen.reward] = gen.speedMultiplier || 1;
-    generatorUpgradeLevels[gen.reward] = gen.upgrades || 0;
-  });
-  const save = {
-    state,
-    settings,
-    swariaKnowledge,
-    boughtElements,
-    prismAdvancedLabUnlocked: window.prismAdvancedLabUnlocked || false,
-    elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
-    permanentElementDiscovery: state.permanentElementDiscovery ? {
-      highestGradeAchieved: state.permanentElementDiscovery.highestGradeAchieved || 1,
-      permanentlyDiscoveredElements: Array.from(state.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
-    } : {
-      highestGradeAchieved: 1,
-      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
-    },
-    generatorUpgrades,
-    prismState: window.prismState || {},
-    generatorsUnlocked: generators.map(g => g.unlocked || false),
-    generatorSpeedUpgrades,
-    generatorSpeedMultipliers,
-    generatorUpgradeLevels,
-    chargerCharge: (window.charger && typeof window.charger.charge !== 'undefined') ? window.charger.charge : 0,
-    chargerSoapState: (window.charger) ? {
-      soapClickCount: window.charger.soapClickCount || 0,
-      soapLastClickTime: window.charger.soapLastClickTime || 0,
-      soapIsMad: window.charger.soapIsMad || false,
-      soapIsTalking: window.charger.soapIsTalking || false,
-      soapChargeEaten: window.charger.soapChargeEaten || 0,
-      soapWillEatCharge: window.charger.soapWillEatCharge || false
-    } : {},
-    chargerMilestones: (window.charger && window.charger.milestones) ? window.charger.milestones.map(ms => ({
-      unlocked: ms.unlocked || false,
-      elementUnlocked: ms.elementUnlocked || false
-    })) : [],
-    terrariumPollen: window.terrariumPollen || 0,
-    terrariumFlowers: window.terrariumFlowers || 0,
-    terrariumXP: window.terrariumXP || 0,
-    terrariumLevel: window.terrariumLevel || 1,
-    terrariumPollenValueUpgradeLevel: window.terrariumPollenValueUpgradeLevel || 0,
-    terrariumPollenValueUpgrade2Level: window.terrariumPollenValueUpgrade2Level || 0,
-    terrariumFlowerValueUpgradeLevel: window.terrariumFlowerValueUpgradeLevel || 0,
-    terrariumPollenToolSpeedUpgradeLevel: window.terrariumPollenToolSpeedUpgradeLevel || 0,
-    terrariumFlowerXPUpgradeLevel: window.terrariumFlowerXPUpgradeLevel || 0,
-    terrariumExtraChargeUpgradeLevel: window.terrariumExtraChargeUpgradeLevel || 0,
-    terrariumXpMultiplierUpgradeLevel: window.terrariumXpMultiplierUpgradeLevel || 0,
-    terrariumFlowerFieldExpansionUpgradeLevel: window.terrariumFlowerFieldExpansionUpgradeLevel || 0, 
-    terrariumFlowerUpgrade4Level: window.terrariumFlowerUpgrade4Level || 0, 
-    terrariumFlowerUpgrade5Level: window.terrariumFlowerUpgrade5Level || 0,
-    terrariumNectar: window.terrariumNectar || 0,
-    terrariumKpNectarUpgradeLevel: window.terrariumKpNectarUpgradeLevel || 0,
-    terrariumPollenFlowerNectarUpgradeLevel: window.terrariumPollenFlowerNectarUpgradeLevel || 0,
-    terrariumNectarXpUpgradeLevel: window.terrariumNectarXpUpgradeLevel || 0,
-    terrariumNectarValueUpgradeLevel: window.terrariumNectarValueUpgradeLevel || 0,
-    terrariumNectarInfinityUpgradeLevel: window.terrariumNectarInfinityUpgradeLevel || 0,
-    nectarUpgradeLevel: window.nectarUpgradeLevel || 0,
-    nectarUpgradeCost: window.nectarUpgradeCost || 100,
-        nectarizeMachineRepaired: window.nectarizeMachineRepaired || false,
-        nectarizeMachineLevel: window.nectarizeMachineLevel || 1,
-        nectarizeQuestActive: window.nectarizeQuestActive || false,
-        nectarizeQuestProgress: window.nectarizeQuestProgress || 0,
-        nectarizeQuestPermanentlyCompleted: window.nectarizeQuestPermanentlyCompleted || false,
-        hardModePermanentlyUnlocked: window.hardModePermanentlyUnlocked || false,
-        nectarizeQuestGivenBattery: window.nectarizeQuestGivenBattery || 0,
-        nectarizeQuestGivenSparks: window.nectarizeQuestGivenSparks || 0,
-        nectarizeQuestGivenPetals: window.nectarizeQuestGivenPetals || 0,
-        nectarizeMilestones: window.nectarizeMilestones || [],
-        nectarizeMilestoneLevel: window.nectarizeMilestoneLevel || 0,
-        nectarizeResets: window.nectarizeResets || 0,
-        nectarizeResetBonus: window.nectarizeResetBonus || 0,
-        nectarizeTier: window.nectarizeTier || 0,
-        nectarizePostResetTokenRequirement: window.nectarizePostResetTokenRequirement || 0,
-        nectarizePostResetTokensGiven: window.nectarizePostResetTokensGiven || 0,
-        nectarizePostResetTokenType: window.nectarizePostResetTokenType || 'petals',
-        fluzzerTimeoutActive: window.fluzzerTimeoutActive || false,
-        fluzzerTimeoutEndTime: window.fluzzerTimeoutEndTime || null,
-        fluzzerClickTimestamps: window.fluzzerClickTimestamps || [],
-        kitchenIngredients: (() => {
-          const serialized = {};
-          for (const [key, value] of Object.entries(window.kitchenIngredients || {})) {
-            if (DecimalUtils.isDecimal(value)) {
-              serialized[key] = value.toString();
-            } else {
-              serialized[key] = value;
-            }
-          }
-          return serialized;
-        })(),
-    friendship: window.friendship || {},
-    berryCookingState: berryCookingState,
-    swabucks: (window.state && window.state.swabucks) ? window.state.swabucks.toString() : "0",
-    berryPlate: (window.state && typeof window.state.berryPlate === 'number') ? window.state.berryPlate : 0,
-    mushroomSoup: (window.state && typeof window.state.mushroomSoup === 'number') ? window.state.mushroomSoup : 0,
-    batteries: (window.state && typeof window.state.batteries === 'number') ? window.state.batteries : 0,
-    glitteringPetals: (window.state && typeof window.state.glitteringPetals === 'number') ? window.state.glitteringPetals : 0,
-    chargedPrisma: (window.state && typeof window.state.chargedPrisma === 'number') ? window.state.chargedPrisma : 0,
-    mysticCookingSpeedBoost: (window.state && typeof window.state.mysticCookingSpeedBoost === 'number') ? window.state.mysticCookingSpeedBoost : 0,
-    soapBatteryBoost: (window.state && typeof window.state.soapBatteryBoost === 'number') ? window.state.soapBatteryBoost : 0,
-    fluzzerGlitteringPetalsBoost: (window.state && typeof window.state.fluzzerGlitteringPetalsBoost === 'number') ? window.state.fluzzerGlitteringPetalsBoost : 0,
-    peachyHungerBoost: (window.state && typeof window.state.peachyHungerBoost === 'number') ? window.state.peachyHungerBoost : 0,
-    chargerState: {
-      charge: window.charger ? window.charger.charge : 0,
-      milestones: window.charger ? window.charger.milestones.map(ms => ({ unlocked: ms.unlocked })) : [],
-      milestoneQuests: window.charger ? window.charger.milestoneQuests : null,
-      questStage: window.state && window.state.soapChargeQuest ? window.state.soapChargeQuest.stage : 0
-    },
-    characterFullStatus: (window.state && window.state.characterFullStatus) ? window.state.characterFullStatus : {
-      swaria: 0,
-      soap: 0,
-      fluzzer: 0,
-      mystic: 0,
-      vi: 0
-    },
-    hardModeQuestActive: state.hardModeQuestActive || false,
-    hardModeQuestProgress: state.hardModeQuestProgress || {
-      berryTokens: 0,
-      stardustTokens: 0,
-      berryPlateTokens: 0,
-      mushroomSoupTokens: 0,
-      prismClicks: 0,
-      commonBoxes: 0,
-      flowersWatered: 0,
-      powerRefills: 0,
-      soapPokes: 0,
-      ingredientsCooked: 0
-    },
-    hardModeEnabled: window.hardModeEnabled || false,
-    premiumState: window.premiumState || {
-      bijouUnlocked: false,
-      bijouEnabled: false,
-      vrchatMirrorUnlocked: false
-    },
-    intercomState: {
-      intercomEventTriggered: (window.intercomEventTriggered !== undefined) ? window.intercomEventTriggered : false,
-      intercomEvent20Triggered: (window.intercomEvent20Triggered !== undefined) ? window.intercomEvent20Triggered : false
-    },
-    boutiqueData: window.boutique ? window.boutique.saveData() : { purchaseHistory: {} },
-    frontDeskState: window.frontDeskState ? {
-      employees: window.frontDeskState.employees,
-      totalHired: window.frontDeskState.totalHired,
-      // Add our new front desk system data
-      availableWorkers: window.frontDeskState.availableWorkers,
-      assignedWorkers: window.frontDeskState.assignedWorkers,
-      unlockedSlots: window.frontDeskState.unlockedSlots,
-      nextArrivalTime: window.frontDeskState.nextArrivalTime,
-      isUnlocked: window.frontDeskState.isUnlocked
-    } : { employees: {}, totalHired: 0 }
-  };
-  
-  // Add infinity system data to main save
-  save.infinityData = window.infinitySystem ? {
-    counts: window.infinitySystem.counts || {},
-    everReached: window.infinitySystem.everReached || {},
-    infinityPoints: window.infinitySystem.infinityPoints ? window.infinitySystem.infinityPoints.toString() : "0",
-    infinityTheorems: window.infinitySystem.infinityTheorems || 0,
-    totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems || 0,
-    theoremProgress: window.infinitySystem.theoremProgress ? window.infinitySystem.theoremProgress.toString() : "0",
-    totalInfinityEarned: window.infinitySystem.totalInfinityEarned || 0,
-    lastInfinityPointsUpdate: window.infinitySystem.lastInfinityPointsUpdate || Date.now()
-  } : {
-    counts: {},
-    everReached: {},
-    infinityPoints: "0",
-    infinityTheorems: 0,
-    totalInfinityTheorems: 0,
-    theoremProgress: "0",
-    totalInfinityEarned: 0,
-    lastInfinityPointsUpdate: Date.now()
-  };
-  
-  // Add infinity upgrades data
-  save.infinityUpgrades = window.infinityUpgrades || {};
-  
-  // Add infinity caps data
-  save.infinityCaps = window.infinityCaps || {};
-  
-  // Add advanced prism calibration state - only if advanced prism is unlocked
-  save.advancedPrismCalibration = (window.advancedPrismState && window.advancedPrismState.unlocked) ? {
-    stable: {
-      light: window.advancedPrismState.calibration.stable.light ? window.advancedPrismState.calibration.stable.light.toString() : "0",
-      redlight: window.advancedPrismState.calibration.stable.redlight ? window.advancedPrismState.calibration.stable.redlight.toString() : "0",
-      orangelight: window.advancedPrismState.calibration.stable.orangelight ? window.advancedPrismState.calibration.stable.orangelight.toString() : "0",
-      yellowlight: window.advancedPrismState.calibration.stable.yellowlight ? window.advancedPrismState.calibration.stable.yellowlight.toString() : "0",
-      greenlight: window.advancedPrismState.calibration.stable.greenlight ? window.advancedPrismState.calibration.stable.greenlight.toString() : "0",
-      bluelight: window.advancedPrismState.calibration.stable.bluelight ? window.advancedPrismState.calibration.stable.bluelight.toString() : "0"
-    },
-    nerfs: {
-      light: window.advancedPrismState.calibration.nerfs.light ? window.advancedPrismState.calibration.nerfs.light.toString() : "1",
-      redlight: window.advancedPrismState.calibration.nerfs.redlight ? window.advancedPrismState.calibration.nerfs.redlight.toString() : "1",
-      orangelight: window.advancedPrismState.calibration.nerfs.orangelight ? window.advancedPrismState.calibration.nerfs.orangelight.toString() : "1",
-      yellowlight: window.advancedPrismState.calibration.nerfs.yellowlight ? window.advancedPrismState.calibration.nerfs.yellowlight.toString() : "1",
-      greenlight: window.advancedPrismState.calibration.nerfs.greenlight ? window.advancedPrismState.calibration.nerfs.greenlight.toString() : "1",
-      bluelight: window.advancedPrismState.calibration.nerfs.bluelight ? window.advancedPrismState.calibration.nerfs.bluelight.toString() : "1"
-    },
-    totalTimeAccumulated: window.advancedPrismState.calibration.totalTimeAccumulated || {
-      light: 0,
-      redlight: 0,
-      orangelight: 0,
-      yellowlight: 0,
-      greenlight: 0,
-      bluelight: 0
-    }
-  } : null;
-  
-  // Add advanced prism lab clicks and image swap state - only if advanced prism is unlocked
-  save.advancedPrismState = (window.advancedPrismState && window.advancedPrismState.unlocked) ? {
-    labTabClicks: window.advancedPrismState.labTabClicks || 0,
-    hasCompletedLabClicks: window.advancedPrismState.hasCompletedLabClicks || false,
-    imagesSwapped: window.advancedPrismState.imagesSwapped || false,
-    hasShownLabDialogue: window.advancedPrismState.hasShownLabDialogue || false
-  } : null;
-  
-  save.infinityChallengeData = (typeof window.infinityChallenges !== 'undefined' && typeof window.activeChallenge !== 'undefined' && typeof window.activeDifficulty !== 'undefined') ? {
-      challenges: window.infinityChallenges,
-      activeChallenge: window.activeChallenge,
-      activeDifficulty: window.activeDifficulty
-    } : {
-      challenges: {},
-      activeChallenge: 0,
-      activeDifficulty: 0
-    };
-  
-  // Use DecimalUtils to serialize the state for saving
-  const serializedSave = DecimalUtils.serializeGameState(save);
-  
-  const saveSlotNumber = localStorage.getItem('currentSaveSlot');
-  if (saveSlotNumber) {
-    localStorage.setItem(`swariaSaveSlot${saveSlotNumber}`, JSON.stringify(serializedSave));
-  } else {
-    localStorage.setItem("swariaSave", JSON.stringify(serializedSave));
-  }
-  
-  // Infinity data is now saved as part of the main save system
-  
-  if (typeof window.saveChargerState === 'function') {
-    window.saveChargerState();
-  }
-}
-
-function loadGame() {
-  const loadGameSaveSlot = localStorage.getItem('currentSaveSlot');
-  let save;
-  
-  try {
-    if (loadGameSaveSlot) {
-      const slotData = localStorage.getItem(`swariaSaveSlot${loadGameSaveSlot}`);
-      if (slotData) {
-        save = DecimalUtils.deserializeGameState(JSON.parse(slotData));
-        
-        // Validate the loaded save has essential data
-        if (!save.kitchenIngredients || !save.friendship || !save.state) {
-          throw new Error('Save data appears incomplete');
-        }
-      } else {
-        save = {};
-      }
-    } else {
-      const saveData = localStorage.getItem("swariaSave") || "{}";
-      save = DecimalUtils.deserializeGameState(JSON.parse(saveData));
-    }
-  } catch (error) {
-
-    // Try backup if current slot failed
-    if (loadGameSaveSlot) {
-      const backupKey = `swariaSaveSlot${loadGameSaveSlot}_backup`;
-      const backupData = localStorage.getItem(backupKey);
-      if (backupData) {
-
-        try {
-          save = DecimalUtils.deserializeGameState(JSON.parse(backupData));
-        } catch (backupError) {
-
-          save = {};
-        }
-      } else {
-        save = {};
-      }
-    } else {
-      save = {};
-    }
-  }
-  
-  if (save.state) Object.assign(state, save.state);
-  
-  // Ensure state.grade is a Decimal
-  if (typeof state.grade !== 'undefined' && !DecimalUtils.isDecimal(state.grade)) {
-    state.grade = new Decimal(state.grade);
-  }
-  
-  if (!state.characterHunger) state.characterHunger = {};
-  if (typeof state.characterHunger.swaria !== 'number') state.characterHunger.swaria = 100;
-  if (typeof state.characterHunger.soap !== 'number') state.characterHunger.soap = 100;
-  if (typeof state.characterHunger.fluzzer !== 'number') state.characterHunger.fluzzer = 100;
-  if (typeof state.characterHunger.mystic !== 'number') state.characterHunger.mystic = 100;
-  if (typeof state.characterHunger.vi !== 'number') state.characterHunger.vi = 100;
-    if (!state.characterFullStatus) state.characterFullStatus = {};
-    if (typeof state.characterFullStatus.swaria !== 'number') state.characterFullStatus.swaria = 0;
-    if (typeof state.characterFullStatus.soap !== 'number') state.characterFullStatus.soap = 0;
-    if (typeof state.characterFullStatus.fluzzer !== 'number') state.characterFullStatus.fluzzer = 0;
-    if (typeof state.characterFullStatus.mystic !== 'number') state.characterFullStatus.mystic = 0;
-    if (typeof state.characterFullStatus.vi !== 'number') state.characterFullStatus.vi = 0;
-    if (save.characterFullStatus) {
-      state.characterFullStatus = save.characterFullStatus;
-    }
-    if (typeof updateSwariaHungerUI === 'function') {
-      updateSwariaHungerUI();
-    }
-  if (save.settings) Object.assign(settings, save.settings);
-  window.settings = settings;
-  if (save.swariaKnowledge) Object.assign(swariaKnowledge, save.swariaKnowledge);
-  boughtElements = save.boughtElements || {};
-  
-  // Load permanent prism advanced lab unlock status
-  window.prismAdvancedLabUnlocked = save.prismAdvancedLabUnlocked || false;
-  
-  // Re-apply all purchased element effects properly
-  recalculateAllElementEffects();
-  
-  // Update prism navigation immediately after loading elements
-  updatePrismAdvancedButtonVisibility();
-  
-  generatorUpgrades = save.generatorUpgrades || {};
-  
-  // Convert to Decimal objects for consistency
-  Object.keys(generatorUpgrades).forEach(key => {
-    if (!DecimalUtils.isDecimal(generatorUpgrades[key])) {
-      generatorUpgrades[key] = new Decimal(generatorUpgrades[key] || 0);
-    }
-  });
-  
-  // Keep window reference synced
-  window.generatorUpgrades = generatorUpgrades;
-  if (save.elementDiscoveryProgress !== undefined) {
-    state.elementDiscoveryProgress = save.elementDiscoveryProgress;
-  }
-  
-  // Load permanent element discovery data
-  if (save.permanentElementDiscovery !== undefined) {
-    state.permanentElementDiscovery = {
-      highestGradeAchieved: save.permanentElementDiscovery.highestGradeAchieved || 1,
-      permanentlyDiscoveredElements: new Set(save.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
-    };
-  } else if (!state.permanentElementDiscovery) {
-    // Initialize if not present
-    state.permanentElementDiscovery = {
-      highestGradeAchieved: 1,
-      permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
-    };
-  }
-  
-  if (typeof window.trackElementDiscovery === 'function' && boughtElements) {
-    window.trackElementDiscovery(boughtElements);
-  }
-  if (typeof window.trackGeneratorUnlocks === 'function') {
-    window.trackGeneratorUnlocks();
-  }
-  if (typeof window.trackGradeMilestone === 'function') {
-    window.trackGradeMilestone(state.grade);
-  }
-  if (typeof window.trackLightParticleGeneration === 'function') {
-    window.trackLightParticleGeneration();
-  }
-  if (typeof window.trackRedLightParticleGeneration === 'function' && window.prismState && window.prismState.generatorUnlocked && window.prismState.generatorUnlocked.redlight) {
-    window.trackRedLightParticleGeneration();
-  }
-  if (typeof window.trackChargeMilestone === 'function' && window.charger && window.charger.charge > 0) {
-    window.trackChargeMilestone(window.charger.charge);
-  }
-  if (typeof window.trackFluffMilestone === 'function' && state.fluff > 0) {
-    window.trackFluffMilestone(state.fluff);
-  }
-      if (typeof window.trackFlowerMilestone === 'function' && window.terrariumFlowers > 0) {
-      window.trackFlowerMilestone(window.terrariumFlowers);
-    }
-    if (typeof window.trackNectarMilestone === 'function' && window.terrariumNectar > 0) {
-      window.trackNectarMilestone(window.terrariumNectar);
-    }
-    if (typeof window.trackOrangeLightMilestone === 'function' && window.prismState && window.prismState.orangelight > 0) {
-      window.trackOrangeLightMilestone(window.prismState.orangelight);
-    }
-  if (typeof window.trackNectarMilestone === 'function' && window.terrariumNectar > 0) {
-    window.trackNectarMilestone(window.terrariumNectar);
-  }
-  if (typeof window.trackOrangeLightMilestone === 'function' && window.prismState && window.prismState.orangelight > 0) {
-    window.trackOrangeLightMilestone(window.prismState.orangelight);
-  }
-  if (typeof window.updateSecretAchievementProgress === 'function' && settings.style === 'square') {
-    window.updateSecretAchievementProgress('secret2', 1);
-  }
-  if (save.generatorSpeedUpgrades || save.generatorSpeedMultipliers || save.generatorUpgradeLevels) {
-    generators.forEach(gen => {
-      gen.speedUpgrades = (save.generatorSpeedUpgrades && save.generatorSpeedUpgrades[gen.reward]) || 0;
-      gen.speedMultiplier = (save.generatorSpeedMultipliers && save.generatorSpeedMultipliers[gen.reward]) || 1;
-      gen.upgrades = (save.generatorUpgradeLevels && save.generatorUpgradeLevels[gen.reward]) || 0;
-      gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades) * (gen.speedMultiplier || 1);
-    });
-  } else {
-    generators.forEach(gen => {
-      gen.speedUpgrades = 0;
-      gen.speedMultiplier = 1;
-      gen.upgrades = 0;
-      gen.speed = gen.baseSpeed;
-    });
-  }
-  if (save.prismState && window.prismState) {
-    // Convert saved values to Decimals to maintain precision
-    const decimalProps = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight', 
-                         'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
-                         'greenlightparticle', 'bluelightparticle'];
-    
-    for (const prop in save.prismState) {
-      if (decimalProps.includes(prop)) {
-        window.prismState[prop] = new Decimal(save.prismState[prop] || 0);
-      } else {
-        window.prismState[prop] = save.prismState[prop];
-      }
-    }
-  }
-  if (save.chargerState && window.charger) {
-    window.charger.charge = new Decimal(save.chargerState.charge || 0);
-    if (Array.isArray(save.chargerState.milestones)) {
-      save.chargerState.milestones.forEach((ms, idx) => {
-        if (idx < window.charger.milestones.length) {
-          window.charger.milestones[idx].unlocked = ms.unlocked || false;
-        }
-      });
-    }
-    if (!window.charger.milestoneQuests) {
-      window.charger.milestoneQuests = {
-        3: { required: 10, given: 0, completed: false },
-        4: { required: 15, given: 0, completed: false },
-        5: { required: 25, given: 0, completed: false },
-        6: { required: 50, given: 0, completed: false },
-        7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 },
-        8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }
-      };
-    }
-    if (save.chargerState.milestoneQuests) {
-      Object.entries(save.chargerState.milestoneQuests).forEach(([index, quest]) => {
-        if (window.charger.milestoneQuests[index]) {
-          window.charger.milestoneQuests[index].given = quest.given || 0;
-          window.charger.milestoneQuests[index].completed = quest.completed || false;
-          if ((index === '7' || index === '8')) {
-            if (typeof quest.batteryRequired !== 'undefined') {
-              window.charger.milestoneQuests[index].batteryRequired = quest.batteryRequired;
-            }
-            if (typeof quest.batteryGiven !== 'undefined') {
-              window.charger.milestoneQuests[index].batteryGiven = quest.batteryGiven;
-            }
-          }
-        }
-      });
-    }
-    if (typeof save.chargerState.questStage !== 'undefined' && window.state) {
-      if (!window.state.soapChargeQuest) {
-        window.state.soapChargeQuest = { stage: save.chargerState.questStage, initialized: true };
-      } else {
-        window.state.soapChargeQuest.stage = save.chargerState.questStage;
-        window.state.soapChargeQuest.initialized = true;
-      }
-    }
-  }
-  if (window.state && !window.state.soapChargeQuest) {
-    window.state.soapChargeQuest = { stage: 0, initialized: true };
-  }
-  if (save.characterFullStatus) {
-    state.characterFullStatus = save.characterFullStatus;
-  }
-  if (save.berryCookingState) {
-    localStorage.setItem('berryCookingState', save.berryCookingState);
-  } else {
-    localStorage.removeItem('berryCookingState');
-  }
-  if (typeof window.loadChargerState === 'function') {
-    window.loadChargerState();
-  }
-  if (typeof window.saveChargerState === 'function') {
-    window.saveChargerState();
-  }
-  if (window.charger && save.chargerState && save.chargerState.milestoneQuests) {
-    window.charger.milestoneQuests = save.chargerState.milestoneQuests;
-  }
-  if (!state.powerEnergy) state.powerEnergy = new Decimal(100);
-  if (!state.powerMaxEnergy) state.powerMaxEnergy = calculatePowerGeneratorCap();
-  if (!state.powerStatus) state.powerStatus = 'online';
-  if (!state.powerLastTick) state.powerLastTick = Date.now();
-  if (!state.boxesProduced) state.boxesProduced = 0;
-  if (!state.boxesProducedByType) {
-    state.boxesProducedByType = {
-      common: new Decimal(0),
-      uncommon: new Decimal(0),
-      rare: new Decimal(0),
-      legendary: new Decimal(0),
-      mythic: new Decimal(0)
-    };
-  }
-  if (typeof state.soapTotalChargeEaten !== 'number') state.soapTotalChargeEaten = 0;
-  if (window.charger && save.chargerState && typeof save.chargerState.charge !== 'undefined') {
-    window.charger.charge = new Decimal(save.chargerState.charge);
-  }
-  else if (window.charger && typeof save.chargerCharge !== 'undefined') {
-    window.charger.charge = new Decimal(save.chargerCharge);
-  }
-  if (window.charger && save.chargerSoapState) {
-    window.charger.soapClickCount = save.chargerSoapState.soapClickCount || 0;
-    window.charger.soapLastClickTime = save.chargerSoapState.soapLastClickTime || 0;
-    window.charger.soapIsMad = save.chargerSoapState.soapIsMad || false;
-    window.charger.soapIsTalking = save.chargerSoapState.soapIsTalking || false;
-    window.charger.soapChargeEaten = save.chargerSoapState.soapChargeEaten || 0;
-    window.charger.soapWillEatCharge = save.chargerSoapState.soapWillEatCharge || false;
-  }
-  if (window.charger && save.chargerState && save.chargerState.milestones && Array.isArray(save.chargerState.milestones)) {
-    save.chargerState.milestones.forEach((ms, idx) => {
-      if (window.charger.milestones[idx]) {
-        window.charger.milestones[idx].unlocked = ms.unlocked || false;
-        window.charger.milestones[idx].elementUnlocked = ms.elementUnlocked || false;
-      }
-    });
-  }
-  else if (window.charger && save.chargerMilestones && Array.isArray(save.chargerMilestones)) {
-    save.chargerMilestones.forEach((ms, idx) => {
-      if (window.charger.milestones[idx]) {
-        window.charger.milestones[idx].unlocked = ms.unlocked || false;
-        window.charger.milestones[idx].elementUnlocked = ms.elementUnlocked || false;
-      }
-    });
-  }
-  if (typeof save.terrariumPollen !== 'undefined') window.terrariumPollen = new Decimal(save.terrariumPollen || 0);
-  if (typeof save.terrariumFlowers !== 'undefined') window.terrariumFlowers = new Decimal(save.terrariumFlowers || 0);
-  if (typeof save.terrariumXP !== 'undefined') window.terrariumXP = new Decimal(save.terrariumXP || 0);
-  if (typeof save.terrariumLevel !== 'undefined') window.terrariumLevel = save.terrariumLevel;
-  if (typeof save.terrariumPollenValueUpgradeLevel !== 'undefined') {
-    window.terrariumPollenValueUpgradeLevel = save.terrariumPollenValueUpgradeLevel;
-  }
-  if (typeof save.terrariumPollenValueUpgrade2Level !== 'undefined') {
-    window.terrariumPollenValueUpgrade2Level = save.terrariumPollenValueUpgrade2Level;
-  }
-  if (typeof save.terrariumFlowerValueUpgradeLevel !== 'undefined') {
-    window.terrariumFlowerValueUpgradeLevel = save.terrariumFlowerValueUpgradeLevel;
-  }
-  if (typeof save.terrariumPollenToolSpeedUpgradeLevel !== 'undefined') {
-    window.terrariumPollenToolSpeedUpgradeLevel = save.terrariumPollenToolSpeedUpgradeLevel;
-  }
-  if (typeof save.terrariumFlowerXPUpgradeLevel !== 'undefined') {
-    window.terrariumFlowerXPUpgradeLevel = save.terrariumFlowerXPUpgradeLevel;
-  }
-  if (typeof save.terrariumExtraChargeUpgradeLevel !== 'undefined') {
-    window.terrariumExtraChargeUpgradeLevel = save.terrariumExtraChargeUpgradeLevel;
-  }
-  if (typeof save.terrariumXpMultiplierUpgradeLevel !== 'undefined') {
-    window.terrariumXpMultiplierUpgradeLevel = save.terrariumXpMultiplierUpgradeLevel;
-  }
-  if (typeof save.terrariumFlowerFieldExpansionUpgradeLevel !== 'undefined') {
-    window.terrariumFlowerFieldExpansionUpgradeLevel = save.terrariumFlowerFieldExpansionUpgradeLevel; 
-  }
-  if (typeof save.terrariumFlowerUpgrade4Level !== 'undefined') {
-    window.terrariumFlowerUpgrade4Level = save.terrariumFlowerUpgrade4Level; 
-  }
-  if (typeof save.terrariumFlowerUpgrade5Level !== 'undefined') {
-    window.terrariumFlowerUpgrade5Level = save.terrariumFlowerUpgrade5Level; 
-  }
-  if (typeof save.terrariumNectar !== 'undefined') window.terrariumNectar = save.terrariumNectar;
-        if (typeof save.nectarUpgradeLevel !== 'undefined') window.nectarUpgradeLevel = save.nectarUpgradeLevel;
-        if (typeof save.nectarUpgradeCost !== 'undefined') window.nectarUpgradeCost = save.nectarUpgradeCost;
-        if (typeof save.nectarizeMachineRepaired !== 'undefined') window.nectarizeMachineRepaired = save.nectarizeMachineRepaired;
-        if (typeof save.nectarizeMachineLevel !== 'undefined') window.nectarizeMachineLevel = save.nectarizeMachineLevel;
-        if (typeof save.nectarizeQuestActive !== 'undefined') window.nectarizeQuestActive = save.nectarizeQuestActive;
-        if (typeof save.nectarizeQuestProgress !== 'undefined') window.nectarizeQuestProgress = save.nectarizeQuestProgress;
-        if (typeof save.nectarizeQuestPermanentlyCompleted !== 'undefined') window.nectarizeQuestPermanentlyCompleted = save.nectarizeQuestPermanentlyCompleted;
-        if (typeof save.hardModePermanentlyUnlocked !== 'undefined') window.hardModePermanentlyUnlocked = save.hardModePermanentlyUnlocked;
-        if (typeof save.nectarizeQuestGivenBattery !== 'undefined') window.nectarizeQuestGivenBattery = save.nectarizeQuestGivenBattery;
-        if (typeof save.nectarizeQuestGivenSparks !== 'undefined') window.nectarizeQuestGivenSparks = save.nectarizeQuestGivenSparks;
-        if (typeof save.nectarizeQuestGivenPetals !== 'undefined') window.nectarizeQuestGivenPetals = save.nectarizeQuestGivenPetals;
-        if (typeof save.nectarizeMilestones !== 'undefined') window.nectarizeMilestones = save.nectarizeMilestones;
-        if (typeof save.nectarizeMilestoneLevel !== 'undefined') window.nectarizeMilestoneLevel = save.nectarizeMilestoneLevel;
-        if (typeof save.nectarizeResets !== 'undefined') window.nectarizeResets = save.nectarizeResets;
-        if (typeof save.nectarizeResetBonus !== 'undefined') window.nectarizeResetBonus = save.nectarizeResetBonus;
-        if (typeof save.nectarizeTier !== 'undefined') window.nectarizeTier = save.nectarizeTier;
-        if (typeof save.nectarizePostResetTokenRequirement !== 'undefined') window.nectarizePostResetTokenRequirement = save.nectarizePostResetTokenRequirement;
-        if (typeof save.nectarizePostResetTokensGiven !== 'undefined') window.nectarizePostResetTokensGiven = save.nectarizePostResetTokensGiven;
-        if (typeof save.nectarizePostResetTokenType !== 'undefined') window.nectarizePostResetTokenType = save.nectarizePostResetTokenType;
-        if (typeof save.fluzzerTimeoutActive !== 'undefined') window.fluzzerTimeoutActive = save.fluzzerTimeoutActive;
-        if (typeof save.fluzzerTimeoutEndTime !== 'undefined') window.fluzzerTimeoutEndTime = save.fluzzerTimeoutEndTime;
-        if (typeof save.fluzzerClickTimestamps !== 'undefined') window.fluzzerClickTimestamps = save.fluzzerClickTimestamps;
-        window.terrariumKpNectarUpgradeLevel = (typeof save.terrariumKpNectarUpgradeLevel !== 'undefined') ? save.terrariumKpNectarUpgradeLevel : 0;
-        window.terrariumPollenFlowerNectarUpgradeLevel = (typeof save.terrariumPollenFlowerNectarUpgradeLevel !== 'undefined') ? save.terrariumPollenFlowerNectarUpgradeLevel : 0;
-        window.terrariumNectarXpUpgradeLevel = (typeof save.terrariumNectarXpUpgradeLevel !== 'undefined') ? save.terrariumNectarXpUpgradeLevel : 0;
-        window.terrariumNectarValueUpgradeLevel = (typeof save.terrariumNectarValueUpgradeLevel !== 'undefined') ? save.terrariumNectarValueUpgradeLevel : 0;
-        window.terrariumNectarInfinityUpgradeLevel = (typeof save.terrariumNectarInfinityUpgradeLevel !== 'undefined') ? save.terrariumNectarInfinityUpgradeLevel : 0;
-  if (typeof syncTerrariumUpgradeVarsFromWindow === 'function') {
-    syncTerrariumUpgradeVarsFromWindow();
-  }
-  if (typeof window.syncTerrariumVarsFromWindow === 'function') {
-    window.syncTerrariumVarsFromWindow();
-  }
-  applySettings();
-  updateUI();
-  updateKnowledgeUI();
-  if (typeof updateGradeUI === 'function') updateGradeUI();
-  if (typeof updateGeneratorUpgradesUI === 'function') updateGeneratorUpgradesUI();
-  if (typeof updateSwariaHungerUI === 'function') updateSwariaHungerUI();
-  if (window.initPrism) {
-    window.initPrism();
-  }
-  // Check for control center unlock
-  checkControlCenterUnlock();
-  if (boughtElements[7]) {
-    const genBtn = document.getElementById("generatorSubTabBtn");
-    if (window.currentFloor === 2) {
-      genBtn.style.display = "none";
-    } else {
-      genBtn.style.display = "inline-block";
-    }
-    document.getElementById("subTabNav").style.display = "flex";
-    if (currentHomeSubTab === 'generatorMainTab') {
-      renderGenerators();
-    }
-  }
-  if (boughtElements[8]) {
-    document.getElementById("graduationSubTabBtn").style.display = "inline-block";
-    document.getElementById("knowledgeSubTabNav").style.display = "flex";
-    const gradTab = document.getElementById("graduationSubTab");
-    if (gradTab) {
-      if (typeof currentKnowledgeSubTab !== 'undefined' && currentKnowledgeSubTab === 'graduationSubTab') {
-        gradTab.style.display = "block";
-        switchKnowledgeSubTab('graduationSubTab');
-      } else {
-        gradTab.style.display = "none";
-      }
-    }
-  }
-  
-  // Check for infinity research unlock
-  checkInfinityResearchUnlock();
-  if (save.generatorsUnlocked && Array.isArray(save.generatorsUnlocked)) {
-    save.generatorsUnlocked.forEach((unlocked, idx) => {
-      if (generators[idx]) generators[idx].unlocked = unlocked;
-    });
-    if (typeof window.trackGeneratorUnlocks === 'function') {
-      window.trackGeneratorUnlocks();
-    }
-  }
-  if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
-  if (typeof window.initializeChargerElementUnlocking === 'function') {
-    window.initializeChargerElementUnlocking();
-  }
-  applySettings();
-  updateUI();
-  updateKnowledgeUI();
-  if (typeof updateGradeUI === 'function') updateGradeUI();
-  if (typeof updateGeneratorUpgradesUI === 'function') updateGeneratorUpgradesUI();
-  if (window.initPrism) {
-    window.initPrism();
-  }
-  window.kitchenIngredients = save.kitchenIngredients || {};
-  // Convert kitchen ingredients back to Decimal objects
-  for (const [key, value] of Object.entries(window.kitchenIngredients)) {
-    if (typeof value === 'string' && value !== '') {
-      window.kitchenIngredients[key] = new Decimal(value);
-    } else if (typeof value === 'number') {
-      window.kitchenIngredients[key] = new Decimal(value);
-    }
-  }
-  ['mushroom', 'sparks', 'berries', 'petals', 'water', 'prisma', 'stardust', 'swabucks', 'berryPlate', 'batteries', 'glitteringPetals', 'chargedPrisma', 'mushroomSoup'].forEach(type => {
-    if (!DecimalUtils.isDecimal(window.kitchenIngredients[type])) {
-      window.kitchenIngredients[type] = new Decimal(0);
-    }
-  });
-  if (typeof updateKitchenUI === 'function') updateKitchenUI();
-  if (!state.characterHunger) {
-    state.characterHunger = {
-      swaria: 100,
-      soap: 100,
-      fluzzer: 100,
-      mystic: 100,
-      vi: 100
-    };
-  }
-  if (typeof save.berryPlate === 'number') window.state.berryPlate = save.berryPlate;
-else window.state.berryPlate = 0;
-if (typeof save.swabucks !== 'undefined') window.state.swabucks = new Decimal(save.swabucks || 0);
-else window.state.swabucks = new Decimal(0);
-  if (typeof save.mushroomSoup === 'number') window.state.mushroomSoup = save.mushroomSoup;
-  else window.state.mushroomSoup = 0;
-  if (typeof save.batteries === 'number') window.state.batteries = save.batteries;
-  else window.state.batteries = 0;
-  if (typeof save.glitteringPetals === 'number') window.state.glitteringPetals = save.glitteringPetals;
-  else window.state.glitteringPetals = 0;
-  if (typeof save.chargedPrisma === 'number') window.state.chargedPrisma = save.chargedPrisma;
-  else window.state.chargedPrisma = 0;
-  if (typeof save.mysticCookingSpeedBoost === 'number') window.state.mysticCookingSpeedBoost = save.mysticCookingSpeedBoost;
-  else window.state.mysticCookingSpeedBoost = 0;
-  if (typeof save.soapBatteryBoost === 'number') window.state.soapBatteryBoost = save.soapBatteryBoost;
-  else window.state.soapBatteryBoost = 0;
-  if (typeof save.fluzzerGlitteringPetalsBoost === 'number') window.state.fluzzerGlitteringPetalsBoost = save.fluzzerGlitteringPetalsBoost;
-  else window.state.fluzzerGlitteringPetalsBoost = 0;
-  if (typeof save.peachyHungerBoost === 'number') window.state.peachyHungerBoost = save.peachyHungerBoost;
-  else window.state.peachyHungerBoost = 0;
-  if (!state.lastBerryPlateTime) state.lastBerryPlateTime = Date.now();
-  if (!state.lastHungerTick) state.lastHungerTick = Date.now();
-  if (!state.berryPlateCookingProgress) state.berryPlateCookingProgress = 0;
-  if (!state.swariaDesperateEatingTriggered) state.swariaDesperateEatingTriggered = false;
-  if (!state.swariaSafetyRefillTriggered) state.swariaSafetyRefillTriggered = false;
-  if (save.friendship) {
-    window.friendship = save.friendship;
-  } else if (!window.friendship) {
-    window.friendship = {
-      Cargo: { level: 0, points: 0 },
-      Generator: { level: 0, points: 0 },
-      Lab: { level: 0, points: 0 },
-      Kitchen: { level: 0, points: 0 },
-      Terrarium: { level: 0, points: 0 }
-    };
-  }
-      if (save.berryCookingState) {
-      localStorage.setItem('berryCookingState', save.berryCookingState);
-    } else {
-      localStorage.removeItem('berryCookingState');
-    }
-    if (typeof window.loadChargerState === 'function') {
-      window.loadChargerState();
-    }
-    if (typeof window.saveChargerState === 'function') {
-      window.saveChargerState();
-    }
-  if (typeof updateSwariaHungerUI === 'function') {
-    updateSwariaHungerUI();
-  }
-  if (typeof save.hardModeQuestActive !== 'undefined') {
-    state.hardModeQuestActive = save.hardModeQuestActive;
-  }
-  if (save.hardModeQuestProgress) {
-    state.hardModeQuestProgress = {
-      berryTokens: save.hardModeQuestProgress.berryTokens || 0,
-      stardustTokens: save.hardModeQuestProgress.stardustTokens || 0,
-      berryPlateTokens: save.hardModeQuestProgress.berryPlateTokens || 0,
-      mushroomSoupTokens: save.hardModeQuestProgress.mushroomSoupTokens || 0,
-      prismClicks: save.hardModeQuestProgress.prismClicks || 0,
-      commonBoxes: save.hardModeQuestProgress.commonBoxes || 0,
-      flowersWatered: save.hardModeQuestProgress.flowersWatered || 0,
-      powerRefills: save.hardModeQuestProgress.powerRefills || 0,
-      soapPokes: save.hardModeQuestProgress.soapPokes || 0,
-      ingredientsCooked: save.hardModeQuestProgress.ingredientsCooked || 0
-    };
-  }
-  if (typeof save.hardModeEnabled !== 'undefined') {
-    window.hardModeEnabled = save.hardModeEnabled;
-  } else {
-    window.hardModeEnabled = true;
-  }
-  if (state.hardModeQuestActive && typeof updateHardModeQuestProgress === 'function') {
-    updateHardModeQuestProgress();
-  }
-  if (typeof window.hardModeQuestActive !== 'undefined') {
-    window.hardModeQuestActive = state.hardModeQuestActive;
-  }
-  if (typeof window.hardModeQuestProgress !== 'undefined') {
-    window.hardModeQuestProgress = state.hardModeQuestProgress;
-  }
-  if (state.hardModeQuestActive && typeof window.updateHardModeQuestProgress === 'function') {
-    setTimeout(() => {
-      window.updateHardModeQuestProgress();
-    }, 100);
-  }
-  if (typeof window.renderTerrariumUI === 'function') {
-    if (typeof window.forceSyncFlowerUpgrade4 === 'function') {
-      window.forceSyncFlowerUpgrade4();
-    }
-    if (typeof window.syncTerrariumUpgradeVarsFromWindow === 'function') {
-      window.syncTerrariumUpgradeVarsFromWindow();
-    }
-    setTimeout(() => {
-      window.renderTerrariumUI();
-    }, 100);
-  }
-  if (typeof window.trackKPMilestone === 'function' && swariaKnowledge.kp > 0) {
-    window.trackKPMilestone(swariaKnowledge.kp);
-  }
-  if (save.premiumState) {
-    window.premiumState = save.premiumState;
-    if (typeof window.savePremiumState === 'function') {
-      window.savePremiumState(); 
-    }
-    if (typeof window.updatePremiumUI === 'function') {
-      window.updatePremiumUI();
-    }
-  }
-  if (save.intercomState) {
-    window.intercomEventTriggered = save.intercomState.intercomEventTriggered || false;
-  }
-  if (save.boutiqueData && window.boutique) {
-    window.boutique.loadData(save.boutiqueData);
-  }
-  if (save.frontDeskState) {
-    if (!window.frontDeskState) window.frontDeskState = { employees: {}, totalHired: 0, initialized: false };
-    window.frontDeskState.employees = save.frontDeskState.employees || {};
-    window.frontDeskState.totalHired = save.frontDeskState.totalHired || 0;
-    
-    // Load our new front desk system data
-    window.frontDeskState.availableWorkers = save.frontDeskState.availableWorkers || [];
-    window.frontDeskState.assignedWorkers = save.frontDeskState.assignedWorkers || {};
-    window.frontDeskState.unlockedSlots = save.frontDeskState.unlockedSlots || 1;
-    window.frontDeskState.nextArrivalTime = save.frontDeskState.nextArrivalTime || 0;
-    window.frontDeskState.isUnlocked = save.frontDeskState.isUnlocked || false;
-
-    // Ensure all employees have state entries
-    if (window.frontDeskEmployees) {
-      window.frontDeskEmployees.forEach(employee => {
-        if (!window.frontDeskState.employees[employee.id]) {
-          window.frontDeskState.employees[employee.id] = {
-            hired: false,
-            hiredDate: null
-          };
-        }
-      });
-    }
-  }
-  
-  // Trigger front desk to reload data after main save system loads
-  if (window.frontDesk && typeof window.frontDesk.loadData === 'function') {
-    window.frontDesk.loadData();
-
-  }
-  
-  // Backwards compatibility: Grant infinity research unlock to players who already have infinity count >= 1
-  try {
-    const infinityUnlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-    if (!localStorage.getItem(infinityUnlockKey)) {
-      let totalInfinityCount = 0;
-      if (window.infinitySystem && typeof window.infinitySystem.getTotalInfinityCurrency === 'function') {
-        totalInfinityCount = window.infinitySystem.getTotalInfinityCurrency();
-      }
-      
-      if (totalInfinityCount >= 1) {
-        localStorage.setItem(infinityUnlockKey, 'true');
-
-      }
-    }
-  } catch (error) {
-
-  }
-  
-  // Backwards compatibility: Grant control center unlock to players who already have KP or elements
-  try {
-    const controlCenterUnlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-    if (!localStorage.getItem(controlCenterUnlockKey) && 
-        (state.seenFirstDeliveryStory || 
-         (swariaKnowledge && swariaKnowledge.kp > 0) || 
-         (boughtElements && Object.keys(boughtElements).length > 0))) {
-      localStorage.setItem(controlCenterUnlockKey, 'true');
-
-    }
-  } catch (error) {
-
-  }
-  
-  // Load infinity system data from main save
-  if (save.infinityData && window.infinitySystem) {
-    try {
-      // Restore infinity counts
-      if (save.infinityData.counts) {
-        window.infinitySystem.counts = { ...window.infinitySystem.counts, ...save.infinityData.counts };
-      }
-      
-      // Restore ever reached tracking
-      if (save.infinityData.everReached) {
-        window.infinitySystem.everReached = { ...window.infinitySystem.everReached, ...save.infinityData.everReached };
-      }
-      
-      // Restore infinity points and theorems
-      if (save.infinityData.infinityPoints) {
-        window.infinitySystem.infinityPoints = new Decimal(save.infinityData.infinityPoints);
-      }
-      
-      if (typeof save.infinityData.infinityTheorems === 'number') {
-        window.infinitySystem.infinityTheorems = save.infinityData.infinityTheorems;
-      }
-      
-      if (typeof save.infinityData.totalInfinityTheorems === 'number') {
-        window.infinitySystem.totalInfinityTheorems = save.infinityData.totalInfinityTheorems;
-      }
-      
-      if (save.infinityData.theoremProgress) {
-        window.infinitySystem.theoremProgress = new Decimal(save.infinityData.theoremProgress);
-      }
-      
-      if (typeof save.infinityData.totalInfinityEarned === 'number') {
-        window.infinitySystem.totalInfinityEarned = save.infinityData.totalInfinityEarned;
-      }
-      
-      if (typeof save.infinityData.lastInfinityPointsUpdate === 'number') {
-        window.infinitySystem.lastInfinityPointsUpdate = save.infinityData.lastInfinityPointsUpdate;
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Load infinity upgrades from main save
-  if (save.infinityUpgrades) {
-    window.infinityUpgrades = { ...window.infinityUpgrades, ...save.infinityUpgrades };
-
-  }
-  
-  // Load infinity caps from main save
-  if (save.infinityCaps) {
-    window.infinityCaps = { ...window.infinityCaps, ...save.infinityCaps };
-
-  }
-  
-  // Load infinity caps from save slot specific key (for backward compatibility)
-  if (window.infinityCaps) {
-    try {
-      const infinityCapsKey = getSaveSlotSpecificKey('infinityCaps');
-      const savedCaps = localStorage.getItem(infinityCapsKey);
-      if (savedCaps) {
-        const parsedCaps = JSON.parse(savedCaps);
-        window.infinityCaps = { ...window.infinityCaps, ...parsedCaps };
-
-      }
-    } catch (error) {
-
-    }
-  }
-  
-  // Load advanced prism calibration state - only if the system is unlocked
-  if (save.advancedPrismCalibration && window.advancedPrismState && window.advancedPrismState.unlocked) {
-    try {
-      // Load stable light values
-      if (save.advancedPrismCalibration.stable) {
-        const stableData = save.advancedPrismCalibration.stable;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (stableData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.stable[lightType] = new Decimal(stableData[lightType]);
-          }
-        });
-      }
-      
-      // Load nerf values
-      if (save.advancedPrismCalibration.nerfs) {
-        const nerfData = save.advancedPrismCalibration.nerfs;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (nerfData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(nerfData[lightType]);
-          }
-        });
-      }
-      
-      // Load total time accumulated
-      if (save.advancedPrismCalibration.totalTimeAccumulated) {
-        const timeData = save.advancedPrismCalibration.totalTimeAccumulated;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (timeData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = timeData[lightType];
-          }
-        });
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Load advanced prism lab clicks and image swap state - only if the system is unlocked
-  if (save.advancedPrismState && window.advancedPrismState && window.advancedPrismState.unlocked) {
-    try {
-      if (save.advancedPrismState.labTabClicks !== undefined) {
-        window.advancedPrismState.labTabClicks = save.advancedPrismState.labTabClicks;
-      }
-      
-      if (save.advancedPrismState.hasCompletedLabClicks !== undefined) {
-        window.advancedPrismState.hasCompletedLabClicks = save.advancedPrismState.hasCompletedLabClicks;
-      }
-      
-      if (save.advancedPrismState.imagesSwapped !== undefined) {
-        window.advancedPrismState.imagesSwapped = save.advancedPrismState.imagesSwapped;
-      }
-      
-      if (save.advancedPrismState.hasShownLabDialogue !== undefined) {
-        window.advancedPrismState.hasShownLabDialogue = save.advancedPrismState.hasShownLabDialogue;
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Load infinity counts from save slot specific key
-  if (window.infinitySystem && window.infinitySystem.counts) {
-    initializeInfinityCountsForSlot();
-  }
-  
-  // Clear unlock states for fresh saves first
-  clearUnlockStatesForFreshSave();
-  
-  // Final check for infinity research unlock after loading
-  checkInfinityResearchUnlock();
-  
-  // Final check for control center unlock after loading
-  checkControlCenterUnlock();
-  
-  // Initialize infinity counts for current save slot
-  if (typeof initializeInfinityCountsForSlot === 'function') {
-    initializeInfinityCountsForSlot();
-  }
-  
-  // Initialize advanced prism to restore prism core state after load
-  if (typeof window.initAdvancedPrism === 'function') {
-    window.initAdvancedPrism();
-  }
-  
-  // Check for advanced prism unlock after loading state
-  if (typeof window.checkAdvancedPrismUnlock === 'function') {
-    window.checkAdvancedPrismUnlock();
-  }
-  
-  // Check for pending story modals after loading (including infinity reset story)
-  setTimeout(() => {
-    if (typeof window.checkForPendingStoryModals === 'function') {
-      window.checkForPendingStoryModals();
-    }
-  }, 1500);
-}
-
 let lastExportClickTime = 0;
 
-function exportSave() {
-  const currentTime = Date.now();
-  if (currentTime - lastExportClickTime < 2000 && typeof window.updateSecretAchievementProgress === 'function') {
-    window.updateSecretAchievementProgress('secret3', 1);
-  }
-  lastExportClickTime = currentTime;
-  const generatorSpeedUpgrades = {};
-  const generatorSpeedMultipliers = {};
-  const generatorUpgradeLevels = {};
-  generators.forEach(gen => {
-    generatorSpeedUpgrades[gen.reward] = gen.speedUpgrades || 0;
-    generatorSpeedMultipliers[gen.reward] = gen.speedMultiplier || 1;
-    generatorUpgradeLevels[gen.reward] = gen.upgrades || 0;
-  });
-  const stateCopy = { ...state };
-  delete stateCopy.hardModeQuestProgress;
-  delete stateCopy.hardModeQuestActive;
-  delete stateCopy.soapChargeQuest;
-  const save = {
-    state: stateCopy,
-    settings,
-    swariaKnowledge,
-    boughtElements,
-    elementDiscoveryProgress: state.elementDiscoveryProgress || 0,
-    permanentElementDiscovery: state.permanentElementDiscovery ? {
-      highestGradeAchieved: state.permanentElementDiscovery.highestGradeAchieved || 1,
-      permanentlyDiscoveredElements: Array.from(state.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
-    } : {
-      highestGradeAchieved: 1,
-      permanentlyDiscoveredElements: [1, 2, 3, 4, 5, 6, 7, 8]
-    },
-    generatorUpgrades,
-    prismState: window.prismState || {},
-    generatorsUnlocked: generators.map(g => g.unlocked || false),
-    generatorSpeedUpgrades,
-    generatorSpeedMultipliers,
-    generatorUpgradeLevels,
-    chargerCharge: (window.charger && typeof window.charger.charge !== 'undefined') ? window.charger.charge : 0,
-    chargerSoapState: (window.charger) ? {
-      soapClickCount: window.charger.soapClickCount || 0,
-      soapLastClickTime: window.charger.soapLastClickTime || 0,
-      soapIsMad: window.charger.soapIsMad || false,
-      soapIsTalking: window.charger.soapIsTalking || false,
-      soapChargeEaten: window.charger.soapChargeEaten || 0,
-      soapWillEatCharge: window.charger.soapWillEatCharge || false
-    } : {},
-    terrariumPollen: window.terrariumPollen || 0,
-    terrariumFlowers: window.terrariumFlowers || 0,
-    terrariumXP: window.terrariumXP || 0,
-    terrariumLevel: window.terrariumLevel || 1,
-    terrariumPollenValueUpgradeLevel: window.terrariumPollenValueUpgradeLevel || 0,
-    terrariumPollenValueUpgrade2Level: window.terrariumPollenValueUpgrade2Level || 0,
-    terrariumXpMultiplierUpgradeLevel: window.terrariumXpMultiplierUpgradeLevel || 0,
-    terrariumFlowerFieldExpansionUpgradeLevel: window.terrariumFlowerFieldExpansionUpgradeLevel || 0,
-    terrariumFlowerUpgrade4Level: window.terrariumFlowerUpgrade4Level || 0,
-    terrariumFlowerValueUpgradeLevel: window.terrariumFlowerValueUpgradeLevel || 0,
-    terrariumPollenToolSpeedUpgradeLevel: window.terrariumPollenToolSpeedUpgradeLevel || 0,
-    terrariumFlowerXPUpgradeLevel: window.terrariumFlowerXPUpgradeLevel || 0,
-    terrariumExtraChargeUpgradeLevel: window.terrariumExtraChargeUpgradeLevel || 0,
-    terrariumNectar: window.terrariumNectar || 0,
-    terrariumKpNectarUpgradeLevel: window.terrariumKpNectarUpgradeLevel || 0,
-    terrariumPollenFlowerNectarUpgradeLevel: window.terrariumPollenFlowerNectarUpgradeLevel || 0,
-    terrariumNectarXpUpgradeLevel: window.terrariumNectarXpUpgradeLevel || 0,
-    terrariumNectarValueUpgradeLevel: window.terrariumNectarValueUpgradeLevel || 0,
-    terrariumNectarInfinityUpgradeLevel: window.terrariumNectarInfinityUpgradeLevel || 0,
-    nectarUpgradeLevel: window.nectarUpgradeLevel || 0,
-    nectarUpgradeCost: window.nectarUpgradeCost || 100,
-    nectarizeMachineRepaired: window.nectarizeMachineRepaired || false,
-    nectarizeMachineLevel: window.nectarizeMachineLevel || 1,
-    nectarizeQuestActive: window.nectarizeQuestActive || false,
-    nectarizeQuestProgress: window.nectarizeQuestProgress || 0,
-    nectarizeQuestPermanentlyCompleted: window.nectarizeQuestPermanentlyCompleted || false,
-    hardModePermanentlyUnlocked: window.hardModePermanentlyUnlocked || false,
-    nectarizeQuestGivenBattery: window.nectarizeQuestGivenBattery || 0,
-    nectarizeQuestGivenSparks: window.nectarizeQuestGivenSparks || 0,
-    nectarizeQuestGivenPetals: window.nectarizeQuestGivenPetals || 0,
-    nectarizeMilestones: window.nectarizeMilestones || [],
-    nectarizeMilestoneLevel: window.nectarizeMilestoneLevel || 0,
-    nectarizeResets: window.nectarizeResets || 0,
-    nectarizeResetBonus: window.nectarizeResetBonus || 0,
-    nectarizeTier: window.nectarizeTier || 0,
-    nectarizePostResetTokenRequirement: window.nectarizePostResetTokenRequirement || 0,
-    nectarizePostResetTokensGiven: window.nectarizePostResetTokensGiven || 0,
-    nectarizePostResetTokenType: window.nectarizePostResetTokenType || 'petals',
-    kitchenIngredients: (() => {
-      const serialized = {};
-      for (const [key, value] of Object.entries(window.kitchenIngredients || {})) {
-        if (DecimalUtils.isDecimal(value)) {
-          serialized[key] = value.toString();
-        } else {
-          serialized[key] = value;
-        }
-      }
-      return serialized;
-    })(),
-    friendship: window.friendship || {},
-    berryCookingState: localStorage.getItem('berryCookingState') || null,
-    swabucks: (window.state && window.state.swabucks) ? window.state.swabucks.toString() : "0",
-    berryPlate: (window.state && typeof window.state.berryPlate === 'number') ? window.state.berryPlate : 0,
-    mushroomSoup: (window.state && typeof window.state.mushroomSoup === 'number') ? window.state.mushroomSoup : 0,
-    batteries: (window.state && typeof window.state.batteries === 'number') ? window.state.batteries : 0,
-    glitteringPetals: (window.state && typeof window.state.glitteringPetals === 'number') ? window.state.glitteringPetals : 0,
-    chargedPrisma: (window.state && typeof window.state.chargedPrisma === 'number') ? window.state.chargedPrisma : 0,
-    mysticCookingSpeedBoost: (window.state && typeof window.state.mysticCookingSpeedBoost === 'number') ? window.state.mysticCookingSpeedBoost : 0,
-    soapBatteryBoost: (window.state && typeof window.state.soapBatteryBoost === 'number') ? window.state.soapBatteryBoost : 0,
-    fluzzerGlitteringPetalsBoost: (window.state && typeof window.state.fluzzerGlitteringPetalsBoost === 'number') ? window.state.fluzzerGlitteringPetalsBoost : 0,
-    peachyHungerBoost: (window.state && typeof window.state.peachyHungerBoost === 'number') ? window.state.peachyHungerBoost : 0,
-    chargerState: {
-      charge: window.charger ? window.charger.charge : 0,
-      milestones: window.charger ? window.charger.milestones.map(ms => ({ unlocked: ms.unlocked })) : [],
-      milestoneQuests: window.charger ? window.charger.milestoneQuests : null,
-      questStage: window.state && window.state.soapChargeQuest ? window.state.soapChargeQuest.stage : 0
-    },
-    hardModeQuestActive: state.hardModeQuestActive || false,
-    hardModeQuestProgress: state.hardModeQuestProgress || {
-      berryTokens: 0,
-      stardustTokens: 0,
-      berryPlateTokens: 0,
-      mushroomSoupTokens: 0,
-      prismClicks: 0,
-      commonBoxes: 0,
-      flowersWatered: 0,
-      powerRefills: 0,
-      soapPokes: 0,
-      ingredientsCooked: 0
-    },
-    soapChargeQuest: state.soapChargeQuest || { stage: 0, initialized: true },
-    hardModeEnabled: window.hardModeEnabled || false,
-    intercomState: {
-      intercomEventTriggered: (window.intercomEventTriggered !== undefined) ? window.intercomEventTriggered : false
-    },
-    achievementData: (() => {
-      const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-      const saveKey = currentSaveSlot ? `fluffIncAchievementsSlot${currentSaveSlot}` : 'fluffIncAchievements';
-      const saved = localStorage.getItem(saveKey);
-      return saved ? JSON.parse(saved) : null;
-    })(),
-    secretAchievementData: (() => {
-      const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-      const saveKey = currentSaveSlot ? `fluffIncSecretAchievementsSlot${currentSaveSlot}` : 'fluffIncSecretAchievements';
-      const saved = localStorage.getItem(saveKey);
-      return saved ? JSON.parse(saved) : null;
-    })(),
-    infinityTreeData: window.infinitySystem ? {
-      infinityPoints: window.infinitySystem.infinityPoints.toString(),
-      infinityTheorems: window.infinitySystem.infinityTheorems,
-      totalInfinityTheorems: window.infinitySystem.totalInfinityTheorems,
-      theoremProgress: window.infinitySystem.theoremProgress.toString(),
-      totalInfinityEarned: window.infinitySystem.totalInfinityEarned,
-      upgrades: window.infinityUpgrades ? window.infinityUpgrades : {},
-      everReached: window.infinitySystem.everReached || {},
-      caps: window.infinityCaps || {}
-    } : {
-      infinityPoints: "0",
-      infinityTheorems: 0,
-      totalInfinityTheorems: 0,
-      theoremProgress: "0",
-      totalInfinityEarned: 0,
-      upgrades: {},
-      everReached: {},
-      caps: {}
-    },
-    infinityChallengeData: (typeof window.infinityChallenges !== 'undefined' && typeof window.activeChallenge !== 'undefined' && typeof window.activeDifficulty !== 'undefined') ? {
-      challenges: window.infinityChallenges,
-      activeChallenge: window.activeChallenge,
-      activeDifficulty: window.activeDifficulty
-    } : {
-      challenges: {},
-      activeChallenge: 0,
-      activeDifficulty: 0
-    },
-    frontDeskState: window.frontDeskState ? {
-      employees: window.frontDeskState.employees || {},
-      totalHired: window.frontDeskState.totalHired || 0
-    } : { employees: {}, totalHired: 0 }
-  };
-  
-  // Use DecimalUtils to serialize the save data for export
-  const serializedSave = DecimalUtils.serializeGameState(save);
-  const saveData = btoa(unescape(encodeURIComponent(JSON.stringify(serializedSave))));
-  navigator.clipboard.writeText(saveData).then(() => alert("Copied to clipboard"));
-  if (typeof window.saveChargerState === 'function') {
-    window.saveChargerState();
-  }
-}
 
-function importSave() {
-  const input = prompt("Paste your save data here:");
-  if (!input) return;
-  try {
-    const decoded = decodeURIComponent(escape(atob(input)));
-    const rawSave = JSON.parse(decoded);
-    
-    // Use DecimalUtils to deserialize the imported save data
-    const save = DecimalUtils.deserializeGameState(rawSave);
-    
-    if (save.state) Object.assign(state, save.state);
-    
-    // Ensure state.grade is a Decimal
-    if (typeof state.grade !== 'undefined' && !DecimalUtils.isDecimal(state.grade)) {
-      state.grade = new Decimal(state.grade);
-    }
-    
-    if (!state.characterHunger) state.characterHunger = {};
-    if (typeof state.characterHunger.swaria !== 'number') state.characterHunger.swaria = 100;
-    if (typeof state.characterHunger.soap !== 'number') state.characterHunger.soap = 100;
-    if (typeof state.characterHunger.fluzzer !== 'number') state.characterHunger.fluzzer = 100;
-    if (typeof state.characterHunger.mystic !== 'number') state.characterHunger.mystic = 100;
-    if (typeof state.characterHunger.vi !== 'number') state.characterHunger.vi = 100;
-    if (save.settings) Object.assign(settings, save.settings);
-    if (save.swariaKnowledge) Object.assign(swariaKnowledge, save.swariaKnowledge);
-    boughtElements = save.boughtElements || {};
-    
-    // Re-apply all purchased element effects properly
-    recalculateAllElementEffects();
-    
-    // Update prism navigation immediately after loading elements
-    updatePrismAdvancedButtonVisibility();
-    
-    generatorUpgrades = save.generatorUpgrades || {};
-    
-    // Convert to Decimal objects for consistency
-    Object.keys(generatorUpgrades).forEach(key => {
-      if (!DecimalUtils.isDecimal(generatorUpgrades[key])) {
-        generatorUpgrades[key] = new Decimal(generatorUpgrades[key] || 0);
-      }
-    });
-    
-    // Keep window reference synced
-    window.generatorUpgrades = generatorUpgrades;
-    if (save.elementDiscoveryProgress !== undefined) {
-      state.elementDiscoveryProgress = save.elementDiscoveryProgress;
-    }
-    
-    // Load permanent element discovery data
-    if (save.permanentElementDiscovery !== undefined) {
-      state.permanentElementDiscovery = {
-        highestGradeAchieved: save.permanentElementDiscovery.highestGradeAchieved || 1,
-        permanentlyDiscoveredElements: new Set(save.permanentElementDiscovery.permanentlyDiscoveredElements || [1, 2, 3, 4, 5, 6, 7, 8])
-      };
-    } else if (!state.permanentElementDiscovery) {
-      // Initialize if not present
-      state.permanentElementDiscovery = {
-        highestGradeAchieved: 1,
-        permanentlyDiscoveredElements: new Set([1, 2, 3, 4, 5, 6, 7, 8])
-      };
-    }
-    
-    if (typeof window.trackElementDiscovery === 'function' && boughtElements) {
-      window.trackElementDiscovery(boughtElements);
-    }
-    if (typeof window.trackChargeMilestone === 'function' && window.charger && window.charger.charge > 0) {
-      window.trackChargeMilestone(window.charger.charge);
-    }
-    if (typeof window.trackFluffMilestone === 'function' && state.fluff > 0) {
-      window.trackFluffMilestone(state.fluff);
-    }
-    if (typeof window.trackFlowerMilestone === 'function' && window.terrariumFlowers > 0) {
-      window.trackFlowerMilestone(window.terrariumFlowers);
-    }
-    if (typeof window.trackKPMilestone === 'function' && swariaKnowledge.kp > 0) {
-      window.trackKPMilestone(swariaKnowledge.kp);
-    }
-    
-    // Check for infinity research unlock
-    checkInfinityResearchUnlock();
-    if (save.generatorsUnlocked && Array.isArray(save.generatorsUnlocked)) {
-      save.generatorsUnlocked.forEach((unlocked, idx) => {
-        if (generators[idx]) generators[idx].unlocked = unlocked;
-      });
-      if (typeof window.trackGeneratorUnlocks === 'function') {
-        window.trackGeneratorUnlocks();
-      }
-    }
-    if (save.generatorSpeedUpgrades || save.generatorSpeedMultipliers || save.generatorUpgradeLevels) {
-      generators.forEach(gen => {
-        gen.speedUpgrades = (save.generatorSpeedUpgrades && save.generatorSpeedUpgrades[gen.reward]) || 0;
-        gen.speedMultiplier = (save.generatorSpeedMultipliers && save.generatorSpeedMultipliers[gen.reward]) || 1;
-        gen.upgrades = (save.generatorUpgradeLevels && save.generatorUpgradeLevels[gen.reward]) || 0;
-        gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades) * (gen.speedMultiplier || 1);
-      });
-    } else {
-      generators.forEach(gen => {
-        gen.speedUpgrades = 0;
-        gen.speedMultiplier = 1;
-        gen.upgrades = 0;
-        gen.speed = gen.baseSpeed;
-      });
-    }
-    generators.forEach(gen => {
-      gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades || 0) * (gen.speedMultiplier || 1);
-    });
-    if (save.prismState && window.prismState) {
-      // Convert saved values to Decimals to maintain precision
-      const decimalProps = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight', 
-                           'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
-                           'greenlightparticle', 'bluelightparticle'];
-      
-      for (const prop in save.prismState) {
-        if (decimalProps.includes(prop)) {
-          window.prismState[prop] = new Decimal(save.prismState[prop] || 0);
-        } else {
-          window.prismState[prop] = save.prismState[prop];
-        }
-      }
-      
-      if (typeof window.trackRedLightParticleGeneration === 'function' && window.prismState.generatorUnlocked && window.prismState.generatorUnlocked.redlight) {
-        window.trackRedLightParticleGeneration();
-      }
-    }
-    if (!state.boxesProduced) state.boxesProduced = 0;
-    if (!state.boxesProducedByType) {
-      state.boxesProducedByType = {
-        common: new Decimal(0),
-        uncommon: new Decimal(0),
-        rare: new Decimal(0),
-        legendary: new Decimal(0),
-        mythic: new Decimal(0)
-      };
-    }
-    if (!state.powerEnergy) state.powerEnergy = new Decimal(100);
-    if (!state.powerMaxEnergy) state.powerMaxEnergy = calculatePowerGeneratorCap();
-    if (!state.powerStatus) state.powerStatus = 'online';
-    if (!state.powerLastTick) state.powerLastTick = Date.now();
-    applySettings();
-    updateUI();
-    updateKnowledgeUI();
-    updatePrismAdvancedButtonVisibility(); // Update prism navigation after loading
-    if (typeof updateGradeUI === 'function') updateGradeUI();
-    if (typeof updateGeneratorUpgradesUI === 'function') updateGeneratorUpgradesUI();
-    if (window.initPrism) window.initPrism();
-    // Update prism navigation after prism initialization
-    updatePrismAdvancedButtonVisibility();
-    // Check for control center unlock
-    checkControlCenterUnlock();
-    if (boughtElements[7]) {
-      const genBtn = document.getElementById("generatorSubTabBtn");
-      if (window.currentFloor === 2) {
-        genBtn.style.display = "none";
-      } else {
-        genBtn.style.display = "inline-block";
-      }
-      document.getElementById("subTabNav").style.display = "flex";
-    }
-    if (boughtElements[8]) {
-      document.getElementById("graduationSubTabBtn").style.display = "inline-block";
-      document.getElementById("knowledgeSubTabNav").style.display = "flex";
-      const gradTab = document.getElementById("graduationSubTab");
-      if (gradTab) {
-        if (typeof currentKnowledgeSubTab !== 'undefined' && currentKnowledgeSubTab === 'graduationSubTab') {
-          gradTab.style.display = "block";
-          switchKnowledgeSubTab('graduationSubTab');
-        } else {
-          gradTab.style.display = "none";
-        }
-      }
-    }
-    if (typeof updatePowerEnergyStatusUI === 'function') updatePowerEnergyStatusUI();
-    if (typeof updateGlobalBlackoutOverlay === 'function') updateGlobalBlackoutOverlay();
-    if (typeof updateGlobalDimOverlay === 'function') updateGlobalDimOverlay();
-    if (save.achievementData) {
-      const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-      const saveKey = currentSaveSlot ? `fluffIncAchievementsSlot${currentSaveSlot}` : 'fluffIncAchievements';
-      localStorage.setItem(saveKey, JSON.stringify(save.achievementData));
-    }
-    if (save.secretAchievementData) {
-      const currentSaveSlot = localStorage.getItem('currentSaveSlot');
-      const saveKey = currentSaveSlot ? `fluffIncSecretAchievementsSlot${currentSaveSlot}` : 'fluffIncSecretAchievements';
-      localStorage.setItem(saveKey, JSON.stringify(save.secretAchievementData));
-    }
-    if (typeof window.reloadAchievementsForSlot === 'function') {
-      window.reloadAchievementsForSlot();
-    }
-    if (currentHomeSubTab === 'generatorMainTab' && typeof renderGenerators === 'function') {
-      renderGenerators();
-    }
-    if (typeof updateGeneratorsUI === 'function') updateGeneratorsUI();
-    if (window.charger && typeof save.chargerCharge !== 'undefined') {
-      window.charger.charge = new Decimal(save.chargerCharge);
-    }
-    if (window.charger && save.chargerSoapState) {
-      window.charger.soapClickCount = save.chargerSoapState.soapClickCount || 0;
-      window.charger.soapLastClickTime = save.chargerSoapState.soapLastClickTime || 0;
-      window.charger.soapIsMad = save.chargerSoapState.soapIsMad || false;
-      window.charger.soapIsTalking = save.chargerSoapState.soapIsTalking || false;
-      window.charger.soapChargeEaten = save.chargerSoapState.soapChargeEaten || 0;
-      window.charger.soapWillEatCharge = save.chargerSoapState.soapWillEatCharge || false;
-    }
-    if (save.chargerState && window.charger) {
-      window.charger.charge = new Decimal(save.chargerState.charge || 0);
-      if (Array.isArray(save.chargerState.milestones)) {
-        save.chargerState.milestones.forEach((ms, idx) => {
-          if (idx < window.charger.milestones.length) {
-            window.charger.milestones[idx].unlocked = ms.unlocked || false;
-          }
-        });
-      }
-      if (!window.charger.milestoneQuests) {
-        window.charger.milestoneQuests = {
-          3: { required: 10, given: 0, completed: false },
-          4: { required: 15, given: 0, completed: false },
-          5: { required: 25, given: 0, completed: false },
-          6: { required: 50, given: 0, completed: false },
-          7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 },
-          8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }
-        };
-      }
-      if (save.chargerState.milestoneQuests) {
-        Object.entries(save.chargerState.milestoneQuests).forEach(([index, quest]) => {
-          if (window.charger.milestoneQuests[index]) {
-            window.charger.milestoneQuests[index].given = quest.given || 0;
-            window.charger.milestoneQuests[index].completed = quest.completed || false;
-            if ((index === '7' || index === '8') && typeof quest.batteryRequired !== 'undefined') {
-              window.charger.milestoneQuests[index].batteryRequired = quest.batteryRequired;
-            }
-          }
-        });
-      }
-      if (typeof save.chargerState.questStage !== 'undefined' && window.state) {
-        if (!window.state.soapChargeQuest) {
-          window.state.soapChargeQuest = { stage: save.chargerState.questStage, initialized: true };
-        } else {
-          window.state.soapChargeQuest.stage = save.chargerState.questStage;
-          window.state.soapChargeQuest.initialized = true;
-        }
-      }
-    }
-    if (typeof save.terrariumPollen !== 'undefined') window.terrariumPollen = new Decimal(save.terrariumPollen || 0);
-    if (typeof save.terrariumFlowers !== 'undefined') window.terrariumFlowers = new Decimal(save.terrariumFlowers || 0);
-    if (typeof save.terrariumXP !== 'undefined') window.terrariumXP = new Decimal(save.terrariumXP || 0);
-    if (typeof save.terrariumLevel !== 'undefined') window.terrariumLevel = save.terrariumLevel;
-    if (typeof save.terrariumPollenValueUpgradeLevel !== 'undefined') {
-      window.terrariumPollenValueUpgradeLevel = save.terrariumPollenValueUpgradeLevel;
-    }
-    if (typeof save.terrariumPollenValueUpgrade2Level !== 'undefined') {
-      window.terrariumPollenValueUpgrade2Level = save.terrariumPollenValueUpgrade2Level;
-    }
-    if (typeof save.terrariumFlowerValueUpgradeLevel !== 'undefined') {
-      window.terrariumFlowerValueUpgradeLevel = save.terrariumFlowerValueUpgradeLevel;
-    }
-    if (typeof save.terrariumPollenToolSpeedUpgradeLevel !== 'undefined') {
-      window.terrariumPollenToolSpeedUpgradeLevel = save.terrariumPollenToolSpeedUpgradeLevel;
-    }
-    if (typeof save.terrariumFlowerXPUpgradeLevel !== 'undefined') {
-      window.terrariumFlowerXPUpgradeLevel = save.terrariumFlowerXPUpgradeLevel;
-    }
-    if (typeof save.terrariumExtraChargeUpgradeLevel !== 'undefined') {
-      window.terrariumExtraChargeUpgradeLevel = save.terrariumExtraChargeUpgradeLevel;
-    }
-    if (typeof save.terrariumXpMultiplierUpgradeLevel !== 'undefined') {
-      window.terrariumXpMultiplierUpgradeLevel = save.terrariumXpMultiplierUpgradeLevel;
-    }
-    if (typeof save.terrariumFlowerFieldExpansionUpgradeLevel !== 'undefined') {
-      window.terrariumFlowerFieldExpansionUpgradeLevel = save.terrariumFlowerFieldExpansionUpgradeLevel; 
-    }
-    if (typeof save.terrariumFlowerUpgrade4Level !== 'undefined') {
-      window.terrariumFlowerUpgrade4Level = save.terrariumFlowerUpgrade4Level; 
-    }
-    if (typeof save.terrariumFlowerUpgrade5Level !== 'undefined') {
-      window.terrariumFlowerUpgrade5Level = save.terrariumFlowerUpgrade5Level; 
-    }
-    if (typeof save.terrariumNectar !== 'undefined') window.terrariumNectar = save.terrariumNectar;
-          if (typeof save.nectarUpgradeLevel !== 'undefined') window.nectarUpgradeLevel = save.nectarUpgradeLevel;
-          if (typeof save.nectarUpgradeCost !== 'undefined') window.nectarUpgradeCost = save.nectarUpgradeCost;
-          if (typeof save.nectarizeMachineRepaired !== 'undefined') window.nectarizeMachineRepaired = save.nectarizeMachineRepaired;
-          if (typeof save.nectarizeMachineLevel !== 'undefined') window.nectarizeMachineLevel = save.nectarizeMachineLevel;
-          if (typeof save.nectarizeQuestActive !== 'undefined') window.nectarizeQuestActive = save.nectarizeQuestActive;
-          if (typeof save.nectarizeQuestProgress !== 'undefined') window.nectarizeQuestProgress = save.nectarizeQuestProgress;
-          if (typeof save.nectarizeQuestPermanentlyCompleted !== 'undefined') window.nectarizeQuestPermanentlyCompleted = save.nectarizeQuestPermanentlyCompleted;
-          if (typeof save.hardModePermanentlyUnlocked !== 'undefined') window.hardModePermanentlyUnlocked = save.hardModePermanentlyUnlocked;
-          if (typeof save.nectarizeQuestGivenBattery !== 'undefined') window.nectarizeQuestGivenBattery = save.nectarizeQuestGivenBattery;
-          if (typeof save.nectarizeQuestGivenSparks !== 'undefined') window.nectarizeQuestGivenSparks = save.nectarizeQuestGivenSparks;
-          if (typeof save.nectarizeQuestGivenPetals !== 'undefined') window.nectarizeQuestGivenPetals = save.nectarizeQuestGivenPetals;
-          if (typeof save.nectarizeMilestones !== 'undefined') window.nectarizeMilestones = save.nectarizeMilestones;
-          if (typeof save.nectarizeMilestoneLevel !== 'undefined') window.nectarizeMilestoneLevel = save.nectarizeMilestoneLevel;
-          if (typeof save.nectarizeResets !== 'undefined') window.nectarizeResets = save.nectarizeResets;
-          if (typeof save.nectarizeResetBonus !== 'undefined') window.nectarizeResetBonus = save.nectarizeResetBonus;
-          if (typeof save.nectarizeTier !== 'undefined') window.nectarizeTier = save.nectarizeTier;
-          if (typeof save.fluzzerTimeoutActive !== 'undefined') window.fluzzerTimeoutActive = save.fluzzerTimeoutActive;
-          if (typeof save.fluzzerTimeoutEndTime !== 'undefined') window.fluzzerTimeoutEndTime = save.fluzzerTimeoutEndTime;
-          if (typeof save.fluzzerClickTimestamps !== 'undefined') window.fluzzerClickTimestamps = save.fluzzerClickTimestamps;
-        window.terrariumKpNectarUpgradeLevel = (typeof save.terrariumKpNectarUpgradeLevel !== 'undefined') ? save.terrariumKpNectarUpgradeLevel : 0;
-        window.terrariumPollenFlowerNectarUpgradeLevel = (typeof save.terrariumPollenFlowerNectarUpgradeLevel !== 'undefined') ? save.terrariumPollenFlowerNectarUpgradeLevel : 0;
-        window.terrariumNectarXpUpgradeLevel = (typeof save.terrariumNectarXpUpgradeLevel !== 'undefined') ? save.terrariumNectarXpUpgradeLevel : 0;
-        window.terrariumNectarValueUpgradeLevel = (typeof save.terrariumNectarValueUpgradeLevel !== 'undefined') ? save.terrariumNectarValueUpgradeLevel : 0;
-        window.terrariumNectarInfinityUpgradeLevel = (typeof save.terrariumNectarInfinityUpgradeLevel !== 'undefined') ? save.terrariumNectarInfinityUpgradeLevel : 0;
-    if (typeof syncTerrariumUpgradeVarsFromWindow === 'function') {
-      syncTerrariumUpgradeVarsFromWindow();
-    }
-    applySettings();
-    updateUI();
-    updateKnowledgeUI();
-    if (typeof updateGradeUI === 'function') updateGradeUI();
-    if (typeof updateGeneratorUpgradesUI === 'function') updateGeneratorUpgradesUI();
-    if (window.initPrism) {
-      window.initPrism();
-    }
-    // Check for control center unlock
-    checkControlCenterUnlock();
-    if (boughtElements[7]) {
-      const genBtn = document.getElementById("generatorSubTabBtn");
-      if (window.currentFloor === 2) {
-        genBtn.style.display = "none";
-      } else {
-        genBtn.style.display = "inline-block";
-      }
-      document.getElementById("subTabNav").style.display = "flex";
-    }
-    if (boughtElements[8]) {
-      document.getElementById("graduationSubTabBtn").style.display = "inline-block";
-      document.getElementById("knowledgeSubTabNav").style.display = "flex";
-      const gradTab = document.getElementById("graduationSubTab");
-      if (gradTab) {
-        if (typeof currentKnowledgeSubTab !== 'undefined' && currentKnowledgeSubTab === 'graduationSubTab') {
-          gradTab.style.display = "block";
-          switchKnowledgeSubTab('graduationSubTab');
-        } else {
-          gradTab.style.display = "none";
-        }
-      }
-    }
-    if (typeof updatePowerEnergyStatusUI === 'function') updatePowerEnergyStatusUI();
-    if (typeof updateGlobalBlackoutOverlay === 'function') updateGlobalBlackoutOverlay();
-    if (typeof updateGlobalDimOverlay === 'function') updateGlobalDimOverlay();
-    if (currentHomeSubTab === 'generatorMainTab' && typeof renderGenerators === 'function') {
-      renderGenerators();
-    }
-    if (typeof updateGeneratorsUI === 'function') updateGeneratorsUI();
-    if (window.charger && typeof save.chargerCharge !== 'undefined') {
-      window.charger.charge = new Decimal(save.chargerCharge);
-    }
-    if (window.charger && save.chargerSoapState) {
-      window.charger.soapClickCount = save.chargerSoapState.soapClickCount || 0;
-      window.charger.soapLastClickTime = save.chargerSoapState.soapLastClickTime || 0;
-      window.charger.soapIsMad = save.chargerSoapState.soapIsMad || false;
-      window.charger.soapIsTalking = save.chargerSoapState.soapIsTalking || false;
-      window.charger.soapChargeEaten = save.chargerSoapState.soapChargeEaten || 0;
-      window.charger.soapWillEatCharge = save.chargerSoapState.soapWillEatCharge || false;
-    }
-    if (save.chargerState && window.charger) {
-      window.charger.charge = new Decimal(save.chargerState.charge || 0);
-      if (Array.isArray(save.chargerState.milestones)) {
-        save.chargerState.milestones.forEach((ms, idx) => {
-          if (idx < window.charger.milestones.length) {
-            window.charger.milestones[idx].unlocked = ms.unlocked || false;
-          }
-        });
-      }
-      if (!window.charger.milestoneQuests) {
-        window.charger.milestoneQuests = {
-          3: { required: 10, given: 0, completed: false },
-          4: { required: 15, given: 0, completed: false },
-          5: { required: 25, given: 0, completed: false },
-          6: { required: 50, given: 0, completed: false },
-          7: { required: 30, given: 0, completed: false, batteryRequired: 1, batteryGiven: 0 },
-          8: { required: 75, given: 0, completed: false, batteryRequired: 2, batteryGiven: 0 }
-        };
-      }
-      if (save.chargerState.milestoneQuests) {
-        Object.entries(save.chargerState.milestoneQuests).forEach(([index, quest]) => {
-          if (window.charger.milestoneQuests[index]) {
-            window.charger.milestoneQuests[index].given = quest.given || 0;
-            window.charger.milestoneQuests[index].completed = quest.completed || false;
-            if ((index === '7' || index === '8') && typeof quest.batteryRequired !== 'undefined') {
-              window.charger.milestoneQuests[index].batteryRequired = quest.batteryRequired;
-            }
-          }
-        });
-      }
-      if (typeof save.chargerState.questStage !== 'undefined' && window.state) {
-        if (!window.state.soapChargeQuest) {
-          window.state.soapChargeQuest = { stage: save.chargerState.questStage, initialized: true };
-        } else {
-          window.state.soapChargeQuest.stage = save.chargerState.questStage;
-          window.state.soapChargeQuest.initialized = true;
-        }
-      }
-    }
-    if (typeof save.terrariumPollen !== 'undefined') window.terrariumPollen = new Decimal(save.terrariumPollen || 0);
-    if (typeof save.terrariumFlowers !== 'undefined') window.terrariumFlowers = new Decimal(save.terrariumFlowers || 0);
-    if (typeof save.terrariumXP !== 'undefined') window.terrariumXP = new Decimal(save.terrariumXP || 0);
-    if (typeof save.terrariumLevel !== 'undefined') window.terrariumLevel = save.terrariumLevel;
-    if (typeof save.terrariumPollenValueUpgradeLevel !== 'undefined') {
-      window.terrariumPollenValueUpgradeLevel = save.terrariumPollenValueUpgradeLevel;
-    }
-    if (typeof save.terrariumXpMultiplierUpgradeLevel !== 'undefined') {
-      window.terrariumXpMultiplierUpgradeLevel = save.terrariumXpMultiplierUpgradeLevel;
-    }
-    if (typeof save.terrariumFlowerUpgrade4Level !== 'undefined') {
-      window.terrariumFlowerUpgrade4Level = save.terrariumFlowerUpgrade4Level;
-    }
-    if (typeof save.terrariumFlowerValueUpgradeLevel !== 'undefined') {
-      window.terrariumFlowerValueUpgradeLevel = save.terrariumFlowerValueUpgradeLevel;
-    }
-    if (typeof save.terrariumPollenToolSpeedUpgradeLevel !== 'undefined') {
-      window.terrariumPollenToolSpeedUpgradeLevel = save.terrariumPollenToolSpeedUpgradeLevel;
-    }
-    if (typeof save.terrariumFlowerXPUpgradeLevel !== 'undefined') {
-      window.terrariumFlowerXPUpgradeLevel = save.terrariumFlowerXPUpgradeLevel;
-    }
-    if (typeof save.hardModeQuestActive !== 'undefined') {
-      state.hardModeQuestActive = save.hardModeQuestActive;
-    }
-    if (save.hardModeQuestProgress) {
-      state.hardModeQuestProgress = {
-        berryTokens: save.hardModeQuestProgress.berryTokens || 0,
-        stardustTokens: save.hardModeQuestProgress.stardustTokens || 0,
-        berryPlateTokens: save.hardModeQuestProgress.berryPlateTokens || 0,
-        mushroomSoupTokens: save.hardModeQuestProgress.mushroomSoupTokens || 0,
-        prismClicks: save.hardModeQuestProgress.prismClicks || 0,
-        commonBoxes: save.hardModeQuestProgress.commonBoxes || 0,
-        flowersWatered: save.hardModeQuestProgress.flowersWatered || 0,
-        powerRefills: save.hardModeQuestProgress.powerRefills || 0,
-        soapPokes: save.hardModeQuestProgress.soapPokes || 0,
-        ingredientsCooked: save.hardModeQuestProgress.ingredientsCooked || 0
-      };
-    }
-    if (typeof save.hardModeEnabled !== 'undefined') {
-      window.hardModeEnabled = save.hardModeEnabled;
-    } else {
-      window.hardModeEnabled = true;
-    }
-    if (save.soapChargeQuest && window.state) {
-      window.state.soapChargeQuest = {
-        stage: save.soapChargeQuest.stage || 0,
-        initialized: save.soapChargeQuest.initialized || true
-      };
-    }
-    window.kitchenIngredients = save.kitchenIngredients || {};
-    if (typeof updateKitchenUI === 'function') updateKitchenUI();
-    if (typeof save.berryPlate === 'number') window.state.berryPlate = save.berryPlate;
-    else window.state.berryPlate = 0;
-    if (typeof save.mushroomSoup === 'number') window.state.mushroomSoup = save.mushroomSoup;
-    else window.state.mushroomSoup = 0;
-    if (typeof save.batteries === 'number') window.state.batteries = save.batteries;
-    else window.state.batteries = 0;
-    if (typeof save.glitteringPetals === 'number') window.state.glitteringPetals = save.glitteringPetals;
-    else window.state.glitteringPetals = 0;
-    if (typeof save.chargedPrisma === 'number') window.state.chargedPrisma = save.chargedPrisma;
-    else window.state.chargedPrisma = 0;
-    if (typeof save.swabucks !== 'undefined') window.state.swabucks = new Decimal(save.swabucks || 0);
-    else window.state.swabucks = new Decimal(0);
-    if (typeof save.mysticCookingSpeedBoost === 'number') window.state.mysticCookingSpeedBoost = save.mysticCookingSpeedBoost;
-    else window.state.mysticCookingSpeedBoost = 0;
-    if (typeof save.soapBatteryBoost === 'number') window.state.soapBatteryBoost = save.soapBatteryBoost;
-    else window.state.soapBatteryBoost = 0;
-    if (typeof save.fluzzerGlitteringPetalsBoost === 'number') window.state.fluzzerGlitteringPetalsBoost = save.fluzzerGlitteringPetalsBoost;
-    else window.state.fluzzerGlitteringPetalsBoost = 0;
-    if (typeof save.peachyHungerBoost === 'number') window.state.peachyHungerBoost = save.peachyHungerBoost;
-    else window.state.peachyHungerBoost = 0;
-    if (save.friendship) {
-      window.friendship = save.friendship;
-    } else if (!window.friendship) {
-      window.friendship = {
-        Cargo: { level: 0, points: 0 },
-        Generator: { level: 0, points: 0 },
-        Lab: { level: 0, points: 0 },
-        Kitchen: { level: 0, points: 0 },
-        Terrarium: { level: 0, points: 0 }
-      };
-    }
-    if (save.berryCookingState) {
-      localStorage.setItem('berryCookingState', save.berryCookingState);
-    } else {
-      localStorage.removeItem('berryCookingState');
-    }
-    if (typeof updateKitchenUI === 'function') updateKitchenUI();
-    if (typeof renderTerrariumUI === 'function') renderTerrariumUI();
-    if (typeof updateGradeUI === 'function') updateGradeUI();
-    if (typeof updateGeneratorUpgradesUI === 'function') updateGeneratorUpgradesUI();
-    if (typeof syncTerrariumUpgradeVarsFromWindow === 'function') {
-      syncTerrariumUpgradeVarsFromWindow();
-    }
-  if (typeof checkHardModeTabButtonVisibility === 'function') {
-    checkHardModeTabButtonVisibility();
-  }
-  if (typeof window.syncTerrariumVarsFromWindow === 'function') {
-    window.syncTerrariumVarsFromWindow();
-  }
-  if (save.intercomState) {
-    window.intercomEventTriggered = save.intercomState.intercomEventTriggered || false;
-    window.intercomEvent20Triggered = save.intercomState.intercomEvent20Triggered || false;
-  }
-  
-  // Infinity data is now handled by the unified save slot system
-  
-  if (save.frontDeskState) {
-    if (!window.frontDeskState) window.frontDeskState = { employees: {}, totalHired: 0, initialized: false };
-    window.frontDeskState.employees = save.frontDeskState.employees || {};
-    window.frontDeskState.totalHired = save.frontDeskState.totalHired || 0;
-    
-    // Load our new front desk system data
-    window.frontDeskState.availableWorkers = save.frontDeskState.availableWorkers || [];
-    window.frontDeskState.assignedWorkers = save.frontDeskState.assignedWorkers || {};
-    window.frontDeskState.unlockedSlots = save.frontDeskState.unlockedSlots || 1;
-    window.frontDeskState.nextArrivalTime = save.frontDeskState.nextArrivalTime || 0;
-    window.frontDeskState.isUnlocked = save.frontDeskState.isUnlocked || false;
-
-    // Ensure all employees have state entries
-    if (window.frontDeskEmployees) {
-      window.frontDeskEmployees.forEach(employee => {
-        if (!window.frontDeskState.employees[employee.id]) {
-          window.frontDeskState.employees[employee.id] = {
-            hired: false,
-            hiredDate: null
-          };
-        }
-      });
-    }
-  }
-  
-  // Load infinity system data from imported save
-  if (save.infinityData && window.infinitySystem) {
-    try {
-      // Restore infinity counts
-      if (save.infinityData.counts) {
-        window.infinitySystem.counts = { ...window.infinitySystem.counts, ...save.infinityData.counts };
-      }
-      
-      // Restore ever reached tracking
-      if (save.infinityData.everReached) {
-        window.infinitySystem.everReached = { ...window.infinitySystem.everReached, ...save.infinityData.everReached };
-      }
-      
-      // Restore infinity points and theorems
-      if (save.infinityData.infinityPoints) {
-        window.infinitySystem.infinityPoints = new Decimal(save.infinityData.infinityPoints);
-      }
-      
-      if (typeof save.infinityData.infinityTheorems === 'number') {
-        window.infinitySystem.infinityTheorems = save.infinityData.infinityTheorems;
-      }
-      
-      if (typeof save.infinityData.totalInfinityTheorems === 'number') {
-        window.infinitySystem.totalInfinityTheorems = save.infinityData.totalInfinityTheorems;
-      }
-      
-      if (save.infinityData.theoremProgress) {
-        window.infinitySystem.theoremProgress = new Decimal(save.infinityData.theoremProgress);
-      }
-      
-      if (typeof save.infinityData.totalInfinityEarned === 'number') {
-        window.infinitySystem.totalInfinityEarned = save.infinityData.totalInfinityEarned;
-      }
-      
-      if (typeof save.infinityData.lastInfinityPointsUpdate === 'number') {
-        window.infinitySystem.lastInfinityPointsUpdate = save.infinityData.lastInfinityPointsUpdate;
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Load infinity upgrades from imported save
-  if (save.infinityUpgrades) {
-    window.infinityUpgrades = { ...window.infinityUpgrades, ...save.infinityUpgrades };
-
-  }
-  
-  // Load infinity caps from imported save
-  if (save.infinityCaps) {
-    window.infinityCaps = { ...window.infinityCaps, ...save.infinityCaps };
-
-  }
-  
-  // Load advanced prism calibration state from imported save - only if the system is unlocked
-  if (save.advancedPrismCalibration && window.advancedPrismState && window.advancedPrismState.unlocked) {
-    try {
-      // Load stable light values
-      if (save.advancedPrismCalibration.stable) {
-        const stableData = save.advancedPrismCalibration.stable;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (stableData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.stable[lightType] = new Decimal(stableData[lightType]);
-          }
-        });
-      }
-      
-      // Load nerf values
-      if (save.advancedPrismCalibration.nerfs) {
-        const nerfData = save.advancedPrismCalibration.nerfs;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (nerfData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(nerfData[lightType]);
-          }
-        });
-      }
-      
-      // Load total time accumulated
-      if (save.advancedPrismCalibration.totalTimeAccumulated) {
-        const timeData = save.advancedPrismCalibration.totalTimeAccumulated;
-        const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-        
-        lightTypes.forEach(lightType => {
-          if (timeData[lightType] !== undefined) {
-            window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = timeData[lightType];
-          }
-        });
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Load advanced prism lab clicks and image swap state from imported save - only if the system is unlocked
-  if (save.advancedPrismState && window.advancedPrismState && window.advancedPrismState.unlocked) {
-    try {
-      if (save.advancedPrismState.labTabClicks !== undefined) {
-        window.advancedPrismState.labTabClicks = save.advancedPrismState.labTabClicks;
-      }
-      
-      if (save.advancedPrismState.hasCompletedLabClicks !== undefined) {
-        window.advancedPrismState.hasCompletedLabClicks = save.advancedPrismState.hasCompletedLabClicks;
-      }
-      
-      if (save.advancedPrismState.imagesSwapped !== undefined) {
-        window.advancedPrismState.imagesSwapped = save.advancedPrismState.imagesSwapped;
-      }
-      
-      if (save.advancedPrismState.hasShownLabDialogue !== undefined) {
-        window.advancedPrismState.hasShownLabDialogue = save.advancedPrismState.hasShownLabDialogue;
-      }
-
-    } catch (error) {
-
-    }
-  }
-  
-  // Check infinity research unlock after importing data
-  if (typeof checkInfinityResearchUnlock === 'function') {
-    checkInfinityResearchUnlock();
-  }
-  } catch (e) {
-    alert("Invalid format.");
-  }
-}
 
 document.querySelectorAll('.navBtn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -4753,7 +4095,7 @@ function showPage(pageId) {
     knowledgeSubTabBar.style.display = 'flex';
     if (cafeteriaSubTabBar) cafeteriaSubTabBar.style.display = 'none';
     if (achievementsSubTabBar) achievementsSubTabBar.style.display = 'none';
-    if (currentKnowledgeSubTab === 'graduationSubTab') {
+    if (state.currentKnowledgeSubTab === 'graduationSubTab') {
       document.body.classList.add('regal-bg');
       document.documentElement.classList.add('regal-bg');
     } else {
@@ -4857,7 +4199,7 @@ function switchHomeSubTab(subTabId) {
       }
       if (!state.seenGeneratorTabFirstTime) {
         state.seenGeneratorTabFirstTime = true;
-        if (typeof saveGame === 'function') saveGame();
+        // Save system disabled
         showSoapFirstTimeMessage();
         if (window.daynight && typeof window.daynight.getTime === 'function') {
           const mins = window.daynight.getTime();
@@ -5131,6 +4473,15 @@ function setupPrismSubTabButtons() {
       currentPrismSubTab = 'advanced';
       window.currentPrismSubTab = 'advanced';
       
+      // Render Advanced Prism UI when tab is clicked
+      if (typeof window.renderAdvancedPrismUI === 'function') {
+        try {
+          window.renderAdvancedPrismUI();
+        } catch (error) {
+          console.error('Error rendering Advanced Prism UI:', error);
+        }
+      }
+      
       // Hide Vi's speech bubble if it's currently visible
       const viSpeechBubble = document.getElementById('viSpeechBubble');
       if (viSpeechBubble) {
@@ -5224,10 +4575,7 @@ function updatePrismAdvancedButtonVisibility() {
       if (element25Bought && storyModalSeen && !window.prismAdvancedLabUnlocked) {
 
         window.prismAdvancedLabUnlocked = true;
-        // Auto-save to preserve the permanent unlock
-        if (typeof saveGame === 'function') {
-          saveGame();
-        }
+        // Save system disabled
       }
     } else {
 
@@ -5306,12 +4654,11 @@ window.forceShowPrismAdvanced = function() {
 // Debug function to manually set element 25 as bought
 window.forceElement25Bought = function() {
 
-  if (!window.boughtElements) {
-    window.boughtElements = {};
-    boughtElements = window.boughtElements;
+  if (!window.state.boughtElements) {
+    window.state.boughtElements = {};
   }
-  window.boughtElements[25] = true;
-  boughtElements[25] = true;
+  state.boughtElements[25] = true;
+  window.boughtElements = state.boughtElements;
 
 
   updatePrismAdvancedButtonVisibility();
@@ -5336,14 +4683,12 @@ window.forceAdvancedLabUnlock = function() {
 // Reset element 25 to not bought state
 window.resetElement25 = function() {
 
-  if (window.boughtElements) {
-    delete window.boughtElements[25];
-    delete window.boughtElements["25"];
+  if (window.state.boughtElements) {
+    delete state.boughtElements[25];
+    delete state.boughtElements["25"];
   }
-  if (typeof boughtElements !== 'undefined') {
-    delete boughtElements[25];
-    delete boughtElements["25"];
-  }
+  // Update global reference
+  window.boughtElements = state.boughtElements;
   
   // Also reset the permanent unlock flag if you want to test the full unlock process
   // window.prismAdvancedLabUnlocked = false;
@@ -5442,7 +4787,7 @@ function switchKnowledgeSubTab(tabId) {
   if (targetButton) {
     targetButton.classList.add("active");
   }
-  currentKnowledgeSubTab = tabId;
+  state.currentKnowledgeSubTab = tabId;
   if (tabId === 'infinityResearchSubTab') {
     const tab = document.getElementById('infinityResearchSubTab');
     if (tab) {
@@ -5891,11 +5236,8 @@ window.testInfinityResearch = function() {
 
 // Debug function to test infinity research unlock
 window.testInfinityUnlock = function() {
-  const unlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  localStorage.setItem(unlockKey, 'true');
-
-  checkInfinityResearchUnlock();
-  return 'Infinity Research tab should now be visible!';
+  // Save system disabled - unlock functionality disabled
+  return 'Save system disabled - unlock functionality disabled';
 };
 
 // Debug function to simulate infinity count for testing
@@ -5924,19 +5266,18 @@ window.simulateInfinityCount = function(count = 1) {
 
 // Debug function to reset infinity research unlock
 window.resetInfinityUnlock = function() {
-  const unlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  localStorage.removeItem(unlockKey);
+  // Save system disabled - unlock functionality disabled
   const btn = document.getElementById('infinityResearchSubTabBtn');
   if (btn) {
     btn.style.display = 'none';
   }
 
-  return 'Infinity Research tab should now be hidden until currency reaches infinity again!';
+  return 'Save system disabled - unlock functionality disabled';
 };
 
 // Debug function to test control center unlock
 window.testControlCenterUnlock = function() {
-  const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
+  // Save system disabled - unlock functionality disabled
   localStorage.setItem(unlockKey, 'true');
 
   checkControlCenterUnlock();
@@ -5945,14 +5286,13 @@ window.testControlCenterUnlock = function() {
 
 // Debug function to reset control center unlock
 window.resetControlCenterUnlock = function() {
-  const unlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-  localStorage.removeItem(unlockKey);
+  // Save system disabled - unlock functionality disabled
   const tab = document.getElementById('knowledgeTab');
   if (tab) {
     tab.style.display = 'none';
   }
 
-  return 'Control Center tab should now be hidden until first delivery reset again!';
+  return 'Save system disabled - unlock functionality disabled';
 };
 
 // Debug function to force show control center (bypass all checks)
@@ -5970,15 +5310,10 @@ window.forceShowControlCenter = function() {
 
 // Debug function to check unlock status
 window.checkUnlockStatus = function() {
-  const currentSaveSlot = localStorage.getItem('currentSaveSlot') || 'default';
-  const infinityUnlockKey = getSaveSlotSpecificKey('infinityResearchUnlocked');
-  const controlCenterUnlockKey = getSaveSlotSpecificKey('controlCenterUnlocked');
-  const nectarizeUnlockKey = `highestGradeReached_${currentSaveSlot}`;
-  
-  const infinityUnlocked = localStorage.getItem(infinityUnlockKey);
-  const controlCenterUnlocked = localStorage.getItem(controlCenterUnlockKey);
-  const highestGradeReached = localStorage.getItem(nectarizeUnlockKey) || '1';
-  const nectarizeUnlocked = parseInt(highestGradeReached) >= 7;
+  // Save system disabled - unlock status check disabled
+  const infinityUnlocked = false;
+  const controlCenterUnlocked = false;
+  const nectarizeUnlocked = false;
 
 
 
@@ -6076,7 +5411,7 @@ window.forceShowControlCenter = function() {
 window.checkControlCenterStatus = function() {
   const tab = document.getElementById('knowledgeTab');
   const unlocked = localStorage.getItem('controlCenterUnlocked');
-  const hasKP = swariaKnowledge && swariaKnowledge.kp > 0;
+  const hasKP = state && state.kp > 0;
   const hasElements = Object.keys(boughtElements).length > 0;
   const seenStory = state && state.seenFirstDeliveryStory;
 
@@ -6252,7 +5587,7 @@ function earnBox(type, rewardMultiplier = 1, suppressPopup = false, count = 1) {
     const avgArtifact = new Decimal((box.artifact[0] + box.artifact[1]) / 2).mul(rewardMultiplierDecimal);
     artifactGain = avgArtifact.mul(countDecimal);
     if (boughtElements[6]) {
-      const kpDecimal = DecimalUtils.isDecimal(swariaKnowledge.kp) ? swariaKnowledge.kp : new Decimal(swariaKnowledge.kp || 0);
+      const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
       artifactGain = artifactGain.add(kpDecimal.mul(0.1).floor().mul(rewardMultiplierDecimal).mul(countDecimal));
     }
     if (typeof state !== 'undefined' && DecimalUtils.toDecimal(state.grade || 1).gte(5)) {
@@ -6497,10 +5832,10 @@ function renderGenerators() {
       const unlockedGenerators = generators.filter(gen => gen.unlocked);
       let hasAnyUpgrades = false;
       unlockedGenerators.forEach(gen => {
-        if (generatorUpgrades[gen.reward] && !generatorUpgrades[gen.reward].eq(0)) {
+        if (state.generatorUpgrades[gen.reward] && !state.generatorUpgrades[gen.reward].eq(0)) {
           hasAnyUpgrades = true;
 
-          generatorUpgrades[gen.reward] = new Decimal(0);
+          state.generatorUpgrades[gen.reward] = new Decimal(0);
         }
       });
       if (hasAnyUpgrades) {
@@ -6691,7 +6026,7 @@ function renderGenerators() {
       const unlockCost = gen.baseCost;
       let canUnlock = false;
       if (gen.currency === 'kp') {
-        canUnlock = DecimalUtils.isDecimal(swariaKnowledge.kp) && swariaKnowledge.kp.gte(unlockCost);
+        canUnlock = DecimalUtils.isDecimal(state.kp) && state.kp.gte(unlockCost);
       } else if (gen.currency === 'swaria coins') {
         canUnlock = DecimalUtils.isDecimal(state.swaria) && state.swaria.gte(unlockCost);
       } else {
@@ -6704,7 +6039,7 @@ function renderGenerators() {
       const cost = DecimalUtils.multiply(gen.baseCost, new Decimal(gen.costMultiplier).pow(gen.upgrades));
       let canUpgrade = false;
       if (gen.currency === 'kp') {
-        canUpgrade = DecimalUtils.isDecimal(swariaKnowledge.kp) && swariaKnowledge.kp.gte(cost);
+        canUpgrade = DecimalUtils.isDecimal(state.kp) && state.kp.gte(cost);
       } else if (gen.currency === 'swaria coins') {
         canUpgrade = DecimalUtils.isDecimal(state.swaria) && state.swaria.gte(cost);
       } else {
@@ -6783,7 +6118,7 @@ function unlockGenerator(i) {
   const unlockCost = gen.baseCost;
   let currentAmount = new Decimal(0);
   if (gen.currency === 'kp') {
-    currentAmount = swariaKnowledge.kp;
+    currentAmount = window.state.kp;
   } else if (gen.currency === 'swaria coins') {
     currentAmount = state.swaria;
   } else {
@@ -6797,7 +6132,7 @@ function unlockGenerator(i) {
   
   if (currentAmount.lt(unlockCost)) return;
   if (gen.currency === 'kp') {
-    swariaKnowledge.kp = swariaKnowledge.kp.sub(unlockCost);
+    state.kp = state.kp.sub(unlockCost);
   } else if (gen.currency === 'swaria coins') {
     state.swaria = state.swaria.sub(unlockCost);
   } else {
@@ -6819,7 +6154,7 @@ function upgradeGenerator(i) {
   const cost = DecimalUtils.multiply(gen.baseCost, new Decimal(gen.costMultiplier).pow(gen.upgrades));
   let canUpgrade = false;
   if (gen.currency === 'kp') {
-    canUpgrade = DecimalUtils.isDecimal(swariaKnowledge.kp) && swariaKnowledge.kp.gte(cost);
+    canUpgrade = DecimalUtils.isDecimal(state.kp) && state.kp.gte(cost);
   } else if (gen.currency === 'swaria coins') {
     canUpgrade = DecimalUtils.isDecimal(state.swaria) && state.swaria.gte(cost);
   } else {
@@ -6827,7 +6162,7 @@ function upgradeGenerator(i) {
   }
   if (!canUpgrade) return;
   if (gen.currency === 'kp') {
-    swariaKnowledge.kp = swariaKnowledge.kp.sub(cost);
+    state.kp = state.kp.sub(cost);
   } else if (gen.currency === 'swaria coins') {
     state.swaria = state.swaria.sub(cost);
   } else {
@@ -7165,7 +6500,7 @@ function updateGeneratorsUI(force) {
       if (!gen.unlocked) {
         buyBtn.innerText = `Unlock (${formatNumber(gen.baseCost)} ${gen.currency})`;
         if (gen.currency === 'kp') {
-          buyBtn.disabled = !DecimalUtils.isDecimal(swariaKnowledge.kp) || swariaKnowledge.kp.lt(buyCost);
+          buyBtn.disabled = !DecimalUtils.isDecimal(state.kp) || state.kp.lt(buyCost);
         } else if (gen.currency === 'swaria coins') {
           buyBtn.disabled = !DecimalUtils.isDecimal(state.swaria) || state.swaria.lt(buyCost);
         } else {
@@ -7188,7 +6523,7 @@ function updateGeneratorsUI(force) {
           const cost = DecimalUtils.multiply(gen.baseCost, new Decimal(gen.costMultiplier).pow(gen.upgrades));
           upgradeBtn.innerText = `Upgrade (${formatNumber(cost)} ${gen.currency})`;
           if (gen.currency === 'kp') {
-            upgradeBtn.disabled = !DecimalUtils.isDecimal(swariaKnowledge.kp) || swariaKnowledge.kp.lt(cost);
+            upgradeBtn.disabled = !DecimalUtils.isDecimal(state.kp) || state.kp.lt(cost);
           } else if (gen.currency === 'swaria coins') {
             upgradeBtn.disabled = !DecimalUtils.isDecimal(state.swaria) || state.swaria.lt(cost);
           } else {
@@ -7517,22 +6852,32 @@ function switchSettingsSubTab(tabId) {
   document.getElementById('settingsCreditsTab').style.display = 'none';
   document.getElementById('settingsRecoveryTab').style.display = 'none';
   document.getElementById('settingsHardModeTab').style.display = 'none';
-  document.getElementById('settingsSavesTabBtn').classList.remove('active');
-  document.getElementById('settingsStatsTabBtn').classList.remove('active');
-  document.getElementById('settingsCreditsTabBtn').classList.remove('active');
-  document.getElementById('settingsRecoveryTabBtn').classList.remove('active');
-  document.getElementById('settingsHardModeTabBtn').classList.remove('active');
+  const settingsSavesTabBtn = document.getElementById('settingsSavesTabBtn');
+  if (settingsSavesTabBtn) settingsSavesTabBtn.classList.remove('active');
+  const settingsStatsTabBtn = document.getElementById('settingsStatsTabBtn');
+  if (settingsStatsTabBtn) settingsStatsTabBtn.classList.remove('active');
+  const settingsCreditsTabBtn = document.getElementById('settingsCreditsTabBtn');
+  if (settingsCreditsTabBtn) settingsCreditsTabBtn.classList.remove('active');
+  const settingsRecoveryTabBtn = document.getElementById('settingsRecoveryTabBtn');
+  if (settingsRecoveryTabBtn) settingsRecoveryTabBtn.classList.remove('active');
+  const settingsHardModeTabBtn = document.getElementById('settingsHardModeTabBtn');
+  if (settingsHardModeTabBtn) settingsHardModeTabBtn.classList.remove('active');
   document.getElementById(tabId).style.display = 'block';
   if (tabId === 'settingsSavesTab') {
-    document.getElementById('settingsSavesTabBtn').classList.add('active');
+    const btn = document.getElementById('settingsSavesTabBtn');
+    if (btn) btn.classList.add('active');
   } else if (tabId === 'settingsStatsTab') {
-    document.getElementById('settingsStatsTabBtn').classList.add('active');
+    const btn = document.getElementById('settingsStatsTabBtn');
+    if (btn) btn.classList.add('active');
   } else if (tabId === 'settingsCreditsTab') {
-    document.getElementById('settingsCreditsTabBtn').classList.add('active');
+    const btn = document.getElementById('settingsCreditsTabBtn');
+    if (btn) btn.classList.add('active');
   } else if (tabId === 'settingsRecoveryTab') {
-    document.getElementById('settingsRecoveryTabBtn').classList.add('active');
+    const btn = document.getElementById('settingsRecoveryTabBtn');
+    if (btn) btn.classList.add('active');
   } else if (tabId === 'settingsHardModeTab') {
-    document.getElementById('settingsHardModeTabBtn').classList.add('active');
+    const btn = document.getElementById('settingsHardModeTabBtn');
+    if (btn) btn.classList.add('active');
   }
 }
 const origShowPage = window.showPage || (typeof showPage === 'function' && showPage);
@@ -7954,9 +7299,9 @@ window.testAllTerrariumElements = function() {
 
 // Grant elements for testing (WARNING: Cheating function!)
 window.grantElement = function(index) {
-  if (!boughtElements[index]) {
-    boughtElements[index] = true;
-    window.boughtElements = boughtElements;
+  if (!state.boughtElements[index]) {
+    state.boughtElements[index] = true;
+    window.boughtElements = state.boughtElements;
     if (typeof applyElementEffect === 'function') {
       applyElementEffect(index);
     }
@@ -8209,7 +7554,7 @@ function checkForPendingStoryModals() {
         // Clear the pending flag and mark story as seen
         window.state.pendingInfinityResetStory = false;
         window.state.seenInfinityResetStory = true;
-        if (typeof saveGame === 'function') saveGame();
+        // Save system disabled
         
         // Show the modal after a short delay to ensure page is fully loaded
         setTimeout(() => {
@@ -8224,7 +7569,7 @@ function checkForPendingStoryModals() {
     var infinityEarned = window.infinitySystem && window.infinitySystem.totalInfinityEarned ? window.infinitySystem.totalInfinityEarned : 0;
     if (infinityEarned >= 1 && !window.state.seenInfinityResetStory) {
         window.state.seenInfinityResetStory = true;
-        if (typeof saveGame === 'function') saveGame();
+        // Save system disabled
         
         setTimeout(() => {
             if (typeof window.showInfinityResetStoryModal === 'function') {

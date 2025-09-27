@@ -22,29 +22,16 @@ class WaterFiltration {
   }
 
   loadState() {
-    // Load saved state from localStorage if available
-    try {
-      const saved = localStorage.getItem('waterFiltrationState');
-      if (saved) {
-        const data = JSON.parse(saved);
-        this.isRepaired = data.isRepaired || false;
-        this.waterPurity = data.waterPurity || 0;
-        this.filtrationRate = data.filtrationRate || 0;
-        this.repairProgress = data.repairProgress || 0;
-      }
-    } catch (error) {
-
-    }
+    // Save system disabled - start with default values
+    this.isRepaired = false;
+    this.waterPurity = 0;
+    this.filtrationRate = 0;
+    this.repairProgress = 0;
   }
 
   saveState() {
-    const state = {
-      isRepaired: this.isRepaired,
-      waterPurity: this.waterPurity,
-      filtrationRate: this.filtrationRate,
-      repairProgress: this.repairProgress
-    };
-    localStorage.setItem('waterFiltrationState', JSON.stringify(state));
+    // Save system disabled
+    return;
   }
 
   setupUI() {
@@ -168,8 +155,7 @@ class WaterFiltration {
     this.waterPurity = 85;
     this.filtrationRate = 150;
 
-    // Save state
-    this.saveState();
+    // Save system disabled
 
     // Show success message
     this.showRepairSuccess();

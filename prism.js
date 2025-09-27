@@ -56,23 +56,95 @@ window.prismTimeouts = window.prismTimeouts || [];
 
 
 
-let prismState = {
-  light: new Decimal(0),
-  redlight: new Decimal(0),
-  orangelight: new Decimal(0),
-  yellowlight: new Decimal(0),
-  greenlight: new Decimal(0),
-  bluelight: new Decimal(0),
-  lightparticle: new Decimal(0),
-  redlightparticle: new Decimal(0),
-  orangelightparticle: new Decimal(0),
-  yellowlightparticle: new Decimal(0),
-  greenlightparticle: new Decimal(0),
-  bluelightparticle: new Decimal(0),
-  activeTileIndex: null,
-  activeTileColor: null,
+// Use centralized prism state from window.state
+function initializePrismState() {
+  // Wait for window.state to be properly set up by script.js
+  if (!window.state || !window.state.prismState) {
+    // If state isn't ready yet, we'll sync later when the page loads
+    return;
+  }
+  
+  // Ensure all prism state values are Decimals
+  const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+  const particleTypes = ['lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'];
+  const fractionalTypes = ['lightFractional', 'redlightFractional', 'orangelightFractional', 'yellowlightFractional', 'greenlightFractional', 'bluelightFractional'];
+  
+  [...lightTypes, ...particleTypes, ...fractionalTypes].forEach(type => {
+    if (!DecimalUtils.isDecimal(window.state.prismState[type])) {
+      window.state.prismState[type] = new Decimal(window.state.prismState[type] || 0);
+    }
+  });
+  
+  // Ensure generator objects exist
+  if (!window.state.prismState.generatorUpgrades) {
+    window.state.prismState.generatorUpgrades = {};
+  }
+  if (!window.state.prismState.generatorUnlocked) {
+    window.state.prismState.generatorUnlocked = {};
+  }
+  
+  // Initialize permanent unlock flags for light tiles
+  if (!window.state.prismState.permanentUnlocks) {
+    window.state.prismState.permanentUnlocks = {};
+  }
+  if (typeof window.state.prismState.permanentUnlocks.redLightUnlocked === 'undefined') {
+    window.state.prismState.permanentUnlocks.redLightUnlocked = false;
+  }
+  if (typeof window.state.prismState.permanentUnlocks.orangeLightUnlocked === 'undefined') {
+    window.state.prismState.permanentUnlocks.orangeLightUnlocked = false;
+  }
+  
+  // Create global reference for backward compatibility
+  window.prismState = window.state.prismState;
+}
+
+// Make function globally accessible for sync purposes
+window.initializePrismState = initializePrismState;
+
+// Debug function to check prism state persistence
+window.debugPrismState = function() {
+  return {
+    prismState: window.state?.prismState,
+    prismStateRef: window.prismState,
+    referencesMatch: window.prismState === window.state?.prismState,
+    lightValues: window.prismState ? {
+      light: window.prismState.light?.toString() || 'undefined',
+      redlight: window.prismState.redlight?.toString() || 'undefined',
+      orangelight: window.prismState.orangelight?.toString() || 'undefined',
+      yellowlight: window.prismState.yellowlight?.toString() || 'undefined',
+      greenlight: window.prismState.greenlight?.toString() || 'undefined',
+      bluelight: window.prismState.bluelight?.toString() || 'undefined'
+    } : null
+  };
 };
-window.prismState = prismState;
+
+// Debug function to add test light values
+window.grantTestLight = function() {
+  if (!window.prismState) {
+    return false;
+  }
+  
+  window.prismState.light = new Decimal(100);
+  window.prismState.redlight = new Decimal(50);
+  window.prismState.orangelight = new Decimal(25);
+  window.prismState.yellowlight = new Decimal(10);
+  window.prismState.greenlight = new Decimal(5);
+  window.prismState.bluelight = new Decimal(1);
+  
+  // Update UI
+  if (typeof window.forceUpdateAllLightCounters === 'function') {
+    window.forceUpdateAllLightCounters();
+  }
+  
+  return true;
+};
+
+// Initialize prism state when ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializePrismState);
+} else {
+  initializePrismState();
+}
 const lightGeneratorConfigs = {
   light:      { baseCost: new Decimal(100),      baseRate: new Decimal(1),   resource: 'light' },
   redlight:   { baseCost: new Decimal(500),      baseRate: new Decimal(1),   resource: 'redlight' },
@@ -196,6 +268,44 @@ function spawnMultipleLightTiles() {
   }
 }
 
+// Function to check and update permanent light unlock flags based on grade
+function checkPermanentLightUnlocks() {
+  // Find where grade is stored
+  let currentGrade = null;
+  
+  // Check multiple possible locations for grade
+  if (window.state && DecimalUtils.isDecimal(window.state.grade)) {
+    currentGrade = window.state.grade;
+  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade)) {
+    currentGrade = state.grade;
+  } else if (typeof window.grade !== 'undefined' && DecimalUtils.isDecimal(window.grade)) {
+    currentGrade = window.grade;
+  } else if (window.state && typeof window.state.grade !== 'undefined') {
+    // Try to convert to Decimal if it's a number
+    currentGrade = new Decimal(window.state.grade || 0);
+  } else if (typeof state !== 'undefined' && typeof state.grade !== 'undefined') {
+    currentGrade = new Decimal(state.grade || 0);
+  }
+  
+  // Only proceed if we have valid state and grade
+  if (!window.state || !window.state.prismState || !window.state.prismState.permanentUnlocks ||
+      !currentGrade || !DecimalUtils.isDecimal(currentGrade)) {
+    return;
+  }
+  
+  // Check if red light should be permanently unlocked (grade 4+)
+  if (!window.state.prismState.permanentUnlocks.redLightUnlocked && 
+      currentGrade.gte(4)) {
+    window.state.prismState.permanentUnlocks.redLightUnlocked = true;
+  }
+  
+  // Check if orange light should be permanently unlocked (grade 6+)
+  if (!window.state.prismState.permanentUnlocks.orangeLightUnlocked && 
+      currentGrade.gte(6)) {
+    window.state.prismState.permanentUnlocks.orangeLightUnlocked = true;
+  }
+}
+
 // New function that spawns a single tile without clearing existing ones
 function spawnSingleLightTile() {
   const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism"));
@@ -210,21 +320,40 @@ function spawnSingleLightTile() {
   const randomTile = availableTiles[Math.floor(Math.random() * availableTiles.length)];
   const index = parseInt(randomTile.dataset.index);
   
+  // Check for permanent unlock flags first
+  checkPermanentLightUnlocks();
+  
+  // Find the correct grade reference
+  let currentGrade = null;
+  if (window.state && DecimalUtils.isDecimal(window.state.grade)) {
+    currentGrade = window.state.grade;
+  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade)) {
+    currentGrade = state.grade;
+  } else if (typeof window.grade !== 'undefined' && DecimalUtils.isDecimal(window.grade)) {
+    currentGrade = window.grade;
+  } else if (window.state && typeof window.state.grade !== 'undefined') {
+    currentGrade = new Decimal(window.state.grade || 0);
+  } else if (typeof state !== 'undefined' && typeof state.grade !== 'undefined') {
+    currentGrade = new Decimal(state.grade || 0);
+  }
+  
   // Check if yellow light is unlocked - prism core level 2 OR grade 8+ fallback
   const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2)) || 
-                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(8));
+                         (currentGrade && currentGrade.gte(8));
   // Check if green light is unlocked - prism core level 3 OR grade 10+ fallback
   const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3)) || 
-                        (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(10));
+                        (currentGrade && currentGrade.gte(10));
   // Check if blue light is unlocked - prism core level 4 OR grade 12+ fallback
   const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4)) || 
-                       (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(12));
+                       (currentGrade && currentGrade.gte(12));
   
-  // Check unlock conditions for red and orange light (prism core level 1+ OR grade fallback)
+  // Check unlock conditions for red and orange light - now includes permanent unlocks
   const redUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
-                     (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4));
+                     (currentGrade && currentGrade.gte(4)) ||
+                     (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.redLightUnlocked);
   const orangeUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
-                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6));
+                         (currentGrade && currentGrade.gte(6)) ||
+                         (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.orangeLightUnlocked);
   
   // Check if prism core has been upgraded at least once (level > 1)
   const prismCoreUpgraded = window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gt(1);
@@ -238,6 +367,7 @@ function spawnSingleLightTile() {
   if (prismCoreUpgraded) {
     // If prism core has been upgraded, make all light types available based on unlock conditions
     const roll = Math.random();
+    
     if (blueUnlocked && roll < 0.08) {
       randomTile.classList.add("active-tile", "blue-tile");
     } else if (greenUnlocked && roll < 0.16) {
@@ -251,9 +381,25 @@ function spawnSingleLightTile() {
     } else {
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4)) {
-    // Grade-based fallback path for when prism core isn't upgraded (matches main spawning function)
+  } else if (currentGrade && currentGrade.gte(6)) {
     const roll = Math.random();
+    
+    if (blueUnlocked && roll < 0.08) {
+      randomTile.classList.add("active-tile", "blue-tile");
+    } else if (greenUnlocked && roll < 0.16) {
+      randomTile.classList.add("active-tile", "green-tile");
+    } else if (yellowUnlocked && roll < 0.24) {
+      randomTile.classList.add("active-tile", "yellow-tile");
+    } else if (orangeUnlocked && roll < 0.44) {
+      randomTile.classList.add("active-tile", "orange-tile");
+    } else if (redUnlocked && roll < 0.72) {
+      randomTile.classList.add("active-tile", "red-tile");
+    } else {
+      randomTile.classList.add("active-tile", "white-tile");
+    }
+  } else if (currentGrade && currentGrade.gte(4)) {
+    const roll = Math.random();
+    
     if (blueUnlocked && roll < 0.1) {
       randomTile.classList.add("active-tile", "blue-tile");
     } else if (greenUnlocked && roll < 0.2) {
@@ -320,7 +466,7 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
     // Calculate gain for this tile (simplified version of the main logic)
     let tileGain = calculateLightTileGain(tileColor, friendshipMultiplier);
     
-    // Add to the appropriate currency
+    // Add to the appropriate currency and capture the actual amount added
     const currencyName = tileColor === 'redlight' ? 'redLight' : 
                         tileColor === 'orangelight' ? 'orangeLight' :
                         tileColor === 'yellowlight' ? 'yellowLight' :
@@ -328,15 +474,23 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
                         tileColor === 'bluelight' ? 'blueLight' :
                         'light';
     
+    let actualGainAmount;
     if (typeof window.addCurrency === 'function') {
-      window.addCurrency(currencyName, tileGain);
+      actualGainAmount = window.addCurrency(currencyName, tileGain);
     } else {
+      // Fallback direct addition - apply challenge nerfs manually
+      let processedGain = tileGain;
+      if (typeof window.applyChallengeNerfs === 'function') {
+        processedGain = window.applyChallengeNerfs(processedGain, tileColor);
+      }
+      
       // Fallback direct addition
       if (currencyName === 'light') {
-        window.prismState.light = window.prismState.light.add(tileGain);
+        window.prismState.light = window.prismState.light.add(processedGain);
       } else if (currencyName === 'redLight') {
-        window.prismState.redlight = window.prismState.redlight.add(tileGain);
+        window.prismState.redlight = window.prismState.redlight.add(processedGain);
       }
+      actualGainAmount = processedGain;
       // Add other colors as needed
     }
     
@@ -367,16 +521,16 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
     if (typeof showPrismGainPopup === 'function') {
       // Add a small delay for each popup so they don't all appear at exactly the same time
       setTimeout(() => {
-        showPrismGainPopup(popupId, tileGain, popupText);
+        showPrismGainPopup(popupId, actualGainAmount, popupText);
       }, tileIndex * 50); // 50ms delay between each popup
     }
     
     // Update tracker
     if (window.prismClickTracker) {
-      if (DecimalUtils.isDecimal(tileGain)) {
-        window.prismClickTracker[tileColor] = (window.prismClickTracker[tileColor] || new Decimal(0)).add(tileGain);
+      if (DecimalUtils.isDecimal(actualGainAmount)) {
+        window.prismClickTracker[tileColor] = (window.prismClickTracker[tileColor] || new Decimal(0)).add(actualGainAmount);
       } else {
-        window.prismClickTracker[tileColor] = (window.prismClickTracker[tileColor] || new Decimal(0)).add(new Decimal(tileGain));
+        window.prismClickTracker[tileColor] = (window.prismClickTracker[tileColor] || new Decimal(0)).add(new Decimal(actualGainAmount));
       }
     }
     
@@ -507,28 +661,44 @@ function spawnNewLightTile() {
   window.prismState.activeTileIndex = index;
   currentActiveTile = randomTile; // Cache the active tile
   
+  // Check for permanent unlock flags first
+  checkPermanentLightUnlocks();
+  
+  // Find the correct grade reference
+  let currentGrade = null;
+  if (window.state && DecimalUtils.isDecimal(window.state.grade)) {
+    currentGrade = window.state.grade;
+  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade)) {
+    currentGrade = state.grade;
+  } else if (typeof window.grade !== 'undefined' && DecimalUtils.isDecimal(window.grade)) {
+    currentGrade = window.grade;
+  } else if (window.state && typeof window.state.grade !== 'undefined') {
+    currentGrade = new Decimal(window.state.grade || 0);
+  } else if (typeof state !== 'undefined' && typeof state.grade !== 'undefined') {
+    currentGrade = new Decimal(state.grade || 0);
+  }
+  
   // Check unlock conditions for different light types
-  // Red light: unlocked via prism core level 1+ OR high grade (fallback at grade 4+)
+  // Red light: unlocked via prism core level 1+ OR high grade (fallback at grade 4+) OR permanent unlock
   const redUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
-                     (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(4));
-  // Orange light: unlocked via prism core level 1+ OR high grade (fallback at grade 6+)
+                     (currentGrade && currentGrade.gte(4)) ||
+                     (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.redLightUnlocked);
+  // Orange light: unlocked via prism core level 1+ OR high grade (fallback at grade 6+) OR permanent unlock
   const orangeUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
-                         (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6));
+                         (currentGrade && currentGrade.gte(6)) ||
+                         (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.orangeLightUnlocked);
   // Yellow light: unlocked via prism core level 2 OR high grade (fallback at grade 8+)
   const yellowUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(2)) || 
-                        (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(8));
+                        (currentGrade && currentGrade.gte(8));
   // Green light: unlocked via prism core level 3 OR high grade (fallback at grade 10+)
   const greenUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(3)) || 
-                       (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(10));
+                       (currentGrade && currentGrade.gte(10));
   // Blue light: unlocked via prism core level 4 OR high grade (fallback at grade 12+)
   const blueUnlocked = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(4)) || 
-                      (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(12));
+                      (currentGrade && currentGrade.gte(12));
   
   // Check if prism core has been upgraded at least once (level > 1)
   const prismCoreUpgraded = window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gt(1);
-  
-  // Debug: Log current state
-  
   
   // Check for grey anomaly - if active, only spawn grey tiles
   if (window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.prismGreyAnomaly) {
@@ -537,10 +707,10 @@ function spawnNewLightTile() {
     return;
   }
   
+  const roll = Math.random();
+  
   if (prismCoreUpgraded) {
     // If prism core has been upgraded, make all light types available
-    const roll = Math.random();
-
     if (blueUnlocked && roll < 0.08) {
       window.prismState.activeTileColor = 'bluelight';
       randomTile.classList.add("active-tile", "blue-tile");
@@ -602,8 +772,9 @@ function spawnNewLightTile() {
       window.prismState.activeTileColor = 'light';
       randomTile.classList.add("active-tile", "white-tile");
     }
-  } else if (typeof window.state !== 'undefined' && DecimalUtils.isDecimal(window.state.grade) && window.state.grade.gte(6)) {
+  } else if (currentGrade && currentGrade.gte(6)) {
     const roll = Math.random();
+    
     if (blueUnlocked && roll < 0.08) {
       window.prismState.activeTileColor = 'bluelight';
       randomTile.classList.add("active-tile", "blue-tile");
@@ -668,10 +839,12 @@ function spawnNewLightTile() {
 function clickLightTile(index) {
   // Check if the clicked tile is any active tile
   const clickedTile = document.querySelector(`.light-tile[data-index="${index}"]`);
+  
   if (clickedTile && clickedTile.classList.contains('active-tile')) {
     if (typeof window.trackHardModePrismClick === 'function') {
       window.trackHardModePrismClick();
     }
+    
     // Determine color from the clicked tile's CSS classes
     let color = 'light';
     if (clickedTile.classList.contains('grey-tile')) {
@@ -1313,7 +1486,7 @@ function handleLightGenClick(type) {
       forceUpdateAllLightCounters();
       updateLightGeneratorButtons();
       showGainPopup(`${type}particleCount`, 1, `${type} unlocked`);
-      if (window.saveGame) window.saveGame();
+      // Note: Save will be handled by regular save system, not on every upgrade
     }
     return;
   }
@@ -1324,12 +1497,16 @@ function handleLightGenClick(type) {
     forceUpdateAllLightCounters();
     updateLightGeneratorButtons();
     showGainPopup(`${type}particleCount`, 1, `${type} upgrade`);
-    if (window.saveGame) window.saveGame();
+    // Note: Save will be handled by regular save system, not on every upgrade
   }
 }
 
 function tickLightGenerators(diff) {
   // Prism lab operates independently of power status
+  
+  // Check for permanent unlocks periodically
+  checkPermanentLightUnlocks();
+  
   Object.keys(lightGeneratorConfigs).forEach(type => {
     if (!window.prismState.generatorUnlocked[type]) return;
     const config = lightGeneratorConfigs[type];
@@ -1477,6 +1654,10 @@ function initPrism() {
     initPrismGrid();
     prismGridInitialized = true;
   }
+  
+  // Check and update permanent unlocks on initialization
+  checkPermanentLightUnlocks();
+  
   spawnNewLightTile();
   ensureClickHandlers();
   forceUpdateAllLightCounters();
@@ -1486,6 +1667,7 @@ function initPrism() {
 window.handleLightGenClick = handleLightGenClick;
 window.tickLightGenerators = tickLightGenerators;
 window.initPrism = initPrism;
+window.checkPermanentLightUnlocks = checkPermanentLightUnlocks;
 
 // Force immediate update function for user interactions
 function forceUpdateAllLightCounters() {
@@ -2583,3 +2765,148 @@ function awardVivienFriendshipForLightTileClick() {
 }
 
 window.awardVivienFriendshipForLightTileClick = awardVivienFriendshipForLightTileClick;
+
+// Test function to verify permanent unlock system
+window.testPermanentLightUnlocks = function(testGrade) {
+  if (!window.state || !window.state.prismState) {
+    return { error: 'Prism state not initialized' };
+  }
+  
+  // Store original grade
+  const originalGrade = window.state.grade;
+  
+  // Test with specified grade
+  if (testGrade) {
+    window.state.grade = new Decimal(testGrade);
+  }
+  
+  // Check current unlock status before
+  const beforeRed = window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.redLightUnlocked;
+  const beforeOrange = window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.orangeLightUnlocked;
+  
+  // Run the permanent unlock check
+  checkPermanentLightUnlocks();
+  
+  // Check status after
+  const afterRed = window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.redLightUnlocked;
+  const afterOrange = window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.orangeLightUnlocked;
+  
+  // Restore original grade
+  if (originalGrade !== undefined) {
+    window.state.grade = originalGrade;
+  }
+  
+  return {
+    testGrade: testGrade,
+    before: { red: beforeRed, orange: beforeOrange },
+    after: { red: afterRed, orange: afterOrange },
+    changedRed: beforeRed !== afterRed,
+    changedOrange: beforeOrange !== afterOrange
+  };
+};
+
+// Debug function to show current permanent unlock status
+window.showPermanentUnlockStatus = function() {
+  if (!window.state || !window.state.prismState || !window.state.prismState.permanentUnlocks) {
+    return { error: 'Permanent unlocks not initialized' };
+  }
+  
+  // Find the correct grade reference
+  let currentGrade = null;
+  let gradeSource = 'none';
+  
+  if (window.state && DecimalUtils.isDecimal(window.state.grade)) {
+    currentGrade = window.state.grade;
+    gradeSource = 'window.state.grade';
+  } else if (typeof state !== 'undefined' && DecimalUtils.isDecimal(state.grade)) {
+    currentGrade = state.grade;
+    gradeSource = 'state.grade';
+  } else if (typeof window.grade !== 'undefined' && DecimalUtils.isDecimal(window.grade)) {
+    currentGrade = window.grade;
+    gradeSource = 'window.grade';
+  } else if (window.state && typeof window.state.grade !== 'undefined') {
+    currentGrade = new Decimal(window.state.grade || 0);
+    gradeSource = 'window.state.grade (converted)';
+  } else if (typeof state !== 'undefined' && typeof state.grade !== 'undefined') {
+    currentGrade = new Decimal(state.grade || 0);
+    gradeSource = 'state.grade (converted)';
+  }
+  
+  const grade = currentGrade ? currentGrade.toString() : 'unknown';
+  const redUnlocked = window.state.prismState.permanentUnlocks.redLightUnlocked;
+  const orangeUnlocked = window.state.prismState.permanentUnlocks.orangeLightUnlocked;
+  
+  // Also check the actual unlock conditions used in spawning
+  const prismCoreUpgraded = window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gt(1);
+  const redCondition = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                     (currentGrade && currentGrade.gte(4)) ||
+                     (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.redLightUnlocked);
+  const orangeCondition = (window.prismState.prismcore && window.prismState.prismcore.level && window.prismState.prismcore.level.gte(1)) || 
+                         (currentGrade && currentGrade.gte(6)) ||
+                         (window.state && window.state.prismState && window.state.prismState.permanentUnlocks && window.state.prismState.permanentUnlocks.orangeLightUnlocked);
+  
+  return {
+    grade: { value: grade, source: gradeSource },
+    permanentUnlocks: { red: redUnlocked, orange: orangeUnlocked },
+    prismCoreUpgraded,
+    spawnConditions: { red: redCondition, orange: orangeCondition }
+  };
+};
+
+// Quick fix function to force unlock and test
+window.fixPrismLightSpawning = function() {
+  checkPermanentLightUnlocks();
+  const status = window.showPermanentUnlockStatus();
+  spawnNewLightTile();
+  return { status, message: 'Check the prism - you should see colored tiles now!' };
+};
+
+// Manual tile spawning for testing
+window.forceSpawnColoredTile = function(color = 'random') {
+  // Get eligible tiles
+  const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism"));
+  if (eligible.length === 0) {
+    return { success: false, error: 'No eligible tiles found' };
+  }
+  
+  // Clear current tile if exists
+  if (currentActiveTile) {
+    currentActiveTile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
+    currentActiveTile = null;
+  }
+  
+  // Select random tile
+  const randomTile = eligible[Math.floor(Math.random() * eligible.length)];
+  const index = parseInt(randomTile.dataset.index);
+  window.prismState.activeTileIndex = index;
+  currentActiveTile = randomTile;
+  
+  // Apply specific color or random
+  const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'white'];
+  const actualColor = color === 'random' ? colors[Math.floor(Math.random() * colors.length)] : color;
+  
+  // Clear all color classes first
+  randomTile.classList.remove("red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
+  
+  // Apply new color
+  randomTile.classList.add("active-tile", `${actualColor}-tile`);
+  
+  // Set the state color
+  const colorMap = {
+    'red': 'redlight',
+    'orange': 'orangelight', 
+    'yellow': 'yellowlight',
+    'green': 'greenlight',
+    'blue': 'bluelight',
+    'white': 'light'
+  };
+  
+  window.prismState.activeTileColor = colorMap[actualColor];
+  
+  return { 
+    success: true, 
+    color: actualColor, 
+    index: index,
+    message: `Spawned ${actualColor} tile at index ${index}` 
+  };
+};

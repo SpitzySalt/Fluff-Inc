@@ -1,208 +1,120 @@
-/* Infinity Challenge Visual Effects */
+/* Infinity Challenge Visual Effects - Optimized */
 .infinity-challenge-filter {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(45deg, 
-    rgba(138, 43, 226, 0.15) 0%, 
-    rgba(75, 0, 130, 0.12) 25%, 
-    rgba(72, 61, 139, 0.15) 50%, 
-    rgba(123, 104, 238, 0.12) 75%, 
-    rgba(138, 43, 226, 0.15) 100%);
+  background: rgba(138, 43, 226, 0.15);
   pointer-events: none;
   z-index: 9998;
   opacity: 0;
   transition: opacity 0.8s ease-in-out;
-  backdrop-filter: hue-rotate(200deg) saturate(1.3) brightness(0.95);
-  -webkit-backdrop-filter: hue-rotate(200deg) saturate(1.3) brightness(0.95);
   overflow: hidden;
+  /* Removed expensive backdrop-filter for better performance */
 }
 
 .infinity-challenge-filter.active {
   opacity: 1;
 }
 
-/* Additional floating symbols */
-.infinity-symbol-1, .infinity-symbol-2, .infinity-symbol-3, .infinity-symbol-4,
-.infinity-symbol-5, .infinity-symbol-6, .infinity-symbol-7, .infinity-symbol-8 {
+/* Simplified floating symbols - reduced from 8 to 4 for better performance */
+.infinity-symbol-1, .infinity-symbol-2, .infinity-symbol-3, .infinity-symbol-4 {
   position: absolute;
   color: rgba(138, 43, 226, 0.4);
   font-size: 18px;
   font-weight: bold;
   pointer-events: none;
   opacity: 0;
+  will-change: transform;
+  transform: translate3d(0, 0, 0); /* Hardware acceleration */
 }
 
 .infinity-challenge-filter.active .infinity-symbol-1 {
-  animation: floatUp1 20s ease-in-out infinite;
+  animation: floatUpOptimized1 12s ease-in-out infinite;
 }
 
 .infinity-challenge-filter.active .infinity-symbol-2 {
-  animation: floatUp2 24s ease-in-out infinite 3s;
+  animation: floatUpOptimized2 14s ease-in-out infinite 2s;
 }
 
 .infinity-challenge-filter.active .infinity-symbol-3 {
-  animation: floatUp3 22s ease-in-out infinite 6s;
+  animation: floatUpOptimized3 13s ease-in-out infinite 4s;
 }
 
 .infinity-challenge-filter.active .infinity-symbol-4 {
-  animation: floatUp4 26s ease-in-out infinite 9s;
+  animation: floatUpOptimized4 15s ease-in-out infinite 6s;
 }
 
-.infinity-challenge-filter.active .infinity-symbol-5 {
-  animation: floatUp5 18s ease-in-out infinite 2s;
-}
-
-.infinity-challenge-filter.active .infinity-symbol-6 {
-  animation: floatUp6 25s ease-in-out infinite 7s;
-}
-
-.infinity-challenge-filter.active .infinity-symbol-7 {
-  animation: floatUp7 21s ease-in-out infinite 4s;
-}
-
-.infinity-challenge-filter.active .infinity-symbol-8 {
-  animation: floatUp8 23s ease-in-out infinite 8s;
-}
-
-/* Floating animations */
-@keyframes floatUp1 {
+/* Optimized floating animations - simplified to only vertical movement */
+@keyframes floatUpOptimized1 {
   0% { 
-    transform: translateY(100vh) translateX(10vw) rotate(0deg);
+    transform: translate3d(20vw, 100vh, 0);
     opacity: 0;
   }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
   100% { 
-    transform: translateY(-100px) translateX(15vw) rotate(360deg);
+    transform: translate3d(20vw, -100px, 0);
     opacity: 0;
   }
 }
 
-@keyframes floatUp2 {
+@keyframes floatUpOptimized2 {
   0% { 
-    transform: translateY(100vh) translateX(70vw) rotate(0deg);
+    transform: translate3d(60vw, 100vh, 0);
     opacity: 0;
   }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
   100% { 
-    transform: translateY(-100px) translateX(75vw) rotate(-360deg);
+    transform: translate3d(60vw, -100px, 0);
     opacity: 0;
   }
 }
 
-@keyframes floatUp3 {
+@keyframes floatUpOptimized3 {
   0% { 
-    transform: translateY(100vh) translateX(40vw) rotate(0deg);
+    transform: translate3d(40vw, 100vh, 0);
     opacity: 0;
   }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
   100% { 
-    transform: translateY(-100px) translateX(35vw) rotate(180deg);
+    transform: translate3d(40vw, -100px, 0);
     opacity: 0;
   }
 }
 
-@keyframes floatUp4 {
+@keyframes floatUpOptimized4 {
   0% { 
-    transform: translateY(100vh) translateX(85vw) rotate(0deg);
+    transform: translate3d(80vw, 100vh, 0);
     opacity: 0;
   }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
   100% { 
-    transform: translateY(-100px) translateX(90vw) rotate(-180deg);
+    transform: translate3d(80vw, -100px, 0);
     opacity: 0;
   }
 }
 
-@keyframes floatUp5 {
-  0% { 
-    transform: translateY(100vh) translateX(25vw) rotate(0deg);
-    opacity: 0;
-  }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { 
-    transform: translateY(-100px) translateX(20vw) rotate(270deg);
-    opacity: 0;
-  }
-}
-
-@keyframes floatUp6 {
-  0% { 
-    transform: translateY(100vh) translateX(60vw) rotate(0deg);
-    opacity: 0;
-  }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { 
-    transform: translateY(-100px) translateX(65vw) rotate(-270deg);
-    opacity: 0;
-  }
-}
-
-@keyframes floatUp7 {
-  0% { 
-    transform: translateY(100vh) translateX(5vw) rotate(0deg);
-    opacity: 0;
-  }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { 
-    transform: translateY(-100px) translateX(10vw) rotate(450deg);
-    opacity: 0;
-  }
-}
-
-@keyframes floatUp8 {
-  0% { 
-    transform: translateY(100vh) translateX(95vw) rotate(0deg);
-    opacity: 0;
-  }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { 
-    transform: translateY(-100px) translateX(90vw) rotate(-450deg);
-    opacity: 0;
-  }
-}
-
-/* Infinity Challenge Pulse Animation */
+/* Simplified Infinity Challenge Pulse Animation */
 @keyframes infinityChallengeGlow {
   0% { 
-    background: linear-gradient(45deg, 
-      rgba(138, 43, 226, 0.15) 0%, 
-      rgba(75, 0, 130, 0.12) 25%, 
-      rgba(72, 61, 139, 0.15) 50%, 
-      rgba(123, 104, 238, 0.12) 75%, 
-      rgba(138, 43, 226, 0.15) 100%);
+    opacity: 0.8;
   }
   50% { 
-    background: linear-gradient(45deg, 
-      rgba(138, 43, 226, 0.2) 0%, 
-      rgba(75, 0, 130, 0.17) 25%, 
-      rgba(72, 61, 139, 0.2) 50%, 
-      rgba(123, 104, 238, 0.17) 75%, 
-      rgba(138, 43, 226, 0.2) 100%);
+    opacity: 1;
   }
   100% { 
-    background: linear-gradient(45deg, 
-      rgba(138, 43, 226, 0.15) 0%, 
-      rgba(75, 0, 130, 0.12) 25%, 
-      rgba(72, 61, 139, 0.15) 50%, 
-      rgba(123, 104, 238, 0.12) 75%, 
-      rgba(138, 43, 226, 0.15) 100%);
+    opacity: 0.8;
   }
 }
 
 .infinity-challenge-filter.active {
   opacity: 1;
-  animation: infinityChallengeGlow 4s ease-in-out infinite;
+  animation: infinityChallengeGlow 3s ease-in-out infinite;
 }
 
 :root {

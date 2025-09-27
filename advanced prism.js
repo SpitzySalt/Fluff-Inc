@@ -171,13 +171,16 @@ const viSpeechPatterns = {
     "I should probably document my findings better, but who would read them?",
     "The facility's expansion means more complex light management systems.",
     "These calibration procedures are mind-numbing, but necessary.",
+    "So why are trying to stabilize the light spectrum? There's 2 reasons actually. 1 is to create the dark prism, and the second is for the flower grid stability system.",
     "I wonder if the others realize how complicated my work actually is.",
     "The prismatic resonance patterns are almost hypnotic sometimes.",
     "Research funding would be nice, but I make do with what I have.",
     "The light amplification chambers need constant monitoring.",
+    "I've had to improvise a lot of these equipments to connect to the terrarium's flower grid.",
     "The crystalline structure of prisms is more complex than most people realize.",
     "I've lost count of how many experiments I've run this month.",
     "Yeah that's right, I've got antlers, you don't.",
+    "Mhh? Wondering why the yellow light's boost",
     "The advanced prism systems require constant fine-tuning.",
     "I wonder if Swaria appreciates the complexity of my work...",
     "These light wavelengths behave differently than theoretical models predict.",
@@ -770,15 +773,44 @@ function setupSubTabResetHooks() {
   });
 }
 function hookIntoTokenSystem() {
-  if (window.showGiveTokenModal && !window._originalShowGiveTokenModal) {
-    window._originalShowGiveTokenModal = window.showGiveTokenModal;
-    window.showGiveTokenModal = function(tokenType, characterName) {
-      if (characterName === 'Vi') {
-        window._lastGivenTokenType = tokenType;
-      }
-      return window._originalShowGiveTokenModal(tokenType, characterName);
-    };
+  // Try to hook immediately, but also set up a retry mechanism
+  function attemptHook() {
+    if (window.showGiveTokenModal && !window._originalShowGiveTokenModal) {
+      window._originalShowGiveTokenModal = window.showGiveTokenModal;
+      window.showGiveTokenModal = function(tokenType, characterName) {
+        if (characterName === 'Vi') {
+          window._lastGivenTokenType = tokenType;
+        }
+        return window._originalShowGiveTokenModal(tokenType, characterName);
+      };
+      return true;
+    }
+    return false;
   }
+  
+  // Try immediately
+  if (attemptHook()) {
+    return;
+  }
+  
+  // If not available yet, retry a few times with delays
+  let retryCount = 0;
+  const maxRetries = 10;
+  
+  function retryHook() {
+    retryCount++;
+    if (attemptHook()) {
+      return;
+    }
+    
+    if (retryCount < maxRetries) {
+      setTimeout(retryHook, 100 * retryCount); // Increasing delay
+    } else {
+      console.warn('Advanced prism token system hook failed to install after', maxRetries, 'retries');
+    }
+  }
+  
+  setTimeout(retryHook, 100);
 }
 function ensureModalInBody() {
   const modal = document.getElementById('calibrationModal');
@@ -1843,9 +1875,23 @@ window.checkNerfDecaySystemStatus = function() {
   };
 };
 function renderAdvancedPrismUI() {
-  const container = document.getElementById('prismAdvancedArea');
+  // First check for the specific advanced prism content container
+  let container = document.getElementById('advancedPrismContent');
+  
+  // If that doesn't exist, fall back to the main advanced area
+  if (!container) {
+    container = document.getElementById('prismAdvancedArea');
+  }
+  
   if (!container) return;
-  container.innerHTML = `
+  
+  // Clear any existing content
+  container.innerHTML = '';
+  
+  // If we're rendering into the main area, we need the full card structure
+  const needsCardWrapper = container.id === 'prismAdvancedArea';
+  
+  const content = `
     <div style="display: flex; flex-direction: column; gap: 2rem; padding: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem;">
         <div class="card" style="flex: 0 0 300px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
@@ -2157,6 +2203,11 @@ function renderAdvancedPrismUI() {
       }
     </style>
   `;
+  
+  // Always render content directly into the container without card wrapper
+  // The prismAdvancedArea should handle the full layout
+  container.innerHTML = content;
+  
   setTimeout(() => {
     initializeViTokenDrops();
     updateAdvancedPrismUI(true); // Force immediate update when rendering
@@ -2503,8 +2554,8 @@ function checkAdvancedPrismUnlock() {
       advancedBtn.style.display = 'block';
     } else {
     }
-    const advancedTab = document.getElementById('prismAdvancedTab');
-    if (advancedTab && advancedTab.style.display !== 'none') {
+    const advancedArea = document.getElementById('prismAdvancedArea');
+    if (advancedArea && advancedArea.style.display !== 'none') {
       renderAdvancedPrismUI();
     }
   } else {
@@ -2521,14 +2572,19 @@ function initAdvancedPrism() {
   if (window.prismState && window.prismState.prismcore) {
     try {
       const savedCore = window.prismState.prismcore;
-      if (savedCore.level) {
+      if (savedCore && savedCore.level) {
         prismCoreState.level = new Decimal(savedCore.level);
       }
-      if (savedCore.potential) {
+      if (savedCore && savedCore.potential) {
         prismCoreState.potential = new Decimal(savedCore.potential);
       }
       window.prismState.prismcore = prismCoreState;
     } catch (error) {
+    }
+    
+    // Additional safety check to ensure prismcore level is always a Decimal
+    if (window.prismState.prismcore && !DecimalUtils.isDecimal(window.prismState.prismcore.level)) {
+      window.prismState.prismcore.level = new Decimal(window.prismState.prismcore.level || 1);
     }
   }
   if (window.prismState && window.prismState.advancedPrismState) {
