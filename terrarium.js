@@ -122,7 +122,8 @@ function getTerrariumState() {
         pollenWandActive: false,
         wateringCanActive: false,
         flowerFieldExpansionUpgradeLevel: 0,
-        pollenValueUpgradeLevel: 0
+        pollenValueUpgradeLevel: 0,
+        flowerGridPermanentlyUnlocked: false
       };
     }
   }
@@ -137,6 +138,7 @@ let terrariumXP = terrarium.xp;
 let terrariumLevel = terrarium.level;
 let flowerFieldExpansionUpgradeLevel = terrarium.flowerFieldExpansionUpgradeLevel || 0;
 let pollenValueUpgradeLevel = terrarium.pollenValueUpgradeLevel || 0;
+let flowerGridPermanentlyUnlocked = terrarium.flowerGridPermanentlyUnlocked || false;
 
 // Helper functions to sync local variables with state
 function syncTerrariumToState() {
@@ -190,6 +192,9 @@ function syncTerrariumToState() {
   // Sync flower grid troll
   window.state.terrarium.flowerGridTrollLevel = flowerGridTrollLevel;
   
+  // Sync flower grid permanent unlock
+  window.state.terrarium.flowerGridPermanentlyUnlocked = flowerGridPermanentlyUnlocked;
+  
   // Also update window variables for backward compatibility
   window.terrariumPollen = terrariumPollen;
   window.terrariumFlowers = terrariumFlowers;
@@ -197,6 +202,7 @@ function syncTerrariumToState() {
   window.terrariumNectar = terrariumNectar;
   window.terrariumLevel = terrariumLevel;
   window.flowerGridTrollLevel = flowerGridTrollLevel;
+  window.flowerGridPermanentlyUnlocked = flowerGridPermanentlyUnlocked;
   window.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
   window.pollenValueUpgrade2Level = pollenValueUpgrade2Level;
   window.flowerValueUpgradeLevel = flowerValueUpgradeLevel;
@@ -233,6 +239,7 @@ function syncStateToTerrarium() {
   flowerXPUpgradeLevel = window.state.terrarium.flowerXPUpgradeLevel || 0;
   extraChargeUpgradeLevel = window.state.terrarium.extraChargeUpgradeLevel || 0;
   flowerGridTrollLevel = window.state.terrarium.flowerGridTrollLevel || 100;
+  flowerGridPermanentlyUnlocked = window.state.terrarium.flowerGridPermanentlyUnlocked || false;
   
   // Sync all terrarium upgrade levels to window variables
   window.terrariumFlowerUpgrade1Level = window.state.terrarium.terrariumFlowerUpgrade1Level || 0;
@@ -279,6 +286,7 @@ window.terrariumXP = terrariumXP;
 window.terrariumLevel = terrariumLevel;
 window.flowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
 window.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
+window.flowerGridPermanentlyUnlocked = flowerGridPermanentlyUnlocked;
 
 function getCurrentFlowerGridDimensions() {
   return {
@@ -471,10 +479,10 @@ if (typeof window.nectarizePostResetTokenType === 'undefined') {
 let flowerGridTrollLevel = terrarium.flowerGridTrollLevel || 100;
 
 function handleFlowerGridTroll(currentLevel) {
-  // Start trolling when player gets to level 96 or above
-  if (currentLevel >= 96) {
+  // Start trolling when player gets to level 96 or above, but cap the troll level at 200
+  if (currentLevel >= 96 && flowerGridTrollLevel < 200) {
     const oldLevel = flowerGridTrollLevel;
-    const newTrollLevel = currentLevel + 4; // Always stay 4 levels ahead
+    const newTrollLevel = Math.min(200, currentLevel + 4); // Always stay 4 levels ahead, but cap at 200
     
     // Only show message if the level actually changed
     if (newTrollLevel !== flowerGridTrollLevel) {
@@ -500,7 +508,7 @@ function handleFlowerGridTroll(currentLevel) {
         fluzzerSay(randomMessage, false, 6000);
       }
     } else {
-      // Just update the level silently to keep it 4 ahead
+      // Just update the level silently to keep it 4 ahead, but cap at 200
       flowerGridTrollLevel = newTrollLevel;
       window.flowerGridTrollLevel = flowerGridTrollLevel;
       updateFlowerGridButtonState();
@@ -515,18 +523,26 @@ function updateFlowerGridButtonState() {
   // Debug logging
  
   
-  // The true unlock requirement is 1000, but we show a fake requirement to trick players
-  const trueUnlockLevel = 1000;
+  // The true unlock requirement is 200, but we show a fake requirement to trick players
+  const trueUnlockLevel = 200;
   const fakeDisplayLevel = flowerGridTrollLevel; // Show the current troll level to deceive players
   
+  // Check if flower grid is permanently unlocked or player has reached the true unlock level
+  const isUnlocked = flowerGridPermanentlyUnlocked || terrariumLevel >= trueUnlockLevel;
 
   
-  if (terrariumLevel < trueUnlockLevel) {
+  if (!isUnlocked) {
     flowerGridBtn.textContent = `Unlocked at level ${fakeDisplayLevel}`;
     flowerGridBtn.disabled = true;
     flowerGridBtn.classList.add('locked');
     flowerGridBtn.onclick = null; 
   } else {
+    // Set permanent unlock flag if player reached level 200 for the first time
+    if (!flowerGridPermanentlyUnlocked && terrariumLevel >= trueUnlockLevel) {
+      flowerGridPermanentlyUnlocked = true;
+      syncTerrariumToState(); // Save the permanent unlock
+    }
+    
     flowerGridBtn.textContent = "Flower Grid";
     flowerGridBtn.disabled = false;
     flowerGridBtn.classList.remove('locked');
@@ -728,9 +744,9 @@ function syncTerrariumVarsFromWindow() {
     }
   }
   
-  // Initialize troll after all variables are synced
+  // Initialize troll after all variables are synced, but cap at 200
   if (terrariumLevel >= 96 && flowerGridTrollLevel <= 100) {
-    flowerGridTrollLevel = terrariumLevel + 4;
+    flowerGridTrollLevel = Math.min(200, terrariumLevel + 4);
     window.flowerGridTrollLevel = flowerGridTrollLevel;
     setTimeout(updateFlowerGridButtonState, 100); // Update button after a short delay
   }
@@ -2321,6 +2337,36 @@ const fluzzerNormalSpeeches = [
   {
     text: "Sometimes I catch anomalies watching me tend the garden. Isn't that sweet?",
     condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0
+  },
+  
+  // Flower grid tease speeches (only appear when flower grid is not yet permanently unlocked)
+  {
+    text: "You are so close to unlocking the flower grid! Only a few more levels to go... maybe.",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
+  },
+  {
+    text: "Aww what was it? You thought I would unlock the door to the flower grid at terrarium level 100? I'm sorry but the flower grid is not yet ready to be used.",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 100
+  },
+  {
+    text: "You wanna know what's there in the flower grid room? Currently there are some vines I need to remove and a half built flower grid.",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
+  },
+  {
+    text: "The flower grid door? Oh, that old thing! I think I lost the key somewhere in the grass. I think I'll find those keys when the terrarium's lvl reaches 500.",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
+  },
+  {
+    text: "Every time you get close to the flower grid level requirement, it seems to... wiggle away! Strange, right?",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
+  },
+  {
+    text: "Yes of course I can enter the flower grid room, I know a secret passage that only Finea's can use.",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
+  },
+  {
+    text: "Inside the flower grid room, I was able to merge 2 of the same flower type together and it created a new flower! But these merged flowers are very unstable and can't be used for boosting production. Wait maybe I should not have told you that...",
+    condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
   },
 ];
 

@@ -175,6 +175,7 @@ const viSpeechPatterns = {
     "I wonder if the others realize how complicated my work actually is.",
     "The prismatic resonance patterns are almost hypnotic sometimes.",
     "Research funding would be nice, but I make do with what I have.",
+    "If we get 2 fully stabilized light, the flower grid stability system will start working.",
     "The light amplification chambers need constant monitoring.",
     "I've had to improvise a lot of these equipments to connect to the terrarium's flower grid.",
     "The crystalline structure of prisms is more complex than most people realize.",
@@ -335,11 +336,13 @@ function pokeViWithMainSpeechBubble() {
   }
   if (!isNightTime && Math.random() < 0.2) {
     const prismPotentialExplanations = [
-      "Prism Potential is the product of all your light types multiplied together! The more balanced your collection, the higher it grows.",
+      "Prism Potential is the product of all your light types multiplied together! The more light the better.",
       "Did you know? Prism Potential is calculated by multiplying all light amounts: White X Red X Orange X Yellow X Green X Blue. Even having zero of one type makes it work!",
-      "The secret to massive Prism Potential is balance. You need some of every light type, not just focusing on one color.",
-      "Prism Potential grows exponentially when you develop all light types equally. It's the key to upgrading the Prism Core!",
-      "Think of Prism Potential like a crystal's harmony - all wavelengths must resonate together to achieve true power."
+      "Is gaining light impossible because you used the calibration machines for too long? Don't worry, the negatives effect decays over time.",
+      "When calibrating the light spectrum, watch out for the negatives as they will exponentialy reduce light gain based on the amount of time spent calibrating.",
+      "Upgrading the prism core is how new lights gets unlocked.",
+      "The yellow light boost is not working? It's because the boost starts only at 1e30 yellow lights.",
+      "Don't tell anyone what I'm about to say, but fluzzer told me that they will open the flower grid when the terrarium gets to lvl 200.",
     ];
     const explanation = prismPotentialExplanations[Math.floor(Math.random() * prismPotentialExplanations.length)];
     showViInMainPrismSpeech(explanation, 6000);
@@ -538,8 +541,10 @@ window.respondCharacter = pokeSwariaCharacter;
 // Performance optimization for lab tab - prevent memory leaks
 const ADVANCED_PRISM_UI_UPDATE_THROTTLE = 100; // Update UI at most every 100ms (10 FPS)
 const CALIBRATION_MINIGAME_UPDATE_THROTTLE = 100; // Update minigame at most every 100ms (10 FPS)
+const STABLE_LIGHT_CARDS_UPDATE_THROTTLE = 50; // Update cards at most every 50ms (20 FPS)
 let lastAdvancedPrismUIUpdateTime = 0;
 let lastCalibrationMinigameUpdateTime = 0;
+let lastStableLightCardsUpdateTime = 0;
 
 let viRandomSpeechTimer = null;
 function startViRandomSpeechTimer() {
@@ -1104,8 +1109,11 @@ function updateCalibrationMinigame(lightType) {
   }
   if (generation > 0) {
     const generationDecimal = new Decimal(generation);
-    advancedPrismState.calibration.stable[lightType] =
-      advancedPrismState.calibration.stable[lightType].add(generationDecimal);
+    const newAmount = advancedPrismState.calibration.stable[lightType].add(generationDecimal);
+    
+    // Apply hardcap
+    advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, newAmount);
+    
     const stableAmount = advancedPrismState.calibration.stable[lightType];
     let displayText;
     if (stableAmount.gte(1000)) {
@@ -1114,6 +1122,9 @@ function updateCalibrationMinigame(lightType) {
       displayText = stableAmount.toFixed(1);
     }
     document.getElementById('calibrationStableLight').textContent = displayText;
+    
+    // Update the main UI cards in real-time (more efficient than full UI update)
+    updateStableLightCards();
   }
   const timeMultiplierEl = document.getElementById('calibrationTimeMultiplier');
   if (timeMultiplierEl) {
@@ -1532,6 +1543,74 @@ const lightTypes = [
     description: 'Cool blue wavelengths, improves processing efficiency.'
   }
 ];
+
+// Stable Light Caps Configuration
+const stableLightCaps = {
+  light: new Decimal("1e10"),        // 100% at 1e10
+  redlight: new Decimal("1e30"),     // 100% at 1e30
+  orangelight: new Decimal("1e75"),  // 100% at 1e75
+  yellowlight: new Decimal("1e150"), // 100% at 1e150
+  greenlight: new Decimal("1e215"),  // 100% at 1e215
+  bluelight: new Decimal("1e308")    // 100% at 1e308
+};
+
+// Calculate logarithmic percentage for stable light
+function calculateStableLightPercentage(lightType, currentAmount) {
+  if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
+    currentAmount = new Decimal(currentAmount || 0);
+  }
+  
+  if (currentAmount.lte(0)) return 0;
+  
+  const cap = stableLightCaps[lightType];
+  if (!cap) return 0;
+  
+  // If we've reached or exceeded the cap, return 100%
+  if (currentAmount.gte(cap)) return 100;
+  
+  // Logarithmic percentage calculation
+  // Use log10 to make the progression more meaningful
+  const currentLog = currentAmount.log10();
+  const capLog = cap.log10();
+  
+  // Calculate percentage based on logarithmic scale
+  const percentage = (currentLog / capLog) * 100;
+  
+  // Ensure we don't go below 0% or above 100%
+  return Math.max(0, Math.min(100, percentage));
+}
+
+// Format percentage for display
+function formatStableLightPercentage(percentage) {
+  if (percentage >= 100) return "100%";
+  if (percentage >= 10) return percentage.toFixed(1) + "%";
+  if (percentage >= 1) return percentage.toFixed(2) + "%";
+  return percentage.toFixed(3) + "%";
+}
+
+// Check if stable light is at hardcap
+function isStableLightAtCap(lightType, currentAmount) {
+  if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
+    currentAmount = new Decimal(currentAmount || 0);
+  }
+  
+  const cap = stableLightCaps[lightType];
+  return cap && currentAmount.gte(cap);
+}
+
+// Apply hardcap to stable light amount
+function applyStableLightCap(lightType, currentAmount) {
+  if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
+    currentAmount = new Decimal(currentAmount || 0);
+  }
+  
+  const cap = stableLightCaps[lightType];
+  if (!cap) return currentAmount;
+  
+  // If amount exceeds cap, return the cap
+  return currentAmount.gte(cap) ? cap : currentAmount;
+}
+
 const stableLightBuffs = {
   light: {
     name: 'Infinity Points',
@@ -1770,6 +1849,13 @@ window.applyOrangeStableLightBuff = applyOrangeStableLightBuff;
 window.applyYellowStableLightBuff = applyYellowStableLightBuff;
 window.applyGreenStableLightBuff = applyGreenStableLightBuff;
 window.applyBlueStableLightBuff = applyBlueStableLightBuff;
+
+// Export stable light cap functions
+window.calculateStableLightPercentage = calculateStableLightPercentage;
+window.formatStableLightPercentage = formatStableLightPercentage;
+window.isStableLightAtCap = isStableLightAtCap;
+window.applyStableLightCap = applyStableLightCap;
+window.stableLightCaps = stableLightCaps;
 function testStableLightBuff() {
   advancedPrismState.calibration.stable.light = new Decimal(200000);
   updateAdvancedPrismUI();
@@ -1777,6 +1863,78 @@ function testStableLightBuff() {
   const buffedRate = applyWhiteStableLightBuff(testRate);
 }
 window.testStableLightBuff = testStableLightBuff;
+
+// Test function for stable light percentages and caps
+window.testStableLightPercentages = function() {
+  console.log("Testing stable light percentage calculations:");
+  
+  // Test different light types with various amounts
+  const testCases = [
+    { light: 'light', amount: new Decimal(1000), expected: 'low %' },
+    { light: 'light', amount: new Decimal(1e5), expected: '~50%' },
+    { light: 'light', amount: new Decimal(1e10), expected: '100%' },
+    { light: 'redlight', amount: new Decimal(1e15), expected: '~50%' },
+    { light: 'redlight', amount: new Decimal(1e30), expected: '100%' },
+    { light: 'orangelight', amount: new Decimal("1e37.5"), expected: '~50%' },
+    { light: 'orangelight', amount: new Decimal("1e75"), expected: '100%' }
+  ];
+  
+  testCases.forEach(testCase => {
+    const percentage = calculateStableLightPercentage(testCase.light, testCase.amount);
+    const formatted = formatStableLightPercentage(percentage);
+    const isAtCap = isStableLightAtCap(testCase.light, testCase.amount);
+    const cappedAmount = applyStableLightCap(testCase.light, testCase.amount);
+    
+    console.log(`${testCase.light}: ${testCase.amount.toString()} -> ${formatted} (${testCase.expected}) - At cap: ${isAtCap} - Capped amount: ${cappedAmount.toString()}`);
+  });
+  
+  console.log("Test completed! Check the percentages in the UI.");
+};
+
+// Test function to set specific stable light amounts
+window.setStableLightForTesting = function(lightType, amount) {
+  if (!advancedPrismState.calibration.stable[lightType]) {
+    console.error(`Invalid light type: ${lightType}`);
+    return;
+  }
+  
+  const decimalAmount = new Decimal(amount);
+  advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, decimalAmount);
+  updateAdvancedPrismUI(true);
+  
+  const percentage = calculateStableLightPercentage(lightType, advancedPrismState.calibration.stable[lightType]);
+  console.log(`Set ${lightType} to ${advancedPrismState.calibration.stable[lightType].toString()} (${formatStableLightPercentage(percentage)})`);
+};
+
+// Test function to demonstrate the hardcap system
+window.testStableLightHardcaps = function() {
+  console.log("Testing stable light hardcaps:");
+  
+  // Try to set each light type above its cap
+  const testAmounts = {
+    light: "1e15",      // Far above 1e10 cap
+    redlight: "1e50",   // Far above 1e30 cap
+    orangelight: "1e100", // Far above 1e75 cap
+    yellowlight: "1e200", // Far above 1e150 cap
+    greenlight: "1e250",  // Far above 1e215 cap
+    bluelight: "1e400"    // Far above 1e308 cap
+  };
+  
+  Object.keys(testAmounts).forEach(lightType => {
+    const originalAmount = new Decimal(testAmounts[lightType]);
+    const cappedAmount = applyStableLightCap(lightType, originalAmount);
+    const cap = stableLightCaps[lightType];
+    
+    console.log(`${lightType}: Tried ${originalAmount.toString()}, got ${cappedAmount.toString()}, cap is ${cap.toString()}`);
+    
+    // Set the capped amount in the game state
+    advancedPrismState.calibration.stable[lightType] = cappedAmount;
+  });
+  
+  // Update UI to show the results
+  updateAdvancedPrismUI(true);
+  console.log("All lights should now show 100% and have golden glow!");
+};
 window.testVivienNerfDecayBuff = function(level = 10) {
   if (!window.friendship) {
     window.friendship = {};
@@ -2088,6 +2246,7 @@ function renderAdvancedPrismUI() {
                onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 8px ${style.shadowColor}, inset 0 1px 2px rgba(255,255,255,0.2)'">
             <span style="color: ${style.textColor}; font-size: 0.6rem; font-weight: bold; text-shadow: ${style.textShadow}; margin-bottom: 1px; z-index: 2;">${light.name}</span>
             <div style="color: ${style.textColor}; font-size: 0.7rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; line-height: 1.1; z-index: 2;" id="${light.id}Amount">0</div>
+            <div style="color: ${style.textColor}; font-size: 0.55rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; margin-top: 2px; z-index: 2;" id="${light.id}Percentage">0.000%</div>
             <div id="${light.id}Buff" style="z-index: 2;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%); pointer-events: none; z-index: 1;"></div>
           </div>
@@ -2200,6 +2359,26 @@ function renderAdvancedPrismUI() {
         50% {
           box-shadow: 0 6px 12px var(--shadow-color), 0 0 20px var(--glow-color), inset 0 1px 2px rgba(255,255,255,0.3);
         }
+      }
+      .spectrum-button.at-cap {
+        animation: goldenGlow 3s ease-in-out infinite;
+      }
+      @keyframes goldenGlow {
+        0%, 100% {
+          box-shadow: 0 4px 8px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4), inset 0 1px 2px rgba(255,255,255,0.2);
+        }
+        50% {
+          box-shadow: 0 6px 12px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6), inset 0 1px 2px rgba(255,255,255,0.3);
+        }
+      }
+      .spectrum-button.at-cap::before {
+        background: linear-gradient(45deg, transparent 30%, rgba(255,215,0,0.3) 50%, transparent 70%);
+        animation: goldenShimmer 2s ease-in-out infinite;
+        opacity: 1;
+      }
+      @keyframes goldenShimmer {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
       }
     </style>
   `;
@@ -2449,6 +2628,7 @@ function updateAdvancedPrismUI(forceUpdate = false) {
   updateCoreBoostCard();
   lightTypes.forEach(light => {
     const amountEl = document.getElementById(`${light.id}Amount`);
+    const percentageEl = document.getElementById(`${light.id}Percentage`);
     const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
     if (amountEl && cardEl) {
       const stableAmount = advancedPrismState.calibration.stable[light.id];
@@ -2469,6 +2649,37 @@ function updateAdvancedPrismUI(forceUpdate = false) {
         displayText = '0';
       }
       amountEl.innerHTML = displayText;
+      
+      // Update percentage display
+      if (percentageEl) {
+        const percentage = calculateStableLightPercentage(light.id, stableAmount);
+        const formattedPercentage = formatStableLightPercentage(percentage);
+        percentageEl.textContent = formattedPercentage;
+        
+        // Add visual indication when at cap
+        if (percentage >= 100) {
+          percentageEl.style.color = '#FFD700'; // Gold color for 100%
+          percentageEl.style.textShadow = '0 0 3px #FFD700, 1px 1px 2px rgba(0,0,0,0.8)';
+          // Add golden glow to the entire card when at cap
+          cardEl.style.boxShadow = '0 4px 8px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)';
+          cardEl.classList.add('at-cap');
+        } else {
+          // Reset to original color styling
+          const lightStyles = {
+            'light': '#333',
+            'redlight': '#fff',
+            'orangelight': '#fff',
+            'yellowlight': '#333',
+            'greenlight': '#fff',
+            'bluelight': '#fff'
+          };
+          const textColor = lightStyles[light.id] || '#fff';
+          percentageEl.style.color = textColor;
+          percentageEl.style.textShadow = light.id === 'light' || light.id === 'yellowlight' ? 'none' : '0 1px 2px rgba(0,0,0,0.3)';
+          cardEl.classList.remove('at-cap');
+        }
+      }
+      
       const buffEl = document.getElementById(`${light.id}Buff`);
       if (buffEl) {
         buffEl.innerHTML = getStableLightBuffDisplay(light.id);
@@ -2476,6 +2687,73 @@ function updateAdvancedPrismUI(forceUpdate = false) {
     }
   });
 }
+
+// Efficient function to update only the stable light cards during calibration
+function updateStableLightCards(forceUpdate = false) {
+  // Throttle updates to prevent performance issues
+  const now = Date.now();
+  if (!forceUpdate && (now - lastStableLightCardsUpdateTime < STABLE_LIGHT_CARDS_UPDATE_THROTTLE)) {
+    return;
+  }
+  lastStableLightCardsUpdateTime = now;
+  
+  lightTypes.forEach(light => {
+    const amountEl = document.getElementById(`${light.id}Amount`);
+    const percentageEl = document.getElementById(`${light.id}Percentage`);
+    const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
+    if (amountEl && cardEl) {
+      const stableAmount = advancedPrismState.calibration.stable[light.id];
+      let displayText = '0';
+      
+      if (stableAmount && stableAmount.gt(0)) {
+        if (stableAmount.gte(1000)) {
+          displayText = formatNumber(stableAmount);
+        } else {
+          displayText = stableAmount.toFixed(1);
+        }
+      } else {
+        displayText = '0';
+      }
+      amountEl.innerHTML = displayText;
+      
+      // Update percentage display
+      if (percentageEl) {
+        const percentage = calculateStableLightPercentage(light.id, stableAmount);
+        const formattedPercentage = formatStableLightPercentage(percentage);
+        percentageEl.textContent = formattedPercentage;
+        
+        // Add visual indication when at cap
+        if (percentage >= 100) {
+          percentageEl.style.color = '#FFD700'; // Gold color for 100%
+          percentageEl.style.textShadow = '0 0 3px #FFD700, 1px 1px 2px rgba(0,0,0,0.8)';
+          // Add golden glow to the entire card when at cap
+          cardEl.style.boxShadow = '0 4px 8px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4), inset 0 1px 2px rgba(255,255,255,0.2)';
+          cardEl.classList.add('at-cap');
+        } else {
+          // Reset to original color styling
+          const lightStyles = {
+            'light': '#333',
+            'redlight': '#fff',
+            'orangelight': '#fff',
+            'yellowlight': '#333',
+            'greenlight': '#fff',
+            'bluelight': '#fff'
+          };
+          const textColor = lightStyles[light.id] || '#fff';
+          percentageEl.style.color = textColor;
+          percentageEl.style.textShadow = light.id === 'light' || light.id === 'yellowlight' ? 'none' : '0 1px 2px rgba(0,0,0,0.3)';
+          cardEl.classList.remove('at-cap');
+        }
+      }
+      
+      const buffEl = document.getElementById(`${light.id}Buff`);
+      if (buffEl) {
+        buffEl.innerHTML = getStableLightBuffDisplay(light.id);
+      }
+    }
+  });
+}
+
 function updateCoreBoostCard() {
   try {
     const boostsList = document.getElementById('coreBoostsList');
@@ -2593,7 +2871,9 @@ function initAdvancedPrism() {
       if (savedAdvanced.calibration && savedAdvanced.calibration.stable) {
         Object.keys(savedAdvanced.calibration.stable).forEach(lightType => {
           if (savedAdvanced.calibration.stable[lightType] !== undefined) {
-            advancedPrismState.calibration.stable[lightType] = new Decimal(savedAdvanced.calibration.stable[lightType]);
+            const loadedAmount = new Decimal(savedAdvanced.calibration.stable[lightType]);
+            // Apply hardcap when loading saved values
+            advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, loadedAmount);
           }
         });
       }
@@ -2666,6 +2946,7 @@ function initAdvancedPrism() {
 window.pokeVi = pokeVi;
 window.attemptAdvancedPrismReset = attemptAdvancedPrismReset;
 window.updateAdvancedPrismUI = updateAdvancedPrismUI;
+window.updateStableLightCards = updateStableLightCards;
 window.initAdvancedPrism = initAdvancedPrism;
 window.renderAdvancedPrismUI = renderAdvancedPrismUI;
 window.checkAdvancedPrismUnlock = checkAdvancedPrismUnlock;
