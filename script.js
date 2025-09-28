@@ -1720,10 +1720,7 @@ function addSwaBucks(amount) {
   }
   // Note: Element may not exist if inventory modal is closed, but it will be updated when modal opens
   
-  // Save the game
-  if (typeof window.saveGame === 'function') {
-    window.saveGame();
-  }
+  // Note: Save will be handled by regular save system, not on every swabucks addition
 }
 
 // Make addSwaBucks available globally

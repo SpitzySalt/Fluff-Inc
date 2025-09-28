@@ -424,7 +424,7 @@ function collectIngredientToken(type, token) {
   }
   
   if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
-  if (typeof saveGame === 'function') saveGame();
+  // Note: Save will be handled by regular save system, not on every token collection
   if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token collection
 }
 

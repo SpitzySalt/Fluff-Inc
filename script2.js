@@ -652,6 +652,171 @@ const TokenCleanupSystem = {
 // Make token cleanup system globally accessible
 window.TokenCleanupSystem = TokenCleanupSystem;
 
+// Prism cleanup system for memory leak prevention
+const PrismCleanupSystem = {
+  // Track active MutationObservers for cleanup
+  mutationObservers: [],
+  
+  // Clean up all prism-related memory leaks
+  cleanupPrismSystem: function() {
+    try {
+      // Disconnect all MutationObservers
+      this.mutationObservers.forEach(observer => {
+        if (observer && typeof observer.disconnect === 'function') {
+          observer.disconnect();
+        }
+      });
+      this.mutationObservers = [];
+      
+      // Clean up prism tile event listeners
+      this.cleanupPrismTileListeners();
+      
+      // Clear prism-related intervals and timeouts
+      this.clearPrismTimers();
+      
+    } catch (error) {
+      console.warn('Error cleaning up prism system:', error);
+    }
+  },
+  
+  // Clean up event listeners on prism tiles
+  cleanupPrismTileListeners: function() {
+    const grid = document.getElementById('lightGrid');
+    if (!grid) return;
+    
+    // Clean up all tile listeners using EventListenerManager
+    grid.querySelectorAll('.light-tile').forEach(tile => {
+      // Use EventListenerManager for comprehensive cleanup
+      if (window.EventListenerManager) {
+        window.EventListenerManager.cleanupElement(tile);
+      }
+      
+      // Clear onclick handlers
+      tile.onclick = null;
+      
+      // Clear token patching flag for re-initialization
+      delete tile._tokenPatched;
+    });
+  },
+  
+  // Clear all prism-related timers
+  clearPrismTimers: function() {
+    // Clear prism timeouts array
+    if (window.prismTimeouts && Array.isArray(window.prismTimeouts)) {
+      window.prismTimeouts.forEach(timeoutId => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+      window.prismTimeouts = [];
+    }
+    
+    // Clear specific prism intervals
+    const prismIntervals = [
+      'prismNerfDisplayInterval',
+      'prismSpeechInterval',
+      'prismUpdateInterval'
+    ];
+    
+    prismIntervals.forEach(intervalName => {
+      if (window[intervalName]) {
+        clearInterval(window[intervalName]);
+        window[intervalName] = null;
+      }
+    });
+    
+    // Clear specific prism timeouts
+    const prismTimeouts = [
+      'viSpeechTimeout',
+      'prismViTimeout',
+      'prismInitTimeout'
+    ];
+    
+    prismTimeouts.forEach(timeoutName => {
+      if (window[timeoutName]) {
+        clearTimeout(window[timeoutName]);
+        window[timeoutName] = null;
+      }
+    });
+  },
+  
+  // Setup safe MutationObserver with tracking
+  createSafeMutationObserver: function(callback, target, options) {
+    try {
+      const observer = new MutationObserver(callback);
+      observer.observe(target, options);
+      
+      // Track for cleanup
+      this.mutationObservers.push(observer);
+      
+      return observer;
+    } catch (error) {
+      console.warn('Error creating MutationObserver:', error);
+      return null;
+    }
+  },
+  
+  // Safe tile event listener setup with proper cleanup tracking
+  setupTileEventListeners: function(tiles, clickHandler, tokenHandler) {
+    if (!window.EventListenerManager) return;
+    
+    tiles.forEach((tile) => {
+      // Clean up existing listeners first
+      window.EventListenerManager.cleanupElement(tile);
+      tile.onclick = null;
+      delete tile._tokenPatched;
+      
+      // Get the tile's actual index from data-index attribute
+      const tileIndex = parseInt(tile.dataset.index);
+      if (isNaN(tileIndex)) return; // Skip tiles without valid index
+      
+      // Set up click handler
+      if (clickHandler && typeof clickHandler === 'function') {
+        const listenerId = window.EventListenerManager.addEventListener(tile, 'click', () => {
+          clickHandler(tileIndex); // Use tile's data-index, not array index
+        });
+        
+        // Store listener ID on element for reference
+        tile._prismClickListener = listenerId;
+      }
+      
+      // Set up token handler if provided
+      if (tokenHandler && typeof tokenHandler === 'function' && !tile._tokenPatched) {
+        const tokenListenerId = window.EventListenerManager.addEventListener(tile, 'click', (e) => {
+          tokenHandler(tile, e);
+        });
+        
+        tile._tokenPatched = true;
+        tile._prismTokenListener = tokenListenerId;
+      }
+    });
+  },
+  
+  // Initialize prism system with proper cleanup
+  initializePrismWithCleanup: function() {
+    try {
+      // Clean up existing system first
+      this.cleanupPrismSystem();
+      
+      // Wait a frame to ensure cleanup is complete
+      requestAnimationFrame(() => {
+        // Re-initialize prism components
+        if (typeof window.initPrismGrid === 'function') {
+          window.initPrismGrid();
+        }
+        
+        if (typeof window.initPrism === 'function') {
+          window.initPrism();
+        }
+      });
+      
+    } catch (error) {
+      console.warn('Error initializing prism with cleanup:', error);
+    }
+  }
+};
+
+// Make prism cleanup system globally accessible
+window.PrismCleanupSystem = PrismCleanupSystem;
+
 // DOM cleanup utilities to prevent memory leaks
 const DOMUtils = {
   // Safely replace innerHTML after cleaning up event listeners
@@ -9037,10 +9202,7 @@ function showCharacterSpeech(characterName, tokenType) {
         window.updateChargerUI();
       }
       
-      // Save the game to persist changes
-      if (typeof window.saveGame === 'function') {
-        window.saveGame();
-      }
+      // Note: Save will be handled by regular save system, not on every token giving
       
       modal.style.display = 'none';
     }
@@ -9908,10 +10070,7 @@ function showCharacterSpeech(characterName, tokenType) {
       window.updateInventoryModal(true); // Force update
     }
 
-    // Save the game to persist changes
-    if (typeof window.saveGame === 'function') {
-      window.saveGame();
-    }
+    // Note: Save will be handled by regular save system, not on every token transaction
 
   }
   

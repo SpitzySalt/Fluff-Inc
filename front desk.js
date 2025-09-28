@@ -1762,7 +1762,7 @@
     this.prismTileProgress.prismTileClicks++;
     this.checkPrismTileAutomatorUnlocks();
     this.updateJobModalIfOpen();
-    this.saveData();
+    // Note: Save will be handled by regular save system, not on every click
   }
   onLightGeneratorTick(generatorType) {
     const automatorId = `${generatorType}_generator_automator`;

@@ -1175,12 +1175,11 @@ function updateCalibrationMinigame(lightType) {
     const lightDisplayText = formatNumber(currentLightAmount);
     currentLightEl.textContent = lightDisplayText;
   }
+  // Automatic save removed to prevent unwanted saves during regular prism tile clicking
+  // Save will be handled by the main save system when appropriate
   const currentTime = Date.now();
   if (currentTime - advancedPrismState.calibration.lastSaveTime >= 5000) {
-    if (typeof saveGame === 'function') {
-      saveGame();
-      advancedPrismState.calibration.lastSaveTime = currentTime;
-    }
+    advancedPrismState.calibration.lastSaveTime = currentTime;
   }
   drawWave();
 }

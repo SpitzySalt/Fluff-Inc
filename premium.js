@@ -598,7 +598,7 @@ function collectTokenManually(type, token) {
     if (!window.state.swabucks) window.state.swabucks = new Decimal(0);
     window.state.swabucks = new Decimal(window.state.swabucks).add(tokenGainAmount);
     collectedResources.swabucks = tokenGainAmount;
-    if (typeof saveGame === 'function') saveGame();
+    // Note: Save will be handled by regular save system, not on every token collection
   } else {
     // Add to window.state.tokens instead of kitchenIngredients
     if (!window.state) window.state = {};

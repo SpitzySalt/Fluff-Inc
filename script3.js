@@ -1340,10 +1340,7 @@ function awardFreeGiftRewards() {
             }
         }
         
-        // Save immediately after awarding special tokens to persist changes
-        if (typeof saveGame === 'function') {
-            saveGame();
-        }
+        // Note: Save will be handled by regular save system, not on every free gift special token award
     }
     
     // Track token collection for front desk automator unlock progress (same as kitchen system)
@@ -1364,9 +1361,7 @@ function awardFreeGiftRewards() {
     if (typeof window.updateInventoryModal === 'function') {
         window.updateInventoryModal(true); // Force update after token collection
     }
-    if (typeof saveGame === 'function') {
-        saveGame();
-    }
+    // Note: Save will be handled by regular save system, not on every free gift claim
 }
 
 function initializeFreeGiftModal() {

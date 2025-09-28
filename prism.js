@@ -198,6 +198,12 @@ const tileColorMap = {
 function initPrismGrid() {
   const grid = document.getElementById("lightGrid");
   if (!grid) return;
+  
+  // Clean up existing tiles before reinitializing
+  if (window.PrismCleanupSystem) {
+    window.PrismCleanupSystem.cleanupPrismTileListeners();
+  }
+  
   grid.innerHTML = "";
   // Prism lab operates independently of power status
   for (let i = 0; i < 49; i++) {
@@ -1080,14 +1086,11 @@ function clickLightTile(index) {
 }
 
 function ensureClickHandlers() {
-  const tiles = document.querySelectorAll(".light-tile.active-prism");
-  tiles.forEach(tile => {
-    const index = parseInt(tile.dataset.index);
-    if (index !== undefined) {
-      tile.onclick = null;
-      tile.onclick = () => clickLightTile(index);
-    }
-  });
+  // Since checkPrismGridPowerState already sets up onclick handlers,
+  // just make sure it's called to refresh the handlers
+  if (typeof window.checkPrismGridPowerState === 'function') {
+    window.checkPrismGridPowerState();
+  }
 }
 
 function updateLightCounter() {
@@ -1607,6 +1610,11 @@ function updateLightGeneratorButtons() {
 }
 
 function initPrism() {
+  // Clean up any existing prism system state to prevent memory leaks
+  if (typeof window.cleanupPrismSystem === 'function') {
+    window.cleanupPrismSystem();
+  }
+  
   if (typeof window.prismState.activeTileIndex === 'undefined') {
     window.prismState.activeTileIndex = null;
   }
@@ -1668,6 +1676,7 @@ window.handleLightGenClick = handleLightGenClick;
 window.tickLightGenerators = tickLightGenerators;
 window.initPrism = initPrism;
 window.checkPermanentLightUnlocks = checkPermanentLightUnlocks;
+window.clickLightTile = clickLightTile;
 
 // Force immediate update function for user interactions
 function forceUpdateAllLightCounters() {
@@ -2343,12 +2352,23 @@ if (window.daynight && typeof window.daynight.onThemeChange === 'function') {
 }
 
 function observeThemeChanges() {
-  const targets = [document.documentElement, document.body, document.getElementById('root')].filter(Boolean);
-  targets.forEach(target => {
-    new MutationObserver(() => {
-      updatePrismOverlayForTheme();
-    }).observe(target, { attributes: true, attributeFilter: ['data-theme'] });
-  });
+  // Use PrismCleanupSystem for safe MutationObserver setup
+  if (window.PrismCleanupSystem) {
+    const targets = [document.documentElement, document.body, document.getElementById('root')].filter(Boolean);
+    targets.forEach(target => {
+      window.PrismCleanupSystem.createSafeMutationObserver(() => {
+        updatePrismOverlayForTheme();
+      }, target, { attributes: true, attributeFilter: ['data-theme'] });
+    });
+  } else {
+    // Fallback to original method if PrismCleanupSystem not available
+    const targets = [document.documentElement, document.body, document.getElementById('root')].filter(Boolean);
+    targets.forEach(target => {
+      new MutationObserver(() => {
+        updatePrismOverlayForTheme();
+      }).observe(target, { attributes: true, attributeFilter: ['data-theme'] });
+    });
+  }
 }
 
 observeThemeChanges();
@@ -2662,16 +2682,36 @@ window.testPrismSpawning = function() {
 function addPrismTileTokenChance() {
   const grid = document.getElementById('lightGrid');
   if (!grid) return;
-  grid.querySelectorAll('.light-tile').forEach(tile => {
-    if (!tile._tokenPatched) {
-      tile.addEventListener('click', function(e) {
-        if (window.spawnIngredientToken && Math.random() < 1/1) {
-          window.spawnIngredientToken('prism', tile);
+  
+  // Use PrismCleanupSystem for safe event listener setup
+  if (window.PrismCleanupSystem) {
+    const tiles = Array.from(grid.querySelectorAll('.light-tile'));
+    window.PrismCleanupSystem.setupTileEventListeners(tiles, null, (tile, e) => {
+      if (window.spawnIngredientToken && Math.random() < 1/1) {
+        window.spawnIngredientToken('prism', tile);
+      }
+    });
+  } else {
+    // Fallback to original method with improved cleanup
+    grid.querySelectorAll('.light-tile').forEach(tile => {
+      if (!tile._tokenPatched) {
+        // Clean up any existing listeners first
+        if (tile._prismTokenHandler) {
+          tile.removeEventListener('click', tile._prismTokenHandler);
         }
-      });
-      tile._tokenPatched = true;
-    }
-  });
+        
+        // Create new handler and store reference for cleanup
+        tile._prismTokenHandler = function(e) {
+          if (window.spawnIngredientToken && Math.random() < 1/1) {
+            window.spawnIngredientToken('prism', tile);
+          }
+        };
+        
+        tile.addEventListener('click', tile._prismTokenHandler);
+        tile._tokenPatched = true;
+      }
+    });
+  }
 }
 
 window.testViDialogueUpdate = function() {
@@ -2705,6 +2745,13 @@ window.testViFriendshipBuff = function(level = 1) {
 
 // Prism system cleanup function
 window.cleanupPrismSystem = function() {
+    // Use PrismCleanupSystem for comprehensive cleanup if available
+    if (window.PrismCleanupSystem) {
+        window.PrismCleanupSystem.cleanupPrismSystem();
+        return;
+    }
+    
+    // Fallback cleanup for compatibility
     // Clear main nerf display interval
     if (window.prismNerfDisplayInterval) {
         clearInterval(window.prismNerfDisplayInterval);
