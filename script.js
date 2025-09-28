@@ -7095,45 +7095,30 @@ function trackHardModeFlowerWatered() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.flowersWatered++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function trackHardModePowerRefill() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.powerRefills++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function trackHardModeCommonBox() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.commonBoxes++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function trackHardModeSoapPoke() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.soapPokes++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function trackHardModeIngredientsCooked() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.ingredientsCooked++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function checkHardModeTabButtonVisibility() {
