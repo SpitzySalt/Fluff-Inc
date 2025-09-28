@@ -746,6 +746,7 @@ const swariaImage = document.getElementById("swariaCharacter");
 const swariaSpeech = document.getElementById("swariaSpeech");
 const swariaQuotes = [
   { text: "Keep fluffing!", condition: () => true },
+  { text: "You should try playing the game fundamental! Its great!", condition: () => true },
   { text: "Do NOT go to the bathroom at 3:33 AM!", condition: () => true },
   { text: "Click on a box type then hold down the enter key for Swagic!", condition: () => true },
   { text: "When are we seeing the sights?", condition: () => true },
