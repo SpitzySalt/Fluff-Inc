@@ -545,16 +545,11 @@ function updateFlowerGridButtonState() {
     
     // Add click handler for teasing dialogue when locked
     flowerGridBtn.onclick = function() {
-      console.log('Flower grid button clicked!'); // Debug log
       if (typeof fluzzerSay === 'function' && typeof getRandomFlowerGridTeaseDialogue === 'function') {
         const teaseMessage = getRandomFlowerGridTeaseDialogue();
-        console.log('Tease message:', teaseMessage); // Debug log
         fluzzerSay(teaseMessage, false, 4000);
       } else {
-        console.log('Functions not available:', {
-          fluzzerSay: typeof fluzzerSay,
-          getRandomFlowerGridTeaseDialogue: typeof getRandomFlowerGridTeaseDialogue
-        });
+        fluzzerSay('Teasing functions are not available.', false, 4000);
       }
     }; 
   } else {
