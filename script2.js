@@ -6658,14 +6658,15 @@ function soapGetsMad() {
     if (pausedIntervals.includes('_mainGameTickInterval')) {
       window._mainGameTickInterval = setInterval(mainGameTick, 100);
     }
-    if (pausedIntervals.includes('_autosaveInterval')) {
-      window._autosaveInterval = setInterval(() => {
-        if (window.SaveSystem) {
-          window.SaveSystem.saveGame(); // Use new save system
-          showAutosaveIndicator();
-        }
-      }, 30000);
-    }
+    // Redundant autosave interval removed - SaveSystem handles autosaving
+    // if (pausedIntervals.includes('_autosaveInterval')) {
+    //   window._autosaveInterval = setInterval(() => {
+    //     if (window.SaveSystem) {
+    //       window.SaveSystem.saveGame(); // Use new save system
+    //       showAutosaveIndicator();
+    //     }
+    //   }, 30000);
+    // }
     // Resume fluff display interval independently if needed
     if (pausedIntervals.includes('_fluffDisplayInterval')) {
       if (window._fluffDisplayInterval) clearInterval(window._fluffDisplayInterval);

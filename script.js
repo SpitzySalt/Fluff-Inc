@@ -8071,11 +8071,12 @@ function resumeGame() {
   if (originalIntervals.mainGameTickInterval && typeof mainGameTick === 'function') {
     window._mainGameTickInterval = setInterval(mainGameTick, 100);
   }
-  if (originalIntervals.autosaveInterval2) {
-    window._autosaveInterval = setInterval(() => {
-      if (settings.autosave && typeof saveGame === "function") saveGame();
-    }, 20000);
-  }
+  // Redundant autosave interval removed - SaveSystem handles autosaving
+  // if (originalIntervals.autosaveInterval2) {
+  //   window._autosaveInterval = setInterval(() => {
+  //     if (settings.autosave && typeof saveGame === "function") saveGame();
+  //   }, 20000);
+  // }
   
   // Restart delivery button intervals
   if (originalIntervals.deliverButtonStateInterval) {
