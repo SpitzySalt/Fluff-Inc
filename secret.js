@@ -318,14 +318,16 @@ const secretAchievements = {
 };
 
 function updateSecretAchievementDescription(achievementId) {
-  const achievement = secretAchievements[achievementId];
+  // Use the centralized state reference instead of local variable
+  const achievement = window.secretAchievements[achievementId];
   if (achievement && achievement.unlocked) {
     achievement.description = achievement.realDescription;
   }
 }
 
 function unlockSecretAchievement(achievementId) {
-  const achievement = secretAchievements[achievementId];
+  // Use the centralized state reference instead of local variable
+  const achievement = window.secretAchievements[achievementId];
   if (achievement && !achievement.unlocked) {
     achievement.unlocked = true;
     achievement.progress = achievement.requirement;
@@ -333,8 +335,11 @@ function unlockSecretAchievement(achievementId) {
     if (typeof window.showAchievementNotification === 'function') {
       window.showAchievementNotification(achievement);
     }
-    if (typeof window.saveAchievements === 'function') {
-      window.saveAchievements();
+    // Use main save system instead of saveAchievements() since secret achievements are in window.state
+    if (typeof window.SaveSystem !== 'undefined' && window.SaveSystem.saveGame) {
+      window.SaveSystem.saveGame();
+    } else if (typeof saveGame === 'function') {
+      saveGame();
     }
     if (typeof window.updateAchievementsDisplay === 'function') {
       window.updateAchievementsDisplay();
@@ -343,7 +348,8 @@ function unlockSecretAchievement(achievementId) {
 }
 
 function handleSecretAchievementClick(achievementId) {
-  const achievement = secretAchievements[achievementId];
+  // Use the centralized state reference instead of local variable
+  const achievement = window.secretAchievements[achievementId];
   if (achievement && !achievement.unlocked) {
     if (achievementId === 'secret1') {
       unlockSecretAchievement(achievementId);
@@ -352,7 +358,8 @@ function handleSecretAchievementClick(achievementId) {
 }
 
 function updateSecretAchievementProgress(achievementId, value) {
-  const achievement = secretAchievements[achievementId];
+  // Use the centralized state reference instead of local variable
+  const achievement = window.secretAchievements[achievementId];
   if (achievement && !achievement.unlocked) {
     achievement.progress = Decimal.max(achievement.progress || new Decimal(0), new Decimal(value));
     if (achievement.progress.gte(achievement.requirement || new Decimal(0))) {
@@ -366,30 +373,36 @@ function updateSecretAchievementProgress(achievementId, value) {
 
 function initSecretAchievements() {
   // Initialize all secret achievements with proper Decimal values
-  Object.values(secretAchievements).forEach(achievement => {
-    if (typeof achievement.requirement === 'number') {
-      achievement.requirement = new Decimal(achievement.requirement);
-    }
-    if (typeof achievement.progress === 'number') {
-      achievement.progress = new Decimal(achievement.progress);
-    }
-    if (!achievement.progress) {
-      achievement.progress = new Decimal(0);
-    }
-  });
+  // Work with the centralized state, not the local object
+  if (window.state && window.state.secretAchievements) {
+    Object.values(window.state.secretAchievements).forEach(achievement => {
+      if (typeof achievement.requirement === 'number') {
+        achievement.requirement = new Decimal(achievement.requirement);
+      }
+      if (typeof achievement.progress === 'number') {
+        achievement.progress = new Decimal(achievement.progress);
+      }
+      if (!achievement.progress) {
+        achievement.progress = new Decimal(0);
+      }
+    });
+  }
   // Secret achievements are now loaded by main save system - no separate loading needed
 }
 
 function resetSecretAchievementsForNewSlot(slotNumber) {
   // Reset logic only - save removed as achievements are now managed by main save system
-  Object.keys(secretAchievements).forEach(id => {
-    secretAchievements[id] = {
-      unlocked: false,
-      progress: new Decimal(0),
-      rewarded: false,
-      description: '???'
-    };
-  });
+  // Use the centralized state reference
+  if (window.secretAchievements) {
+    Object.keys(window.secretAchievements).forEach(id => {
+      window.secretAchievements[id] = {
+        unlocked: false,
+        progress: new Decimal(0),
+        rewarded: false,
+        description: '???'
+      };
+    });
+  }
 }
 
 // Initialize state secret achievements if they don't exist
@@ -400,6 +413,16 @@ if (!window.state.secretAchievements) window.state.secretAchievements = {};
 Object.keys(secretAchievements).forEach(key => {
   if (!window.state.secretAchievements[key]) {
     window.state.secretAchievements[key] = {...secretAchievements[key]};
+    // Ensure proper Decimal initialization for new achievements
+    if (typeof window.state.secretAchievements[key].requirement === 'number') {
+      window.state.secretAchievements[key].requirement = new Decimal(window.state.secretAchievements[key].requirement);
+    }
+    if (typeof window.state.secretAchievements[key].progress === 'number') {
+      window.state.secretAchievements[key].progress = new Decimal(window.state.secretAchievements[key].progress);
+    }
+    if (!window.state.secretAchievements[key].progress) {
+      window.state.secretAchievements[key].progress = new Decimal(0);
+    }
   }
 });
 
