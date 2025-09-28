@@ -9780,14 +9780,12 @@ window.anomalySystem.cleanupOrphanedTokens = function() {
 window.anomalySystem.forceRemoveBlownToken = function(tokenData, returnToInventory = false) {
     if (!tokenData) return;
     
-    // Clear timeout
-    if (tokenData.lostTimeout) {
-        clearTimeout(tokenData.lostTimeout);
-    }
+    let collectedResources = {};
     
     // Return token to inventory if requested and not already collected
     if (returnToInventory && tokenData.token && tokenData.token.dataset.collected !== 'true' && tokenData.tokenInfo) {
         this.returnTokenToInventory(tokenData.tokenInfo.type, new Decimal(1));
+        collectedResources[tokenData.tokenInfo.type] = new Decimal(1);
         
         // Show recovery popup if token still exists
         if (tokenData.token.parentNode) {
@@ -9795,21 +9793,40 @@ window.anomalySystem.forceRemoveBlownToken = function(tokenData, returnToInvento
         }
     }
     
-    // Remove from DOM
-    if (tokenData.token && tokenData.token.parentNode) {
-        tokenData.token.style.opacity = '0';
-        tokenData.token.style.pointerEvents = 'none'; // Prevent further interactions
-        setTimeout(() => {
-            if (tokenData.token.parentNode) {
-                tokenData.token.parentNode.removeChild(tokenData.token);
-            }
-        }, 300);
-    }
-    
-    // Remove from active tokens array
-    const index = this.activeBlownTokens.indexOf(tokenData);
-    if (index !== -1) {
-        this.activeBlownTokens.splice(index, 1);
+    // Use TokenCleanupSystem for proper cleanup
+    if (window.TokenCleanupSystem && tokenData.token) {
+        const cleanupData = {
+            ...tokenData,
+            type: 'blown',
+            timeoutId: tokenData.lostTimeout
+        };
+        
+        if (returnToInventory) {
+            window.TokenCleanupSystem.cleanupCollectedToken(tokenData.token, cleanupData, collectedResources);
+        } else {
+            window.TokenCleanupSystem.cleanupExpiredToken(tokenData.token, cleanupData, 'force removed');
+        }
+    } else {
+        // Fallback cleanup for compatibility
+        if (tokenData.lostTimeout) {
+            clearTimeout(tokenData.lostTimeout);
+        }
+        
+        if (tokenData.token && tokenData.token.parentNode) {
+            tokenData.token.style.opacity = '0';
+            tokenData.token.style.pointerEvents = 'none';
+            setTimeout(() => {
+                if (tokenData.token.parentNode) {
+                    tokenData.token.parentNode.removeChild(tokenData.token);
+                }
+            }, 300);
+        }
+        
+        // Remove from active tokens array
+        const index = this.activeBlownTokens.indexOf(tokenData);
+        if (index !== -1) {
+            this.activeBlownTokens.splice(index, 1);
+        }
     }
 };
 

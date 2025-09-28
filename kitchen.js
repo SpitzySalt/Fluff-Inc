@@ -354,18 +354,20 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
 }
 
 function collectIngredientToken(type, token) {
-  // Clean up token from active tokens array
+  // Find token data for proper cleanup
+  let tokenData = {};
   if (window.activeIngredientTokens) {
-    const index = window.activeIngredientTokens.findIndex(item => item.token === token);
-    if (index !== -1) {
-      clearTimeout(window.activeIngredientTokens[index].fadeTimeout);
-      window.activeIngredientTokens.splice(index, 1);
+    const tokenIndex = window.activeIngredientTokens.findIndex(item => item.token === token);
+    if (tokenIndex !== -1) {
+      tokenData = window.activeIngredientTokens[tokenIndex];
     }
   }
 
-  token.style.transform += ' scale(0.2)';
-  token.style.opacity = '0';
-  setTimeout(() => token.remove(), 400);
+  // Calculate token gain amount with green stable light buff
+  let tokenGainAmount = new Decimal(1);
+  if (typeof window.applyGreenStableLightBuff === 'function') {
+    tokenGainAmount = window.applyGreenStableLightBuff(tokenGainAmount);
+  }
   
   // Initialize state if needed
   if (!window.state) window.state = {};
@@ -381,33 +383,40 @@ function collectIngredientToken(type, token) {
     };
   }
 
-  // Calculate token gain amount with green stable light buff
-  let tokenGainAmount = new Decimal(1);
-  if (typeof window.applyGreenStableLightBuff === 'function') {
-    tokenGainAmount = window.applyGreenStableLightBuff(tokenGainAmount);
-  }
+  let collectedResources = {};
   
   if (type === 'swabucks') {
     if (!DecimalUtils.isDecimal(window.state.swabucks)) window.state.swabucks = new Decimal(0);
     window.state.swabucks = window.state.swabucks.add(tokenGainAmount);
-
-    // Track token collection for front desk automator unlock progress
-    if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
-      window.frontDesk.onTokenCollected();
+    collectedResources.swabucks = tokenGainAmount;
+  } else {
+    // Store basic ingredient tokens in window.state.tokens
+    if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
+      window.state.tokens[type] = new Decimal(0);
     }
+    window.state.tokens[type] = window.state.tokens[type].add(tokenGainAmount);
+    collectedResources[type] = tokenGainAmount;
     
-    if (typeof saveGame === 'function') saveGame();
-    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true); // Force update after token collection
-    return;
+    showIngredientGainPopup(token, tokenGainAmount);
   }
-  
-  // Store basic ingredient tokens in window.state.tokens
-  if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
-    window.state.tokens[type] = new Decimal(0);
-  }
-  window.state.tokens[type] = window.state.tokens[type].add(tokenGainAmount);
 
-  showIngredientGainPopup(token, tokenGainAmount);
+  // Use TokenCleanupSystem for proper cleanup
+  if (window.TokenCleanupSystem) {
+    window.TokenCleanupSystem.cleanupCollectedToken(token, {...tokenData, type: 'ingredient'}, collectedResources);
+  } else {
+    // Fallback cleanup for compatibility
+    token.style.transform += ' scale(0.2)';
+    token.style.opacity = '0';
+    setTimeout(() => token.remove(), 400);
+    
+    if (window.activeIngredientTokens) {
+      const index = window.activeIngredientTokens.findIndex(item => item.token === token);
+      if (index !== -1) {
+        clearTimeout(window.activeIngredientTokens[index].fadeTimeout);
+        window.activeIngredientTokens.splice(index, 1);
+      }
+    }
+  }
   
   // Track token collection for front desk automator unlock progress
   if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {

@@ -583,9 +583,6 @@ function processBijouCollectionQueue() {
 }
 
 function collectTokenManually(type, token) {
-  token.style.transform += ' scale(0.2)';
-  token.style.opacity = '0';
-  setTimeout(() => token.remove(), 400);
   if (!window.kitchenIngredients) window.kitchenIngredients = {};
   
   // Calculate token gain amount with green stable light buff
@@ -594,28 +591,45 @@ function collectTokenManually(type, token) {
     tokenGainAmount = applyGreenStableLightBuff(tokenGainAmount);
   }
   
+  let collectedResources = {};
+  
   if (type === 'swabucks') {
     if (!window.state) window.state = {};
     if (!window.state.swabucks) window.state.swabucks = new Decimal(0);
     window.state.swabucks = new Decimal(window.state.swabucks).add(tokenGainAmount);
+    collectedResources.swabucks = tokenGainAmount;
     if (typeof saveGame === 'function') saveGame();
-    showIngredientGainPopup(token, tokenGainAmount);
-    return;
+  } else {
+    // Add to window.state.tokens instead of kitchenIngredients
+    if (!window.state) window.state = {};
+    if (!window.state.tokens) window.state.tokens = {};
+    if (!window.state.tokens[type]) {
+      window.state.tokens[type] = new Decimal(0);
+    }
+    window.state.tokens[type] = new Decimal(window.state.tokens[type]).add(tokenGainAmount);
+    
+    // Also update legacy kitchenIngredients for backward compatibility
+    window.kitchenIngredients[type] = new Decimal(window.kitchenIngredients[type] || 0).add(tokenGainAmount);
+    
+    collectedResources[type] = tokenGainAmount;
+    if (typeof updateKitchenUI === 'function') updateKitchenUI();
   }
-  
-  // Add to window.state.tokens instead of kitchenIngredients
-  if (!window.state) window.state = {};
-  if (!window.state.tokens) window.state.tokens = {};
-  if (!window.state.tokens[type]) {
-    window.state.tokens[type] = new Decimal(0);
-  }
-  window.state.tokens[type] = new Decimal(window.state.tokens[type]).add(tokenGainAmount);
-  
-  // Also update legacy kitchenIngredients for backward compatibility
-  window.kitchenIngredients[type] = new Decimal(window.kitchenIngredients[type] || 0).add(tokenGainAmount);
   
   showIngredientGainPopup(token, tokenGainAmount);
-  if (typeof updateKitchenUI === 'function') updateKitchenUI();
+  
+  // Use TokenCleanupSystem for proper cleanup
+  if (window.TokenCleanupSystem) {
+    // Find bijou queue data for this token
+    const queueData = window.bijouCollectionQueue ? 
+      window.bijouCollectionQueue.find(item => item.element === token || item === token) : {};
+    
+    window.TokenCleanupSystem.cleanupCollectedToken(token, {type: 'bijou', ...queueData}, collectedResources);
+  } else {
+    // Fallback cleanup for compatibility
+    token.style.transform += ' scale(0.2)';
+    token.style.opacity = '0';
+    setTimeout(() => token.remove(), 400);
+  }
 }
 
 function showIngredientGainPopup(token, amount) {

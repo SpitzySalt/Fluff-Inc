@@ -505,6 +505,153 @@ const EventListenerManager = {
 // Make event listener manager globally accessible
 window.EventListenerManager = EventListenerManager;
 
+// Token cleanup system for comprehensive token management
+const TokenCleanupSystem = {
+  // Clean up a token element and its associated resources
+  cleanupToken: function(tokenElement, tokenData = {}) {
+    if (!tokenElement) return;
+    
+    try {
+      // Clear any timeout associated with this token
+      if (tokenData.timeoutId) {
+        clearTimeout(tokenData.timeoutId);
+        tokenData.timeoutId = null;
+      }
+      
+      // Clear any interval associated with this token
+      if (tokenData.intervalId) {
+        clearInterval(tokenData.intervalId);
+        tokenData.intervalId = null;
+      }
+      
+      // Clean up event listeners
+      EventListenerManager.cleanupElement(tokenElement);
+      
+      // Remove from DOM
+      if (tokenElement.parentNode) {
+        tokenElement.parentNode.removeChild(tokenElement);
+      }
+      
+      // Clean up any references in token tracking arrays
+      this.removeFromTokenArrays(tokenElement, tokenData);
+      
+    } catch (error) {
+      console.warn('Error cleaning up token:', error);
+    }
+  },
+  
+  // Clean up expired token with additional logging
+  cleanupExpiredToken: function(tokenElement, tokenData = {}, reason = 'expired') {
+    try {
+      // Log cleanup reason for debugging
+      if (tokenData.type) {
+      }
+      
+      // Use standard cleanup
+      this.cleanupToken(tokenElement, tokenData);
+      
+    } catch (error) {
+      console.warn('Error cleaning up expired token:', error);
+    }
+  },
+  
+  // Remove token from known tracking arrays
+  removeFromTokenArrays: function(tokenElement, tokenData = {}) {
+    // Kitchen ingredient tokens
+    if (window.activeIngredientTokens) {
+      const index = window.activeIngredientTokens.findIndex(token => 
+        token.element === tokenElement || token === tokenElement
+      );
+      if (index !== -1) {
+        window.activeIngredientTokens.splice(index, 1);
+      }
+    }
+    
+    // Bijou collection queue
+    if (window.bijouCollectionQueue) {
+      const bijouIndex = window.bijouCollectionQueue.findIndex(item => 
+        item.element === tokenElement
+      );
+      if (bijouIndex !== -1) {
+        window.bijouCollectionQueue.splice(bijouIndex, 1);
+      }
+    }
+    
+    // Premium blown tokens
+    if (window.activeBlownTokens) {
+      const blownIndex = window.activeBlownTokens.findIndex(token => 
+        token.element === tokenElement
+      );
+      if (blownIndex !== -1) {
+        window.activeBlownTokens.splice(blownIndex, 1);
+      }
+    }
+  },
+  
+  // Enhanced cleanup for collection with resource rewards
+  cleanupCollectedToken: function(tokenElement, tokenData = {}, collectedResources = {}) {
+    try {
+      // Log collection for debugging
+      if (tokenData.type && Object.keys(collectedResources).length > 0) {
+      }
+      
+      // Standard cleanup
+      this.cleanupToken(tokenElement, tokenData);
+      
+      // Update UI if resources were gained
+      if (Object.keys(collectedResources).length > 0) {
+        if (typeof window.updateUI === 'function') {
+          window.updateUI();
+        }
+      }
+      
+    } catch (error) {
+      console.warn('Error cleaning up collected token:', error);
+    }
+  },
+  
+  // Clean up all tokens of a specific type
+  cleanupTokensByType: function(tokenType) {
+    try {
+      // Kitchen ingredient tokens
+      if (tokenType === 'ingredient' && window.activeIngredientTokens) {
+        const tokens = [...window.activeIngredientTokens];
+        tokens.forEach(token => {
+          if (token.element) {
+            this.cleanupToken(token.element, token);
+          }
+        });
+      }
+      
+      // Bijou tokens
+      if (tokenType === 'bijou' && window.bijouCollectionQueue) {
+        const tokens = [...window.bijouCollectionQueue];
+        tokens.forEach(token => {
+          if (token.element) {
+            this.cleanupToken(token.element, token);
+          }
+        });
+      }
+      
+      // Blown anomaly tokens
+      if (tokenType === 'blown' && window.activeBlownTokens) {
+        const tokens = [...window.activeBlownTokens];
+        tokens.forEach(token => {
+          if (token.element) {
+            this.cleanupToken(token.element, token);
+          }
+        });
+      }
+      
+    } catch (error) {
+      console.warn(`Error cleaning up ${tokenType} tokens:`, error);
+    }
+  }
+};
+
+// Make token cleanup system globally accessible
+window.TokenCleanupSystem = TokenCleanupSystem;
+
 // DOM cleanup utilities to prevent memory leaks
 const DOMUtils = {
   // Safely replace innerHTML after cleaning up event listeners
@@ -4204,7 +4351,6 @@ window.generators = generators;
 // Function to restart legacy autosave with new interval - DISABLED
 window.restartLegacyAutosave = function() {
   // Legacy autosave disabled - main SaveSystem handles autosaving
-  console.log('Legacy autosave restart disabled - using SaveSystem autosave');
 };
 
 window.addEventListener("beforeunload", () => {
@@ -6036,7 +6182,6 @@ function deleteSlot(slotNumber) {
 // Function to restart slot autosave with new interval - DISABLED
 window.restartSlotAutosave = function() {
   // Slot autosave disabled - main SaveSystem handles autosaving
-  console.log('Slot autosave restart disabled - using SaveSystem autosave');
 };
 
 // Emergency backup system - saves every 5 minutes to a separate key
@@ -10675,7 +10820,6 @@ window.testBothModals = function() {
 // Debug function to check token storage locations
 window.debugTokenStorage = function() {
   if (window.state?.tokens) {
-    console.log('Available token types:', Object.keys(window.state.tokens));
   }
 };
 
