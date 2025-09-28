@@ -7085,9 +7085,7 @@ function trackHardModePrismClick() {
   if (state.hardModeQuestActive) {
     state.hardModeQuestProgress.prismClicks++;
     updateHardModeQuestProgress();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
+    // Save removed - will be handled by regular save system
   }
   if (typeof window.trackPrismLabClick === 'function') {
     window.trackPrismLabClick();
