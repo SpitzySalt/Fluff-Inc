@@ -116,18 +116,33 @@ function initFriendshipFunctions() {
       window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
     }
     
+    // Ensure level is properly initialized as a number
+    if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
+      window.state.friendship[dept].level = 0;
+    }
+    
     // Ensure points parameter is a Decimal
     const pointsToAdd = DecimalUtils.isDecimal(points) ? points : new Decimal(points || 0);
     
+    // Add the points to the current total
     window.state.friendship[dept].points = window.state.friendship[dept].points.add(pointsToAdd);
-      let lvl = window.state.friendship[dept].level;
-      let needed = getFriendshipPointsForLevel(lvl);
-      while (window.state.friendship[dept].points.gte(needed) && lvl < MAX_FRIENDSHIP_LEVEL) {
-        window.state.friendship[dept].points = window.state.friendship[dept].points.sub(needed);
-        lvl++;
-        needed = getFriendshipPointsForLevel(lvl);
+    
+    // Calculate the correct level based on total accumulated points
+    // getFriendshipPointsForLevel(n) returns the TOTAL points needed to BE AT level n
+    let newLevel = 0;
+    const totalPoints = window.state.friendship[dept].points;
+    
+    // Find the highest level where total points >= required points for that level
+    for (let level = 0; level <= MAX_FRIENDSHIP_LEVEL; level++) {
+      const requiredForThisLevel = getFriendshipPointsForLevel(level);
+      if (totalPoints.gte(requiredForThisLevel)) {
+        newLevel = level;
+      } else {
+        break; // Stop when we find the first level we can't reach
       }
-      window.state.friendship[dept].level = lvl;
+    }
+    
+    window.state.friendship[dept].level = newLevel;
   } catch (error) {
     console.warn(`Error in friendship.addPoints for ${character}:`, error);
     // Try to recover by ensuring decimal conversion

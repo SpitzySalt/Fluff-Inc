@@ -8603,6 +8603,8 @@ function showCharacterSpeech(characterName, tokenType) {
 
 
       // Process friendship points for all characters (except Swaria who has hunger instead)
+      // DISABLED: Friendship points from tokens removed to prevent level calculation bugs
+      /*
       if (friendshipAmount > 0 && characterName !== 'Swaria') {
 
         const charToDept = {
@@ -8638,6 +8640,11 @@ function showCharacterSpeech(characterName, tokenType) {
         if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
           const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
 
+          // Debug logging to understand what's happening
+          if (tokenType === 'stardust') {
+            console.log(`DEBUG Stardust: Character=${characterName}, pointsPerToken=${pointsPerToken}, friendshipAmount=${friendshipAmount}, totalPoints=${totalPoints.toString()}`);
+          }
+
           window.friendship.addPoints(characterName, totalPoints);
           
           const statsModal = document.getElementById('departmentStatsModal');
@@ -8651,6 +8658,7 @@ function showCharacterSpeech(characterName, tokenType) {
 
         }
       }
+      */
 
       if (questSpeech && characterName === 'Vivien' && typeof window.showAdvancedPrismViResponse === 'function') {
         setTimeout(() => window.showAdvancedPrismViResponse(questSpeech), 200);
@@ -8781,7 +8789,41 @@ function showCharacterSpeech(characterName, tokenType) {
         if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
           const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
 
-          window.friendship.addPoints(characterName, totalPoints);
+          // Add friendship points and check for single level-up
+          window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
+          
+          // Ensure existing points is a Decimal
+          if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
+            window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
+          }
+          
+          // Ensure level is properly initialized as a number
+          if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
+            window.state.friendship[dept].level = 0;
+          }
+          
+          // Add the points to the current total
+          window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
+          
+          // Check if points are enough for exactly one level-up
+          const currentLevel = window.state.friendship[dept].level;
+          const nextLevel = currentLevel + 1;
+          
+          if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
+            // Points needed to level up from current level (not total points for next level)
+            const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
+            
+            if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
+              // Level up by exactly 1 and reset points to 0
+              window.state.friendship[dept].level = nextLevel;
+              window.state.friendship[dept].points = new Decimal(0);
+            }
+          }
+          
+          // Update UI manually since we bypassed addPoints
+          if (typeof window.renderDepartmentStatsButtons === 'function') {
+            window.renderDepartmentStatsButtons();
+          }
           
           // Update stats modal if it's open for this department
           const statsModal = document.getElementById('departmentStatsModal');
@@ -9688,50 +9730,15 @@ function showCharacterSpeech(characterName, tokenType) {
 
     // Process character-specific interactions and friendship
     if (characterName !== 'Swaria') {
-      // Call the main character processing function
-      showCharacterSpeech(characterName, tokenType);
-      
-      // Add friendship points
-      const charToDept = {
-        'Swaria': 'Cargo',
-        'Soap': 'Generator',
-        'Mystic': 'Kitchen',
-        'Fluzzer': 'Terrarium',
-        'Vi': 'Lab',
-        'Vivien': 'Lab',
-        'Lepre': 'Boutique',
-        'Tico': 'FrontDesk'
-      };
-      
-      const dept = charToDept[characterName];
-      if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
-        // Map token names to storage keys for preferences
-        const tokenToStorageKey = {
-          'berry': 'berries',
-          'petal': 'petals',
-          'spark': 'sparks',
-          'mushroom': 'mushroom',
-          'water': 'water',
-          'stardust': 'stardust',
-          'prisma': 'prisma'
-        };
-        
-        let storageKey = tokenToStorageKey[tokenType] || tokenType;
-        let pointsPerToken = 5; // Default neutral
-        
-        // Check character preferences
-        if (characterTokenPreferences && characterTokenPreferences[characterName]) {
-          if (characterTokenPreferences[characterName].likes.includes(storageKey)) {
-            pointsPerToken = 20;
-          } else if (characterTokenPreferences[characterName].dislikes.includes(storageKey)) {
-            pointsPerToken = 1;
-          }
-        }
-        
-        const totalPoints = new Decimal(pointsPerToken).mul(amount);
-        window.friendship.addPoints(characterName, totalPoints);
-
+      // Call the main character processing function (wrapped in try-catch to prevent speech errors from breaking friendship)
+      try {
+        showCharacterSpeech(characterName, tokenType);
+      } catch (error) {
+        console.warn(`Character speech error for ${characterName}:`, error);
       }
+      
+      // Note: Friendship points are already added in the earlier block above
+      // No need to add them again here to avoid double-counting
     }
 
     // Update all relevant UIs

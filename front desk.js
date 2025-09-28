@@ -1994,7 +1994,11 @@
     }
   }
   showTicoSpeech(message, duration = 3000) {
-    this.showSpeech(message, duration);
+    if (typeof this.showSpeech === 'function') {
+      this.showSpeech(message, duration);
+    } else {
+      console.warn('showSpeech method not available on this context');
+    }
   }
   triggerRandomSpeech() {
     if (this.isAsleep) return;

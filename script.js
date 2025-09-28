@@ -1252,20 +1252,26 @@ function syncGlobalReferencesToState() {
             state.friendship[dept].points = new Decimal(state.friendship[dept].points || 0);
           }
           
+          // Ensure level is properly initialized as a number
+          if (typeof state.friendship[dept].level !== 'number' || isNaN(state.friendship[dept].level)) {
+            state.friendship[dept].level = 0;
+          }
+          
           // Add points
           const pointsToAdd = DecimalUtils.isDecimal(points) ? points : new Decimal(points);
           state.friendship[dept].points = state.friendship[dept].points.add(pointsToAdd);
           
-          // Check for level ups
-          let lvl = state.friendship[dept].level || 0;
+          // Calculate the correct level based on total accumulated points
+          // This version uses a simpler calculation where each level needs 100 points
+          let newLevel = 0;
+          const totalPoints = state.friendship[dept].points;
           const MAX_FRIENDSHIP_LEVEL = 100;
           
-          // Simple level calculation - each level needs 100 points for now
-          while (state.friendship[dept].points.gte(100) && lvl < MAX_FRIENDSHIP_LEVEL) {
-            state.friendship[dept].points = state.friendship[dept].points.sub(100);
-            lvl++;
-          }
-          state.friendship[dept].level = lvl;
+          // Simple level calculation - each level needs 100 points
+          // Level = floor(totalPoints / 100), capped at MAX_FRIENDSHIP_LEVEL
+          newLevel = Math.min(Math.floor(totalPoints.toNumber() / 100), MAX_FRIENDSHIP_LEVEL);
+          
+          state.friendship[dept].level = newLevel;
           
         } catch (error) {
           console.error(`Error adding friendship points to ${character}:`, error);
