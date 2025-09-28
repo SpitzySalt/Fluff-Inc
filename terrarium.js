@@ -547,9 +547,19 @@ function updateFlowerGridButtonState() {
     flowerGridBtn.onclick = function() {
       if (typeof fluzzerSay === 'function' && typeof getRandomFlowerGridTeaseDialogue === 'function') {
         const teaseMessage = getRandomFlowerGridTeaseDialogue();
-        fluzzerSay(teaseMessage, false, 4000);
+        
+        // If Fluzzer is sleeping, show the message in a sleepy way
+        if (window.isFluzzerSleeping) {
+          fluzzerSaySleepy(teaseMessage, 4000);
+        } else {
+          fluzzerSay(teaseMessage, false, 4000);
+        }
       } else {
-        fluzzerSay('Teasing functions are not available.', false, 4000);
+        if (window.isFluzzerSleeping) {
+          fluzzerSaySleepy('Teasing functions are not available.', 4000);
+        } else {
+          fluzzerSay('Teasing functions are not available.', false, 4000);
+        }
       }
     }; 
   } else {
@@ -2657,6 +2667,71 @@ function fluzzerSay(message, upset = false, duration = 5000) {
     }
     fluzzerIsTalking = false;
     if (!upset) scheduleFluzzerRandomSpeech();
+  }, duration);
+}
+
+// Special sleepy version of fluzzerSay for when Fluzzer is sleeping
+function fluzzerSaySleepy(message, duration = 5000) {
+  if (window.isFluzzerLevelUpSpeaking) return;
+  const charCard = document.getElementById('terrariumCharacterCard');
+  if (!charCard) return;
+  const imgWrap = charCard.querySelector('.fluzzer-img-wrap');
+  if (!imgWrap) return;
+  let bubble = document.getElementById('fluzzerSpeech');
+  if (!bubble) {
+    bubble = document.createElement('div');
+    bubble.id = 'fluzzerSpeech';
+    bubble.className = 'swaria-speech';
+    bubble.style.position = 'absolute';
+    bubble.style.left = '100%';
+    bubble.style.top = '50%';
+    bubble.style.transform = 'translateY(-50%)';
+    bubble.style.marginLeft = '10px';
+    bubble.style.zIndex = '10';
+    imgWrap.appendChild(bubble);
+  }
+  
+  // Make the message sleepy by adding "zzz..." and making it dreamy
+  const sleepyMessage = message + ' zzz...';
+  bubble.textContent = sleepyMessage;
+  bubble.style.display = 'block';
+  bubble.style.background = '#fff';
+  bubble.style.color = '#666'; // Slightly dimmed text for sleepy effect
+  bubble.style.fontStyle = 'italic'; // Italic for dreamy/sleepy feel
+  
+  if (!bubble._hasPointer) {
+    const pointer = document.createElement('div');
+    pointer.style.position = 'absolute';
+    pointer.style.left = '-18px';
+    pointer.style.top = '18px';
+    pointer.style.width = '0';
+    pointer.style.height = '0';
+    pointer.style.borderTop = '12px solid transparent';
+    pointer.style.borderBottom = '12px solid transparent';
+    pointer.style.borderRight = '18px solid #fff';
+    pointer.style.zIndex = '11';
+    pointer.className = 'fluzzer-speech-pointer';
+    bubble.appendChild(pointer);
+    bubble._hasPointer = true;
+  }
+  
+  const fluzzerImg = document.getElementById('fluzzerImg');
+  if (fluzzerImg) {
+    // Use sleep_talking image to show Fluzzer is talking while sleeping
+    fluzzerImg.src = getFluzzerImagePath('sleep_talking');
+  }
+  
+  fluzzerIsTalking = true;
+  if (window.fluzzerSpeechTimeout) clearTimeout(window.fluzzerSpeechTimeout);
+  window.fluzzerSpeechTimeout = setTimeout(() => {
+    bubble.style.display = 'none';
+    bubble.style.fontStyle = ''; // Reset font style
+    if (fluzzerImg) {
+      // Go back to sleeping image after talking
+      fluzzerImg.src = getFluzzerImagePath('sleeping');
+    }
+    fluzzerIsTalking = false;
+    // Don't schedule random speech when sleeping
   }, duration);
 }
 
