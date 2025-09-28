@@ -533,9 +533,30 @@ function updateFlowerGridButtonState() {
   
   if (!isUnlocked) {
     flowerGridBtn.textContent = `Unlocked at level ${fakeDisplayLevel}`;
-    flowerGridBtn.disabled = true;
+    flowerGridBtn.disabled = false; // Keep enabled so clicks work for teasing dialogue
     flowerGridBtn.classList.add('locked');
-    flowerGridBtn.onclick = null; 
+    
+    // Apply locked styling
+    flowerGridBtn.style.backgroundColor = '#6b7280'; // Gray background
+    flowerGridBtn.style.color = '#9ca3af'; // Light gray text
+    flowerGridBtn.style.border = '2px solid #4b5563'; // Dark gray border
+    flowerGridBtn.style.cursor = 'not-allowed'; // Show locked cursor
+    flowerGridBtn.style.opacity = '0.7'; // Slightly transparent
+    
+    // Add click handler for teasing dialogue when locked
+    flowerGridBtn.onclick = function() {
+      console.log('Flower grid button clicked!'); // Debug log
+      if (typeof fluzzerSay === 'function' && typeof getRandomFlowerGridTeaseDialogue === 'function') {
+        const teaseMessage = getRandomFlowerGridTeaseDialogue();
+        console.log('Tease message:', teaseMessage); // Debug log
+        fluzzerSay(teaseMessage, false, 4000);
+      } else {
+        console.log('Functions not available:', {
+          fluzzerSay: typeof fluzzerSay,
+          getRandomFlowerGridTeaseDialogue: typeof getRandomFlowerGridTeaseDialogue
+        });
+      }
+    }; 
   } else {
     // Set permanent unlock flag if player reached level 200 for the first time
     if (!flowerGridPermanentlyUnlocked && terrariumLevel >= trueUnlockLevel) {
@@ -546,6 +567,13 @@ function updateFlowerGridButtonState() {
     flowerGridBtn.textContent = "Flower Grid";
     flowerGridBtn.disabled = false;
     flowerGridBtn.classList.remove('locked');
+    
+    // Reset styling to normal unlocked state
+    flowerGridBtn.style.backgroundColor = ''; // Reset to default
+    flowerGridBtn.style.color = ''; // Reset to default
+    flowerGridBtn.style.border = ''; // Reset to default
+    flowerGridBtn.style.cursor = ''; // Reset to default
+    flowerGridBtn.style.opacity = ''; // Reset to default
     flowerGridBtn.onclick = function() {
       const grassArea = document.getElementById('terrariumGrassPatchArea');
       const pollenArea = document.getElementById('terrariumPollenUpgradesArea');
@@ -576,6 +604,32 @@ function updateFlowerGridButtonState() {
 
 window.handleFlowerGridTroll = handleFlowerGridTroll;
 window.updateFlowerGridButtonState = updateFlowerGridButtonState;
+
+// Function to get a random flower grid tease dialogue for when button is clicked
+function getRandomFlowerGridTeaseDialogue() {
+  const flowerGridTeaseDialogues = [
+    "Oh? Trying to click your way in? That's not how doors work, silly!",
+    "Click all you want, but the flower grid isn't ready yet!",
+    "Did you think clicking harder would unlock it faster? Hehe!",
+    "I see you're eager! But patience is key... maybe a few more levels?",
+    "The flower grid door doesn't respond to clicking... yet!",
+    "Aww, you really want to see what's inside, don't you? Soon, I promise!",
+    "That clicking won't make the vines leave faster, you know!",
+    "I know it's tempting, but the flower grid needs more time to grow!",
+    "You're so persistent! But the door is still locked tight.",
+    "Maybe if you click it exactly " + Math.floor(Math.random() * 1000 + 100) + " more times... just kidding!",
+    "The flower grid is being shy today. Try being nicer to it!",
+    "I think the door heard you clicking and got nervous!",
+    "Clicking won't make those vines remove themselves, unfortunately.",
+    "The flower grid says 'not yet!' in a very polite flower voice.",
+    "I wish I could let you in, but the flower grid isn't finished yet!"
+  ];
+  
+  return flowerGridTeaseDialogues[Math.floor(Math.random() * flowerGridTeaseDialogues.length)];
+}
+
+// Make the function globally accessible
+window.getRandomFlowerGridTeaseDialogue = getRandomFlowerGridTeaseDialogue;
 
 // Initialize troll mechanic after DOM is loaded
 function initializeFlowerGridTroll() {
