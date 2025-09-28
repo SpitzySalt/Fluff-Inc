@@ -498,12 +498,24 @@ function gradeUp() {
   window.state.mk2SpeedUpgrades = 0;
   window.state.doubleAllBoxUpgrades = 0;
   
+  // Reset all light-related variables
+  const zero = new Decimal(0);
+  
+  // Reset global light currencies (for backward compatibility)
+  if (typeof window.light !== 'undefined') window.light = zero;
+  if (typeof window.redLight !== 'undefined') window.redLight = zero;
+  if (typeof window.orangeLight !== 'undefined') window.orangeLight = zero;
+  if (typeof window.yellowLight !== 'undefined') window.yellowLight = zero;
+  if (typeof window.greenLight !== 'undefined') window.greenLight = zero;
+  if (typeof window.blueLight !== 'undefined') window.blueLight = zero;
+  
+  // Reset window.prismState
   if (window.prismState) {
     [
       'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
       'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'
-    ].forEach(key => prismState[key] = 0);
-    prismState.generatorUpgrades = {
+    ].forEach(key => window.prismState[key] = zero);
+    window.prismState.generatorUpgrades = {
       light: 0,
       redlight: 0,
       orangelight: 0,
@@ -511,7 +523,7 @@ function gradeUp() {
       greenlight: 0,
       bluelight: 0
     };
-    prismState.generatorUnlocked = {
+    window.prismState.generatorUnlocked = {
       light: false,
       redlight: false,
       orangelight: false,
@@ -520,6 +532,39 @@ function gradeUp() {
       bluelight: false
     };
   }
+  
+  // Reset window.state.prismState
+  if (window.state && window.state.prismState) {
+    [
+      'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
+      'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 'greenlightparticle', 'bluelightparticle'
+    ].forEach(key => window.state.prismState[key] = zero);
+    
+    if (window.state.prismState.generatorUpgrades) {
+      window.state.prismState.generatorUpgrades = {
+        light: 0,
+        redlight: 0,
+        orangelight: 0,
+        yellowlight: 0,
+        greenlight: 0,
+        bluelight: 0
+      };
+    }
+    
+    if (window.state.prismState.generatorUnlocked) {
+      window.state.prismState.generatorUnlocked = {
+        light: false,
+        redlight: false,
+        orangelight: false,
+        yellowlight: false,
+        greenlight: false,
+        bluelight: false
+      };
+    }
+  }
+  
+  // Reset any potential lights variable if it exists
+  if (typeof window.lights !== 'undefined') window.lights = zero;
   // Terrarium content is now preserved during expansion resets
   // resetTerrariumContent(); // Commented out to preserve terrarium progress
 

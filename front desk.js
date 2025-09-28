@@ -2002,7 +2002,28 @@
   }
   triggerRandomSpeech() {
     if (this.isAsleep) return;
-    const randomSpeech = this.randomSpeeches[Math.floor(Math.random() * this.randomSpeeches.length)];
+    
+    // Filter and extract valid speeches (similar to Fluzzer's speech system)
+    const validSpeeches = [];
+    for (const speech of this.randomSpeeches) {
+      if (typeof speech === 'string') {
+        validSpeeches.push(speech);
+      } else if (typeof speech === 'object' && speech.text) {
+        // Check condition if it exists
+        if (!speech.condition || (typeof speech.condition === 'function' && speech.condition())) {
+          validSpeeches.push(speech.text);
+        }
+      }
+    }
+    
+    // Fallback if no valid speeches
+    if (validSpeeches.length === 0) {
+      this.showSpeech("Welcome to our front desk! Looking for some skilled workers?", 4000);
+      this.lastInteractionTime = Date.now();
+      return;
+    }
+    
+    const randomSpeech = validSpeeches[Math.floor(Math.random() * validSpeeches.length)];
     this.showSpeech(randomSpeech, 4000);
     this.lastInteractionTime = Date.now();
   }

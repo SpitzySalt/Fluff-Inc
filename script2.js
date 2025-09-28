@@ -6515,6 +6515,9 @@ resetGame = function() {
   checkKpSoftcapStory();
 };
 
+// Legacy gradeUp function - DISABLED to prevent friendship reset bug
+// The comprehensive gradeUp function in expansion.js should be used instead
+/*
 function gradeUp() {
   const currentGrade = DecimalUtils.isDecimal(state.grade) ? state.grade.toNumber() : (state.grade || 1);
   const nextGrade = currentGrade + 1;
@@ -6598,6 +6601,7 @@ function gradeUp() {
     state.powerEnergy = state.powerMaxEnergy;
   }
 }
+*/
 
 function showFirstDeliveryStoryModal() {
   document.getElementById('firstDeliveryStoryModal').style.display = 'flex';

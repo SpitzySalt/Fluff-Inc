@@ -7284,6 +7284,36 @@ body.observatory-bg.night-time::after {
   opacity: 0.6; /* Maximum mystical effects at night */
 }
 
+/* Stable Light Text Visibility During Nighttime */
+body.night-time #lightPercentage,
+body.night-time #redlightPercentage,
+body.night-time #orangelightPercentage,
+body.night-time #yellowlightPercentage,
+body.night-time #greenlightPercentage,
+body.night-time #bluelightPercentage,
+html.night-time #lightPercentage,
+html.night-time #redlightPercentage,
+html.night-time #orangelightPercentage,
+html.night-time #yellowlightPercentage,
+html.night-time #greenlightPercentage,
+html.night-time #bluelightPercentage {
+  color: #fff !important;
+  text-shadow: none !important;
+}
+
+/* Additional higher specificity selectors for stubborn elements */
+body.night-time div#lightPercentage,
+body.night-time div#yellowlightPercentage,
+body.night-time span#lightPercentage,
+body.night-time span#yellowlightPercentage,
+html.night-time div#lightPercentage,
+html.night-time div#yellowlightPercentage,
+html.night-time span#lightPercentage,
+html.night-time span#yellowlightPercentage {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
 /* Box Generator Mk.2 Rainbow Effect */
 .rainbow-effect {
   background: linear-gradient(45deg, 

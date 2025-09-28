@@ -3303,3 +3303,11 @@ window.stopTrackingNerfDisplayUpdates = function() {
   }
   nerfDisplayUpdateTimes = [];
 };
+
+// Helper function to apply nighttime text color override for stable lights
+function applyNighttimeTextColor(element, defaultColor) {
+  if (!element) return;
+  const isNightTime = document.body.classList.contains('night-time') || document.documentElement.classList.contains('night-time');
+  element.style.color = isNightTime ? '#fff' : defaultColor;
+}
+window.applyNighttimeTextColor = applyNighttimeTextColor;
