@@ -695,19 +695,12 @@ window.SaveSystem = {
       const saveSlotNumber = this.currentSlot || localStorage.getItem('currentSaveSlot');
       const backupKey = saveSlotNumber ? 
         `deliveryResetBackup_slot${saveSlotNumber}` : 
-        'deliveryResetBackup';
-      
-      console.log('Delivery reset export - Looking for backup with key:', backupKey);
-      console.log('SaveSystem.currentSlot:', this.currentSlot);
-      console.log('localStorage currentSaveSlot:', localStorage.getItem('currentSaveSlot'));
-      
+        'deliveryResetBackup';      
       const backupDataString = localStorage.getItem(backupKey);
       
       if (!backupDataString) {
         // Check if there's a backup with a different slot number
-        const allKeys = Object.keys(localStorage).filter(key => key.startsWith('deliveryResetBackup'));
-        console.log('No backup found. All delivery reset backup keys:', allKeys);
-        
+        const allKeys = Object.keys(localStorage).filter(key => key.startsWith('deliveryResetBackup'));        
         if (allKeys.length > 0) {
           this.showSaveNotification(`Backup found in different slot. Current: slot${saveSlotNumber}. Available: ${allKeys.join(', ')}`, true);
         } else {
@@ -998,7 +991,6 @@ window.SaveSystem = {
         activeTab.click();
       }
       
-      console.log('Complete game reload performed after import');
       
     } catch (error) {
       console.error('Error during complete reload:', error);

@@ -1199,6 +1199,58 @@ function giveSparksToSoap(amount) {
   amount = Math.max(0, parseInt(amount) || 0);
   if (amount === 0) return;
   
+  // Add friendship points for giving sparks to Soap (following script2.js pattern)
+  if (amount > 0) {
+    const dept = 'Generator'; // Soap belongs to Generator department
+    const pointsPerToken = 20; // Sparks are Soap's liked token
+    const totalPoints = new Decimal(pointsPerToken).mul(amount);
+
+    // Add friendship points and check for single level-up (following script2.js logic)
+    window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
+    
+    // Ensure existing points is a Decimal
+    if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
+      window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
+    }
+    
+    // Ensure level is properly initialized as a number
+    if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
+      window.state.friendship[dept].level = 0;
+    }
+    
+    // Add the points to the current total
+    window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
+    
+    // Check if points are enough for exactly one level-up
+    const currentLevel = window.state.friendship[dept].level;
+    const nextLevel = currentLevel + 1;
+    
+    if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
+      // Points needed to level up from current level (not total points for next level)
+      const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
+      
+      if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
+        // Level up by exactly 1 and reset points to 0
+        window.state.friendship[dept].level = nextLevel;
+        window.state.friendship[dept].points = new Decimal(0);
+      }
+    }
+    
+    // Update UI manually since we bypassed addPoints
+    if (typeof window.renderDepartmentStatsButtons === 'function') {
+      window.renderDepartmentStatsButtons();
+    }
+    
+    // Update stats modal if it's open for this department
+    const statsModal = document.getElementById('departmentStatsModal');
+    if (statsModal && statsModal.style.display !== 'none') {
+      const title = document.getElementById('departmentStatsModalTitle');
+      if (title && title.textContent && title.textContent.toLowerCase().includes(dept.toLowerCase())) {
+        if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
+      }
+    }
+  }
+  
   if (!charger.milestoneQuests) {
     charger.milestoneQuests = {
       3: { required: 10, given: new Decimal(0), completed: false },
@@ -1318,6 +1370,58 @@ function giveBatteriesToSoap(amount) {
   }
   amount = Math.max(0, parseInt(amount) || 0);
   if (amount === 0) return;
+  
+  // Add friendship points for giving batteries to Soap (following script2.js pattern)
+  if (amount > 0) {
+    const dept = 'Generator'; // Soap belongs to Generator department
+    const pointsPerToken = 5; // Batteries are neutral for Soap
+    const totalPoints = new Decimal(pointsPerToken).mul(amount);
+
+    // Add friendship points and check for single level-up (following script2.js logic)
+    window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
+    
+    // Ensure existing points is a Decimal
+    if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
+      window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
+    }
+    
+    // Ensure level is properly initialized as a number
+    if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
+      window.state.friendship[dept].level = 0;
+    }
+    
+    // Add the points to the current total
+    window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
+    
+    // Check if points are enough for exactly one level-up
+    const currentLevel = window.state.friendship[dept].level;
+    const nextLevel = currentLevel + 1;
+    
+    if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
+      // Points needed to level up from current level (not total points for next level)
+      const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
+      
+      if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
+        // Level up by exactly 1 and reset points to 0
+        window.state.friendship[dept].level = nextLevel;
+        window.state.friendship[dept].points = new Decimal(0);
+      }
+    }
+    
+    // Update UI manually since we bypassed addPoints
+    if (typeof window.renderDepartmentStatsButtons === 'function') {
+      window.renderDepartmentStatsButtons();
+    }
+    
+    // Update stats modal if it's open for this department
+    const statsModal = document.getElementById('departmentStatsModal');
+    if (statsModal && statsModal.style.display !== 'none') {
+      const title = document.getElementById('departmentStatsModalTitle');
+      if (title && title.textContent && title.textContent.toLowerCase().includes(dept.toLowerCase())) {
+        if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
+      }
+    }
+  }
   
   if (!charger.milestoneQuests) {
     charger.milestoneQuests = {

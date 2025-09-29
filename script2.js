@@ -8394,7 +8394,7 @@ function showCharacterSpeech(characterName, tokenType) {
           } else if (characterName === 'Mystic') {
             img.src = 'assets/icons/chef mystic.png';
           } else if (characterName === 'Fluzzer') {
-            img.src = 'assets/icons/fluzzer.png';
+            img.src = getFluzzerImagePath('normal');
           }
         }
         if (startTimer) startTimer();

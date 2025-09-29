@@ -152,9 +152,21 @@ if (typeof window.cleanupTerrarium2 === 'undefined') {
 
 function checkNectarizeMilestones() {
   const currentTier = window.nectarizeTier || 0;
+  let milestonesChanged = false;
+  
   nectarizeMilestoneData.forEach((milestone, index) => {
+    const wasUnlocked = milestone.unlocked;
     milestone.unlocked = currentTier >= milestone.tier;
+    if (!wasUnlocked && milestone.unlocked) {
+      milestonesChanged = true;
+    }
   });
+  
+  // Save state if milestones changed
+  if (milestonesChanged && typeof window.syncTerrariumToState === 'function') {
+    window.syncTerrariumToState();
+  }
+  
   return nectarizeMilestoneData;
 }
 
