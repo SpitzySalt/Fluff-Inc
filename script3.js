@@ -229,6 +229,17 @@ function initializeBoostDisplay() {
     startBoostDisplayUpdate();
     registerDayNightCallback();
     initializeIntercomSystem();
+    
+    // Ensure boost display updates even if other systems interfere
+    // This creates a backup timer that's harder to disable
+    if (!window.boostDisplayBackupInterval) {
+        window.boostDisplayBackupInterval = setInterval(() => {
+            const activeBoosts = getActiveBoosts();
+            if (activeBoosts.length > 0 && (!boostDisplayInterval || window.gameOptimization?.isOptimized)) {
+                updateBoostDisplay();
+            }
+        }, 1000);
+    }
 }
 
 function initializeIntercomSystem() {
@@ -517,8 +528,12 @@ function updateBoostDisplay() {
         matchAnomalyDetectorWidth();
     }
     
+    // Check if we should update the display
     const currentContent = JSON.stringify(activeBoosts);
-    if (currentContent === lastBoostDisplayContent) {
+    const hasTimers = activeBoosts.some(boost => boost.timer && boost.timer.includes(':'));
+    
+    // Always update if there are timers (to show countdown), or if content actually changed
+    if (currentContent === lastBoostDisplayContent && !hasTimers) {
         return; 
     }
     lastBoostDisplayContent = currentContent;
@@ -571,8 +586,16 @@ function updateBoostDisplay() {
 
 function getActiveBoosts() {
     const boosts = [];
-    if (window.state && window.state.peachyHungerBoost && window.state.peachyHungerBoost > 0) {
-        const secondsRemaining = Math.ceil(window.state.peachyHungerBoost / 1000);
+    if (window.state && window.state.peachyHungerBoost && (
+        (DecimalUtils.isDecimal(window.state.peachyHungerBoost) && window.state.peachyHungerBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.peachyHungerBoost) && window.state.peachyHungerBoost > 0)
+    )) {
+        // Handle both Decimal and number types
+        const timerValue = DecimalUtils.isDecimal(window.state.peachyHungerBoost) 
+            ? window.state.peachyHungerBoost.toNumber() 
+            : window.state.peachyHungerBoost;
+            
+        const secondsRemaining = Math.ceil(timerValue / 1000);
         const minutes = Math.floor(secondsRemaining / 60);
         const seconds = secondsRemaining % 60;
         const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -582,8 +605,16 @@ function getActiveBoosts() {
             color: '#ffb347' 
         });
     }
-           if (window.state && window.state.soapBatteryBoost && window.state.soapBatteryBoost > 0) {
-               const secondsRemaining = Math.ceil(window.state.soapBatteryBoost / 1000);
+           if (window.state && window.state.soapBatteryBoost && (
+               (DecimalUtils.isDecimal(window.state.soapBatteryBoost) && window.state.soapBatteryBoost.gt(0)) ||
+               (!DecimalUtils.isDecimal(window.state.soapBatteryBoost) && window.state.soapBatteryBoost > 0)
+           )) {
+               // Handle both Decimal and number types
+               const timerValue = DecimalUtils.isDecimal(window.state.soapBatteryBoost) 
+                   ? window.state.soapBatteryBoost.toNumber() 
+                   : window.state.soapBatteryBoost;
+                   
+               const secondsRemaining = Math.ceil(timerValue / 1000);
                const minutes = Math.floor(secondsRemaining / 60);
                const seconds = secondsRemaining % 60;
                const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -597,8 +628,16 @@ function getActiveBoosts() {
                     color: isNight ? '#95a5a6' : '#f1c40f' 
                 });
            }
-    if (window.state && window.state.mysticCookingSpeedBoost && window.state.mysticCookingSpeedBoost > 0) {
-        const secondsRemaining = Math.ceil(window.state.mysticCookingSpeedBoost / 1000);
+    if (window.state && window.state.mysticCookingSpeedBoost && (
+        (DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) && window.state.mysticCookingSpeedBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) && window.state.mysticCookingSpeedBoost > 0)
+    )) {
+        // Handle both Decimal and number types
+        const timerValue = DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) 
+            ? window.state.mysticCookingSpeedBoost.toNumber() 
+            : window.state.mysticCookingSpeedBoost;
+            
+        const secondsRemaining = Math.ceil(timerValue / 1000);
         const minutes = Math.floor(secondsRemaining / 60);
         const seconds = secondsRemaining % 60;
         const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -608,8 +647,16 @@ function getActiveBoosts() {
             color: '#9b59b6' 
         });
     }
-    if (window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0) {
-        const secondsRemaining = Math.ceil(window.state.fluzzerGlitteringPetalsBoost / 1000);
+    if (window.state && window.state.fluzzerGlitteringPetalsBoost && (
+        (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost > 0)
+    )) {
+        // Handle both Decimal and number types
+        const timerValue = DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) 
+            ? window.state.fluzzerGlitteringPetalsBoost.toNumber() 
+            : window.state.fluzzerGlitteringPetalsBoost;
+            
+        const secondsRemaining = Math.ceil(timerValue / 1000);
         const minutes = Math.floor(secondsRemaining / 60);
         const seconds = secondsRemaining % 60;
         const timerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -628,6 +675,14 @@ function startBoostDisplayUpdate() {
     }
     updateBoostDisplay();
     if (window.gameOptimization && window.gameOptimization.isOptimized) {
+        // Even in optimized mode, we need a fallback timer for boost countdowns
+        // The optimization system handles most updates, but timers need regular updates
+        boostDisplayInterval = setInterval(() => {
+            const activeBoosts = getActiveBoosts();
+            if (activeBoosts.length > 0) {
+                updateBoostDisplay();
+            }
+        }, 1000);
         return;
     }
     boostDisplayInterval = setInterval(updateBoostDisplay, 1000);
@@ -637,6 +692,10 @@ function stopBoostDisplayUpdate() {
     if (boostDisplayInterval) {
         clearInterval(boostDisplayInterval);
         boostDisplayInterval = null;
+    }
+    if (window.boostDisplayBackupInterval) {
+        clearInterval(window.boostDisplayBackupInterval);
+        window.boostDisplayBackupInterval = null;
     }
 }
 
@@ -960,10 +1019,150 @@ window.script3TrackedSetTimeout(initializeDeliverButtonCooldown, 1500);
 window.script3TrackedSetTimeout(initializeFreeGiftModal, 2000);
 window.testBoostDisplay = function() {
     if (!window.state) window.state = {};
-    window.state.mysticCookingSpeedBoost = 60000; 
-    window.state.fluzzerGlitteringPetalsBoost = 120000; 
-    window.state.peachyHungerBoost = 180000; 
+    window.state.mysticCookingSpeedBoost = new Decimal(60000); 
+    window.state.fluzzerGlitteringPetalsBoost = new Decimal(120000); 
+    window.state.peachyHungerBoost = new Decimal(180000); 
     updateBoostDisplay();
+};
+
+// Debug function to check boost display status
+window.debugBoostDisplay = function() {
+    console.log("=== Boost Display Debug Info ===");
+    console.log("Optimization enabled:", window.gameOptimization && window.gameOptimization.isOptimized);
+    console.log("Boost display interval:", window.boostDisplayInterval ? "Running" : "Stopped");
+    console.log("Backup display interval:", window.boostDisplayBackupInterval ? "Running" : "Stopped");
+    console.log("Optimization boost timer:", window.optimizationBoostTimer ? "Running" : "Stopped");
+    console.log("Active boosts:", getActiveBoosts());
+    console.log("Fluzzer boost timer:", window.state?.fluzzerGlitteringPetalsBoost || 0);
+    console.log("Boost display card visible:", boostDisplayCard && boostDisplayCard.style.display !== 'none');
+    console.log("Last boost content:", lastBoostDisplayContent);
+    if (window.gameOptimization) {
+        console.log("Optimization throttle time:", window.gameOptimization.boostUpdateThrottle || "N/A");
+    }
+    
+    // Force an immediate update for testing
+    console.log("Forcing boost display update...");
+    updateBoostDisplay();
+};
+
+// Add temporary debug logging to boost display updates
+let originalUpdateBoostDisplay = updateBoostDisplay;
+let debugUpdateCount = 0;
+window.enableBoostDisplayDebug = function() {
+    updateBoostDisplay = function() {
+        debugUpdateCount++;
+        console.log(`[${debugUpdateCount}] updateBoostDisplay called, active boosts:`, getActiveBoosts().length);
+        return originalUpdateBoostDisplay.apply(this, arguments);
+    };
+    console.log("Boost display debug logging enabled");
+};
+
+window.disableBoostDisplayDebug = function() {
+    updateBoostDisplay = originalUpdateBoostDisplay;
+    debugUpdateCount = 0;
+    console.log("Boost display debug logging disabled");
+};
+
+// Debug function to restart boost display system
+window.restartBoostDisplay = function() {
+    console.log("Restarting boost display system...");
+    
+    // First ensure game systems are running
+    window.ensureGameSystemsRunning();
+    
+    stopBoostDisplayUpdate();
+    
+    // Also restart optimization boost timer if needed
+    if (window.optimizationBoostTimer) {
+        clearInterval(window.optimizationBoostTimer);
+        window.optimizationBoostTimer = null;
+    }
+    
+    setTimeout(() => {
+        startBoostDisplayUpdate();
+        
+        // Restart optimization timer if in optimized mode
+        if (window.gameOptimization && window.gameOptimization.isOptimized && typeof window.startOptimizationBoostTimer === 'function') {
+            window.startOptimizationBoostTimer();
+        }
+        
+        console.log("Boost display system restarted");
+        window.debugBoostDisplay();
+    }, 100);
+};
+
+// Function to check and restart main game systems if needed
+window.ensureGameSystemsRunning = function() {
+    console.log("Checking game systems...");
+    
+    const optimizationEnabled = window.gameOptimization && window.gameOptimization.isOptimized;
+    const mainTickRunning = window._mainGameTickInterval !== null;
+    const unifiedTickRunning = window._unifiedGameTickInterval !== null;
+    const optimizationLoopRunning = window.gameOptimization && window.gameOptimization.frameId !== null;
+    
+    console.log("Optimization enabled:", optimizationEnabled);
+    console.log("Main tick running:", mainTickRunning);
+    console.log("Unified tick running:", unifiedTickRunning);
+    console.log("Optimization loop running:", optimizationLoopRunning);
+    
+    if (optimizationEnabled && !optimizationLoopRunning) {
+        console.log("Restarting optimization loop...");
+        if (typeof window.initializeOptimizations === 'function') {
+            window.initializeOptimizations();
+        }
+    } else if (!optimizationEnabled && !mainTickRunning && !unifiedTickRunning) {
+        console.log("Restarting game tick systems...");
+        if (typeof window.mainGameTick === 'function') {
+            window._mainGameTickInterval = setInterval(window.mainGameTick, 100);
+        }
+        if (typeof window.unifiedGameTick === 'function') {
+            window._unifiedGameTickInterval = setInterval(window.unifiedGameTick, 100);
+        }
+    }
+};
+
+// Function to ensure all boost timers are running
+window.ensureBoostTimersRunning = function() {
+    console.log("Ensuring all boost display timers are running...");
+    
+    const activeBoosts = getActiveBoosts();
+    if (activeBoosts.length === 0) {
+        console.log("No active boosts, timers not needed");
+        return;
+    }
+    
+    let timersStarted = 0;
+    
+    // Start main boost display interval if not running
+    if (!window.boostDisplayInterval) {
+        startBoostDisplayUpdate();
+        timersStarted++;
+        console.log("Started main boost display interval");
+    }
+    
+    // Start backup interval if not running
+    if (!window.boostDisplayBackupInterval) {
+        window.boostDisplayBackupInterval = setInterval(() => {
+            const activeBoosts = getActiveBoosts();
+            if (activeBoosts.length > 0 && (!window.boostDisplayInterval || window.gameOptimization?.isOptimized)) {
+                updateBoostDisplay();
+            }
+        }, 1000);
+        timersStarted++;
+        console.log("Started backup boost display interval");
+    }
+    
+    // Start optimization timer if in optimized mode and not running
+    if (window.gameOptimization && window.gameOptimization.isOptimized && !window.optimizationBoostTimer) {
+        if (typeof window.startOptimizationBoostTimer === 'function') {
+            window.startOptimizationBoostTimer();
+            timersStarted++;
+            console.log("Started optimization boost timer");
+        }
+    }
+    
+    console.log(`Started ${timersStarted} boost display timers`);
+    window.debugBoostDisplay();
 };
 
 // --- PROGRESSIVE ELEMENT UNLOCKING SYSTEM ---

@@ -1301,7 +1301,31 @@ window.checkChargerMilestone7 = function() {
 // Debug function - call this from browser console to manually test boost
 window.testFluzzerBoost = function() {
   if (!window.state) window.state = {};
-  window.state.fluzzerGlitteringPetalsBoost = 10 * 60 * 1000; // 10 minutes
+  window.state.fluzzerGlitteringPetalsBoost = new Decimal(10 * 60 * 1000); // 10 minutes
+  
+  // Restart AI to pick up the boost
+  if (typeof stopFluzzerAI === 'function' && typeof startFluzzerAI === 'function') {
+    stopFluzzerAI();
+    setTimeout(() => {
+      if (!window.isFluzzerSleeping) {
+        startFluzzerAI();
+      }
+    }, 100);
+  }
+};
+
+// Debug function - call this from browser console to test boost expiration
+window.testFluzzerBoostExpire = function() {
+  if (!window.state) window.state = {};
+  
+  // Set a very short boost (3 seconds) to test expiration
+  window.state.fluzzerGlitteringPetalsBoost = new Decimal(3000);
+  console.log("Fluzzer boost set to 3 seconds. Watch for expiration...");
+  
+  // Update boost display
+  if (typeof window.updateBoostDisplay === 'function') {
+    window.updateBoostDisplay();
+  }
   
   // Restart AI to pick up the boost
   if (typeof stopFluzzerAI === 'function' && typeof startFluzzerAI === 'function') {
@@ -6712,6 +6736,48 @@ function triggerFluzzerBoostCrash() {
     fluzzerBoostCrashTimer = null;
   }, 120000); 
 }
+
+function resetFluzzerGlitteringPetalsBoost() {
+  // Ensure boost is completely cleared
+  if (!window.state) window.state = {};
+  window.state.fluzzerGlitteringPetalsBoost = new Decimal(0);
+  
+  // Force AI restart to pick up the speed change
+  if (typeof window.stopFluzzerAI === 'function' && typeof window.startFluzzerAI === 'function') {
+    window.stopFluzzerAI();
+    setTimeout(() => {
+      if (!window.isFluzzerSleeping) {
+        window.startFluzzerAI();
+      }
+    }, 100);
+  }
+  
+  // Update sleep state in case boost was preventing sleep during night
+  if (typeof window.checkAndUpdateFluzzerSleepState === 'function') {
+    window.checkAndUpdateFluzzerSleepState();
+  }
+  
+  // Update boost display UI
+  if (typeof window.updateBoostDisplay === 'function') {
+    window.updateBoostDisplay();
+  }
+  
+  // Optional: Trigger a dialogue about the boost ending
+  if (typeof fluzzerSay === 'function' && Math.random() < 0.3) { // 30% chance
+    setTimeout(() => {
+      const endMessages = [
+        "Whew! That was intense! I feel like I'm back to normal speed now.",
+        "The sparkly energy is fading... but that was amazing while it lasted!",
+        "I think I need a little rest after all that super-speed flower work!",
+        "Back to regular Fluzzer speed! Those petals really pack a punch!"
+      ];
+      const message = endMessages[Math.floor(Math.random() * endMessages.length)];
+      fluzzerSay(message, false, 4000);
+    }, 500);
+  }
+}
+
+window.resetFluzzerGlitteringPetalsBoost = resetFluzzerGlitteringPetalsBoost;
 
 function triggerFluzzerBoostDialogue() {
   if (!window.state || !window.state.fluzzerGlitteringPetalsBoost || window.state.fluzzerGlitteringPetalsBoost <= 0) {

@@ -1938,6 +1938,92 @@ function gameTick() {
     window.infinitySystem.checkAllCurrencies();
   }
 
+  // Process boost timers
+  if (window.state) {
+    // Process Fluzzer glittering petals boost
+    if (window.state.fluzzerGlitteringPetalsBoost && (
+        (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost > 0)
+    )) {
+      // Handle both Decimal and number types for the timer
+      if (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost)) {
+        window.state.fluzzerGlitteringPetalsBoost = window.state.fluzzerGlitteringPetalsBoost.sub(diff * 1000);
+      } else {
+        window.state.fluzzerGlitteringPetalsBoost -= diff * 1000;
+      }
+      
+      // Check if timer expired (handle both types)
+      const timerValue = DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) 
+        ? window.state.fluzzerGlitteringPetalsBoost.toNumber() 
+        : window.state.fluzzerGlitteringPetalsBoost;
+        
+      if (timerValue <= 0) {
+        // Use the dedicated reset function to ensure complete boost clearing
+        if (typeof window.resetFluzzerGlitteringPetalsBoost === 'function') {
+          window.resetFluzzerGlitteringPetalsBoost();
+        } else {
+          // Fallback to original logic if reset function not available
+          window.state.fluzzerGlitteringPetalsBoost = new Decimal(0);
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+        }
+      }
+    }
+
+    // Process other boost timers for consistency
+    if (window.state.peachyHungerBoost && (
+        (DecimalUtils.isDecimal(window.state.peachyHungerBoost) && window.state.peachyHungerBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.peachyHungerBoost) && window.state.peachyHungerBoost > 0)
+    )) {
+      if (DecimalUtils.isDecimal(window.state.peachyHungerBoost)) {
+        window.state.peachyHungerBoost = window.state.peachyHungerBoost.sub(diff * 1000);
+      } else {
+        window.state.peachyHungerBoost -= diff * 1000;
+      }
+      if ((DecimalUtils.isDecimal(window.state.peachyHungerBoost) ? window.state.peachyHungerBoost.toNumber() : window.state.peachyHungerBoost) <= 0) {
+        window.state.peachyHungerBoost = new Decimal(0);
+        if (typeof window.updateBoostDisplay === 'function') {
+          window.updateBoostDisplay();
+        }
+      }
+    }
+
+    if (window.state.mysticCookingSpeedBoost && (
+        (DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) && window.state.mysticCookingSpeedBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) && window.state.mysticCookingSpeedBoost > 0)
+    )) {
+      if (DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost)) {
+        window.state.mysticCookingSpeedBoost = window.state.mysticCookingSpeedBoost.sub(diff * 1000);
+      } else {
+        window.state.mysticCookingSpeedBoost -= diff * 1000;
+      }
+      if ((DecimalUtils.isDecimal(window.state.mysticCookingSpeedBoost) ? window.state.mysticCookingSpeedBoost.toNumber() : window.state.mysticCookingSpeedBoost) <= 0) {
+        window.state.mysticCookingSpeedBoost = new Decimal(0);
+        if (typeof window.updateBoostDisplay === 'function') {
+          window.updateBoostDisplay();
+        }
+      }
+    }
+
+    if (window.state.soapBatteryBoost && (
+        (DecimalUtils.isDecimal(window.state.soapBatteryBoost) && window.state.soapBatteryBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.soapBatteryBoost) && window.state.soapBatteryBoost > 0)
+    )) {
+      if (DecimalUtils.isDecimal(window.state.soapBatteryBoost)) {
+        window.state.soapBatteryBoost = window.state.soapBatteryBoost.sub(diff * 1000);
+      } else {
+        window.state.soapBatteryBoost -= diff * 1000;
+      }
+      if ((DecimalUtils.isDecimal(window.state.soapBatteryBoost) ? window.state.soapBatteryBoost.toNumber() : window.state.soapBatteryBoost) <= 0) {
+        window.state.soapBatteryBoost = new Decimal(0);
+        if (typeof window.updateBoostDisplay === 'function') {
+          window.updateBoostDisplay();
+        }
+      }
+    }
+  }
+
     // Make key functions globally accessible
     window.recalculateAllElementEffects = recalculateAllElementEffects;
     window.lastGameTick = lastGameTick;
@@ -7673,6 +7759,8 @@ let originalIntervals = {
   deliverButtonStateInterval: null,
   deliverButtonCooldownInterval: null,
   boostDisplayInterval: null,
+  boostDisplayBackupInterval: null,
+  optimizationBoostTimer: null,
   fluzzerTimerInterval: null,
   flowerRegrowthTimer: null,
   createSleepButtonInterval: null,
@@ -7837,6 +7925,20 @@ function pauseGame() {
     originalIntervals.boostDisplayInterval = window.boostDisplayInterval;
     clearInterval(window.boostDisplayInterval);
     window.boostDisplayInterval = null;
+  }
+  
+  // Pause boost display backup interval
+  if (window.boostDisplayBackupInterval) {
+    originalIntervals.boostDisplayBackupInterval = window.boostDisplayBackupInterval;
+    clearInterval(window.boostDisplayBackupInterval);
+    window.boostDisplayBackupInterval = null;
+  }
+  
+  // Pause optimization boost timer
+  if (window.optimizationBoostTimer) {
+    originalIntervals.optimizationBoostTimer = window.optimizationBoostTimer;
+    clearInterval(window.optimizationBoostTimer);
+    window.optimizationBoostTimer = null;
   }
   
   // Pause terrarium intervals
@@ -8082,6 +8184,28 @@ function resumeGame() {
   // Restart boost display interval
   if (originalIntervals.boostDisplayInterval && typeof updateBoostDisplay === 'function') {
     window.boostDisplayInterval = setInterval(updateBoostDisplay, 1000);
+  }
+  
+  // Restart boost display backup interval
+  if (originalIntervals.boostDisplayBackupInterval && typeof updateBoostDisplay === 'function' && typeof getActiveBoosts === 'function') {
+    window.boostDisplayBackupInterval = setInterval(() => {
+      const activeBoosts = getActiveBoosts();
+      if (activeBoosts.length > 0 && (!window.boostDisplayInterval || window.gameOptimization?.isOptimized)) {
+        updateBoostDisplay();
+      }
+    }, 1000);
+  }
+  
+  // Restart optimization boost timer
+  if (originalIntervals.optimizationBoostTimer && typeof updateBoostDisplay === 'function' && typeof getActiveBoosts === 'function') {
+    window.optimizationBoostTimer = setInterval(() => {
+      if (window.gameOptimization && window.gameOptimization.isOptimized) {
+        const activeBoosts = getActiveBoosts();
+        if (activeBoosts.length > 0) {
+          updateBoostDisplay();
+        }
+      }
+    }, 1000);
   }
   
   // Restart terrarium intervals
@@ -8554,4 +8678,118 @@ window.cleanupMainScript = function() {
   if (typeof window.stopViRandomSpeechTimer === 'function') {
     window.stopViRandomSpeechTimer();
   }
+};
+
+// Function to give 1000 tokens of all types
+function GiveToken() {
+    // Ensure window.state exists
+    if (!window.state) {
+        window.state = {};
+    }
+
+    // Initialize tokens structure if needed
+    if (!window.state.tokens) {
+        window.state.tokens = {};
+    }
+
+    // Basic ingredient tokens (stored in window.state.tokens)
+    const basicTokens = ['berries', 'sparks', 'petals', 'mushroom', 'water', 'prisma', 'stardust'];
+    basicTokens.forEach(tokenType => {
+        window.state.tokens[tokenType] = new Decimal(1000);
+    });
+
+    // Special tokens (stored directly in window.state)
+    const specialTokens = ['berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma'];
+    specialTokens.forEach(tokenType => {
+        window.state[tokenType] = new Decimal(1000);
+    });
+
+    // Swa Bucks (currency token)
+    window.state.swabucks = new Decimal(1000);
+
+    // Update all relevant UIs
+    if (typeof window.updateInventoryDisplay === 'function') {
+        window.updateInventoryDisplay();
+    }
+    if (typeof window.updateKitchenUI === 'function') {
+        window.updateKitchenUI();
+    }
+    if (typeof window.updateCafeteriaUI === 'function') {
+        window.updateCafeteriaUI();
+    }
+    if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens(true);
+    }
+    if (typeof window.updateInventoryModal === 'function') {
+        window.updateInventoryModal(true);
+    }
+
+    console.log("✓ Added 1000 tokens of all types!");
+    console.log("Basic tokens:", basicTokens);
+    console.log("Special tokens:", specialTokens);
+    console.log("Currency: swabucks");
+}
+
+// Make the function globally accessible
+window.GiveToken = GiveToken;
+
+// Debug timer for Fluzzer boost
+window.debugFluzzerTimer = function() {
+    console.log("=== Fluzzer Timer Debug ===");
+    
+    if (!window.state) {
+        console.log("❌ window.state is not defined");
+        return;
+    }
+    
+    if (!window.state.fluzzerGlitteringPetalsBoost) {
+        console.log("❌ fluzzerGlitteringPetalsBoost is not defined");
+        return;
+    }
+    
+    const timer = window.state.fluzzerGlitteringPetalsBoost;
+    console.log("Timer value:", timer);
+    console.log("Timer type:", typeof timer);
+    console.log("Is Decimal:", DecimalUtils ? DecimalUtils.isDecimal(timer) : "DecimalUtils not available");
+    
+    if (DecimalUtils && DecimalUtils.isDecimal(timer)) {
+        console.log("Timer as number:", timer.toNumber());
+        console.log("Timer > 0:", timer.gt(0));
+    } else {
+        console.log("Timer > 0:", timer > 0);
+    }
+    
+    // Check game optimization status
+    console.log("Game optimization enabled:", window.gameOptimization && window.gameOptimization.isOptimized);
+    
+    // Check if timer intervals are running
+    console.log("Main game tick interval:", window._mainGameTickInterval !== null);
+    console.log("Regular game tick interval:", window.tickInterval !== null);
+    
+    // Check boost display
+    console.log("Active boosts:", typeof window.getActiveBoosts === 'function' ? window.getActiveBoosts() : "getActiveBoosts not available");
+    
+    console.log("=== End Debug ===");
+};
+
+// Also create a function to manually decrement the timer for testing
+window.testTimerDecrement = function() {
+    if (window.state && window.state.fluzzerGlitteringPetalsBoost) {
+        const oldValue = window.state.fluzzerGlitteringPetalsBoost;
+        console.log("Old timer value:", oldValue);
+        
+        // Simulate 1 second decrement
+        if (DecimalUtils && DecimalUtils.isDecimal(oldValue)) {
+            window.state.fluzzerGlitteringPetalsBoost = oldValue.sub(1000);
+        } else {
+            window.state.fluzzerGlitteringPetalsBoost -= 1000;
+        }
+        
+        console.log("New timer value:", window.state.fluzzerGlitteringPetalsBoost);
+        
+        // Update display
+        if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+        }
+    }
 };

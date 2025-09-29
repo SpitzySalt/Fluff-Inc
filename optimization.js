@@ -66,6 +66,10 @@ function optimizedGameTick(deltaTime) {
         if (typeof window.mainGameTick === 'function') {
             window.mainGameTick();
         }
+        
+        // Ensure boost timers are processed in optimization mode
+        processBoostTimers(deltaTime);
+        
         if (window.boughtElements && window.boughtElements[7] && typeof window.tickPowerGenerator === 'function') {
             window.tickPowerGenerator(deltaTime);
         }
@@ -128,13 +132,115 @@ let boostUpdateThrottle = 0;
 
 function throttledBoostUpdate() {
     boostUpdateThrottle += 16; 
-    if (boostUpdateThrottle < 500) return; 
+    if (boostUpdateThrottle < 1000) return; // Update every 1000ms (1 second) for timers
     boostUpdateThrottle = 0;
     const currentBoosts = typeof window.getActiveBoosts === 'function' ? window.getActiveBoosts() : [];
     const boostStateString = JSON.stringify(currentBoosts);
-    if (lastBoostState !== boostStateString) {
+    // Always update for timer countdowns, even if boost list hasn't changed
+    // This ensures timers tick down properly
+    if (lastBoostState !== boostStateString || currentBoosts.length > 0) {
         lastBoostState = boostStateString;
         window.updateBoostDisplay();
+    }
+}
+
+// Create a reliable boost update timer that works independently of the optimization loop
+let optimizationBoostTimer = null;
+window.optimizationBoostTimer = optimizationBoostTimer;
+
+function startOptimizationBoostTimer() {
+    if (optimizationBoostTimer) {
+        clearInterval(optimizationBoostTimer);
+    }
+    optimizationBoostTimer = setInterval(() => {
+        if (window.gameOptimization && window.gameOptimization.isOptimized) {
+            const currentBoosts = typeof window.getActiveBoosts === 'function' ? window.getActiveBoosts() : [];
+            if (currentBoosts.length > 0 && typeof window.updateBoostDisplay === 'function') {
+                window.updateBoostDisplay();
+            }
+        }
+    }, 1000);
+    window.optimizationBoostTimer = optimizationBoostTimer;
+}
+
+window.startOptimizationBoostTimer = startOptimizationBoostTimer;
+
+// Process boost timers in optimization mode
+function processBoostTimers(deltaTime) {
+    const diffMs = deltaTime * 1000; // Convert to milliseconds
+    
+    // Process Fluzzer glittering petals boost
+    if (window.state && window.state.fluzzerGlitteringPetalsBoost && (
+        (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost.gt(0)) ||
+        (!DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost > 0)
+    )) {
+        // Handle both Decimal and number types for the timer
+        if (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost)) {
+            window.state.fluzzerGlitteringPetalsBoost = window.state.fluzzerGlitteringPetalsBoost.sub(diffMs);
+        } else {
+            window.state.fluzzerGlitteringPetalsBoost -= diffMs;
+        }
+        
+        // Check if timer expired (handle both types)
+        const timerValue = DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) 
+            ? window.state.fluzzerGlitteringPetalsBoost.toNumber() 
+            : window.state.fluzzerGlitteringPetalsBoost;
+            
+        if (timerValue <= 0) {
+            // Use the dedicated reset function to ensure complete boost clearing
+            if (typeof window.resetFluzzerGlitteringPetalsBoost === 'function') {
+                window.resetFluzzerGlitteringPetalsBoost();
+            } else {
+                // Fallback to manual reset
+                window.state.fluzzerGlitteringPetalsBoost = new Decimal(0);
+                if (typeof window.updateBoostDisplay === 'function') {
+                    window.updateBoostDisplay();
+                }
+            }
+        }
+    }
+    
+    // Process other boost timers that might not be handled by mainGameTick
+    if (window.state && window.state.peachyHungerBoost && window.state.peachyHungerBoost > 0) {
+        if (!document.hidden) {
+            window.state.peachyHungerBoost -= diffMs;
+            if (window.state.peachyHungerBoost <= 0) {
+                window.state.peachyHungerBoost = 0;
+                if (typeof window.updateBoostDisplay === 'function') {
+                    window.updateBoostDisplay();
+                }
+            }
+        }
+    }
+    
+    // Process mystic cooking speed boost
+    if (window.state && window.state.mysticCookingSpeedBoost && window.state.mysticCookingSpeedBoost > 0) {
+        if (window.kitchenCooking && window.kitchenCooking.cooking) {
+            window.state.mysticCookingSpeedBoost -= diffMs;
+            if (window.state.mysticCookingSpeedBoost <= 0) {
+                window.state.mysticCookingSpeedBoost = 0;
+                if (typeof window.updateBoostDisplay === 'function') {
+                    window.updateBoostDisplay();
+                }
+            }
+        }
+    }
+    
+    // Process soap battery boost
+    if (window.state && window.state.soapBatteryBoost && window.state.soapBatteryBoost > 0) {
+        const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+            const mins = window.daynight.getTime();
+            return (mins >= 22 * 60 && mins < 24 * 60) || (mins >= 0 && mins < 6 * 60);
+        })();
+        if (!isNight) {
+            window.state.soapBatteryBoost -= diffMs;
+            if (window.state.soapBatteryBoost <= 0) {
+                window.state.soapBatteryBoost = 0;
+                if (typeof window.updateBoostDisplay === 'function') {
+                    window.updateBoostDisplay();
+                }
+            }
+        }
     }
 }
 
@@ -176,10 +282,8 @@ function clearOldIntervals() {
         clearInterval(window._mainGameTickInterval);
         window._mainGameTickInterval = null;
     }
-    if (window.boostDisplayInterval) {
-        clearInterval(window.boostDisplayInterval);
-        window.boostDisplayInterval = null;
-    }
+    // Don't clear boost display interval - it needs to keep running for timer updates
+    // The optimization system handles boost updates through throttledBoostUpdate() instead
 }
 
 function optimizeElement(element) {
@@ -210,6 +314,14 @@ function initializeOptimizations() {
         }
         window.gameOptimization.frameId = requestAnimationFrame(optimizedGameLoop);
         window.getPerformanceStats = getPerformanceStats;
+        
+        // Start dedicated boost timer for optimization mode
+        startOptimizationBoostTimer();
+        
+        // Also ensure regular boost display system is working
+        if (typeof window.startBoostDisplayUpdate === 'function') {
+            window.startBoostDisplayUpdate();
+        }
     }, 100);
 }
 

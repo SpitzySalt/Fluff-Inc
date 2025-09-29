@@ -6722,23 +6722,43 @@ function mainGameTick() {
       }
     }
   }
-  if (window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0) {
-    window.state.fluzzerGlitteringPetalsBoost -= diff * 1000; 
-      if (window.state.fluzzerGlitteringPetalsBoost <= 0) {
-        window.state.fluzzerGlitteringPetalsBoost = 0;
-        if (typeof window.updateBoostDisplay === 'function') {
-          window.updateBoostDisplay();
-        }
-        if (typeof window.checkAndUpdateFluzzerSleepState === 'function') {
-          window.checkAndUpdateFluzzerSleepState();
-        }
-        if (typeof window.stopFluzzerAI === 'function' && typeof window.startFluzzerAI === 'function') {
-          window.stopFluzzerAI();
-          setTimeout(() => {
-            if (!window.isFluzzerSleeping) {
-              window.startFluzzerAI();
-            }
-          }, 100);
+  if (window.state && window.state.fluzzerGlitteringPetalsBoost && (
+      (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost.gt(0)) ||
+      (!DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost > 0)
+  )) {
+    // Handle both Decimal and number types for the timer
+    if (DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost)) {
+      window.state.fluzzerGlitteringPetalsBoost = window.state.fluzzerGlitteringPetalsBoost.sub(diff * 1000);
+    } else {
+      window.state.fluzzerGlitteringPetalsBoost -= diff * 1000;
+    }
+    
+    // Check if timer expired (handle both types)
+    const timerValue = DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) 
+      ? window.state.fluzzerGlitteringPetalsBoost.toNumber() 
+      : window.state.fluzzerGlitteringPetalsBoost;
+      
+    if (timerValue <= 0) {
+        // Use the dedicated reset function to ensure complete boost clearing
+        if (typeof window.resetFluzzerGlitteringPetalsBoost === 'function') {
+          window.resetFluzzerGlitteringPetalsBoost();
+        } else {
+          // Fallback to original logic if reset function not available
+          window.state.fluzzerGlitteringPetalsBoost = new Decimal(0);
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+          if (typeof window.checkAndUpdateFluzzerSleepState === 'function') {
+            window.checkAndUpdateFluzzerSleepState();
+          }
+          if (typeof window.stopFluzzerAI === 'function' && typeof window.startFluzzerAI === 'function') {
+            window.stopFluzzerAI();
+            setTimeout(() => {
+              if (!window.isFluzzerSleeping) {
+                window.startFluzzerAI();
+              }
+            }, 100);
+          }
         }
       }
   }
@@ -8874,7 +8894,7 @@ function showCharacterSpeech(characterName, tokenType) {
         if (tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal') {
           const tenMinutesMs = 10 * 60 * 1000; 
           if (!window.state) window.state = {};
-          window.state.fluzzerGlitteringPetalsBoost = tenMinutesMs;
+          window.state.fluzzerGlitteringPetalsBoost = new Decimal(tenMinutesMs);
           if (typeof window.checkAndUpdateFluzzerSleepState === 'function') {
             window.checkAndUpdateFluzzerSleepState();
           }
