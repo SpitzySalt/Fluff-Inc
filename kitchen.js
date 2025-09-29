@@ -533,6 +533,28 @@ function updateKitchenUI(forceUpdate = false) {
   }
 }
 
+// Make updateKitchenUI globally accessible
+window.updateKitchenUI = updateKitchenUI;
+
+// Debug function to test kitchen UI update
+window.testKitchenUI = function() {
+    console.log("=== Kitchen UI Debug ===");
+    console.log("window.state.tokens:", window.state?.tokens);
+    
+    if (window.state && window.state.tokens) {
+        const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust'];
+        basicTokenTypes.forEach(type => {
+            const value = window.state.tokens[type];
+            const element = document.getElementById('ingredientCount-' + type);
+            console.log(`${type}: value=${value}, element=${element ? 'found' : 'not found'}`);
+        });
+    }
+    
+    console.log("Calling updateKitchenUI...");
+    updateKitchenUI(true);
+    console.log("=== End Debug ===");
+};
+
 const mysticIdleSpeeches = [
   { text: "Where's the seasoning? This dish is so bland, even Fluzzer wouldn't eat it!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
   "Welcome to the kitchen Peachy.",
@@ -1363,7 +1385,7 @@ window.addEventListener('load', function() {
       });
     }
     window.addEventListener('DOMContentLoaded', function() {
-      const saved = loadCookingState();
+      const saved = null; // Cooking state now managed by main save system
       if (saved && saved.amount) {
         const now = Date.now();
         if (saved.pausedForNight) {
@@ -1476,7 +1498,7 @@ window.addEventListener('load', function() {
 
       const showHandler = function() {
         if (mixModal.style.display !== 'none') {
-          const saved = loadCookingState();
+          const saved = null; // Cooking state now managed by main save system
           if (saved && saved.amount && saved.endTime && Date.now() < saved.endTime) {
             cooking = true;
             cookingAmount = saved.amount;
