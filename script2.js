@@ -1465,7 +1465,10 @@ function tickPowerGenerator(diff) {
   const oldPowerEnergy = state.powerEnergy; 
   if (state.powerStatus === 'online' && state.powerEnergy.gt(0)) {
     if (!hasBatteryProtection) {
-      state.powerEnergy = DecimalUtils.max(0, state.powerEnergy.sub(new Decimal(diff).div(5))); 
+      // Calculate power drain rate - 3x faster when kitomode is active
+      const drainMultiplier = (window.state && window.state.kitoFoxModeActive) ? 3 : 1;
+      const drainRate = new Decimal(diff).div(5).mul(drainMultiplier);
+      state.powerEnergy = DecimalUtils.max(0, state.powerEnergy.sub(drainRate)); 
     } else {
     }
     if (state.powerEnergy.lte(50) && !state.soapRefillUsed && oldPowerEnergy.gt(50)) {
@@ -1559,6 +1562,9 @@ function updatePowerGeneratorUI() {
   
   // Update auto recharge display if enabled
   updateAutoRechargeDisplay();
+  
+  // Update battery upgrade display if it exists
+  updateBatteryUpgradeDisplay();
 }
 
 // Soap's auto recharge system functions
@@ -7785,7 +7791,10 @@ tickPowerGenerator = function(diff) {
   if (window.isSoapSleeping) {
     let oldPowerEnergy = state.powerEnergy;
     if (state.powerStatus === 'online' && state.powerEnergy.gt(0)) {
-      state.powerEnergy = DecimalUtils.max(0, state.powerEnergy.sub(new Decimal(diff).div(5)));
+      // Calculate power drain rate - 3x faster when kitomode is active
+      const drainMultiplier = (window.state && window.state.kitoFoxModeActive) ? 3 : 1;
+      const drainRate = new Decimal(diff).div(5).mul(drainMultiplier);
+      state.powerEnergy = DecimalUtils.max(0, state.powerEnergy.sub(drainRate));
       if (state.powerEnergy.gt(50)) {
         state.soapRefillUsed = false;
       }
@@ -8012,7 +8021,9 @@ window.addEventListener('DOMContentLoaded', function() {
     'viCharacterNormal',
     'viCharacterTalking',
     'viCharacterSleeping',
-    'viCharacterSleepTalking'
+    'viCharacterSleepTalking',
+    // Power generator card for battery feeding
+    'powerGeneratorCard'
   ];
 
 // Move restoreSwariaImage to global scope to fix ReferenceError
@@ -8046,6 +8057,7 @@ window.restoreSwariaImage = restoreSwariaImage;
       case 'viCharacterTalking': return 'Vivien';
       case 'viCharacterSleeping': return 'Vivien';
       case 'viCharacterSleepTalking': return 'Vivien';
+      case 'powerGeneratorCard': return 'PowerGenerator';
       default: return 'Unknown';
     }
   }  function setupCharacterDropTargets() {
@@ -8063,9 +8075,20 @@ window.restoreSwariaImage = restoreSwariaImage;
       // Add mouseenter handler for visual feedback
       el.addEventListener('mouseenter', function() {
         if (window._draggingToken) {
-          // Use orange outline for Vi characters, yellow for others
+          // Use green outline for power generator with battery tokens, orange for Vi characters, yellow for others
+          const isPowerGenerator = id === 'powerGeneratorCard';
+          const isBatteryToken = window._draggingTokenType === 'batteries' || window._draggingTokenType === 'battery';
           const isViCharacter = id.startsWith('viCharacter') || id === 'viSpeechBubble';
-          el.style.outline = isViCharacter ? '3px solid #ff9500' : '3px solid #ffe066';
+          
+          if (isPowerGenerator && isBatteryToken) {
+            el.style.outline = '3px solid #4CAF50'; // Green for power generator with batteries
+          } else if (isPowerGenerator && !isBatteryToken) {
+            el.style.outline = '3px solid #ff4444'; // Red for power generator with non-battery tokens
+          } else if (isViCharacter) {
+            el.style.outline = '3px solid #ff9500'; // Orange for Vi characters
+          } else {
+            el.style.outline = '3px solid #ffe066'; // Yellow for other characters
+          }
           el._tokenDropActive = true;
           
           // Change Swaria image to talking when token is dragged over
@@ -8135,9 +8158,9 @@ window.restoreSwariaImage = restoreSwariaImage;
             return;
           }
           
-          if (tokenType === 'batteries' && characterName !== 'Soap' && characterName !== 'Fluzzer') {
+          if (tokenType === 'batteries' && characterName !== 'Soap' && characterName !== 'Fluzzer' && characterName !== 'PowerGenerator') {
             el.style.outline = '3px solid #ff4444';
-            el.title = 'Batteries can only be given to Soap or Fluzzer!';
+            el.title = 'Batteries can only be given to Soap, Fluzzer, or the Power Generator!';
             setTimeout(() => {
               el.style.outline = '';
               el.title = '';
@@ -8183,6 +8206,38 @@ window.restoreSwariaImage = restoreSwariaImage;
               }, 3000);
             }
             return; 
+          }
+          
+          // Special case for Power Generator battery feeding
+          if (characterName === 'PowerGenerator') {
+            if (tokenType === 'batteries' || tokenType === 'battery') {
+              // Check if player has batteries
+              const availableBatteries = DecimalUtils.toDecimal(window.state.batteries || 0);
+              if (availableBatteries.lte(0)) {
+                el.style.outline = '3px solid #ff4444';
+                el.title = 'You don\'t have any batteries!';
+                setTimeout(() => {
+                  el.style.outline = '';
+                  el.title = '';
+                }, 1500);
+                return;
+              }
+              
+              // Use the existing showGiveTokenModal for consistency
+              showGiveTokenModal(tokenType, characterName);
+              el.style.outline = '';
+              el._tokenDropActive = false;
+              return;
+            } else {
+              // Reject non-battery tokens
+              el.style.outline = '3px solid #ff4444';
+              el.title = 'Power Generator only accepts batteries!';
+              setTimeout(() => {
+                el.style.outline = '';
+                el.title = '';
+              }, 1500);
+              return;
+            }
           }
           
           // Show give token modal for valid drops
@@ -8651,6 +8706,9 @@ function showCharacterSpeech(characterName, tokenType) {
         title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to consume?`;
         img.src = tokenImages[tokenType] || '';
       }
+    } else if (characterName === 'PowerGenerator') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to add to the Power Generator?`;
+      img.src = tokenImages[tokenType] || '';
     } else {
       title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to give to ${characterName}?`;
       img.src = tokenImages[tokenType] || '';
@@ -8869,6 +8927,56 @@ function showCharacterSpeech(characterName, tokenType) {
         if (modal) modal.style.display = 'none';
         return;
       }
+      
+      // Handle PowerGenerator battery feeding
+      if (characterName === 'PowerGenerator' && (tokenType === 'battery' || tokenType === 'batteries')) {
+        // Deduct batteries from inventory
+        if (window.state && window.state.batteries) {
+          if (typeof window.state.batteries.minus === 'function') {
+            window.state.batteries = window.state.batteries.minus(amount);
+            if (window.state.batteries.lt(0)) window.state.batteries = window.state.batteries.constructor(0);
+          } else {
+            window.state.batteries = Math.max(0, Number(window.state.batteries) - amount);
+          }
+        }
+        
+        // Ensure battery upgrades state exists
+        if (!DecimalUtils.isDecimal(window.state.powerGeneratorBatteryUpgrades)) {
+          window.state.powerGeneratorBatteryUpgrades = new Decimal(0);
+        }
+        
+        // Add battery upgrades
+        window.state.powerGeneratorBatteryUpgrades = window.state.powerGeneratorBatteryUpgrades.add(amount);
+        
+        // Update power max energy
+        if (typeof window.calculatePowerGeneratorCap === 'function') {
+          window.state.powerMaxEnergy = window.calculatePowerGeneratorCap();
+          // Ensure current power doesn't exceed new max
+          if (window.state.powerEnergy.gt(window.state.powerMaxEnergy)) {
+            window.state.powerEnergy = window.state.powerMaxEnergy;
+          }
+        }
+        
+        // Update inventory display
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
+        // Update power generator UI
+        if (typeof updatePowerGeneratorUI === 'function') {
+          updatePowerGeneratorUI();
+        }
+        
+        // Show success message
+        const powerBonus = amount * 5;
+        showBatteryFeedSuccessMessage(amount, powerBonus);
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
       if (tokenType === 'swabucks') {
         window.state.swabucks = available - amount;
       } else if (tokenType === 'berryPlate' || tokenType === 'mushroomSoup' || tokenType === 'batteries' || tokenType === 'battery' || tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal' || tokenType === 'chargedPrisma') {
@@ -11221,3 +11329,119 @@ window.script2TrackedSetTimeout = function(callback, delay) {
   window.script2Timeouts.push(timeoutId);
   return timeoutId;
 };
+
+// Battery feeding system support functions
+
+function updateBatteryCounter(batteryUpgrades) {
+  // This function now only handles cleanup of any existing battery counters at the top
+  const powerGeneratorCard = document.getElementById('powerGeneratorCard');
+  if (!powerGeneratorCard) return;
+  
+  // Remove any existing battery counter from the top
+  let batteryCounter = powerGeneratorCard.querySelector('.battery-counter');
+  if (batteryCounter && batteryCounter.parentNode) {
+    batteryCounter.parentNode.removeChild(batteryCounter);
+  }
+}
+
+function showBatteryFeedSuccessMessage(batteriesUsed, powerBonus) {
+  // Create a temporary success message
+  const message = document.createElement('div');
+  message.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #4CAF50;
+    color: white;
+    padding: 1em 2em;
+    border-radius: 12px;
+    font-size: 1.1em;
+    font-weight: bold;
+    z-index: 999999999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: fadeInOut 3s ease-in-out;
+  `;
+  
+  message.textContent = `Gave ${batteriesUsed} ${batteriesUsed === 1 ? 'battery' : 'batteries'} to power generator! Max power increased by +${powerBonus}`;
+  
+  // Add animation CSS if not already added
+  if (!document.getElementById('batteryFeedAnimationCSS')) {
+    const style = document.createElement('style');
+    style.id = 'batteryFeedAnimationCSS';
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(message);
+  
+  setTimeout(() => {
+    if (message.parentNode) {
+      message.parentNode.removeChild(message);
+    }
+  }, 3000);
+}
+
+function updateBatteryUpgradeDisplay() {
+  const batteryUpgradeDisplay = document.querySelector('.battery-upgrade-display');
+  const batteryUpgradeHint = document.querySelector('.battery-upgrade-hint');
+  
+  // Ensure battery upgrades state exists
+  if (!DecimalUtils.isDecimal(window.state.powerGeneratorBatteryUpgrades)) {
+    window.state.powerGeneratorBatteryUpgrades = new Decimal(0);
+  }
+  
+  const batteryUpgrades = DecimalUtils.toDecimal(window.state.powerGeneratorBatteryUpgrades);
+  const batteryBonus = batteryUpgrades.mul(5);
+  
+  // Update battery counter in the title area
+  updateBatteryCounter(batteryUpgrades);
+  
+  // If we have upgrades, show the upgrade display, otherwise remove any display
+  if (batteryUpgrades.gt(0)) {
+    if (batteryUpgradeHint) {
+      // Replace hint with upgrade display
+      const newDisplay = document.createElement('div');
+      newDisplay.className = 'battery-upgrade-display';
+      newDisplay.style.cssText = 'margin-top: 10px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border: 1px solid rgba(255, 193, 7, 0.3);';
+      newDisplay.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <img src="assets/icons/battery token.png" alt="Battery" style="width: 16px; height: 16px;">
+            <small style="color: #f57f17; font-weight: bold;">Battery Upgrades: ${batteryUpgrades}</small>
+          </div>
+          <small style="color: #f57f17; font-weight: bold;">+${batteryBonus} Max Power</small>
+        </div>
+        <div style="margin-top: 4px;">
+          <small style="color: #666; font-size: 0.75em;">Drag battery tokens here to permanently increase max power</small>
+        </div>
+      `;
+      batteryUpgradeHint.parentNode.replaceChild(newDisplay, batteryUpgradeHint);
+    } else if (batteryUpgradeDisplay) {
+      // Update existing display
+      const countElement = batteryUpgradeDisplay.querySelector('small[style*="color: #f57f17"]');
+      const bonusElement = batteryUpgradeDisplay.querySelectorAll('small[style*="color: #f57f17"]')[1];
+      if (countElement) countElement.textContent = `Batteries Given: ${batteryUpgrades}`;
+      if (bonusElement) bonusElement.textContent = `+${batteryBonus} Max Power`;
+    }
+  } else {
+    // Remove any existing display or hint when no upgrades
+    if (batteryUpgradeDisplay && batteryUpgradeDisplay.parentNode) {
+      batteryUpgradeDisplay.parentNode.removeChild(batteryUpgradeDisplay);
+    }
+    if (batteryUpgradeHint && batteryUpgradeHint.parentNode) {
+      batteryUpgradeHint.parentNode.removeChild(batteryUpgradeHint);
+    }
+  }
+}
+
+// Make functions globally accessible
+window.updateBatteryCounter = updateBatteryCounter;
+window.updateBatteryUpgradeDisplay = updateBatteryUpgradeDisplay;

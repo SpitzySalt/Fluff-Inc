@@ -87,6 +87,13 @@ function calculatePowerGeneratorCap() {
   if (grade.gte(2)) {
     baseCap = baseCap.add(grade.sub(1).mul(20));
   }
+  
+  // Add battery upgrades: +5 max power per battery fed
+  if (window.state && window.state.powerGeneratorBatteryUpgrades) {
+    const batteryUpgrades = DecimalUtils.toDecimal(window.state.powerGeneratorBatteryUpgrades);
+    baseCap = baseCap.add(batteryUpgrades.mul(5));
+  }
+  
   return baseCap;
 }
 

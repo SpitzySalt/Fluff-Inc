@@ -110,6 +110,7 @@ let state = {
   powerMaxEnergy: new Decimal(100),
   powerStatus: 'online', 
   powerLastTick: Date.now(),
+  powerGeneratorBatteryUpgrades: new Decimal(0),
   // Soap's auto recharge system (level 4+ friendship buff)
   soapAutoRecharge: {
     timer: 600000, // 10 minutes in milliseconds (600 seconds * 1000)
@@ -1651,6 +1652,13 @@ window.validateAndFixDecimals = function() {
   }
   if (window.state.powerMaxEnergy && !DecimalUtils.isDecimal(window.state.powerMaxEnergy)) {
     window.state.powerMaxEnergy = new Decimal(window.state.powerMaxEnergy || 100);
+  }
+  if (window.state.powerGeneratorBatteryUpgrades && !DecimalUtils.isDecimal(window.state.powerGeneratorBatteryUpgrades)) {
+    window.state.powerGeneratorBatteryUpgrades = new Decimal(window.state.powerGeneratorBatteryUpgrades || 0);
+  }
+  // Ensure powerGeneratorBatteryUpgrades exists
+  if (!window.state.powerGeneratorBatteryUpgrades) {
+    window.state.powerGeneratorBatteryUpgrades = new Decimal(0);
   }
   
   // Fix friendship system points
@@ -5900,6 +5908,7 @@ function renderGenerators() {
   leftCol.className = "generator-left-col";
   const powerGeneratorCard = document.createElement("div");
   powerGeneratorCard.className = "card generator power-generator";
+  powerGeneratorCard.id = "powerGeneratorCard";
   
   // Check if auto recharge system is unlocked (Soap level 4+ friendship)
   let autoRechargeHTML = '';
@@ -5947,6 +5956,9 @@ function renderGenerators() {
   }
   isMk2 = soapFriendshipLevel >= 4;
   
+  // Battery upgrade display
+  const batteryUpgrades = DecimalUtils.toDecimal(window.state.powerGeneratorBatteryUpgrades || 0);
+  
   // Choose title and styling based on upgrade status
   const generatorTitle = isMk2 ? 'Power Generator Mk.2' : 'Power Generator';
   const mk2Styling = '';
@@ -5963,7 +5975,22 @@ function renderGenerators() {
       box-shadow: 0 0 20px rgba(33, 150, 243, 0.3) !important;
     `;
   }
-  
+  const batteryBonus = batteryUpgrades.mul(5);
+  const batteryUpgradeHTML = batteryUpgrades.gt(0) ? `
+    <div class="battery-upgrade-display" style="margin-top: 10px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border: 1px solid rgba(255, 193, 7, 0.3);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="assets/icons/battery token.png" alt="Battery" style="width: 16px; height: 16px;">
+          <small style="color: #f57f17; font-weight: bold;">Battery Upgrades: ${batteryUpgrades}</small>
+        </div>
+        <small style="color: #f57f17; font-weight: bold;">+${batteryBonus} Max Power</small>
+      </div>
+      <div style="margin-top: 4px;">
+        <small style="color: #666; font-size: 0.75em;">Drag battery tokens here to permanently increase max power</small>
+      </div>
+    </div>
+  ` : '';
+
   powerGeneratorCard.innerHTML = `
     <h3>${generatorTitle}</h3>
     ${mk2Styling}
@@ -5983,6 +6010,7 @@ function renderGenerators() {
       <small>Energy depletes at 1 per 5 seconds</small><br>
       <small>Click recharge anytime to restore energy</small>
     </div>
+    ${batteryUpgradeHTML}
     ${autoRechargeHTML}
   `;
   leftCol.appendChild(powerGeneratorCard);

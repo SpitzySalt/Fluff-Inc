@@ -702,7 +702,9 @@ function chargerTick(diff) {
   if (charger.isOn) {
     if (typeof state !== 'undefined' && typeof state.powerEnergy !== 'undefined') {
       const powerBeforeDrain = state.powerEnergy;
-      const powerDrain = new Decimal(10).mul(diff);
+      // Calculate power drain rate - 3x faster when kitomode is active
+      const drainMultiplier = (window.state && window.state.kitoFoxModeActive) ? 3 : 1;
+      const powerDrain = new Decimal(10).mul(diff).mul(drainMultiplier);
       state.powerEnergy = state.powerEnergy.sub(powerDrain);
       if (state.powerEnergy.lt(0)) state.powerEnergy = new Decimal(0);
       if (state.powerEnergy.eq(0)) {
