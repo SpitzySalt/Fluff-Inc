@@ -142,6 +142,8 @@ function initFriendshipFunctions() {
       }
     }
     
+    // Ensure we never exceed the maximum friendship level
+    newLevel = Math.min(newLevel, MAX_FRIENDSHIP_LEVEL);
     window.state.friendship[dept].level = newLevel;
   } catch (error) {
     console.warn(`Error in friendship.addPoints for ${character}:`, error);
@@ -201,18 +203,124 @@ function initFriendshipFunctions() {
     };
   };
   
+  // Add function to reset friendship levels that exceed the cap
+  window.state.friendship.resetFriendshipLevelsAboveCap = function() {
+    const departments = ['Cargo', 'Generator', 'Lab', 'Kitchen', 'Terrarium', 'Boutique', 'FrontDesk'];
+    let resetCount = 0;
+    
+    departments.forEach(dept => {
+      if (window.state.friendship[dept] && window.state.friendship[dept].level > MAX_FRIENDSHIP_LEVEL) {
+        console.log(`Resetting ${dept} friendship level from ${window.state.friendship[dept].level} to ${MAX_FRIENDSHIP_LEVEL}`);
+        window.state.friendship[dept].level = MAX_FRIENDSHIP_LEVEL;
+        
+        // Reset points to the amount needed for max level
+        window.state.friendship[dept].points = getFriendshipPointsForLevel(MAX_FRIENDSHIP_LEVEL);
+        resetCount++;
+      }
+    });
+    
+    if (resetCount > 0) {
+      console.log(`Reset ${resetCount} characters' friendship levels to the cap of ${MAX_FRIENDSHIP_LEVEL}`);
+      
+      // Update UI if necessary
+      if (typeof window.renderDepartmentStatsButtons === 'function') {
+        window.renderDepartmentStatsButtons();
+      }
+    }
+    
+    return resetCount;
+  };
+  
   // Create backward compatibility alias for existing code that uses window.friendship
   window.friendship = window.state.friendship;
+  
+  // Add debug function to test friendship system
+  window.testFriendshipSystem = function() {
+    console.log('Testing friendship system...');
+    console.log('window.friendship exists:', !!window.friendship);
+    console.log('addPoints function exists:', typeof window.friendship?.addPoints === 'function');
+    console.log('window.state.friendship exists:', !!window.state?.friendship);
+    
+    if (window.friendship && typeof window.friendship.addPoints === 'function') {
+      console.log('Testing addPoints with 10 points to Soap...');
+      const beforeLevel = window.state.friendship?.Generator?.level || 0;
+      const beforePoints = window.state.friendship?.Generator?.points || new Decimal(0);
+      console.log('Before test - Level:', beforeLevel, 'Points:', beforePoints.toString());
+      
+      window.friendship.addPoints('soap', new Decimal(10));
+      
+      const afterLevel = window.state.friendship?.Generator?.level || 0;
+      const afterPoints = window.state.friendship?.Generator?.points || new Decimal(0);
+      console.log('After test - Level:', afterLevel, 'Points:', afterPoints.toString());
+      console.log('Generator department after test:', window.state.friendship?.Generator);
+      return true;
+    } else {
+      console.log('Friendship system not properly initialized!');
+      return false;
+    }
+  };
+  
+  // Add a simple function to test all friendship earning mechanisms
+  window.testAllFriendshipSources = function() {
+    console.log('Testing all friendship earning mechanisms...');
+    
+    if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+      console.log('Friendship system not available!');
+      return false;
+    }
+    
+    const characters = ['soap', 'mystic', 'fluzzer', 'vi', 'lepre', 'swaria', 'tico'];
+    const testPoints = new Decimal(5);
+    
+    characters.forEach(char => {
+      console.log(`Testing ${char}...`);
+      try {
+        window.friendship.addPoints(char, testPoints);
+        console.log(`✓ ${char} friendship points added successfully`);
+      } catch (error) {
+        console.log(`✗ ${char} failed:`, error);
+      }
+    });
+    
+    console.log('Final friendship state:', window.state.friendship);
+    return true;
+  };
 }
+
+// Function to force initialize friendship system
+window.ensureFriendshipSystemInitialized = function() {
+  if (!window.friendship || typeof window.friendship.addPoints !== 'function') {
+    console.log('Force initializing friendship system...');
+    initFriendshipFunctions();
+    
+    // Reset any friendship levels above cap after initialization
+    if (window.state && window.state.friendship && typeof window.state.friendship.resetFriendshipLevelsAboveCap === 'function') {
+      window.state.friendship.resetFriendshipLevelsAboveCap();
+    }
+    
+    return true;
+  }
+  return false;
+};
 
 // Initialize friendship functions with cleanup tracking
 if (!window._statsInitialized) {
   window._statsInitialized = true;
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(initFriendshipFunctions, 0);
+    setTimeout(() => {
+      initFriendshipFunctions();
+      // Reset any friendship levels above cap after initialization
+      if (window.state && window.state.friendship && typeof window.state.friendship.resetFriendshipLevelsAboveCap === 'function') {
+        window.state.friendship.resetFriendshipLevelsAboveCap();
+      }
+    }, 0);
   } else {
     const initHandler = function() {
       initFriendshipFunctions();
+      // Reset any friendship levels above cap after initialization
+      if (window.state && window.state.friendship && typeof window.state.friendship.resetFriendshipLevelsAboveCap === 'function') {
+        window.state.friendship.resetFriendshipLevelsAboveCap();
+      }
       document.removeEventListener('DOMContentLoaded', initHandler);
     };
     document.addEventListener('DOMContentLoaded', initHandler);
@@ -359,11 +467,32 @@ function showDepartmentStatsModal(department) {
 
     let level = new Decimal(f.level).min(MAX_FRIENDSHIP_LEVEL).toNumber();
     let points = f.points || new Decimal(0);
-    let pointsNeeded = getFriendshipPointsForLevel(level);
-    let percent = new Decimal(100).min(points.div(pointsNeeded).mul(100).round()).toNumber();
-
+    
     let isMax = (level >= MAX_FRIENDSHIP_LEVEL);
-    bar.style.width = isMax ? '100%' : percent + '%';
+    let pointsNeeded, percent;
+    
+    if (isMax) {
+      // At max level, show completion
+      pointsNeeded = getFriendshipPointsForLevel(level);
+      percent = 100;
+    } else {
+      // Show progress to NEXT level
+      const nextLevel = level + 1;
+      pointsNeeded = getFriendshipPointsForLevel(nextLevel);
+      const currentLevelPoints = getFriendshipPointsForLevel(level);
+      
+      // Calculate percentage: (current points - points for current level) / (points for next level - points for current level)
+      const progressInCurrentLevel = points.sub(currentLevelPoints);
+      const pointsNeededForNextLevel = pointsNeeded.sub(currentLevelPoints);
+      
+      if (pointsNeededForNextLevel.gt(0)) {
+        percent = new Decimal(100).min(progressInCurrentLevel.div(pointsNeededForNextLevel).mul(100).round()).toNumber();
+      } else {
+        percent = 100;
+      }
+    }
+
+    bar.style.width = percent + '%';
     text.textContent = isMax
       ? `Level ${level} (MAX)`
       : `Level ${level} (${DecimalUtils.formatDecimal(points)} / ${DecimalUtils.formatDecimal(pointsNeeded)})`;

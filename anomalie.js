@@ -56,8 +56,8 @@ window.anomalySystem = {
     nextId: 1,     // Counter for unique anomaly IDs
     isDetectorVisible: false, // Whether the detector UI is visible
     findModeActive: false, // Whether find mode is currently active
-    maxAnomalies: 3, // Maximum number of anomalies on screen
-    spawnCooldown: 420000, // 7 minutes in milliseconds (increased from 5 minutes)
+    maxAnomalies: 3, // Maximum number of anomalies on screen (5 in KitoFox mode)
+    spawnCooldown: 420000, // 7 minutes in milliseconds (reduced in KitoFox mode)
     lastSpawnTime: 0, // Last anomaly spawn timestamp
     analyzing: false, // Whether detector is currently analyzing
     searching: false, // Whether detector is currently searching
@@ -92,6 +92,23 @@ window.anomalySystem = {
     
     // Box generator freeze anomaly variables
     frozenGeneratorId: null, // Which generator is frozen (0-4)
+    
+    // Helper functions for KitoFox mode adjustments
+    getMaxAnomalies: function() {
+        return (window.state && window.state.kitoFoxModeActive) ? 5 : this.maxAnomalies;
+    },
+    
+    getSpawnCooldown: function() {
+        return (window.state && window.state.kitoFoxModeActive) ? 240000 : this.spawnCooldown; // 4 minutes vs 7 minutes
+    },
+    
+    getDangerousAnomalyChance: function() {
+        return (window.state && window.state.kitoFoxModeActive) ? 0.15 : 0.05; // 15% vs 5%
+    },
+    
+    getRegularSpawnChance: function() {
+        return (window.state && window.state.kitoFoxModeActive) ? 0.08 : 0.05; // 8% vs 5%
+    },
     
     // Initialize the anomaly system
     init: function() {
@@ -1863,9 +1880,9 @@ window.anomalySystem = {
         const timeSinceLastSpawn = now - this.lastSpawnTime;
         
         // Only spawn if cooldown has passed and we're under max anomalies
-        if (timeSinceLastSpawn >= this.spawnCooldown && this.anomalies.length < this.maxAnomalies) {
-            // 5% chance to spawn an anomaly each check (every 30 seconds after cooldown)
-            if (Math.random() < 0.05) {
+        if (timeSinceLastSpawn >= this.getSpawnCooldown() && this.anomalies.length < this.getMaxAnomalies()) {
+            // Dynamic spawn chance based on KitoFox mode
+            if (Math.random() < this.getRegularSpawnChance()) {
                 this.spawnRandomAnomaly();
                 this.lastSpawnTime = now;
             }
@@ -1874,9 +1891,9 @@ window.anomalySystem = {
     
     // Spawn a random anomaly
     spawnRandomAnomaly: function() {
-        // First, roll for dangerous anomaly (5% chance)
+        // First, roll for dangerous anomaly (higher chance in KitoFox mode)
         const dangerousRoll = Math.random();
-        if (dangerousRoll < 0.05) { // 5% chance for dangerous anomalies
+        if (dangerousRoll < this.getDangerousAnomalyChance()) {
             // Choose between dangerous anomalies
             const dangerousAnomalies = [];
             if (!this.activeAnomalies.darkVoidAnomaly) {
@@ -2027,6 +2044,8 @@ window.anomalySystem = {
             case 1: return 0.98;
             case 2: return 0.95;
             case 3: return 0.9;
+            case 4: return 0.8;  // KitoFox mode penalty
+            case 5: return 0.5;  // KitoFox mode severe penalty
             default: return 1.0;
         }
     },
@@ -6183,6 +6202,20 @@ window.anomalySystem = {
         // Restart the anomaly effect
         this.startNotationScrambleAnomaly();
 
+    },
+    
+    // Debug function for testing KitoFox mode anomaly features
+    debugKitoFoxAnomalies: function() {
+        console.log('=== KitoFox Anomaly System Debug ===');
+        console.log('KitoFox Mode Active:', window.state && window.state.kitoFoxModeActive);
+        console.log('Max Anomalies:', this.getMaxAnomalies());
+        console.log('Spawn Cooldown (ms):', this.getSpawnCooldown());
+        console.log('Dangerous Anomaly Chance:', this.getDangerousAnomalyChance());
+        console.log('Regular Spawn Chance:', this.getRegularSpawnChance());
+        console.log('Current Anomaly Count:', this.anomalies.length);
+        console.log('Current Penalty Multiplier:', this.getCurrencyDebuff());
+        console.log('Active Anomalies:', this.activeAnomalies);
+        console.log('====================================');
     }
 };
 

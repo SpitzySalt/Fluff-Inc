@@ -302,7 +302,7 @@ const secretAchievements = {
   },
   secret15: {
     id: 'secret15',
-    name: 'The last one is always the hardest',
+    name: 'This one is the hardest',
     description: '???',
     icon: 'assets/icons/light.png',
     type: 'secret',
@@ -314,6 +314,36 @@ const secretAchievements = {
     position: 3,
     rewarded: false,
     realDescription: 'Complete the impossible quest'
+  },
+  secret19: {
+    id: 'secret19',
+    name: 'Not so secret anymore',
+    description: '???',
+    icon: 'assets/icons/light.png',
+    type: 'secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'secret',
+    row: 4,
+    position: 4,
+    rewarded: false,
+    realDescription: 'redeem a code'
+  },
+  secret20: {
+    id: 'secret20',
+    name: 'There were many warnings...',
+    description: '???',
+    icon: 'assets/icons/light.png',
+    type: 'secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'secret',
+    row: 4,
+    position: 5,
+    rewarded: false,
+    realDescription: 'Listen to the entire peachy dialogue'
   },
 };
 
@@ -332,6 +362,36 @@ function unlockSecretAchievement(achievementId) {
     achievement.unlocked = true;
     achievement.progress = achievement.requirement;
     updateSecretAchievementDescription(achievementId);
+    
+    // Handle rewards for specific achievements
+    if (achievementId === 'secret19') {
+      // Secret 19: Give 20 swa bucks for redeeming a code
+      if (window.state && typeof window.state.swaria !== 'undefined') {
+        if (!window.DecimalUtils.isDecimal(window.state.swaria)) {
+          window.state.swaria = new Decimal(window.state.swaria || 0);
+        }
+        window.state.swaria = window.state.swaria.add(20);
+        
+        // Show notification for the reward
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Secret Achievement Reward: +20 Swa Bucks!', 'success');
+        }
+      }
+    } else if (achievementId === 'secret20') {
+      // Secret 20: Give 50 swa bucks for listening to entire peachy dialogue
+      if (window.state && typeof window.state.swaria !== 'undefined') {
+        if (!window.DecimalUtils.isDecimal(window.state.swaria)) {
+          window.state.swaria = new Decimal(window.state.swaria || 0);
+        }
+        window.state.swaria = window.state.swaria.add(50);
+        
+        // Show notification for the reward
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Secret Achievement Reward: +50 Swa Bucks!', 'success');
+        }
+      }
+    }
+    
     if (typeof window.showAchievementNotification === 'function') {
       window.showAchievementNotification(achievement);
     }
@@ -429,6 +489,25 @@ Object.keys(secretAchievements).forEach(key => {
 // Make secret achievements globally accessible (reference centralized state)
 window.secretAchievements = window.state.secretAchievements;
 window.unlockSecretAchievement = unlockSecretAchievement;
+
+// Debug function to check secret achievements
+window.debugSecretAchievements = function() {
+  return window.secretAchievements;
+};
+
+// Force update achievements display manually
+window.forceUpdateAchievements = function() {
+  if (typeof window.updateAchievementsDisplay === 'function') {
+    window.updateAchievementsDisplay();
+  }
+  if (typeof window.updateSecretAchievements === 'function') {
+    window.updateSecretAchievements();
+  }
+  // Also try the immediate version
+  if (typeof window.updateAchievementsDisplayImmediate === 'function') {
+    window.updateAchievementsDisplayImmediate();
+  }
+};
 window.handleSecretAchievementClick = handleSecretAchievementClick;
 window.updateSecretAchievementProgress = updateSecretAchievementProgress;
 // Save/load functions removed - now managed by main save system
@@ -555,8 +634,28 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
     initSecretAchievements();
     initFluzzerNightOwlTracking();
+    // Force achievements display update after a short delay
+    setTimeout(() => {
+      if (typeof window.updateAchievementsDisplay === 'function') {
+        window.updateAchievementsDisplay();
+      }
+      // Also try direct update of secret achievements
+      if (typeof window.updateSecretAchievements === 'function') {
+        window.updateSecretAchievements();
+      }
+    }, 1000);
   });
 } else {
   initSecretAchievements();
   initFluzzerNightOwlTracking();
+  // Force achievements display update after a short delay
+  setTimeout(() => {
+    if (typeof window.updateAchievementsDisplay === 'function') {
+      window.updateAchievementsDisplay();
+    }
+    // Also try direct update of secret achievements
+    if (typeof window.updateSecretAchievements === 'function') {
+      window.updateSecretAchievements();
+    }
+  }, 1000);
 }

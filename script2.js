@@ -1061,6 +1061,7 @@ const swariaQuotes = [
   { text: "You should try playing the game fundamental! Its great!", condition: () => true },
   { text: "Do NOT go to the bathroom at 3:33 AM!", condition: () => true },
   { text: "Click on a box type then hold down the enter key for Swagic!", condition: () => true },
+  { text: "DO NOT INPUT THE CODE 'Give me 1 million swa bucks' I REPEAT DO NOT!!!", condition: () => true },
   { text: "When are we seeing the sights?", condition: () => true },
   { text: "I'm full of feathers today!", condition: () => true },
   { text: "Did you know I go to Swa university©?", condition: () => true },
@@ -1173,9 +1174,76 @@ window.script2Timeouts = window.script2Timeouts || [];
 
 function showSwariaSpeech() {
   if (!swariaSpeech || !swariaImage) return;
-  const availableQuotes = swariaQuotes.filter(q => q.condition());
+  
+  // Get appropriate quotes based on recorder mode
+  const quotesToUse = (typeof window.getAppropriateQuotes === 'function') ? 
+    window.getAppropriateQuotes() : swariaQuotes;
+  
+  const availableQuotes = quotesToUse.filter(q => q.condition());
   const randomQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
-  swariaSpeech.textContent = randomQuote ? randomQuote.text : "...";
+  
+  
+  // Clear previous content
+  swariaSpeech.innerHTML = "";
+  
+  if (randomQuote && randomQuote.image) {
+    // Check if image field contains both text and image path
+    const imageContent = randomQuote.image;
+    const imagePath = imageContent.match(/assets\/icons\/[^"']+\.png/);
+    
+    if (imagePath) {
+      // Extract text part (everything before the image path)
+      const textPart = imageContent.replace(imagePath[0], '').trim();
+      
+      // Create container for text + image
+      const container = document.createElement('div');
+      container.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      `;
+      
+      // Add text if it exists
+      if (textPart) {
+        const textSpan = document.createElement('span');
+        textSpan.textContent = textPart;
+        textSpan.style.cssText = `
+          text-align: center;
+          margin-bottom: 5px;
+        `;
+        container.appendChild(textSpan);
+      }
+      
+      // Add image
+      const img = document.createElement('img');
+      img.src = imagePath[0];
+      img.style.cssText = `
+        max-width: 100%;
+        max-height: 50px;
+        object-fit: contain;
+      `;
+      container.appendChild(img);
+      
+      swariaSpeech.appendChild(container);
+    } else {
+      // Old format - just display as image
+      const img = document.createElement('img');
+      img.src = randomQuote.image;
+      img.style.cssText = `
+        max-width: 100%;
+        max-height: 60px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto;
+      `;
+      swariaSpeech.appendChild(img);
+    }
+  } else {
+    // Display text as usual
+    swariaSpeech.textContent = randomQuote ? randomQuote.text : "...";
+  }
+  
   swariaSpeech.style.display = "block";
   swariaImage.src = getMainCargoCharacterImage(true); 
   window.script2TrackedSetTimeout(() => {
@@ -1678,20 +1746,32 @@ function initPowerMinigame() {
   }
   let redTilesCleared = 0;
   grid.innerHTML = '';
+  
+  // KitoFox mode flickering setup
+  let flickerInterval = null;
+  const isKitoFoxMode = window.state && window.state.kitoFoxModeActive;
+  
   for (let i = 0; i < totalCells; i++) {
     const cell = document.createElement('div');
     cell.className = 'minigame-cell';
+    if (isKitoFoxMode) {
+      cell.classList.add('kitofox-flicker');
+    }
     cell.dataset.index = i;
     if (redIndices.has(i)) {
       cell.classList.add('red');
+      cell.dataset.originalColor = 'red';
     } else {
       cell.classList.add('green');
+      cell.dataset.originalColor = 'green';
     }
     cell.addEventListener('click', () => {
-      if (cell.classList.contains('red')) {
-        cell.classList.remove('red');
-        cell.classList.add('green');
-        cell.classList.remove('cleared');
+      // Use original color for logic, not current flickering color
+      const originalColor = cell.dataset.originalColor;
+      
+      if (originalColor === 'red') {
+        cell.classList.remove('red', 'green');
+        cell.classList.add('cleared');
         redTilesCleared++;
         const progress = (redTilesCleared / numRed) * 100;
         progressFill.style.width = `${progress}%`;
@@ -1701,9 +1781,14 @@ function initPowerMinigame() {
             completePowerRecharge();
           }, 500);
         }
-      } else if (cell.classList.contains('green')) {
+      } else if (originalColor === 'green') {
         if (typeof window.trackPowerMinigameFailure === 'function') {
           window.trackPowerMinigameFailure();
+        }
+        // Clean up flicker interval before restarting
+        if (window.powerMinigameFlickerInterval) {
+          clearInterval(window.powerMinigameFlickerInterval);
+          window.powerMinigameFlickerInterval = null;
         }
         showElectrocuteEffectNoMsg();
         setTimeout(() => {
@@ -1715,6 +1800,48 @@ function initPowerMinigame() {
   }
   progressFill.style.width = '0%';
   progressText.textContent = `0/${numRed} red cells cleared`;
+  
+  // Start KitoFox mode flickering animation
+  if (isKitoFoxMode) {
+    let flickerState = false;
+    
+    // Function to perform flicker
+    const performFlicker = () => {
+      const cells = grid.querySelectorAll('.minigame-cell');
+      cells.forEach(cell => {
+        if (cell.classList.contains('cleared')) return; // Don't flicker cleared cells
+        
+        const originalColor = cell.dataset.originalColor;
+        if (originalColor === 'red') {
+          // Red cells flicker: red -> green -> red -> green
+          if (flickerState) {
+            cell.classList.remove('red');
+            cell.classList.add('green');
+          } else {
+            cell.classList.remove('green');
+            cell.classList.add('red');
+          }
+        } else if (originalColor === 'green') {
+          // Green cells flicker: green -> red -> green -> red
+          if (flickerState) {
+            cell.classList.remove('green');
+            cell.classList.add('red');
+          } else {
+            cell.classList.remove('red');
+            cell.classList.add('green');
+          }
+        }
+      });
+      flickerState = !flickerState;
+    };
+    
+    // Start flickering immediately with no delay
+    setTimeout(() => {
+      performFlicker();
+      flickerInterval = setInterval(performFlicker, 800); // Gentle flicker every 800ms
+      window.powerMinigameFlickerInterval = flickerInterval;
+    }, 0);
+  }
 }
 
 function completePowerRecharge() {
@@ -1794,6 +1921,12 @@ function awardSoapFriendshipForPowerRecharge() {
 }
 
 function closePowerMinigame() {
+  // Clean up KitoFox mode flicker interval
+  if (window.powerMinigameFlickerInterval) {
+    clearInterval(window.powerMinigameFlickerInterval);
+    window.powerMinigameFlickerInterval = null;
+  }
+  
   const overlay = document.querySelector('.power-minigame-overlay');
   if (overlay) {
     overlay.parentNode.removeChild(overlay);
@@ -8134,6 +8267,10 @@ function updateTerrariumCharacterImage() {
 function getMainCargoCharacterImage(isTalking = false) {
   if (window.premiumState && window.premiumState.bijouEnabled) {
     return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
+  } else if (window.state && window.state.kitoFoxModeActive) {
+    return isTalking ? "assets/icons/kitomode speech.png" : "assets/icons/kitomode.png";
+  } else if (window.state && window.state.recorderModeActive) {
+    return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
   } else {
     return isTalking ? "swa talking.png" : "swa normal.png";
   }
@@ -8150,6 +8287,8 @@ function getPrismLabCharacterImage(isTalking = false) {
 function getHardModeQuestCharacterImage(isTalking = false) {
   if (window.premiumState && window.premiumState.bijouEnabled) {
     return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
+  } else if (window.state && window.state.recorderModeActive) {
+    return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
   } else {
     return isTalking ? "swa talking.png" : "swa normal.png";
   }
@@ -8158,6 +8297,8 @@ function getHardModeQuestCharacterImage(isTalking = false) {
 function getTerrariumCharacterImage(isTalking = false) {
   if (window.premiumState && window.premiumState.bijouEnabled) {
     return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
+  } else if (window.state && window.state.recorderModeActive) {
+    return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
   } else {
     return isTalking ? "assets/icons/swaria talking.png" : "assets/icons/swaria normal.png";
   }
@@ -9122,52 +9263,19 @@ function showCharacterSpeech(characterName, tokenType) {
           }
         }
         
-        if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
-          const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
-
-          // Add friendship points and check for single level-up
-          window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
-          
-          // Ensure existing points is a Decimal
-          if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
-            window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
+        if (dept) {
+          // Ensure friendship system is initialized
+          if (typeof window.ensureFriendshipSystemInitialized === 'function') {
+            window.ensureFriendshipSystemInitialized();
           }
           
-          // Ensure level is properly initialized as a number
-          if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
-            window.state.friendship[dept].level = 0;
-          }
-          
-          // Add the points to the current total
-          window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
-          
-          // Check if points are enough for exactly one level-up
-          const currentLevel = window.state.friendship[dept].level;
-          const nextLevel = currentLevel + 1;
-          
-          if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
-            // Points needed to level up from current level (not total points for next level)
-            const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
+          if (window.friendship && typeof window.friendship.addPoints === 'function') {
+            const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
             
-            if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
-              // Level up by exactly 1 and reset points to 0
-              window.state.friendship[dept].level = nextLevel;
-              window.state.friendship[dept].points = new Decimal(0);
-            }
-          }
-          
-          // Update UI manually since we bypassed addPoints
-          if (typeof window.renderDepartmentStatsButtons === 'function') {
-            window.renderDepartmentStatsButtons();
-          }
-          
-          // Update stats modal if it's open for this department
-          const statsModal = document.getElementById('departmentStatsModal');
-          if (statsModal && statsModal.style.display !== 'none') {
-            const title = document.getElementById('departmentStatsModalTitle');
-            if (title && title.textContent && title.textContent.toLowerCase().includes(dept.toLowerCase())) {
-              if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
-            }
+            // Use the proper friendship system from stats.js
+            window.friendship.addPoints(characterName, totalPoints);
+          } else {
+            console.warn('Friendship system not available for token gifting');
           }
         } else {
 

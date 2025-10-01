@@ -431,6 +431,7 @@ body {
   <div class="settingsSubTabNav">
   <button id="settingsSavesTabBtn" class="settingsSubTabBtn active" onclick="switchSettingsSubTab('settingsSavesTab')">Saves</button>
   <button id="settingsStatsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsStatsTab')">Stats</button>
+  <button id="settingsRedeemCodeTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsRedeemCodeTab')">Redeem Code</button>
   <button id="settingsCreditsTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsCreditsTab')">Credits</button>
   <button id="settingsRecoveryTabBtn" class="settingsSubTabBtn" onclick="switchSettingsSubTab('settingsRecoveryTab')">Recovery</button>
 
@@ -1014,6 +1015,32 @@ body {
       <div id="settingsStatsTab" class="settings-subtab" style="display:none;">
         <div class="grid">
           <div id="departmentStatsButtons" class="card"></div>
+        </div>
+      </div>
+      <div id="settingsRedeemCodeTab" class="settings-subtab" style="display:none;">
+        <div class="grid">
+          <div class="card">
+            <div style="text-align: center; margin: 2em 0;">
+              <h3>Redeem Code</h3>
+              <p>Enter a valid code</p>
+              <div style="margin: 2em 0;">
+                <input type="text" id="redeemCodeInput" placeholder="Enter your code here..." 
+                       style="width: 300px; padding: 12px; font-size: 16px; border: 2px solid #ccc; border-radius: 8px; text-align: center; margin-bottom: 1em;">
+                <br>
+                <button id="redeemCodeBtn" onclick="attemptRedeemCode()" 
+                        style="padding: 12px 24px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                  Redeem Code
+                </button>
+              </div>
+              <div id="redeemCodeMessage" style="margin-top: 1em; font-weight: bold;"></div>
+              <div id="redeemCodeHistory" style="margin-top: 2em; padding: 1em; background: #f5f5f5; border-radius: 8px; max-height: 200px; overflow-y: auto;">
+                <h4>Redeemed Codes:</h4>
+                <div id="redeemCodeHistoryList" style="text-align: left;">
+                  <p style="color: #666; font-style: italic;">No codes redeemed yet.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="settingsCreditsTab" class="settings-subtab" style="display:none;">
@@ -2236,6 +2263,8 @@ body {
 <script src="infinity.js"></script>
 <script src="anomalie.js"></script>
 <script src="daynight.js"></script>
+<script src="quest system.js"></script>
+<script src="code redeem.js"></script>
 <script src="cafeteria.js"></script>
 <script src="expansion.js"></script>
 <script src="kitchen.js"></script>

@@ -1927,6 +1927,12 @@ function stopFlowerRegrowthTimer() {
 
 function regrowFlowers() {
   if (!terrariumFlowerGrid) return;
+  
+  // Skip flower regrowth when KitoFox mode is active
+  if (window.state && window.state.kitoFoxModeActive) {
+    return;
+  }
+  
   let flowersRegrown = 0;
   for (let i = 0; i < terrariumFlowerGrid.length; i++) {
     const flower = terrariumFlowerGrid[i];
@@ -2410,6 +2416,7 @@ const fluzzerNormalSpeeches = [
   "I wonder if the flowers dream when they sleep.",
   "Sometimes I hum to the plants. I think they like it.",
   "I hope you have a wonderful day!",
+  "Are you having trouble dealing with soap's charger quest? I know a nice secret code to help you dealing with it, it's 'omg soap needs so much spark tokens!'.",
   "If you find a lost petal, it's probably mine. I drop things a lot!",
   "The best part of my day is when someone visits.",
   "I once tried to race a bee. I lost, but it was close!",

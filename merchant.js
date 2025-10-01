@@ -48,6 +48,7 @@ class Boutique {
     this.isSpeaking = false;
     this.speechQueue = [];
     this.currentSpeechTimeout = null;
+    this.isIn727AnomalySequence = false; // Flag to prevent random speeches during 727 anomaly
     
     // Initialize shop
     this.normalTokens = this.getNormalTokens();
@@ -321,6 +322,7 @@ class Boutique {
     "Maybe I should perform a show here in this facility.",
     "Do not touch my chest zipper! That is off limit!",
     "I am a jester, not a leprechaun!",
+    "Let me tell you a secret, the code 'Give me 1 million swa bucks' is a trap!",
     "You wanna know what's behind the zipper? A jester's secrets!",
     "Mushrooms, Stardusts, Batteries, its all yours my friend! As long as you have enough Swa bucks~",
     "I look like a living plushy? That's because I am one.",
@@ -586,8 +588,8 @@ class Boutique {
 
   // Handle random Lepre speeches
   handleRandomSpeeches() {
-    // Don't speak if Lepre is gone
-    if (this.isLepreGone) return;
+    // Don't speak if Lepre is gone or during 727 anomaly sequence
+    if (this.isLepreGone || this.isIn727AnomalySequence) return;
     
     const now = Date.now();
     const SPEECH_INTERVAL = 20000; // 20 seconds between random speeches
@@ -1373,8 +1375,8 @@ class Boutique {
     // Reset daily stock
     this.dailyStock = {};
     
-    // Reset free daily Swa Bucks availability
-    this.hasUsedFreeBucksToday = false;
+    // Reset free Swa Bucks availability (tied to restock cycle)
+    // Note: We don't reset lastFreeBucksTime here, just make it available again
 
     // Reset Lepre's anger if he was mad
     const wasMAd = this.lepreIsMad;
@@ -1561,6 +1563,12 @@ class Boutique {
       return false;
     }
     
+    // Check if 727 anomaly sequence is active - prevent purchases during this time
+    if (this.isIn727AnomalySequence) {
+      this.showMessage("Lepre is dealing with an anomaly right now! Please wait...", 'error');
+      return false;
+    }
+    
     const stock = this.getStockRemaining(itemId);
     
     if (stock <= 0) {
@@ -1628,6 +1636,48 @@ class Boutique {
       window.unlockSecretAchievement('secret16');
     }
 
+    // Check for 727 shop item anomaly - Lepre notices something wrong and refunds
+    if (this.detect727Anomaly(price)) {
+      // Refund the Swa Bucks
+      if (typeof window.state.swabucks.add === 'function') {
+        window.state.swabucks = window.state.swabucks.add(price);
+      } else {
+        window.state.swabucks = new Decimal(window.state.swabucks + price);
+      }
+      
+      // Restore the stock since the purchase is being refunded
+      this.dailyStock[itemId]++;
+      
+      // Undo the purchase tracking
+      if (this.purchaseHistory[itemId] > 0) {
+        this.purchaseHistory[itemId]--;
+      }
+      
+      // Remove the token from inventory if it was added
+      if (item.category !== 'premium') {
+        // Calculate how many tokens were added (considering friendship buff)
+        let tokensToRemove = 1;
+        if (window.friendship && window.friendship.Boutique && window.friendship.Boutique.level >= 10) {
+          tokensToRemove = 2;
+        }
+        this.removeTokenFromInventory(itemId, tokensToRemove);
+      }
+      
+      // Show Lepre's anomaly detection speech and refund message
+      this.handleLepreAnomalyRefund(item, price);
+      
+      // Update UI with refunded amounts
+      this.updateBoutiqueUI();
+      this.updateCurrencyDisplay();
+      
+      // Save game with refunded state
+      if (typeof saveGame === 'function') {
+        saveGame();
+      }
+      
+      return true; // Still return true since the transaction was handled
+    }
+
     // Update UI
     this.updateBoutiqueUI();
     this.updateCurrencyDisplay();
@@ -1648,6 +1698,131 @@ class Boutique {
     }
 
     return true;
+  }
+
+  // Detect if the purchase price indicates a 727 shop item anomaly
+  detect727Anomaly(price) {
+    // Check if the price is exactly 727 or contains 727 in some way
+    const priceStr = price.toString();
+    return priceStr === '727' || priceStr.includes('727');
+  }
+
+  // Handle Lepre's response to detecting a 727 anomaly and issue refund
+  handleLepreAnomalyRefund(item, refundAmount) {
+    // Disable random speeches during the anomaly sequence
+    this.isIn727AnomalySequence = true;
+    
+    // Change Lepre to mad images for the anomaly detection
+    this.setLepreToMadImages();
+    
+    // Show immediate shock/confusion reaction
+    this.forceSpeech("Wait... something's not right here...", 3000);
+    
+    // Queue follow-up speeches explaining the anomaly detection
+    setTimeout(() => {
+      this.queueSpeech("That price... 727? That's not one of MY prices!", 4000);
+    }, 3000);
+    
+    setTimeout(() => {
+      this.queueSpeech("This has anomaly written all over it! I'm giving you a full refund!", 4000);
+    }, 7000);
+    
+    // Show refund notification when the refund speech actually starts
+    // The speech queue timing: forceSpeech (3s) + first queueSpeech (4s) = 7s before refund speech starts
+    setTimeout(() => {
+      this.showMessage(`Lepre refunded the ${refundAmount} Swa Bucks!`, 'success');
+    }, 20000); // 7s + 500ms buffer to ensure the refund speech has started
+    
+    setTimeout(() => {
+      const refundMessages = [
+        "I may be a jester, but I know when reality is playing tricks!",
+        "My prices don't work like that - here's your money back!",
+        "Something's messing with my shop! Take your Swa Bucks back!",
+        "That's definitely not a legitimate transaction!",
+        "I've seen enough anomalies to recognize one when I see it!"
+      ];
+      const randomRefundMessage = refundMessages[Math.floor(Math.random() * refundMessages.length)];
+      this.queueSpeech(randomRefundMessage, 4000);
+    }, 11000);
+    
+    // Return to normal images and re-enable random speeches after the anomaly detection sequence
+    setTimeout(() => {
+      this.restoreLepreToNormalImages();
+      // Lepre manually fixes the 727 anomaly after the dialogue sequence
+      if (window.anomalySystem && typeof window.anomalySystem.fixShopPriceAnomaly === 'function') {
+        window.anomalySystem.fixShopPriceAnomaly();
+      }
+      this.isIn727AnomalySequence = false; // Re-enable random speeches
+    }, 22000);
+  }
+
+  // Set Lepre to use mad images during anomaly detection
+  setLepreToMadImages() {
+    const normalImg = document.getElementById('lepreCharacterImage');
+    const speakingImg = document.getElementById('lepreCharacterSpeaking');
+    
+    if (normalImg) {
+      normalImg.src = 'assets/icons/lepre mad.png';
+    }
+    
+    if (speakingImg) {
+      speakingImg.src = 'assets/icons/lepre mad speech.png';
+    }
+  }
+
+  // Restore Lepre to normal images after anomaly detection
+  restoreLepreToNormalImages() {
+    const normalImg = document.getElementById('lepreCharacterImage');
+    const speakingImg = document.getElementById('lepreCharacterSpeaking');
+    
+    if (normalImg) {
+      normalImg.src = 'assets/icons/lepre.png';
+    }
+    
+    if (speakingImg) {
+      speakingImg.src = 'assets/icons/lepre speech.png';
+    }
+  }
+
+  // Remove tokens from inventory (helper method for refunds)
+  removeTokenFromInventory(tokenType, quantity) {
+    // Map token IDs to inventory token types
+    const tokenMapping = {
+      berries: 'berryTokens',
+      mushroom: 'mushroomTokens', 
+      petals: 'petalTokens',
+      water: 'waterTokens',
+      stardust: 'stardustTokens',
+      sparks: 'sparkTokens',
+      prisma: 'prismaTokens',
+      berryPlate: 'berryPlateTokens',
+      mushroomSoup: 'mushroomSoupTokens',
+      glitteringPetals: 'glitteringPetalTokens',
+      batteries: 'batteryTokens',
+      chargedPrisma: 'chargedPrismaTokens'
+    };
+    
+    const inventoryTokenType = tokenMapping[tokenType];
+    if (!inventoryTokenType) return;
+    
+    // Initialize token inventory if it doesn't exist
+    if (!window.state.tokens) {
+      window.state.tokens = {};
+    }
+    
+    if (!window.state.tokens[inventoryTokenType]) {
+      window.state.tokens[inventoryTokenType] = new Decimal(0);
+    }
+    
+    // Ensure it's a Decimal
+    if (!DecimalUtils.isDecimal(window.state.tokens[inventoryTokenType])) {
+      window.state.tokens[inventoryTokenType] = new Decimal(window.state.tokens[inventoryTokenType] || 0);
+    }
+    
+    // Remove tokens (but don't go below 0)
+    const currentAmount = window.state.tokens[inventoryTokenType];
+    const newAmount = currentAmount.sub(quantity);
+    window.state.tokens[inventoryTokenType] = newAmount.max(0);
   }
 
   awardLepreFriendshipForStockDepletion() {
@@ -1785,7 +1960,7 @@ class Boutique {
     ];
     
     const randomMessage = thankYouMessages[Math.floor(Math.random() * thankYouMessages.length)];
-    this.queueSpeech(randomMessage, 3000); // Use queue system with 3 second duration
+    this.forceSpeech(randomMessage, 3000); // Force immediate speech to interrupt current speech
   }
 
   showLepreGreeting() {
@@ -2074,7 +2249,7 @@ class Boutique {
       button.style.textShadow = 'none';
       button.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
       buttonText.textContent = 'Already Claimed';
-      amountText.textContent = '(Come back after restock!)';
+      amountText.textContent = '(Available after restock)';
       amountText.style.color = '#bbb';
     }
   }
@@ -2179,8 +2354,19 @@ class Boutique {
 
   // Free daily Swa Bucks functionality
   canClaimFreeBucks() {
-    // Simple logic: can claim if haven't used since last restock
-    return !this.hasUsedFreeBucksToday;
+    // Check if it's been claimed since the last restock
+    // If never claimed before, allow claim
+    if (this.lastFreeBucksTime === 0) {
+      return true;
+    }
+    
+    // If no restock time recorded, allow claim
+    if (this.lastRestockTime === 0) {
+      return true;
+    }
+    
+    // Allow claim if the last restock happened after the last free bucks claim
+    return this.lastRestockTime > this.lastFreeBucksTime;
   }
 
   getFreeBucksAmount() {
@@ -2198,7 +2384,7 @@ class Boutique {
 
   claimFreeBucks() {
     if (!this.canClaimFreeBucks()) {
-      this.showMessage('You can only claim free Swa Bucks once per day!', 'error');
+      this.showMessage('You can only claim free Swa Bucks once per restock!', 'error');
       return false;
     }
 
@@ -2214,7 +2400,6 @@ class Boutique {
     window.state.swabucks = window.state.swabucks.add(amount);
     
     // Update tracking variables
-    this.hasUsedFreeBucksToday = true;
     this.lastFreeBucksTime = Date.now();
     
     if (window.daynight && typeof window.daynight.getTime === 'function') {
@@ -2276,7 +2461,9 @@ class Boutique {
       // Save boutique schedule state
       wasPlayerInBoutiqueBeforeClose: this.wasPlayerInBoutiqueBeforeClose,
       isBoutiqueClosed: this.isBoutiqueClosed,
-      isLepreGone: this.isLepreGone
+      isLepreGone: this.isLepreGone,
+      // Save anomaly sequence state
+      isIn727AnomalySequence: this.isIn727AnomalySequence
     };
   }
 
@@ -2311,6 +2498,9 @@ class Boutique {
       if (data.wasPlayerInBoutiqueBeforeClose !== undefined) this.wasPlayerInBoutiqueBeforeClose = data.wasPlayerInBoutiqueBeforeClose;
       if (data.isBoutiqueClosed !== undefined) this.isBoutiqueClosed = data.isBoutiqueClosed;
       if (data.isLepreGone !== undefined) this.isLepreGone = data.isLepreGone;
+      
+      // Load anomaly sequence state (should usually be false when loading)
+      if (data.isIn727AnomalySequence !== undefined) this.isIn727AnomalySequence = data.isIn727AnomalySequence;
       
       // Check schedule after loading to update state based on current time
       this.checkBoutiqueSchedule();
@@ -2488,7 +2678,7 @@ window.testDailyFreeBucks = function() {
   return {
     canClaim: window.boutique.canClaimFreeBucks(),
     amount: window.boutique.getFreeBucksAmount(),
-    hasUsed: window.boutique.hasUsedFreeBucksToday,
+    lastClaimTime: window.boutique.lastFreeBucksTime,
     claimResult: result
   };
 };
@@ -2496,11 +2686,9 @@ window.testDailyFreeBucks = function() {
 // Debug function to reset daily free bucks (for testing)
 window.resetDailyFreeBucks = function() {
   if (window.boutique) {
-    window.boutique.hasUsedFreeBucksToday = false;
-    window.boutique.lastFreeBucksTime = null;
-    window.boutique.lastFreeBucksGameTime = null;
+    window.boutique.lastFreeBucksTime = 0;
+    window.boutique.lastFreeBucksGameTime = 0;
     window.boutique.updateFreeBucksButton();
-
   }
 };
 

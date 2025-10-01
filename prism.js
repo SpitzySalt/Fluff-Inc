@@ -185,6 +185,16 @@ window.prismShapeIndices = [
  37, 38, 39,
   45
 ];
+
+// KitoFox mode vantablack light system
+window.vantablackLightSystem = {
+  currentVantablackTile: null,
+  lightSpawnLocked: false,
+  lockoutEndTime: null,
+  lockoutDuration: 60000, // 1 minute in milliseconds
+  hasShownWarningDialogue: false, // Track if we've shown Vi's warning this session
+  forceOverloadOnNextClick: false // Debug flag to force overload on next click
+};
 const tileColorMap = {
   3: 'light',
   9: 'redlight', 10: 'redlight', 11: 'redlight',
@@ -194,6 +204,414 @@ const tileColorMap = {
   37: 'bluelight', 38: 'bluelight', 39: 'bluelight',
   45: 'light'
 };
+
+// Helper function to check if KitoFox mode is active
+function isKitoFoxModeActive() {
+  return window.state && window.state.kitoFoxModeActive;
+}
+
+// Helper function to check if light spawning is locked due to vantablack click
+function isLightSpawnLocked() {
+  if (!window.vantablackLightSystem.lightSpawnLocked) return false;
+  
+  const currentTime = Date.now();
+  if (currentTime >= window.vantablackLightSystem.lockoutEndTime) {
+    // Lockout expired, clear it
+    window.vantablackLightSystem.lightSpawnLocked = false;
+    window.vantablackLightSystem.lockoutEndTime = null;
+    return false;
+  }
+  
+  return true;
+}
+
+// Function to spawn vantablack light tile in KitoFox mode
+function spawnVantablackLight(excludeIndex = null) {
+  if (!isKitoFoxModeActive()) return;
+  
+  // Remove existing vantablack light
+  if (window.vantablackLightSystem.currentVantablackTile) {
+    window.vantablackLightSystem.currentVantablackTile.classList.remove("vantablack-tile");
+    window.vantablackLightSystem.currentVantablackTile = null;
+  }
+  
+  // Get eligible tiles (exclude the one with normal light and the previously excluded one)
+  const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism")).filter(tile => {
+    const index = parseInt(tile.dataset.index);
+    return !tile.classList.contains("active-tile") && 
+           (excludeIndex === null || index !== excludeIndex);
+  });
+  
+  if (eligible.length === 0) return;
+  
+  // Select random tile for vantablack
+  const randomTile = eligible[Math.floor(Math.random() * eligible.length)];
+  randomTile.classList.add("vantablack-tile");
+  window.vantablackLightSystem.currentVantablackTile = randomTile;
+}
+
+// Function to handle vantablack light click (dangerous!)
+function handleVantablackClick() {
+  // Activate 1-minute lockout
+  window.vantablackLightSystem.lightSpawnLocked = true;
+  window.vantablackLightSystem.lockoutEndTime = Date.now() + window.vantablackLightSystem.lockoutDuration;
+  
+  // Remove all active lights
+  document.querySelectorAll(".light-tile.active-tile").forEach(tile => {
+    tile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
+  });
+  
+  // Remove vantablack light
+  if (window.vantablackLightSystem.currentVantablackTile) {
+    window.vantablackLightSystem.currentVantablackTile.classList.remove("vantablack-tile");
+    window.vantablackLightSystem.currentVantablackTile = null;
+  }
+  
+  // Clear active tile references
+  currentActiveTile = null;
+  window.prismState.activeTileIndex = null;
+  window.prismState.activeTileColor = null;
+  
+  // DANGER: Drain all power to 0 (vantablack absorbs energy!)
+  if (window.state && window.state.power !== undefined) {
+    if (DecimalUtils.isDecimal(window.state.power)) {
+      window.state.power = new Decimal(0);
+    } else {
+      window.state.power = 0;
+    }
+    
+    // Update power display if available
+    if (typeof window.updatePowerDisplay === 'function') {
+      window.updatePowerDisplay();
+    }
+    if (typeof window.updateUI === 'function') {
+      window.updateUI();
+    }
+  }
+  
+  // DANGER: Remove 25% of all light types (vantablack absorbs light energy!)
+  if (window.prismState) {
+    const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+    
+    lightTypes.forEach(lightType => {
+      if (window.prismState[lightType] && DecimalUtils.isDecimal(window.prismState[lightType])) {
+        // Only reduce if the light amount is greater than 0
+        if (window.prismState[lightType].gt(0)) {
+          // Remove 25% (multiply by 0.75 to keep 75%)
+          window.prismState[lightType] = window.prismState[lightType].mul(0.75).floor();
+        }
+      } else if (window.prismState[lightType] && window.prismState[lightType] > 0) {
+        // Handle non-Decimal values
+        window.prismState[lightType] = Math.floor(window.prismState[lightType] * 0.75);
+      }
+    });
+    
+    // Update light displays
+    if (typeof window.forceUpdateAllLightCounters === 'function') {
+      window.forceUpdateAllLightCounters();
+    }
+  }
+  
+  // Show warning message to user
+  if (typeof showPrismSpeech === 'function') {
+    showPrismSpeech("The vantablack light has consumed 25% of all light, drained all power, and locked light spawning for 1 minute!", 5000);
+  }
+}
+
+// Function to clean up vantablack system when KitoFox mode is disabled
+function cleanupVantablackSystem() {
+  // End any active overload event
+  if (window.vantablackOverloadSystem.isActive) {
+    endVantablackOverloadEvent(false);
+  }
+  
+  // Remove any existing vantablack tiles
+  document.querySelectorAll(".light-tile.vantablack-tile").forEach(tile => {
+    tile.classList.remove("vantablack-tile");
+  });
+  
+  // Hide Vi's dialogue if it's currently showing
+  const viSpeechBubble = document.getElementById('viSpeechBubble');
+  if (viSpeechBubble) {
+    viSpeechBubble.style.display = 'none';
+  }
+  
+  // Clear Vi's speech timeout
+  if (window.viSpeechTimeout) {
+    clearTimeout(window.viSpeechTimeout);
+    window.viSpeechTimeout = null;
+  }
+  
+  // Clear KitoFox warning timeout
+  if (window.kitoFoxWarningTimeout) {
+    clearTimeout(window.kitoFoxWarningTimeout);
+    window.kitoFoxWarningTimeout = null;
+  }
+  
+  // Clear Vi "Fixed!" timeout
+  if (window.viFixedTimeout) {
+    clearTimeout(window.viFixedTimeout);
+    window.viFixedTimeout = null;
+  }
+  
+  // Clear system state
+  window.vantablackLightSystem.currentVantablackTile = null;
+  window.vantablackLightSystem.lightSpawnLocked = false;
+  window.vantablackLightSystem.lockoutEndTime = null;
+  window.vantablackLightSystem.hasShownWarningDialogue = false;
+  window.vantablackLightSystem.forceOverloadOnNextClick = false;
+}
+
+// Function to get remaining lockout time in seconds
+function getVantablackLockoutTimeRemaining() {
+  if (!window.vantablackLightSystem.lightSpawnLocked) return 0;
+  
+  const currentTime = Date.now();
+  const remainingMs = window.vantablackLightSystem.lockoutEndTime - currentTime;
+  
+  if (remainingMs <= 0) {
+    // Lockout expired, clean it up
+    window.vantablackLightSystem.lightSpawnLocked = false;
+    window.vantablackLightSystem.lockoutEndTime = null;
+    return 0;
+  }
+  
+  return Math.ceil(remainingMs / 1000); // Return seconds
+}
+
+// Function to update lockout display (if needed)
+function updateVantablackLockoutDisplay() {
+  const remainingSeconds = getVantablackLockoutTimeRemaining();
+  
+  if (remainingSeconds > 0) {
+    // Show lockout message with countdown
+    if (typeof showPrismSpeech === 'function' && remainingSeconds % 10 === 0) {
+      // Update message every 10 seconds to avoid spam
+      showPrismSpeech(`Vantablack lockout: ${remainingSeconds} seconds remaining...`, 2000);
+    }
+  }
+}
+
+// Vantablack overload event system
+window.vantablackOverloadSystem = {
+  isActive: false,
+  startTime: null,
+  duration: 10000, // 10 seconds
+  timeoutId: null,
+  overlayElement: null
+};
+
+// Function to trigger vantablack overload event
+function triggerVantablackOverload() {
+  if (!isKitoFoxModeActive() || window.vantablackOverloadSystem.isActive) return;
+  
+  // Mark event as active
+  window.vantablackOverloadSystem.isActive = true;
+  window.vantablackOverloadSystem.startTime = Date.now();
+  
+  // Fill entire grid with vantablack tiles - target ALL prism tiles, not just active ones
+  document.querySelectorAll('.light-tile').forEach(tile => {
+    // Only affect tiles that are part of the prism shape
+    if (tile.classList.contains('active-prism')) {
+      tile.classList.add('vantablack-tile');
+      tile.classList.remove('active-tile', 'red-tile', 'orange-tile', 'white-tile', 'yellow-tile', 'green-tile', 'blue-tile', 'grey-tile');
+    }
+  });
+  
+  // Clear any existing active tiles
+  currentActiveTile = null;
+  window.prismState.activeTileIndex = null;
+  window.prismState.activeTileColor = null;
+  
+  // Create dark overlay
+  createVantablackOverloadOverlay();
+  
+  // Set 10-second timer for Vi's intervention
+  window.vantablackOverloadSystem.timeoutId = setTimeout(() => {
+    endVantablackOverloadEvent(true); // true = Vi intervention
+  }, window.vantablackOverloadSystem.duration);
+}
+
+// Function to create the dark overlay effect
+function createVantablackOverloadOverlay() {
+  // Remove existing overlay if any
+  if (window.vantablackOverloadSystem.overlayElement) {
+    window.vantablackOverloadSystem.overlayElement.remove();
+  }
+  
+  // Find the actual light grid element (the grid with the tiles)
+  const lightGrid = document.getElementById('lightGrid');
+  
+  let cutoutRadius = 180; // Smaller default radius
+  let cutoutX = '50%';
+  let cutoutY = '50%';
+  
+  if (lightGrid) {
+    const rect = lightGrid.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    cutoutX = `${centerX}px`;
+    cutoutY = `${centerY}px`;
+    // Make radius just slightly larger than the grid itself
+    cutoutRadius = Math.max(rect.width, rect.height) / 2 + 20;
+  }
+  
+  // Create full-screen dark overlay with gradual darkness
+  const overlay = document.createElement('div');
+  overlay.id = 'vantablackOverloadOverlay';
+  overlay.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: radial-gradient(
+      circle at ${cutoutX} ${cutoutY}, 
+      transparent ${cutoutRadius}px,
+      rgba(5, 0, 3, 0.3) ${cutoutRadius + 50}px,
+      rgba(10, 0, 5, 0.6) ${cutoutRadius + 150}px,
+      rgba(15, 0, 8, 0.8) ${cutoutRadius + 300}px,
+      rgba(20, 0, 10, 0.95) ${cutoutRadius + 500}px
+    ) !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+    animation: vantablackDreadPulse 2.5s ease-in-out infinite !important;
+  `;
+  
+  // Store cutout info for animation
+  overlay.style.setProperty('--cutout-x', cutoutX);
+  overlay.style.setProperty('--cutout-y', cutoutY);
+  overlay.style.setProperty('--cutout-radius', `${cutoutRadius}px`);
+  
+  document.body.appendChild(overlay);
+  window.vantablackOverloadSystem.overlayElement = overlay;
+}
+
+// Function to end the vantablack overload event
+function endVantablackOverloadEvent(viIntervention = false) {
+  if (!window.vantablackOverloadSystem.isActive) return;
+  
+  // Clear timeout if still active
+  if (window.vantablackOverloadSystem.timeoutId) {
+    clearTimeout(window.vantablackOverloadSystem.timeoutId);
+    window.vantablackOverloadSystem.timeoutId = null;
+  }
+  
+  // Remove all vantablack tiles
+  document.querySelectorAll('.light-tile.vantablack-tile').forEach(tile => {
+    tile.classList.remove('vantablack-tile');
+  });
+  
+  // Remove overlays
+  if (window.vantablackOverloadSystem.overlayElement) {
+    window.vantablackOverloadSystem.overlayElement.remove();
+    window.vantablackOverloadSystem.overlayElement = null;
+  }
+  
+  // Show Vi's intervention message if timer ran out
+  if (viIntervention) {
+    const viSpeechBubble = document.getElementById('viSpeechBubble');
+    if (viSpeechBubble) {
+      const viText = document.getElementById('viSpeechText');
+      if (viText) {
+        viText.textContent = "Fixed!";
+      }
+      viSpeechBubble.style.display = 'block';
+      
+      // Set a 5-second timeout for the "Fixed!" message
+      if (window.viFixedTimeout) {
+        clearTimeout(window.viFixedTimeout);
+      }
+      window.viFixedTimeout = setTimeout(() => {
+        if (viSpeechBubble) {
+          viSpeechBubble.style.display = 'none';
+        }
+        window.viFixedTimeout = null;
+      }, 5000);
+    }
+  }
+  
+  // Reset system state
+  window.vantablackOverloadSystem.isActive = false;
+  window.vantablackOverloadSystem.startTime = null;
+  
+  // Spawn new normal light tiles
+  spawnNewLightTile();
+}
+
+// Modified vantablack click handler for overload event
+function handleVantablackClickOverload() {
+  if (window.vantablackOverloadSystem.isActive) {
+    // Clicking any vantablack during overload ends the event
+    endVantablackOverloadEvent(false);
+    return;
+  }
+  
+  // Original vantablack click behavior
+  handleVantablackClick();
+}
+
+// Function to show KitoFox vantablack warning with guaranteed timeout
+function showKitoFoxWarning() {
+  const prismTab = document.getElementById('prismSubTab');
+  if (!prismTab || prismTab.style.display === 'none') {
+    return;
+  }
+  
+  let viSpeechBubble = document.getElementById('viSpeechBubble');
+  if (!viSpeechBubble) {
+    return;
+  }
+  
+  const viText = document.getElementById('viSpeechText');
+  if (viText) {
+    viText.textContent = "Mhh, it seems like there's a new light type that manifested itself in my prism grid, that's a vantablack, avoid it at all cost.";
+  }
+  
+  viSpeechBubble.style.display = 'block';
+  
+  // Clear any existing timeout
+  if (window.kitoFoxWarningTimeout) {
+    clearTimeout(window.kitoFoxWarningTimeout);
+  }
+  
+  // Set a dedicated timeout for KitoFox warning
+  window.kitoFoxWarningTimeout = setTimeout(() => {
+    if (viSpeechBubble) {
+      viSpeechBubble.style.display = 'none';
+    }
+    window.kitoFoxWarningTimeout = null;
+  }, 8000);
+}
+
+// Debug function to force vantablack overload on next light tile click
+window.forceVantablackOverloadOnNextClick = function() {
+  if (!isKitoFoxModeActive()) {
+    console.log("KitoFox mode must be active to trigger vantablack overload!");
+    return false;
+  }
+  
+  if (window.vantablackOverloadSystem.isActive) {
+    console.log("Vantablack overload is already active!");
+    return false;
+  }
+  
+  // Set a flag to force overload on next click
+  window.vantablackLightSystem.forceOverloadOnNextClick = true;
+  console.log("Next light tile click will trigger vantablack overload!");
+  return true;
+};
+
+// Make functions globally accessible
+window.cleanupVantablackSystem = cleanupVantablackSystem;
+window.handleVantablackClick = handleVantablackClick;
+window.handleVantablackClickOverload = handleVantablackClickOverload;
+window.triggerVantablackOverload = triggerVantablackOverload;
+window.endVantablackOverloadEvent = endVantablackOverloadEvent;
+window.spawnVantablackLight = spawnVantablackLight;
+window.getVantablackLockoutTimeRemaining = getVantablackLockoutTimeRemaining;
+window.updateVantablackLockoutDisplay = updateVantablackLockoutDisplay;
+window.showKitoFoxWarning = showKitoFoxWarning;
 
 function initPrismGrid() {
   const grid = document.getElementById("lightGrid");
@@ -247,6 +665,11 @@ function getVivienBonusLightCount() {
 }
 
 function spawnMultipleLightTiles() {
+  // Check if light spawning is locked due to vantablack click
+  if (isLightSpawnLocked()) {
+    return; // No lights spawn during lockout
+  }
+  
   // Clear any existing active tiles first
   if (currentActiveTile) {
     currentActiveTile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
@@ -314,6 +737,11 @@ function checkPermanentLightUnlocks() {
 
 // New function that spawns a single tile without clearing existing ones
 function spawnSingleLightTile() {
+  // Check if light spawning is locked due to vantablack click
+  if (isLightSpawnLocked()) {
+    return; // No lights spawn during lockout
+  }
+  
   const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism"));
   
   // Remove tiles that are already active from the eligible list
@@ -654,6 +1082,11 @@ window.testVivienBonusLights = function() {
 function spawnNewLightTile() {
   // Prism lab operates independently of power status
   
+  // Check if light spawning is locked due to vantablack click
+  if (isLightSpawnLocked()) {
+    return; // No lights spawn during lockout
+  }
+  
   // Only clear previous tile if it exists, avoid querying all tiles
   if (currentActiveTile) {
     currentActiveTile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
@@ -840,11 +1273,23 @@ function spawnNewLightTile() {
       randomTile.classList.add("active-tile", "white-tile");
     }
   }
+  
+  // In KitoFox mode, always spawn a vantablack light alongside normal light
+  if (isKitoFoxModeActive()) {
+    const currentTileIndex = parseInt(randomTile.dataset.index);
+    spawnVantablackLight(currentTileIndex);
+  }
 }
 
 function clickLightTile(index) {
   // Check if the clicked tile is any active tile
   const clickedTile = document.querySelector(`.light-tile[data-index="${index}"]`);
+  
+  // Check if this is a vantablack tile click (dangerous!)
+  if (clickedTile && clickedTile.classList.contains('vantablack-tile')) {
+    handleVantablackClickOverload();
+    return; // Don't process as normal light
+  }
   
   if (clickedTile && clickedTile.classList.contains('active-tile')) {
     if (typeof window.trackHardModePrismClick === 'function') {
@@ -1042,6 +1487,22 @@ function clickLightTile(index) {
       }
       forceUpdateAllLightCounters();
       
+      // KitoFox mode: Check for forced overload or 1% chance of vantablack overload event
+      if (isKitoFoxModeActive()) {
+        const shouldTriggerOverload = window.vantablackLightSystem.forceOverloadOnNextClick || Math.random() < 0.01;
+        
+        if (shouldTriggerOverload) {
+          // Clear the force flag if it was set
+          if (window.vantablackLightSystem.forceOverloadOnNextClick) {
+            window.vantablackLightSystem.forceOverloadOnNextClick = false;
+            console.log("Forced vantablack overload triggered!");
+          }
+          
+          triggerVantablackOverload();
+          return; // Exit early, overload handles everything
+        }
+      }
+      
       if (shouldCollectAllTiles) {
         // Multi-collection buff: collect ALL active light tiles
         collectAllActiveLightTiles(friendshipMultiplier);
@@ -1076,6 +1537,13 @@ function clickLightTile(index) {
       
       // Award friendship to Vivien for clicking light tiles
       awardVivienFriendshipForLightTileClick();
+      
+      // In KitoFox mode, clicking normal light respawns vantablack on different tile
+      if (isKitoFoxModeActive() && !shouldCollectAllTiles) {
+        // Get the index of the clicked tile to exclude it from vantablack spawning
+        const clickedTileIndex = parseInt(clickedTile.dataset.index);
+        spawnVantablackLight(clickedTileIndex);
+      }
     }
     
     // Track prism tile click for front desk automator unlocks
@@ -2669,6 +3137,53 @@ if (typeof document !== 'undefined') {
       border-right: none !important;
       border-top: 10px solid transparent !important;
       border-bottom: 10px solid transparent !important;
+    }
+    .light-tile.vantablack-tile::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 20px !important;
+      left: 0px !important;
+      width: 500px !important;
+      height: 4px !important;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.7) 60%, rgba(200, 100, 100, 0.8) 75%, rgba(100, 50, 50, 0.95) 90%, rgba(30, 10, 10, 1) 100%) !important;
+      transform: rotate(-170deg) !important;
+      transform-origin: left center !important;
+      pointer-events: none !important;
+      z-index: 10 !important;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 80, 80, 0.6) !important;
+      animation: vantablackRayPulse 2s ease-in-out infinite !important;
+    }
+    @keyframes vantablackRayPulse {
+      0%, 100% { 
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 80, 80, 0.6) !important;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.7) 60%, rgba(200, 100, 100, 0.8) 75%, rgba(100, 50, 50, 0.95) 90%, rgba(30, 10, 10, 1) 100%) !important;
+      }
+      50% { 
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 40, 40, 0.9) !important;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.9) 60%, rgba(255, 120, 120, 0.9) 75%, rgba(150, 70, 70, 1) 90%, rgba(50, 20, 20, 1) 100%) !important;
+      }
+    }
+    @keyframes vantablackDreadPulse {
+      0%, 100% { 
+        background: radial-gradient(
+          circle at var(--cutout-x, 50%) var(--cutout-y, 50%), 
+          transparent var(--cutout-radius, 180px),
+          rgba(5, 0, 3, 0.3) calc(var(--cutout-radius, 180px) + 30px),
+          rgba(10, 0, 5, 0.6) calc(var(--cutout-radius, 180px) + 100px),
+          rgba(15, 0, 8, 0.8) calc(var(--cutout-radius, 180px) + 200px),
+          rgba(20, 0, 10, 0.95) calc(var(--cutout-radius, 180px) + 350px)
+        ) !important;
+      }
+      50% { 
+        background: radial-gradient(
+          circle at var(--cutout-x, 50%) var(--cutout-y, 50%), 
+          transparent var(--cutout-radius, 180px),
+          rgba(8, 2, 5, 0.4) calc(var(--cutout-radius, 180px) + 30px),
+          rgba(15, 3, 8, 0.7) calc(var(--cutout-radius, 180px) + 100px),
+          rgba(25, 5, 15, 0.9) calc(var(--cutout-radius, 180px) + 200px),
+          rgba(35, 8, 20, 1) calc(var(--cutout-radius, 180px) + 350px)
+        ) !important;
+      }
     }
   `;
   document.head.appendChild(style);

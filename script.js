@@ -395,7 +395,19 @@ let state = {
     terrarium: false,
     controlCenter: false,
     infinityResearch: false
-  }
+  },
+  
+  // Unlocked features from redeem codes
+  unlockedFeatures: {
+    recorderMode: false,
+    kitoFoxMode: false
+  },
+  
+  // Recorder mode state
+  recorderModeActive: false,
+  
+  // KitoFox mode state
+  kitoFoxModeActive: false
 };
 let settings = {
   theme: "light",
@@ -1186,6 +1198,17 @@ function syncGlobalReferencesToState() {
     window.achievementStats = state.achievementStats;
   }
   if (state.secretAchievements) {
+    // Don't overwrite window.secretAchievements directly as it may have been 
+    // updated by secret.js with new achievements. Instead, update state.secretAchievements
+    // to ensure it has all current achievements
+    if (window.secretAchievements && Object.keys(window.secretAchievements).length > Object.keys(state.secretAchievements).length) {
+      // secret.js has added new achievements, update the state to include them
+      Object.keys(window.secretAchievements).forEach(key => {
+        if (!state.secretAchievements[key]) {
+          state.secretAchievements[key] = window.secretAchievements[key];
+        }
+      });
+    }
     window.secretAchievements = state.secretAchievements;
   }
   if (state.permanentTabUnlocks) {
@@ -1262,20 +1285,96 @@ function syncGlobalReferencesToState() {
           state.friendship[dept].points = state.friendship[dept].points.add(pointsToAdd);
           
           // Calculate the correct level based on total accumulated points
-          // This version uses a simpler calculation where each level needs 100 points
+          // Use proper exponential friendship system: 100 * 4^level points needed for each level
           let newLevel = 0;
           const totalPoints = state.friendship[dept].points;
-          const MAX_FRIENDSHIP_LEVEL = 100;
+          const MAX_FRIENDSHIP_LEVEL = 15;
           
-          // Simple level calculation - each level needs 100 points
-          // Level = floor(totalPoints / 100), capped at MAX_FRIENDSHIP_LEVEL
-          newLevel = Math.min(Math.floor(totalPoints.toNumber() / 100), MAX_FRIENDSHIP_LEVEL);
+          // Exponential level calculation - find highest level where total points >= required points
+          for (let level = 0; level <= MAX_FRIENDSHIP_LEVEL; level++) {
+            // Each level requires 100 * 4^level total points
+            const requiredPoints = new Decimal(100).mul(new Decimal(4).pow(level));
+            if (totalPoints.gte(requiredPoints)) {
+              newLevel = level;
+            } else {
+              break; // Stop when we find the first level we can't reach
+            }
+          }
           
-          state.friendship[dept].level = newLevel;
+          // Ensure we never exceed the maximum friendship level
+          newLevel = Math.min(newLevel, MAX_FRIENDSHIP_LEVEL);
+          
+          // Check if character can level up and update level if needed
+          const oldLevel = state.friendship[dept].level;
+          if (newLevel > oldLevel) {
+            state.friendship[dept].level = newLevel;
+            
+            // Update UI when level changes
+            if (typeof window.renderDepartmentStatsButtons === 'function') {
+              window.renderDepartmentStatsButtons();
+            }
+          } else if (newLevel !== oldLevel) {
+            // Level changed but didn't increase (shouldn't normally happen)
+            state.friendship[dept].level = newLevel;
+          } else {
+            // Level is correct, but make sure it's set properly
+            state.friendship[dept].level = newLevel;
+          }
           
         } catch (error) {
           console.error(`Error adding friendship points to ${character}:`, error);
         }
+      };
+    }
+    
+    // Add function to check and fix all friendship levels
+    if (!state.friendship.recheckAllLevels) {
+      state.friendship.recheckAllLevels = function() {
+        const charToDept = {
+          'swaria': 'Cargo',
+          'soap': 'Generator', 
+          'vi': 'Lab',
+          'vivien': 'Lab',
+          'mystic': 'Kitchen',
+          'fluzzer': 'Terrarium',
+          'lepre': 'Boutique',
+          'tico': 'FrontDesk'
+        };
+        
+        let fixedCount = 0;
+        
+        Object.entries(charToDept).forEach(([character, dept]) => {
+          if (state.friendship[dept]) {
+            const totalPoints = state.friendship[dept].points || new Decimal(0);
+            const currentLevel = state.friendship[dept].level || 0;
+            const MAX_FRIENDSHIP_LEVEL = 15;
+            
+            // Calculate correct level
+            let correctLevel = 0;
+            for (let level = 0; level <= MAX_FRIENDSHIP_LEVEL; level++) {
+              const requiredPoints = new Decimal(100).mul(new Decimal(4).pow(level));
+              if (totalPoints.gte(requiredPoints)) {
+                correctLevel = level;
+              } else {
+                break;
+              }
+            }
+            correctLevel = Math.min(correctLevel, MAX_FRIENDSHIP_LEVEL);
+            
+            if (correctLevel !== currentLevel) {
+              state.friendship[dept].level = correctLevel;
+              fixedCount++;
+            }
+          }
+        });
+        
+        
+        // Update UI
+        if (typeof window.renderDepartmentStatsButtons === 'function') {
+          window.renderDepartmentStatsButtons();
+        }
+        
+        return fixedCount;
       };
     }
     
@@ -1338,6 +1437,9 @@ function syncGlobalReferencesToState() {
     }
     if (state.friendship.getFriendshipLevel && typeof state.friendship.getFriendshipLevel === 'function') {
       window.friendship.getFriendshipLevel = state.friendship.getFriendshipLevel;
+    }
+    if (state.friendship.recheckAllLevels && typeof state.friendship.recheckAllLevels === 'function') {
+      window.friendship.recheckAllLevels = state.friendship.recheckAllLevels;
     }
   }
 }
@@ -4377,6 +4479,19 @@ function switchHomeSubTab(subTabId) {
       window.checkPrismGridPowerState();
     }
     
+    // KitoFox mode: Show Vi's vantablack warning when entering Lab (only once per session)
+    if (window.state && window.state.kitoFoxModeActive && typeof window.showKitoFoxWarning === 'function') {
+      if (window.vantablackLightSystem && !window.vantablackLightSystem.hasShownWarningDialogue) {
+        // Use setTimeout to ensure the dialogue appears after tab setup is complete
+        setTimeout(() => {
+          if (window.state && window.state.kitoFoxModeActive) { // Double-check mode is still active
+            window.showKitoFoxWarning();
+          }
+        }, 100);
+        window.vantablackLightSystem.hasShownWarningDialogue = true;
+      }
+    }
+    
     // Set up prism sub-navigation
     setupPrismSubTabButtons();
     window.initPrism();
@@ -6938,6 +7053,7 @@ function showGainPopup(id, amount, label) {
 function switchSettingsSubTab(tabId) {
   document.getElementById('settingsSavesTab').style.display = 'none';
   document.getElementById('settingsStatsTab').style.display = 'none';
+  document.getElementById('settingsRedeemCodeTab').style.display = 'none';
   document.getElementById('settingsCreditsTab').style.display = 'none';
   document.getElementById('settingsRecoveryTab').style.display = 'none';
   document.getElementById('settingsHardModeTab').style.display = 'none';
@@ -6945,6 +7061,8 @@ function switchSettingsSubTab(tabId) {
   if (settingsSavesTabBtn) settingsSavesTabBtn.classList.remove('active');
   const settingsStatsTabBtn = document.getElementById('settingsStatsTabBtn');
   if (settingsStatsTabBtn) settingsStatsTabBtn.classList.remove('active');
+  const settingsRedeemCodeTabBtn = document.getElementById('settingsRedeemCodeTabBtn');
+  if (settingsRedeemCodeTabBtn) settingsRedeemCodeTabBtn.classList.remove('active');
   const settingsCreditsTabBtn = document.getElementById('settingsCreditsTabBtn');
   if (settingsCreditsTabBtn) settingsCreditsTabBtn.classList.remove('active');
   const settingsRecoveryTabBtn = document.getElementById('settingsRecoveryTabBtn');
@@ -6958,6 +7076,13 @@ function switchSettingsSubTab(tabId) {
   } else if (tabId === 'settingsStatsTab') {
     const btn = document.getElementById('settingsStatsTabBtn');
     if (btn) btn.classList.add('active');
+  } else if (tabId === 'settingsRedeemCodeTab') {
+    const btn = document.getElementById('settingsRedeemCodeTabBtn');
+    if (btn) btn.classList.add('active');
+    // Update redeem code display when switching to the tab
+    if (typeof window.updateRedeemCodeDisplay === 'function') {
+      window.updateRedeemCodeDisplay();
+    }
   } else if (tabId === 'settingsCreditsTab') {
     const btn = document.getElementById('settingsCreditsTabBtn');
     if (btn) btn.classList.add('active');
@@ -8724,10 +8849,6 @@ function GiveToken() {
         window.updateInventoryModal(true);
     }
 
-    console.log("✓ Added 1000 tokens of all types!");
-    console.log("Basic tokens:", basicTokens);
-    console.log("Special tokens:", specialTokens);
-    console.log("Currency: swabucks");
 }
 
 // Make the function globally accessible
@@ -8735,48 +8856,33 @@ window.GiveToken = GiveToken;
 
 // Debug timer for Fluzzer boost
 window.debugFluzzerTimer = function() {
-    console.log("=== Fluzzer Timer Debug ===");
     
     if (!window.state) {
-        console.log("❌ window.state is not defined");
         return;
     }
     
     if (!window.state.fluzzerGlitteringPetalsBoost) {
-        console.log("❌ fluzzerGlitteringPetalsBoost is not defined");
         return;
     }
     
     const timer = window.state.fluzzerGlitteringPetalsBoost;
-    console.log("Timer value:", timer);
-    console.log("Timer type:", typeof timer);
-    console.log("Is Decimal:", DecimalUtils ? DecimalUtils.isDecimal(timer) : "DecimalUtils not available");
     
     if (DecimalUtils && DecimalUtils.isDecimal(timer)) {
-        console.log("Timer as number:", timer.toNumber());
-        console.log("Timer > 0:", timer.gt(0));
     } else {
-        console.log("Timer > 0:", timer > 0);
     }
     
     // Check game optimization status
-    console.log("Game optimization enabled:", window.gameOptimization && window.gameOptimization.isOptimized);
     
     // Check if timer intervals are running
-    console.log("Main game tick interval:", window._mainGameTickInterval !== null);
-    console.log("Regular game tick interval:", window.tickInterval !== null);
     
     // Check boost display
-    console.log("Active boosts:", typeof window.getActiveBoosts === 'function' ? window.getActiveBoosts() : "getActiveBoosts not available");
     
-    console.log("=== End Debug ===");
 };
 
 // Also create a function to manually decrement the timer for testing
 window.testTimerDecrement = function() {
     if (window.state && window.state.fluzzerGlitteringPetalsBoost) {
         const oldValue = window.state.fluzzerGlitteringPetalsBoost;
-        console.log("Old timer value:", oldValue);
         
         // Simulate 1 second decrement
         if (DecimalUtils && DecimalUtils.isDecimal(oldValue)) {
@@ -8785,7 +8891,6 @@ window.testTimerDecrement = function() {
             window.state.fluzzerGlitteringPetalsBoost -= 1000;
         }
         
-        console.log("New timer value:", window.state.fluzzerGlitteringPetalsBoost);
         
         // Update display
         if (typeof window.updateBoostDisplay === 'function') {

@@ -1024,6 +1024,98 @@ button.glow {
     transform: translateZ(0);
   }
 }
+
+/* Vantablack light tile styling for KitoFox mode */
+.vantablack-tile {
+  background-color: #000000 !important;
+  box-shadow: 0 0 15px 5px rgba(255, 0, 0, 0.8) !important;
+  animation: vantablackPulse 2s infinite ease-in-out !important;
+  border: 2px solid #ff0000 !important;
+  position: relative !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+.vantablack-tile::before {
+  
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  font-size: 16px !important;
+  color: #ff0000 !important;
+  text-shadow: 0 0 8px #ff0000 !important;
+  animation: dangerWarning 1.5s infinite ease-in-out !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+.vantablack-tile::after {
+
+  position: absolute !important;
+  top: 0 !important;
+  left: -60px !important;
+  width: 60px !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 30%, rgba(255, 255, 255, 0.3) 70%, rgba(0, 0, 0, 0.8) 100%) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  opacity: 0.6 !important;
+  animation: vantablackRayPulse 3s infinite ease-in-out !important;
+}
+
+@keyframes vantablackPulse {
+  0% { 
+    box-shadow: 0 0 15px 5px rgba(255, 0, 0, 0.8);
+    border-color: #ff0000;
+  }
+  25% { 
+    box-shadow: 0 0 25px 8px rgba(255, 0, 0, 1);
+    border-color: #ff3333;
+  }
+  50% { 
+    box-shadow: 0 0 35px 12px rgba(255, 0, 0, 1.2);
+    border-color: #ff0000;
+  }
+  75% { 
+    box-shadow: 0 0 25px 8px rgba(255, 0, 0, 1);
+    border-color: #ff3333;
+  }
+  100% { 
+    box-shadow: 0 0 15px 5px rgba(255, 0, 0, 0.8);
+    border-color: #ff0000;
+  }
+}
+
+@keyframes dangerWarning {
+  0% { 
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% { 
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+@keyframes vantablackRayPulse {
+  0% { 
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scaleX(1.0);
+  }
+  100% { 
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+}
 .prism-bottom-row {
   display: flex;
   justify-content: center;
@@ -3973,6 +4065,11 @@ body.global-darkness::before {
   align-items: center;
   justify-content: center;
 }
+
+/* Gentler transition for KitoFox mode flickering */
+.minigame-cell.kitofox-flicker {
+  transition: background 0.5s ease-in-out, border-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
 .minigame-cell:hover {
   background: #444;
   border-color: #00d4ff;
@@ -4146,6 +4243,13 @@ html,
   background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
   border-color: #2ecc71;
   box-shadow: 0 0 8px #2ecc7144;
+}
+.minigame-cell.cleared {
+  background: #444 !important;
+  border-color: #888 !important;
+  box-shadow: none !important;
+  opacity: 0.5;
+  pointer-events: none;
 }
 .minigame-cell.red.cleared {
   background: #444;

@@ -369,6 +369,11 @@ function collectIngredientToken(type, token) {
     tokenGainAmount = window.applyGreenStableLightBuff(tokenGainAmount);
   }
   
+  // Apply KitoFox mode 5x multiplier
+  if (window.state && window.state.kitoFoxModeActive) {
+    tokenGainAmount = tokenGainAmount.mul(5);
+  }
+  
   // Initialize state if needed
   if (!window.state) window.state = {};
   if (!window.state.tokens) {
@@ -566,6 +571,7 @@ const mysticIdleSpeeches = [
   "If you drop another mushroom, you'll be on dish duty for a week!",
   "Prisma shards in the blender? Are you trying to poison someone!? ...Or is it for Vi?",
   "A real chef puts their heart into every dish!",
+  "Inputting the code 'Give me 1 million swa bucks' won't get you anything good. Avoid it at all costs.",
   "If you waste food in my kitchen, you're doing the dishes!",
   "Don't waste the food I cook, that's ungreatfull.",
   "Only the best for my friends! Mediocrity isn't allowed here!",

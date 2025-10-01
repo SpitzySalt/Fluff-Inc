@@ -303,6 +303,11 @@ window.SaveSystem = {
     if (window.premiumState) {
       saveData.other.premiumState = this.serializeObject(window.premiumState);
     }
+    
+    // Save boutique system data
+    if (window.boutique && typeof window.boutique.saveData === 'function') {
+      saveData.other.boutique = this.serializeObject(window.boutique.saveData());
+    }
 
     return saveData;
   },
@@ -553,6 +558,11 @@ window.SaveSystem = {
         // Load premium system data
         if (saveData.other.premiumState) {
           window.premiumState = this.deserializeObject(saveData.other.premiumState);
+        }
+        
+        // Load boutique system data
+        if (saveData.other.boutique && window.boutique && typeof window.boutique.loadData === 'function') {
+          window.boutique.loadData(this.deserializeObject(saveData.other.boutique));
         }
       }
 

@@ -609,6 +609,82 @@ function claimAchievementReward(achievementId) {
   }
 }
 
+function showGenericRewardNotification(tokenType, amount, title = "Reward Earned!", subtitle = null) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #44ff44, #22cc22);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 300px;
+    animation: slideInRight 0.5s ease-out;
+  `;
+  
+  // Get appropriate icon and display name for token type
+  let iconSrc = 'assets/icons/fluff.png';
+  let displayName = tokenType;
+  
+  switch(tokenType) {
+    case 'swabucks':
+      iconSrc = 'assets/icons/Swa Buck.png';
+      displayName = 'Swa Bucks';
+      break;
+    case 'berry':
+      iconSrc = 'assets/icons/berry token.png';
+      displayName = 'Berry';
+      break;
+    case 'mushroom':
+      iconSrc = 'assets/icons/mushroom token.png';
+      displayName = 'Mushroom';
+      break;
+    case 'spark':
+      iconSrc = 'assets/icons/spark token.png';
+      displayName = 'Spark';
+      break;
+    case 'prismashard':
+      iconSrc = 'assets/icons/prisma shard token.png';
+      displayName = 'Prisma Shard';
+      break;
+    case 'water':
+      iconSrc = 'assets/icons/water token.png';
+      displayName = 'Water';
+      break;
+    case 'petal':
+      iconSrc = 'assets/icons/glittering petal token.png';
+      displayName = 'Petal';
+      break;
+    default:
+      displayName = tokenType.charAt(0).toUpperCase() + tokenType.slice(1);
+  }
+  
+  const subtitleText = subtitle || `+${amount} ${displayName}`;
+  
+  notification.innerHTML = `
+    <img src="${iconSrc}" alt="${displayName}" style="width: 32px; height: 32px;">
+    <div>
+      <div style="font-weight: bold; font-size: 1.1em;">${title}</div>
+      <div style="font-size: 0.9em; opacity: 0.9;">${subtitleText}</div>
+    </div>
+  `;
+  document.body.appendChild(notification);
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.5s ease-in';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 500);
+  }, 3000);
+}
+
 function showRewardNotification(achievement, amount) {
   const notification = document.createElement('div');
   notification.style.cssText = `
@@ -817,9 +893,8 @@ function updateSecretAchievements() {
   const totalCount = document.getElementById('secretTotalCount');
   const progressPercent = document.getElementById('secretProgressPercent');
   if (!grid) return;
-  const mainSecretAchievements = Object.values(achievements).filter(a => a.category === 'secret');
-  const additionalSecretAchievements = typeof window.secretAchievements !== 'undefined' ? Object.values(window.secretAchievements) : [];
-  const allSecretAchievements = [...mainSecretAchievements, ...additionalSecretAchievements];
+  // Use only window.secretAchievements since all secret achievements are now managed there
+  const allSecretAchievements = typeof window.secretAchievements !== 'undefined' ? Object.values(window.secretAchievements) : [];
   let unlocked = 0;
   let total = allSecretAchievements.length;
   grid.innerHTML = '';
@@ -1253,3 +1328,6 @@ window.stopAchievementTracking = stopAchievementTracking;
 window.switchAchievementsSubTab = switchAchievementsSubTab;
 window.claimAchievementReward = claimAchievementReward;
 window.showNextPopup = showNextPopup;
+window.showRewardNotification = showRewardNotification;
+window.showAchievementNotification = showAchievementNotification;
+window.showGenericRewardNotification = showGenericRewardNotification;
