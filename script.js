@@ -128,6 +128,24 @@ let state = {
   berryPlate: new Decimal(0),
   mushroomSoup: new Decimal(0),
   batteries: new Decimal(0),
+  deliverySystem: {
+    berryPlatesInLoad: new Decimal(0),
+    totalBerryPlatesGiven: new Decimal(0),
+    kpBoostFromBerryPlates: new Decimal(1),
+    glitteringPetalsInNectarizer: new Decimal(0),
+    totalGlitteringPetalsGiven: new Decimal(0),
+    nectarBoostFromGlitteringPetals: new Decimal(1)
+  },
+  prismCoreSystem: {
+    chargedPrismaInCore: new Decimal(0),
+    totalChargedPrismaGiven: new Decimal(0),
+    lightBoostFromChargedPrisma: new Decimal(1)
+  },
+  mixingSystem: {
+    mushroomSoupInMixer: new Decimal(0),
+    totalMushroomSoupGiven: new Decimal(0),
+    cookingSpeedBoost: new Decimal(1)
+  },
   glitteringPetals: new Decimal(0),
   chargedPrisma: new Decimal(0),
   swabucks: new Decimal(0),
@@ -596,6 +614,78 @@ function migrateGameStateVariables() {
     if (!DecimalUtils.isDecimal(window.state.generatorUpgrades[type])) {
       window.state.generatorUpgrades[type] = new Decimal(window.state.generatorUpgrades[type] || 0);
     }
+  }
+  
+  // Initialize delivery system if not present
+  if (!window.state.deliverySystem) {
+    window.state.deliverySystem = {
+      berryPlatesInLoad: new Decimal(0),
+      totalBerryPlatesGiven: new Decimal(0),
+      kpBoostFromBerryPlates: new Decimal(1),
+      glitteringPetalsInNectarizer: new Decimal(0),
+      totalGlitteringPetalsGiven: new Decimal(0),
+      nectarBoostFromGlitteringPetals: new Decimal(1)
+    };
+  }
+  
+  // Ensure Decimal objects for delivery system
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.berryPlatesInLoad)) {
+    window.state.deliverySystem.berryPlatesInLoad = new Decimal(window.state.deliverySystem.berryPlatesInLoad || 0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.totalBerryPlatesGiven)) {
+    window.state.deliverySystem.totalBerryPlatesGiven = new Decimal(window.state.deliverySystem.totalBerryPlatesGiven || 0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.kpBoostFromBerryPlates)) {
+    window.state.deliverySystem.kpBoostFromBerryPlates = new Decimal(window.state.deliverySystem.kpBoostFromBerryPlates || 1);
+  }
+  
+  // Ensure glittering petal fields exist and are Decimal objects
+  if (!window.state.deliverySystem.glitteringPetalsInNectarizer) {
+    window.state.deliverySystem.glitteringPetalsInNectarizer = new Decimal(0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.glitteringPetalsInNectarizer)) {
+    window.state.deliverySystem.glitteringPetalsInNectarizer = new Decimal(window.state.deliverySystem.glitteringPetalsInNectarizer || 0);
+  }
+  if (!window.state.deliverySystem.totalGlitteringPetalsGiven) {
+    window.state.deliverySystem.totalGlitteringPetalsGiven = new Decimal(0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.totalGlitteringPetalsGiven)) {
+    window.state.deliverySystem.totalGlitteringPetalsGiven = new Decimal(window.state.deliverySystem.totalGlitteringPetalsGiven || 0);
+  }
+  if (!window.state.deliverySystem.nectarBoostFromGlitteringPetals) {
+    window.state.deliverySystem.nectarBoostFromGlitteringPetals = new Decimal(1);
+  }
+  if (!DecimalUtils.isDecimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals)) {
+    window.state.deliverySystem.nectarBoostFromGlitteringPetals = new Decimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals || 1);
+  }
+  
+  // Initialize prism core system if not present
+  if (!window.state.prismCoreSystem) {
+    window.state.prismCoreSystem = {
+      chargedPrismaInCore: new Decimal(0),
+      totalChargedPrismaGiven: new Decimal(0),
+      lightBoostFromChargedPrisma: new Decimal(1)
+    };
+  }
+  
+  // Ensure charged prisma fields exist and are Decimal objects
+  if (!window.state.prismCoreSystem.chargedPrismaInCore) {
+    window.state.prismCoreSystem.chargedPrismaInCore = new Decimal(0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.chargedPrismaInCore)) {
+    window.state.prismCoreSystem.chargedPrismaInCore = new Decimal(window.state.prismCoreSystem.chargedPrismaInCore || 0);
+  }
+  if (!window.state.prismCoreSystem.totalChargedPrismaGiven) {
+    window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(0);
+  }
+  if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+    window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+  }
+  if (!window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+    window.state.prismCoreSystem.lightBoostFromChargedPrisma = new Decimal(1);
+  }
+  if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.lightBoostFromChargedPrisma)) {
+    window.state.prismCoreSystem.lightBoostFromChargedPrisma = new Decimal(window.state.prismCoreSystem.lightBoostFromChargedPrisma || 1);
   }
 }
 
@@ -1310,6 +1400,11 @@ function syncGlobalReferencesToState() {
           if (newLevel > oldLevel) {
             state.friendship[dept].level = newLevel;
             
+            // Track for KitoFox Challenge 2 quest
+            if (typeof window.trackKitoFox2FriendshipLevel === 'function') {
+              window.trackKitoFox2FriendshipLevel(dept, newLevel);
+            }
+            
             // Update UI when level changes
             if (typeof window.renderDepartmentStatsButtons === 'function') {
               window.renderDepartmentStatsButtons();
@@ -1796,6 +1891,11 @@ function addCurrency(currencyName, amount) {
   
   if (newValue.isFinite()) {
     state[currencyName] = newValue;
+    
+    // Track fluff collection for KitoFox Challenge 2
+    if (currencyName === 'fluff' && typeof window.trackKitoFox2FluffCollected === 'function') {
+      window.trackKitoFox2FluffCollected(amount);
+    }
   } else {
     state[currencyName] = currentValue;
   }
@@ -2873,6 +2973,28 @@ function resetGame() {
     
     const isFirstTimeKP = state.kp.eq(0);
     
+    // Process berry plates in load during delivery reset
+    if (window.state.deliverySystem && window.state.deliverySystem.berryPlatesInLoad && 
+        DecimalUtils.toDecimal(window.state.deliverySystem.berryPlatesInLoad).gt(0)) {
+      
+      const berryPlatesInLoad = DecimalUtils.toDecimal(window.state.deliverySystem.berryPlatesInLoad);
+      
+      // Update permanent boost tracking first
+      window.state.deliverySystem.totalBerryPlatesGiven = window.state.deliverySystem.totalBerryPlatesGiven.add(berryPlatesInLoad);
+      window.state.deliverySystem.kpBoostFromBerryPlates = new Decimal(1).add(window.state.deliverySystem.totalBerryPlatesGiven.mul(0.05));
+      
+      // Clear the delivery load
+      window.state.deliverySystem.berryPlatesInLoad = new Decimal(0);
+      
+      // Recalculate KP gain with the new permanent boost
+      kpGain = getKpGainPreview();
+    }
+    
+    // Clear glittering petals from nectarizer display (boost remains active)
+    if (window.state.deliverySystem && window.state.deliverySystem.glitteringPetalsInNectarizer) {
+      window.state.deliverySystem.glitteringPetalsInNectarizer = new Decimal(0);
+    }
+    
     // KP gain already includes all boosts from getKpGainPreview()
     let finalKpGain = kpGain;
     
@@ -3446,6 +3568,47 @@ function updateUI() {
   const artifactsDecimal = DecimalUtils.isDecimal(state.artifacts) ? state.artifacts : new Decimal(state.artifacts || 0);
   
   document.getElementById("resetBtn").style.display = artifactsDecimal.gte(50) ? "block" : "none";
+  
+  // Update berry plate delivery information
+  const berryPlateInfo = document.getElementById("berryPlateDeliveryInfo");
+  if (berryPlateInfo && window.state && window.state.deliverySystem) {
+    const totalGiven = DecimalUtils.toDecimal(window.state.deliverySystem.totalBerryPlatesGiven || 0);
+    const inLoad = DecimalUtils.toDecimal(window.state.deliverySystem.berryPlatesInLoad || 0);
+    const kpBoost = DecimalUtils.toDecimal(window.state.deliverySystem.kpBoostFromBerryPlates || 1);
+    
+    if (totalGiven.gt(0) || inLoad.gt(0)) {
+      let infoHTML = '';
+      
+      if (inLoad.gt(0)) {
+        infoHTML += `
+          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 4px; font-size: 1em; color: #81C784; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+            <img src="assets/icons/berry plate token.png" style="width: 16px; height: 16px; margin-right: 6px;">
+            ${formatNumber(inLoad)} berry plate${inLoad.eq(1) ? '' : 's'} loaded in truck
+          </div>
+        `;
+      }
+      
+      if (totalGiven.gt(0)) {
+        const boostMultiplier = kpBoost.toFixed(2);
+        infoHTML += `
+          <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 6px; font-size: 1em; color: #FFB74D; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+            <img src="assets/icons/berry plate token.png" style="width: 16px; height: 16px; margin-right: 6px;">
+            ${formatNumber(totalGiven)} berry plate${totalGiven.eq(1) ? '' : 's'} given to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; font-size: 1.2em; color: #FFFFFF; font-weight: bold; padding: 8px 12px; background: rgba(0, 0, 0, 0.6); border-radius: 8px; border: 2px solid rgba(0, 0, 0, 0.8); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
+            <img src="assets/icons/kp.png" style="width: 20px; height: 20px; margin-right: 8px;">
+            ×${boostMultiplier} KP Boost
+          </div>
+        `;
+      }
+      
+      berryPlateInfo.innerHTML = infoHTML;
+      berryPlateInfo.style.display = "block";
+    } else {
+      berryPlateInfo.style.display = "none";
+    }
+  }
+  
   const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.gt(0)) {
     document.getElementById("kpLine").style.display = "block";
@@ -6045,6 +6208,43 @@ function renderGenerators() {
       if (typeof startSoapRandomSpeechTimer === 'function') startSoapRandomSpeechTimer();
     }
   }
+  
+  // Reapply quest glow classes after Soap element is recreated
+  if (typeof updateCharacterGlows === 'function') {
+    // Small delay to ensure the element is fully rendered
+    setTimeout(() => {
+      updateCharacterGlows();
+      // Additional check to ensure the class was applied
+      setTimeout(() => {
+        const soapElement = document.querySelector('#swariaGeneratorCharacter');
+        if (soapElement && window.state?.questSystem?.activeQuests) {
+          // Check if Soap has any quests ready to turn in
+          const soapQuests = window.state.questSystem.activeQuests.filter(questId => {
+            const quest = questDefinitions?.[questId];
+            const progress = window.state.questSystem.questProgress?.[questId];
+            return quest && quest.character === 'soap' && progress?.readyToTurnIn;
+          });
+          
+          // If Soap has ready quests but no quest-complete class, force add it
+          if (soapQuests.length > 0 && !soapElement.classList.contains('quest-complete')) {
+            soapElement.classList.add('quest-complete');
+            
+            // Add click handler if missing
+            if (!soapElement.dataset.questTurnInHandler) {
+              soapElement.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof handleCharacterTurnInClick === 'function') {
+                  handleCharacterTurnInClick('soap');
+                }
+              });
+              soapElement.dataset.questTurnInHandler = 'true';
+            }
+          }
+        }
+      }, 50);
+    }, 10);
+  }
 
   const rightCol = document.createElement("div");
   rightCol.className = "generator-right-col";
@@ -7141,16 +7341,16 @@ let hardModeQuestProgress = {
   ingredientsCooked: 0
 };
 const hardModeQuestRequirements = {
-  berryTokens: 10000,
-  stardustTokens: 3000,
-  berryPlateTokens: 500,
-  mushroomSoupTokens: 500,
-  prismClicks: 72700,
-  commonBoxes: 690000,
+  berryTokens: 5000,
+  stardustTokens: 300,
+  berryPlateTokens: 50,
+  mushroomSoupTokens: 50,
+  prismClicks: 7270,
+  commonBoxes: 69000,
   flowersWatered: 69420,
-  powerRefills: 1500,
-  soapPokes: 10000,
-  ingredientsCooked: 1500
+  powerRefills: 150,
+  soapPokes: 1000,
+  ingredientsCooked: 150
 };
 const hardModeSwariaMessages = [
   "Don't do this, it's impossible!",
@@ -7255,26 +7455,9 @@ function updateHardModeQuestProgress() {
   if (!state.hardModeQuestActive) return;
   hardModeQuestActive = state.hardModeQuestActive;
   hardModeQuestProgress = state.hardModeQuestProgress;
-  document.getElementById('hardModeBerryProgress').textContent = `${state.hardModeQuestProgress.berryTokens.toLocaleString()} / ${hardModeQuestRequirements.berryTokens.toLocaleString()}`;
-  document.getElementById('hardModeStardustProgress').textContent = `${state.hardModeQuestProgress.stardustTokens.toLocaleString()} / ${hardModeQuestRequirements.stardustTokens.toLocaleString()}`;
-  document.getElementById('hardModeBerryPlateProgress').textContent = `${state.hardModeQuestProgress.berryPlateTokens.toLocaleString()} / ${hardModeQuestRequirements.berryPlateTokens.toLocaleString()}`;
-  document.getElementById('hardModeMushroomSoupProgress').textContent = `${state.hardModeQuestProgress.mushroomSoupTokens.toLocaleString()} / ${hardModeQuestRequirements.mushroomSoupTokens.toLocaleString()}`;
-  document.getElementById('hardModePrismClicksProgress').textContent = `${state.hardModeQuestProgress.prismClicks.toLocaleString()} / ${hardModeQuestRequirements.prismClicks.toLocaleString()}`;
-  document.getElementById('hardModeCommonBoxesProgress').textContent = `${state.hardModeQuestProgress.commonBoxes.toLocaleString()} / ${hardModeQuestRequirements.commonBoxes.toLocaleString()}`;
-  document.getElementById('hardModeFlowersWateredProgress').textContent = `${state.hardModeQuestProgress.flowersWatered.toLocaleString()} / ${hardModeQuestRequirements.flowersWatered.toLocaleString()}`;
-  document.getElementById('hardModePowerRefillsProgress').textContent = `${state.hardModeQuestProgress.powerRefills.toLocaleString()} / ${hardModeQuestRequirements.powerRefills.toLocaleString()}`;
-  document.getElementById('hardModeSoapPokesProgress').textContent = `${state.hardModeQuestProgress.soapPokes.toLocaleString()} / ${hardModeQuestRequirements.soapPokes.toLocaleString()}`;
-  document.getElementById('hardModeIngredientsCookedProgress').textContent = `${state.hardModeQuestProgress.ingredientsCooked.toLocaleString()} / ${hardModeQuestRequirements.ingredientsCooked.toLocaleString()}`;
-  updateQuestItemCompletion('hardModeBerryProgress', state.hardModeQuestProgress.berryTokens >= hardModeQuestRequirements.berryTokens);
-  updateQuestItemCompletion('hardModeStardustProgress', state.hardModeQuestProgress.stardustTokens >= hardModeQuestRequirements.stardustTokens);
-  updateQuestItemCompletion('hardModeBerryPlateProgress', state.hardModeQuestProgress.berryPlateTokens >= hardModeQuestRequirements.berryPlateTokens);
-  updateQuestItemCompletion('hardModeMushroomSoupProgress', state.hardModeQuestProgress.mushroomSoupTokens >= hardModeQuestRequirements.mushroomSoupTokens);
-  updateQuestItemCompletion('hardModePrismClicksProgress', state.hardModeQuestProgress.prismClicks >= hardModeQuestRequirements.prismClicks);
-  updateQuestItemCompletion('hardModeCommonBoxesProgress', state.hardModeQuestProgress.commonBoxes >= hardModeQuestRequirements.commonBoxes);
-  updateQuestItemCompletion('hardModeFlowersWateredProgress', state.hardModeQuestProgress.flowersWatered >= hardModeQuestRequirements.flowersWatered);
-  updateQuestItemCompletion('hardModePowerRefillsProgress', state.hardModeQuestProgress.powerRefills >= hardModeQuestRequirements.powerRefills);
-  updateQuestItemCompletion('hardModeSoapPokesProgress', state.hardModeQuestProgress.soapPokes >= hardModeQuestRequirements.soapPokes);
-  updateQuestItemCompletion('hardModeIngredientsCookedProgress', state.hardModeQuestProgress.ingredientsCooked >= hardModeQuestRequirements.ingredientsCooked);
+  
+  // UI elements removed - progress is now tracked via quest system
+  // Just maintain the progress checking
   checkHardModeQuestCompletion();
 }
 function updateQuestItemCompletion(progressId, isCompleted) {
@@ -7290,20 +7473,8 @@ function updateQuestItemCompletion(progressId, isCompleted) {
   }
 }
 function checkHardModeQuestCompletion() {
-  const allComplete = 
-    state.hardModeQuestProgress.berryTokens >= hardModeQuestRequirements.berryTokens &&
-    state.hardModeQuestProgress.stardustTokens >= hardModeQuestRequirements.stardustTokens &&
-    state.hardModeQuestProgress.berryPlateTokens >= hardModeQuestRequirements.berryPlateTokens &&
-    state.hardModeQuestProgress.mushroomSoupTokens >= hardModeQuestRequirements.mushroomSoupTokens &&
-    state.hardModeQuestProgress.prismClicks >= hardModeQuestRequirements.prismClicks &&
-    state.hardModeQuestProgress.commonBoxes >= hardModeQuestRequirements.commonBoxes &&
-    state.hardModeQuestProgress.flowersWatered >= hardModeQuestRequirements.flowersWatered &&
-    state.hardModeQuestProgress.powerRefills >= hardModeQuestRequirements.powerRefills &&
-    state.hardModeQuestProgress.soapPokes >= hardModeQuestRequirements.soapPokes &&
-    state.hardModeQuestProgress.ingredientsCooked >= hardModeQuestRequirements.ingredientsCooked;
-  if (allComplete) {
-    completeHardModeQuest();
-  }
+  // Quest completion is now handled by the quest system
+  // This function is kept for compatibility but quest system manages completion
 }
 function completeHardModeQuest() {
   const questStatus = document.getElementById('hardModeQuestStatus');
@@ -7322,7 +7493,13 @@ function completeHardModeQuest() {
 }
 function trackHardModePrismClick() {
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.prismClicks++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.prismClicks) {
+      state.hardModeQuest.prismClicks = 0;
+    }
+    state.hardModeQuest.prismClicks++;
     updateHardModeQuestProgress();
     // Save removed - will be handled by regular save system
   }
@@ -7332,44 +7509,420 @@ function trackHardModePrismClick() {
 }
 function trackHardModeFlowerWatered() {
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.flowersWatered++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.flowersWatered) {
+      state.hardModeQuest.flowersWatered = 0;
+    }
+    state.hardModeQuest.flowersWatered++;
     updateHardModeQuestProgress();
   }
 }
 function trackHardModePowerRefill() {
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.powerRefills++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.powerRefills) {
+      state.hardModeQuest.powerRefills = 0;
+    }
+    state.hardModeQuest.powerRefills++;
     updateHardModeQuestProgress();
   }
 }
 function trackHardModeCommonBox() {
+  // Track for KitoFox Challenge quest
+  if (window.state && window.state.questSystem && 
+      window.state.questSystem.activeQuests && 
+      window.state.questSystem.activeQuests.includes('kitofox_challenge')) {
+    
+    if (!window.state.questSystem.questProgress) {
+      window.state.questSystem.questProgress = {};
+    }
+    
+    if (!window.state.questSystem.questProgress['kitofox_challenge']) {
+      window.state.questSystem.questProgress['kitofox_challenge'] = {};
+    }
+    
+    const progress = window.state.questSystem.questProgress['kitofox_challenge'];
+    if (!progress.commonBoxesClicks) {
+      progress.commonBoxesClicks = new Decimal(0);
+    }
+    
+    progress.commonBoxesClicks = progress.commonBoxesClicks.add(1);
+  }
+  
+  // Keep old tracking for backward compatibility
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.commonBoxes++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.commonBoxes) {
+      state.hardModeQuest.commonBoxes = 0;
+    }
+    state.hardModeQuest.commonBoxes++;
     updateHardModeQuestProgress();
   }
 }
 function trackHardModeSoapPoke() {
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.soapPokes++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.soapPokes) {
+      state.hardModeQuest.soapPokes = 0;
+    }
+    state.hardModeQuest.soapPokes++;
     updateHardModeQuestProgress();
   }
 }
-function trackHardModeIngredientsCooked() {
+function trackHardModeIngredientsCooked(amount = 1) {
   if (state.hardModeQuestActive) {
-    state.hardModeQuestProgress.ingredientsCooked++;
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.ingredientsCooked) {
+      state.hardModeQuest.ingredientsCooked = 0;
+    }
+    state.hardModeQuest.ingredientsCooked += amount;
     updateHardModeQuestProgress();
   }
 }
+function trackHardModeBerryPlateCooking(amount = 1) {
+  if (state.hardModeQuestActive) {
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.berryPlatesCookingActions) {
+      state.hardModeQuest.berryPlatesCookingActions = 0;
+    }
+    state.hardModeQuest.berryPlatesCookingActions += amount;
+    updateHardModeQuestProgress();
+  }
+}
+function trackHardModeMushroomSoupCooking(amount = 1) {
+  if (state.hardModeQuestActive) {
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.mushroomSoupsCookingActions) {
+      state.hardModeQuest.mushroomSoupsCookingActions = 0;
+    }
+    state.hardModeQuest.mushroomSoupsCookingActions += amount;
+    updateHardModeQuestProgress();
+  }
+}
+function trackHardModeCookingAction(recipeId, amount = 1) {
+  if (!state.hardModeQuestActive) return;
+  
+  switch(recipeId) {
+    case 'berryPlate':
+      trackHardModeBerryPlateCooking(amount);
+      break;
+    case 'mushroomSoup':
+      trackHardModeMushroomSoupCooking(amount);
+      break;
+    case 'chargedPrisma':
+      if (typeof window.trackKitoFox2ChargedPrismaCooked === 'function') {
+        window.trackKitoFox2ChargedPrismaCooked(amount);
+      }
+      break;
+  }
+}
+
+function trackHardModeBerryTokenCollection(amount = 1) {
+  // Track for KitoFox Challenge quest
+  if (window.state && window.state.questSystem && 
+      window.state.questSystem.activeQuests && 
+      window.state.questSystem.activeQuests.includes('kitofox_challenge')) {
+    
+    if (!window.state.questSystem.questProgress) {
+      window.state.questSystem.questProgress = {};
+    }
+    
+    if (!window.state.questSystem.questProgress['kitofox_challenge']) {
+      window.state.questSystem.questProgress['kitofox_challenge'] = {};
+    }
+    
+    const progress = window.state.questSystem.questProgress['kitofox_challenge'];
+    if (!progress.berryTokens) {
+      progress.berryTokens = new Decimal(0);
+    }
+    
+    // Ensure amount is a Decimal and add properly
+    const amountDecimal = DecimalUtils.toDecimal(amount);
+    progress.berryTokens = progress.berryTokens.add(amountDecimal);
+  }
+  
+  // Keep old tracking for backward compatibility
+  if (state.hardModeQuestActive) {
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.berryTokensCollected) {
+      state.hardModeQuest.berryTokensCollected = 0;
+    }
+    state.hardModeQuest.berryTokensCollected += amount;
+    updateHardModeQuestProgress();
+  }
+}
+function trackHardModeStardustTokenCollection(amount = 1) {
+  // Track for KitoFox Challenge quest
+  if (window.state && window.state.questSystem && 
+      window.state.questSystem.activeQuests && 
+      window.state.questSystem.activeQuests.includes('kitofox_challenge')) {
+    
+    if (!window.state.questSystem.questProgress) {
+      window.state.questSystem.questProgress = {};
+    }
+    
+    if (!window.state.questSystem.questProgress['kitofox_challenge']) {
+      window.state.questSystem.questProgress['kitofox_challenge'] = {};
+    }
+    
+    const progress = window.state.questSystem.questProgress['kitofox_challenge'];
+    if (!progress.stardustTokens) {
+      progress.stardustTokens = new Decimal(0);
+    }
+    
+    // Ensure amount is a Decimal and add properly
+    const amountDecimal = DecimalUtils.toDecimal(amount);
+    progress.stardustTokens = progress.stardustTokens.add(amountDecimal);
+  }
+  
+  // Keep old tracking for backward compatibility
+  if (state.hardModeQuestActive) {
+    if (!state.hardModeQuest) {
+      state.hardModeQuest = {};
+    }
+    if (!state.hardModeQuest.stardustTokensCollected) {
+      state.hardModeQuest.stardustTokensCollected = 0;
+    }
+    state.hardModeQuest.stardustTokensCollected += amount;
+    updateHardModeQuestProgress();
+  }
+}
+
+// Make cooking tracking functions globally accessible
+window.trackHardModeIngredientsCooked = trackHardModeIngredientsCooked;
+window.trackHardModeBerryPlateCooking = trackHardModeBerryPlateCooking;
+window.trackHardModeMushroomSoupCooking = trackHardModeMushroomSoupCooking;
+window.trackHardModeCookingAction = trackHardModeCookingAction;
+window.trackHardModeBerryTokenCollection = trackHardModeBerryTokenCollection;
+window.trackHardModeStardustTokenCollection = trackHardModeStardustTokenCollection;
+
+// KitoFox Challenge 2 tracking functions - only progress when KitoFox mode is active
+function trackKitoFox2PetalTokenCollection(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.petalTokensCollected)) {
+    window.state.hardModeQuest.petalTokensCollected = new Decimal(0);
+  }
+  window.state.hardModeQuest.petalTokensCollected = window.state.hardModeQuest.petalTokensCollected.add(amount);
+}
+
+function trackKitoFox2WaterTokenNightCollection(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  // Check if it's night time
+  const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+    const mins = window.daynight.getTime();
+    const NIGHT_START = 22 * 60; // 22:00
+    const NIGHT_END = 6 * 60;    // 6:00
+    return mins >= NIGHT_START || mins < NIGHT_END;
+  })();
+  
+  if (!isNight) return; // Only count water tokens collected during night
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.waterTokensNightCollected)) {
+    window.state.hardModeQuest.waterTokensNightCollected = new Decimal(0);
+  }
+  window.state.hardModeQuest.waterTokensNightCollected = window.state.hardModeQuest.waterTokensNightCollected.add(amount);
+}
+
+function trackKitoFox2ChargedPrismaCooked(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.chargedPrismaCooked)) {
+    window.state.hardModeQuest.chargedPrismaCooked = new Decimal(0);
+  }
+  window.state.hardModeQuest.chargedPrismaCooked = window.state.hardModeQuest.chargedPrismaCooked.add(amount);
+}
+
+function trackKitoFox2AnomalyFixed() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.anomaliesFixed)) {
+    window.state.hardModeQuest.anomaliesFixed = new Decimal(0);
+  }
+  window.state.hardModeQuest.anomaliesFixed = window.state.hardModeQuest.anomaliesFixed.add(1);
+}
+
+function trackKitoFox2PowerRefill() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.powerRefillsKito2)) {
+    window.state.hardModeQuest.powerRefillsKito2 = new Decimal(0);
+  }
+  window.state.hardModeQuest.powerRefillsKito2 = window.state.hardModeQuest.powerRefillsKito2.add(1);
+}
+
+function trackKitoFox2PrismClickNight() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  // Check if it's night time
+  const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+    const mins = window.daynight.getTime();
+    const NIGHT_START = 22 * 60; // 22:00
+    const NIGHT_END = 6 * 60;    // 6:00
+    return mins >= NIGHT_START || mins < NIGHT_END;
+  })();
+  
+  if (!isNight) return; // Only count prism clicks during night
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.prismClicksNight)) {
+    window.state.hardModeQuest.prismClicksNight = new Decimal(0);
+  }
+  window.state.hardModeQuest.prismClicksNight = window.state.hardModeQuest.prismClicksNight.add(1);
+}
+
+function trackKitoFox2FlowerClickedPollen() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.flowersClickedPollen)) {
+    window.state.hardModeQuest.flowersClickedPollen = new Decimal(0);
+  }
+  window.state.hardModeQuest.flowersClickedPollen = window.state.hardModeQuest.flowersClickedPollen.add(1);
+}
+
+function trackKitoFox2FluzzerPoke() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.fluzzerPokes)) {
+    window.state.hardModeQuest.fluzzerPokes = new Decimal(0);
+  }
+  window.state.hardModeQuest.fluzzerPokes = window.state.hardModeQuest.fluzzerPokes.add(1);
+}
+
+function trackKitoFox2LeprePoke() {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.leprePokes)) {
+    window.state.hardModeQuest.leprePokes = new Decimal(0);
+  }
+  window.state.hardModeQuest.leprePokes = window.state.hardModeQuest.leprePokes.add(1);
+}
+
+function trackKitoFox2LepreShopPurchase(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.lepreShopPurchases)) {
+    window.state.hardModeQuest.lepreShopPurchases = new Decimal(0);
+  }
+  window.state.hardModeQuest.lepreShopPurchases = window.state.hardModeQuest.lepreShopPurchases.add(amount);
+}
+
+function trackKitoFox2FluffCollected(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.fluffCollectedKito2)) {
+    window.state.hardModeQuest.fluffCollectedKito2 = new Decimal(0);
+  }
+  window.state.hardModeQuest.fluffCollectedKito2 = window.state.hardModeQuest.fluffCollectedKito2.add(amount);
+}
+
+function trackKitoFox2IngredientsCooked(amount = 1) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  if (!window.state.hardModeQuest) {
+    window.state.hardModeQuest = {};
+  }
+  if (!DecimalUtils.isDecimal(window.state.hardModeQuest.ingredientsCookedKito2)) {
+    window.state.hardModeQuest.ingredientsCookedKito2 = new Decimal(0);
+  }
+  window.state.hardModeQuest.ingredientsCookedKito2 = window.state.hardModeQuest.ingredientsCookedKito2.add(amount);
+}
+
+function trackKitoFox2FriendshipLevel(department, newLevel) {
+  if (!window.state || !window.state.kitoFoxModeActive) return;
+  
+  // Only track when a character reaches level 15
+  if (newLevel >= 15) {
+    if (!window.state.hardModeQuest) {
+      window.state.hardModeQuest = {};
+    }
+    if (!DecimalUtils.isDecimal(window.state.hardModeQuest.friendshipLevelsKito2)) {
+      window.state.hardModeQuest.friendshipLevelsKito2 = new Decimal(0);
+    }
+    window.state.hardModeQuest.friendshipLevelsKito2 = window.state.hardModeQuest.friendshipLevelsKito2.add(1);
+  }
+}
+
+// Make KitoFox Challenge 2 tracking functions globally accessible
+window.trackKitoFox2PetalTokenCollection = trackKitoFox2PetalTokenCollection;
+window.trackKitoFox2WaterTokenNightCollection = trackKitoFox2WaterTokenNightCollection;
+window.trackKitoFox2ChargedPrismaCooked = trackKitoFox2ChargedPrismaCooked;
+window.trackKitoFox2AnomalyFixed = trackKitoFox2AnomalyFixed;
+window.trackKitoFox2PowerRefill = trackKitoFox2PowerRefill;
+window.trackKitoFox2PrismClickNight = trackKitoFox2PrismClickNight;
+window.trackKitoFox2FlowerClickedPollen = trackKitoFox2FlowerClickedPollen;
+window.trackKitoFox2FluzzerPoke = trackKitoFox2FluzzerPoke;
+window.trackKitoFox2LeprePoke = trackKitoFox2LeprePoke;
+window.trackKitoFox2LepreShopPurchase = trackKitoFox2LepreShopPurchase;
+window.trackKitoFox2FluffCollected = trackKitoFox2FluffCollected;
+window.trackKitoFox2IngredientsCooked = trackKitoFox2IngredientsCooked;
+window.trackKitoFox2FriendshipLevel = trackKitoFox2FriendshipLevel;
 function checkHardModeTabButtonVisibility() {
+  const hardModeTabBtn = document.getElementById('settingsHardModeTabBtn');
+  
   if (window.hardModePermanentlyUnlocked || 
+      (window.state && window.state.seenNectarizeResetStory) || 
       state.seenNectarizeResetStory || 
       (window.nectarizeResets && window.nectarizeResets >= 1)) {
-    const hardModeTabBtn = document.getElementById('settingsHardModeTabBtn');
     if (hardModeTabBtn) {
       hardModeTabBtn.style.display = 'inline-block';
     }
     if (!window.hardModePermanentlyUnlocked) {
       window.hardModePermanentlyUnlocked = true;
+    }
+    
+    // Auto-start KitoFox Challenge quest when hard mode becomes available
+    if (typeof window.autoStartKitoFoxChallenge === 'function') {
+      window.autoStartKitoFoxChallenge();
     }
   }
 }

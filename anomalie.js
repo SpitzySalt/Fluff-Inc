@@ -312,6 +312,11 @@ window.anomalySystem = {
         // Remove from tracking array
         this.anomalies.splice(anomalyIndex, 1);
         
+        // Track for KitoFox Challenge 2 quest
+        if (typeof window.trackKitoFox2AnomalyFixed === 'function') {
+            window.trackKitoFox2AnomalyFixed();
+        }
+        
         // Update detector modal
         this.updateDetectorModal();
         
@@ -521,6 +526,11 @@ window.anomalySystem = {
     giveAnomalyReward: function() {
         // Show simple "anomaly fixed" notification
         this.showAnomalyFixedNotification();
+        
+        // Track for KitoFox Challenge 2 quest
+        if (typeof window.trackKitoFox2AnomalyFixed === 'function') {
+            window.trackKitoFox2AnomalyFixed();
+        }
     },
     
     // Show notification for anomaly fixed
@@ -3872,6 +3882,11 @@ window.anomalySystem = {
         
         // Give reward
         this.giveAnomalyReward();
+        
+        // Track for KitoFox Challenge 2 quest
+        if (typeof window.trackKitoFox2AnomalyFixed === 'function') {
+            window.trackKitoFox2AnomalyFixed();
+        }
 
     },
 

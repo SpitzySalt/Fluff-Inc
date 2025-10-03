@@ -594,6 +594,11 @@ window.SaveSystem = {
       if (window.renderGenerators) window.renderGenerators();
       if (window.updateChargerUI) window.updateChargerUI(true);
       
+      // Check hard mode tab visibility after loading save
+      if (typeof window.checkHardModeTabButtonVisibility === 'function') {
+        window.checkHardModeTabButtonVisibility();
+      }
+      
       return true;
     } catch (error) {
       console.error('Load failed:', error);

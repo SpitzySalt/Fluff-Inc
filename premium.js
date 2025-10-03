@@ -493,8 +493,10 @@ function toggleKitoFoxMode() {
 
 function updateKitoFoxModeImages() {
   if (!window.state.kitoFoxModeActive) {
-    // Revert to normal swaria images
-    updateAllSwariaImages('swa normal.png', 'swa talking.png');
+    // Revert to appropriate images based on current mode (including Bijou)
+    const normalImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(false) : 'swa normal.png';
+    const speechImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(true) : 'swa talking.png';
+    updateAllSwariaImages(normalImage, speechImage);
     
     // Clean up vantablack light system when KitoFox mode is disabled
     if (typeof window.cleanupVantablackSystem === 'function') {
@@ -531,8 +533,10 @@ function updateKitoFoxModeImages() {
 
 function updateRecorderModeImages() {
   if (!window.state.recorderModeActive) {
-    // Revert to normal swaria images
-    updateAllSwariaImages('swa normal.png', 'swa talking.png');
+    // Revert to appropriate images based on current mode (including Bijou)
+    const normalImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(false) : 'swa normal.png';
+    const speechImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(true) : 'swa talking.png';
+    updateAllSwariaImages(normalImage, speechImage);
   } else {
     // Switch to recorder images
     updateAllSwariaImages('assets/icons/recorder.png', 'assets/icons/recorder speech.png');
@@ -552,12 +556,11 @@ function updateRecorderModeImages() {
 
 function updateAllModeImages() {
   
-  let normalImage = 'swa normal.png';
-  let speechImage = 'swa talking.png';
+  let normalImage, speechImage;
   
   // Priority: KitoFox mode takes precedence over recorder mode
   if (window.state.kitoFoxModeActive) {
-    // Use recorder images for KitoFox mode (can be changed to specific KitoFox images later)
+    // Use KitoFox images
     normalImage = 'assets/icons/kitomode.png';
     speechImage = 'assets/icons/kitomode speech.png';
   } else if (window.state.recorderModeActive) {
@@ -565,6 +568,9 @@ function updateAllModeImages() {
     normalImage = 'assets/icons/recorder.png';
     speechImage = 'assets/icons/recorder speech.png';
   } else {
+    // Use appropriate images based on current mode (including Bijou)
+    normalImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(false) : 'swa normal.png';
+    speechImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(true) : 'swa talking.png';
   }
   
   

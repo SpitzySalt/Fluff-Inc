@@ -302,7 +302,7 @@ class Boutique {
     "Welcome to my humble shop! Vi invited me here... officially, of course!",
     "I used to perform for crowds, now I perform transactions! *jingles coins*",
     "The jester life led me here... and what a profitable detour it's been!",
-    "Vi said I could set up shop here. I think they were joking, but here I am! Just don't tell the Swa elites.",
+    "Vi said I could set up shop here. I think they were joking, but here I am! Just don't tell 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒.",
     "From entertaining nobles to selling tokens... quite the career change!",
     "My juggling skills translate well to inventory management!",
     "The facility's much quieter than the royal court.",
@@ -326,7 +326,7 @@ class Boutique {
     "You wanna know what's behind the zipper? A jester's secrets!",
     "Mushrooms, Stardusts, Batteries, its all yours my friend! As long as you have enough Swa bucks~",
     "I look like a living plushy? That's because I am one.",
-    "The Swa elites has no idea about this little boutique I added here. Just don't tell them, okay?",
+    "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 has no idea about this little boutique I added here. Just don't tell them, okay?",
     "It is I, the amazing Lepre!",
     "I've walked around the facility and one of the rooms smells alot like soap. And no it's not the bathrooms.",
     "Soap is always cleaning something. I once caught them polishing the power generator!",
@@ -623,6 +623,11 @@ class Boutique {
     }
     
     this.leprePokeCount++;
+    
+    // Track for KitoFox Challenge 2 quest
+    if (typeof window.trackKitoFox2LeprePoke === 'function') {
+      window.trackKitoFox2LeprePoke();
+    }
     
     // Check if Lepre should get mad (50 pokes in 30 seconds)
     if (this.leprePokeCount >= 50 && !this.lepreIsMad) {
@@ -1630,6 +1635,11 @@ class Boutique {
 
     // Track purchase
     this.purchaseHistory[itemId] = (this.purchaseHistory[itemId] || 0) + 1;
+    
+    // Track for KitoFox Challenge 2 quest
+    if (typeof window.trackKitoFox2LepreShopPurchase === 'function') {
+      window.trackKitoFox2LepreShopPurchase();
+    }
 
     // Check for secret achievement - buying while Lepre is very mad
     if (this.lepreIsVeryMad && typeof window.unlockSecretAchievement === 'function') {

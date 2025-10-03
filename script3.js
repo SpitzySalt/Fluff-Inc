@@ -120,12 +120,12 @@ function updateDeliverButtonAppearance() {
     if (deliverButtonCooldown.isActive) {
         // Apply cooldown styling
         resetBtn.classList.add('deliver-cooldown');
-        resetBtn.textContent = `Deliver your cargo to the Swa elites (${deliverButtonCooldown.remainingTime}s)`;
+        resetBtn.textContent = `Deliver your cargo to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 (${deliverButtonCooldown.remainingTime}s)`;
         resetBtn.style.cursor = 'not-allowed';
     } else {
         // Remove cooldown styling
         resetBtn.classList.remove('deliver-cooldown');
-        resetBtn.textContent = 'Deliver your cargo to the Swa elites';
+        resetBtn.textContent = 'Deliver your cargo to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒';
         resetBtn.style.cursor = 'pointer';
     }
 }

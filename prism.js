@@ -1010,6 +1010,12 @@ function calculateLightTileGain(color, friendshipMultiplier) {
     totalGain = totalGain.mul(window._chargerLightBoost);
   }
   
+  // Apply charged prisma boost from prism core system
+  if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+    const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+    totalGain = totalGain.mul(prismaBoost);
+  }
+  
   return totalGain.floor();
 }
 
@@ -1363,6 +1369,12 @@ function clickLightTile(index) {
         totalGain = totalGain.mul(window._chargerLightBoost);
       }
       
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
+      }
+      
       totalGain = totalGain.floor(); 
     } else if (color === 'redlight') {
       let redParticleBoost = DecimalUtils.multiply(window.prismState.redlightparticle.floor(), 0.1);
@@ -1376,6 +1388,13 @@ function clickLightTile(index) {
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
         totalGain = totalGain.mul(window._chargerLightBoost);
       }
+      
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
+      }
+      
       totalGain = totalGain.floor();
     } else if (color === 'orangelight') {
       let orangeParticleBoost = DecimalUtils.multiply(window.prismState.orangelightparticle.floor(), 0.1);
@@ -1388,6 +1407,12 @@ function clickLightTile(index) {
       // Ensure charger light boost is applied (in case patching didn't work)
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
         totalGain = totalGain.mul(window._chargerLightBoost);
+      }
+      
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
       }
       
       totalGain = totalGain.floor();
@@ -1404,19 +1429,32 @@ function clickLightTile(index) {
         totalGain = totalGain.mul(window._chargerLightBoost);
       }
       
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
+      }
+      
       totalGain = totalGain.floor();
     } else if (color === 'greenlight') {
       let greenParticleBoost = DecimalUtils.multiply(window.prismState.greenlightparticle.floor(), 0.1);
       totalGain = totalGain.add(greenParticleBoost);
       if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
       if (typeof window.getGreenlightGain === 'function') {
-        totalGain = window.getGreenlightGain(totalGain);
+        totalGain = totalGain.mul(greenParticleBoost);
       }
       
       // Ensure charger light boost is applied (in case patching didn't work)
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
         totalGain = totalGain.mul(window._chargerLightBoost);
       }
+      
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
+      }
+      
       totalGain = totalGain.floor();
     } else if (color === 'bluelight') {
       let blueParticleBoost = DecimalUtils.multiply(window.prismState.bluelightparticle.floor(), 0.1);
@@ -1429,6 +1467,12 @@ function clickLightTile(index) {
       // Ensure charger light boost is applied (in case patching didn't work)
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
         totalGain = totalGain.mul(window._chargerLightBoost);
+      }
+      
+      // Apply charged prisma boost from prism core system
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        totalGain = totalGain.mul(prismaBoost);
       }
       
       totalGain = totalGain.floor();
@@ -1550,6 +1594,11 @@ function clickLightTile(index) {
     if (window.frontDesk && typeof window.frontDesk.onPrismTileClicked === 'function') {
       window.frontDesk.onPrismTileClicked();
     }
+    
+    // Track prism tile click during night hours for KitoFox Challenge 2
+    if (typeof window.isNightTime === 'function' && window.isNightTime() && typeof window.trackKitoFox2PrismClickNight === 'function') {
+      window.trackKitoFox2PrismClickNight();
+    }
   }
 }
 
@@ -1613,6 +1662,7 @@ function getParticleBoost() {
       particleBoost = particleBoost.add(count.mul(0.1));
     }
   }
+  
   return particleBoost;
 }
 
@@ -2320,7 +2370,7 @@ const viResponseQuotes = [
   },
   {
     trigger: "Hey Viii, yuu should come to thhe cafeteria shometimes.",
-    response: "I wish I could, but I'm stuck here in this other room next to yours, all thx to the Swa elites for installing the smallest door that I can't pass through.",
+    response: "I wish I could, but I'm stuck here in this other room next to yours, all thx to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 for installing the smallest door that I can't pass through.",
     condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2) && !window.prismAdvancedLabUnlocked
   },
   { 
@@ -2650,6 +2700,15 @@ if (!window.getLightGain) {
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
     }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
+    }
     return gain;
   } 
 }
@@ -2663,6 +2722,15 @@ if (!window.getRedlightGain) {
     // Apply flower upgrade 5 effect
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+    }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
     }
     return gain;
   } 
@@ -2685,6 +2753,15 @@ if (!window.getOrangelightGain) {
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
     }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
+    }
     return gain;
   } 
 }
@@ -2698,6 +2775,15 @@ if (!window.getYellowlightGain) {
     // Apply flower upgrade 5 effect
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+    }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
     }
     return gain;
   } 
@@ -2713,6 +2799,15 @@ if (!window.getGreenlightGain) {
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
     }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
+    }
     return gain;
   } 
 }
@@ -2726,6 +2821,15 @@ if (!window.getBluelightGain) {
     // Apply flower upgrade 5 effect
     if (typeof window.getFlowerUpgrade5Effect === 'function' && typeof window.terrariumFlowerUpgrade5Level === 'number') {
       gain = gain.mul(window.getFlowerUpgrade5Effect(window.terrariumFlowerUpgrade5Level));
+    }
+    // Apply charged prisma boost
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((DecimalUtils.isDecimal(chargedPrismaBoost) && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
+        gain = gain.mul(boost);
+      }
     }
     return gain;
   } 

@@ -479,15 +479,19 @@ body {
   <img src="assets/icons/mythic box.png" class="icon"> Mythic (20000)
 </button>
             </div>
-            <div class="card">
-              <h2>Deliver to the Swa elites</h2>
+            <div class="card" id="deliveryCard">
+              <h2>Deliver to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒</h2>
               <p id="kpLine" style="display:none;">
   <img src="assets/icons/kp.png" class="icon"> Knowledge Points: <span id="kp">0/</span>
   <span id="kpGain" class="gain-popup"></span>
 </p>
               <div id="wingProgress">Need 50 Wing artifact for ???: <span id="artifactsResetCheck">0</span></div>
               <div id="kpPreview" style="display:none; margin-top: 10px; font-weight: bold;"></div>
-              <button id="resetBtn" style="display:none;" onclick="resetGame()"> Deliver your cargo to the Swa elites</button>
+              <button id="resetBtn" style="display:none;" onclick="resetGame()"> Deliver your cargo to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒</button>
+              <div id="berryPlateDeliveryInfo" style="display:none; margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(0,0,0,0.4);"></div>
+              <div style="margin-top: 8px; font-size: 0.8em; color: #888; font-style: italic;">
+                <small>Drag berry plates here to permanently boost KP gain</small>
+              </div>
             </div>
           </div>
           <div class="bottom-row">
@@ -1124,60 +1128,12 @@ body {
                 <div style="display: flex; gap: 2em; align-items: flex-start; justify-content: center; max-width: 1000px; margin: 0 auto;">
           <div class="card swaria-box" style="text-align: center; padding: 1.5em; flex: 0 0 350px; position: relative;">
             <div id="hardModeSwariaImg" style="width: 300px; height: 300px; margin: 0 auto; cursor: pointer; position: relative;">
-              <img src="swa normal.png" alt="Swaria" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+              <img src="assets/icons/kitomode.png" alt="Swaria" style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
             </div>
             <div id="hardModeSwariaSpeech" class="swaria-speech" style="display: none; position: absolute; top: 75%; left: 50%; transform: translateX(-50%); margin-top: 10px; padding: 0.5em; background: #fff; border-radius: 8px; border: 2px solid #ddd; font-size: 1em; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); min-width: 150px; max-width: 250px; text-align: center;">
               Don't do this, it's impossible!
             </div>
             </p>
-          </div>
-          <div class="card" style="flex: 1; max-width: 600px;">
-            <h2 style="text-align: center;">For Kitofox Challenge</h2>
-            <div id="hardModeQuestProgress" style="margin-bottom: 1.5em;">
-              <h3 style="text-align: center;">Quest Progress:</h3>
-              <div style="display: grid; gap: 0.8em; font-size: 0.9em;">
-                <div class="quest-item">
-                  <span>Give 10,000 Berry Tokens:</span>
-                  <span id="hardModeBerryProgress">0 / 10,000</span>
-                </div>
-                <div class="quest-item">
-                  <span>Give 5,000 Stardust Tokens:</span>
-                  <span id="hardModeStardustProgress">0 / 3,000</span>
-                </div>
-                <div class="quest-item">
-                  <span>Give 500 Berry Plate Tokens:</span>
-                  <span id="hardModeBerryPlateProgress">0 / 500</span>
-                </div>
-                <div class="quest-item">
-                  <span>Give 500 Mushroom Soup Tokens:</span>
-                  <span id="hardModeMushroomSoupProgress">0 / 500</span>
-                </div>
-                <div class="quest-item">
-                  <span>Click Prism Tiles:</span>
-                  <span id="hardModePrismClicksProgress">0 / 72,700</span>
-                </div>
-                <div class="quest-item">
-                  <span>Open Common Boxes Manually:</span>
-                  <span id="hardModeCommonBoxesProgress">0 / 690,000</span>
-                </div>
-                <div class="quest-item">
-                  <span>Water Flowers:</span>
-                  <span id="hardModeFlowersWateredProgress">0 / 69,420</span>
-                </div>
-                <div class="quest-item">
-                  <span>Refill Power:</span>
-                  <span id="hardModePowerRefillsProgress">0 / 1,500</span>
-                </div>
-                <div class="quest-item">
-                  <span>Poke Soap:</span>
-                  <span id="hardModeSoapPokesProgress">0 / 10,000</span>
-                </div>
-                <div class="quest-item">
-                  <span>Cook Ingredients:</span>
-                  <span id="hardModeIngredientsCookedProgress">0 / 1500</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1259,6 +1215,35 @@ body {
         <img src="assets/icons/prisma token.png" class="icon" alt="Charged Prisma Icon" style="width:48px;height:48px;">
         <span id="inventoryCount-chargedPrisma">0</span>
         <span style="font-size:0.9em;color:#666;">Charged Prisma</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="questModal" style="display:none;position:fixed;left:0;right:0;bottom:0;width:100vw;z-index:9999999999999;justify-content:center;align-items:flex-end;pointer-events:auto;">
+  <div id="questModalContent" style="margin:0;background:rgba(255,255,255,0.97);border-radius:24px 24px 0 0;box-shadow:0 -4px 32px #0006;padding:0;width:100%;min-height:200px;display:flex;flex-direction:column;align-items:center;position:relative;">
+    <div id="questModalDragHandle" style="width:100%;height:30px;background:rgba(0,0,0,0.05);border-radius:24px 24px 0 0;cursor:ns-resize;display:flex;justify-content:center;align-items:center;user-select:none;transition:background 0.2s ease;">
+      <div style="width:60px;height:4px;background:rgba(0,0,0,0.3);border-radius:2px;transition:background 0.2s ease;"></div>
+    </div>
+    <div style="font-size:1.5em;font-weight:bold;color:#222;margin:1em 0;padding:0 0.5em;">Quests</div>
+    <div id="questContent" style="display:flex;flex-direction:row;gap:0.5em;width:100%;max-width:none;overflow-x:auto;overflow-y:hidden;padding:0 1em 0.7em 1em;scrollbar-width:thin;scrollbar-color:#ccc #f0f0f0;flex:1;">
+      <style>
+        #questContent::-webkit-scrollbar {
+          height: 8px;
+        }
+        #questContent::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.1);
+          border-radius: 4px;
+        }
+        #questContent::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.3);
+          border-radius: 4px;
+        }
+        #questContent::-webkit-scrollbar-thumb:hover {
+          background: rgba(0,0,0,0.5);
+        }
+      </style>
+      <div style="text-align:center;color:#666;font-size:1.1em;padding:2em;">
+      
       </div>
     </div>
   </div>
@@ -1373,11 +1358,27 @@ body {
           <div id="kitchenSpeechBubble" class="kitchen-speech-bubble"></div>
         </div>
       </div>
-      <div class="card mixing-card">
+      <div id="mixingCard" class="card mixing-card">
         <h3>Mixing</h3>
         <div>
           <p>Combine your ingredients here!</p>
           <button id="mixButton">Mix Ingredients</button>
+          <div id="cookingStatusSection" style="margin-top: 10px; padding: 8px; border-radius: 8px; background: linear-gradient(135deg, #fff3e0, #ffecb3); border: 2px solid #ff9800; display: none; text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px;">
+              <span style="color: #e65100; font-weight: bold;">Currently cooking</span>
+            </div>
+            <div id="cookingStatusContent" style="font-size: 0.9em; color: #bf360c;">
+              <div id="cookingStatusRecipe" style="font-weight: bold; margin-bottom: 2px;"></div>
+              <div id="cookingStatusTime" style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span></span>
+                <span id="cookingStatusTimeText"></span>
+              </div>
+            </div>
+          </div>
+          <div id="cookingSpeedBoostDisplay" style="margin-top: 10px; font-size: 0.9em; color: #666; display: none;">
+            <img src="assets/icons/mushroom soup token.png" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
+            <span id="cookingSpeedBoostText">x1.0 cooking speed</span>
+          </div>
         </div>
       </div>
       <div class="card ingredient-card">
@@ -2243,6 +2244,7 @@ body {
 <div id="digitalClockContainer" style="position:fixed;top:18px;left:24px;right:auto;z-index:2000;display:flex;flex-direction:column;align-items:flex-start;gap:8px;">
   <div id="digitalClock" style="background:linear-gradient(90deg,#222,#444);color:#ffe066;font-family:'Orbitron',monospace;font-size:2em;font-weight:bold;padding:0.25em 1.1em;border-radius:14px 14px 8px 8px;box-shadow:0 2px 12px rgba(0,0,0,0.18);letter-spacing:0.08em;text-shadow:0 2px 8px #000a;min-width:120px;text-align:left;border:3px solid #ffe066;">starting</div>
   <button id="inventoryBtn" style="margin-top:8px;padding:0.5em 1.2em;font-size:1.1em;background:linear-gradient(90deg,#ffe066,#ffd700);color:#222;border:none;border-radius:8px 8px 14px 14px;box-shadow:0 2px 8px #0004;cursor:pointer;font-family:'Orbitron',monospace;font-weight:bold;">Inventory</button>
+  <button id="questBtn" style="margin-top:8px;padding:0.5em 1.2em;font-size:1.1em;background:linear-gradient(90deg,#d2691e,#a0522d);color:#fff;border:none;border-radius:8px 8px 14px 14px;box-shadow:0 2px 8px #0004;cursor:pointer;font-family:'Orbitron',monospace;font-weight:bold;text-shadow:0 1px 2px #000;">Quests</button>
 </div>
 <div id="powerEnergyStatus" style="display:none;position:fixed;top:18px;right:24px;z-index:2000;"></div>
 <div id="anomalyDetectorContainer" style="display:none;position:fixed;top:88px;right:24px;z-index:2000;">
@@ -2333,7 +2335,7 @@ body {
   <div id="kpSoftcapModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
     <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
     <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
-      The swa elites notices your overgrowing collection of resources and it's starting to overwhelm them. As a punishment, they will reward you with even less Knowledge points from now on, "get softcaped idiot" they said...
+      𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 notices your overgrowing collection of resources and it's starting to overwhelm them. As a punishment, they will reward you with even less Knowledge points from now on, "get softcaped idiot" they said...
     </div>
     <button onclick="closeKpSoftcapModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>
@@ -2341,7 +2343,7 @@ body {
 <div id="firstDeliveryStoryModal" style="display:none; position:fixed; z-index:999999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); backdrop-filter:blur(2px); justify-content:center; align-items:center;">
   <div style="position:relative; background:white; border-radius:28px; box-shadow:0 12px 48px #0008; padding:3.5em 2.5em 2.5em 2.5em; max-width:600px; width:96vw; text-align:center; display:flex; flex-direction:column; align-items:center;">
     <img src="assets/icons/control center card.png" alt="WIP" style="width:180px;height:180px;margin-bottom:2em;" />
-    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">After delivering every ressources to the Swa elites, the Swa elites rewarded you with Knowledge points, they also sent you a new keycard that grants you access to the control center of the facility, inside the control center is the mysterious Swaria table of swalements, your new goal is to study all 118 swalements.</div>
+    <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">After delivering every ressources to 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒, 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 rewarded you with Knowledge points, they also sent you a new keycard that grants you access to the control center of the facility, inside the control center is the mysterious Swaria table of swalements, your new goal is to study all 118 swalements.</div>
     <button onclick="closeFirstDeliveryStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>
 </div>
@@ -2356,7 +2358,7 @@ body {
   <div id="kpMildcapModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
     <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
     <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
-      The Swa elites are absolutely flabbergasted by your resource hoarding. They have now imposed the <b>mildcap</b>! KP gain is now even more brutally reduced. "Get mildcaped idiot" they say...
+      𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 are absolutely flabbergasted by your resource hoarding. They have now imposed the <b>mildcap</b>! KP gain is now even more brutally reduced. "Get mildcaped idiot" they say...
     </div>
     <button onclick="closeKpMildcapModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>
@@ -2648,7 +2650,7 @@ body {
   <div id="nectarizeResetStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
     <img src="assets/icons/swa upset.png" alt="Swa Upset" style="width:180px;height:180px;margin-bottom:2em;" />
     <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
-      You and Fluzzer watches in pure horror as the Nectarize Machine explodes after your first usage. "seriously!?" You say to yourself. You discover that the machine was ordered from a website called "Temu.com" by the Swa elites. You and Fluzzer look at the damages on the machine. It's not as severe as you thought as you will only need an handfull of petals to repair it.
+      You and Fluzzer watches in pure horror as the Nectarize Machine explodes after your first usage. "seriously!?" You say to yourself. You discover that the machine was ordered from a website called "Temu.com" by 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒. You and Fluzzer look at the damages on the machine. It's not as severe as you thought as you will only need an handfull of petals to repair it.
     </div>
     <button onclick="closeNectarizeResetStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>
@@ -2675,7 +2677,7 @@ body {
   <div id="infinityResetStoryModalContent" style="position:relative;background:white;border-radius:28px;box-shadow:0 12px 48px #0008;padding:3.5em 2.5em 2.5em 2.5em;max-width:600px;width:96vw;text-align:center;display:flex;flex-direction:column;align-items:center;">
     <img src="assets/icons/infinity reset story modal.png" alt="Infinity Reset" style="width:180px;height:180px;margin-bottom:2em;" />
     <div style="font-size:1.45em;color:#222;line-height:1.6;max-width:520px;">
-      After doing the first infinity reset, you recieved a new gift from the Swa elites, an anomaly detector. There is a note attached to it, it reads "We have detected an unusual fluctation in the fabric of reality around the facility, anomalies will start appearing and you will need to find them and remove them using this device, these anomalies can appear anywhere and at any time, for each anomaly present, they will affect your production until you remove them, be careful. Good luck, The Swa Elites."
+      After doing the first infinity reset, you recieved a new gift from 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒, an anomaly detector. There is a note attached to it, it reads "We have detected an unusual fluctation in the fabric of reality around the facility, anomalies will start appearing and you will need to find them and remove them using this device, these anomalies can appear anywhere and at any time, for each anomaly present, they will affect your production until you remove them, be careful. Good luck, 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒."
     </div>
     <button onclick="closeInfinityResetStoryModal()" style="margin-top:2em;font-size:1.2em;">Continue</button>
   </div>

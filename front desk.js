@@ -2362,19 +2362,21 @@
     let friendshipGain = 0;
     let response = '';
     this.tokensGivenToTico += amount;
-    const rations = Math.floor(this.tokensGivenToTico / 5) - Math.floor((this.tokensGivenToTico - amount) / 5);
-    if (rations > 0) {
+    const baseRations = Math.floor(this.tokensGivenToTico / 5) - Math.floor((this.tokensGivenToTico - amount) / 5);
+    if (baseRations > 0) {
+      let totalRations = baseRations;
       let bonusRations = 0;
       if (window.friendship && window.friendship.FrontDesk && window.friendship.FrontDesk.level >= 4) {
-        bonusRations = window.friendship.FrontDesk.level - 3;
+        const multiplier = 1 + (window.friendship.FrontDesk.level - 3);
+        totalRations = baseRations * multiplier;
+        bonusRations = totalRations - baseRations;
       }
-      const totalRations = rations + bonusRations;
       this.foodRations += totalRations;
       let rationMessage = '';
       if (bonusRations > 0) {
-        rationMessage = `I've prepared ${rations} food ration${rations > 1 ? 's' : ''} + ${bonusRations} bonus ration${bonusRations > 1 ? 's' : ''} (friendship bonus) for the workers.`;
+        rationMessage = `I've prepared ${totalRations} food ration${totalRations > 1 ? 's' : ''} (${baseRations} base × ${1 + (window.friendship.FrontDesk.level - 3)} friendship multiplier) for the workers.`;
       } else {
-        rationMessage = `I've prepared ${rations} food ration${rations > 1 ? 's' : ''} for the workers.`;
+        rationMessage = `I've prepared ${totalRations} food ration${totalRations > 1 ? 's' : ''} for the workers.`;
       }
       
       // Award friendship to Tico for crafting food rations
@@ -2888,7 +2890,6 @@
         }
       } else {
       }
-      this.saveData();
     }
   }
   executeGeneratorAutomatorAction(worker, automator) {
@@ -2901,7 +2902,6 @@
       }
     } else {
     }
-    this.saveData();
   }
   tryBuyGeneratorUpgrades(generatorType) {
     const isMk2Active = this.workers.some(worker => worker.job === 'box_generator_mk2');
@@ -2993,11 +2993,9 @@
       } else {
         this.makeWorkerSpeak(worker, `No KP available to deliver right now.`, 2000);
       }
-      this.saveData();
     } catch (error) {
       this.makeWorkerSpeak(worker, `Error delivering KP.`, 2000);
       worker.lastActionTime = Date.now();
-      this.saveData();
     }
   }
   executePrismTileAutomatorAction(worker, automator) {
@@ -3053,7 +3051,6 @@
     } catch (error) {
       this.makeWorkerSpeak(worker, `Error finding tokens.`, 2000);
     }
-    this.saveData();
   }
   executeLightGeneratorAutomatorAction(worker, automator) {
     worker.lastActionTime = Date.now();
@@ -3079,7 +3076,6 @@
     } catch (error) {
       this.makeWorkerSpeak(worker, `Error upgrading light generator.`, 2000);
     }
-    this.saveData();
   }
   executeUpgradeAutomatorAction(worker) {
     worker.lastActionTime = Date.now();
@@ -5321,7 +5317,9 @@
     const timeLeft = 30 - Math.floor((Date.now() - (worker.lastActionTime || Date.now())) / 1000);
     return `Working... ${Math.max(0, timeLeft)}s`;
   }
-  saveData() {
+  saveData(force = false) {
+    // Front desk state is automatically saved by the main save system
+    // This method is kept for compatibility but no longer performs frequent saves
     if (!window.state.frontDesk) {
       window.state.frontDesk = {};
     }
@@ -5919,8 +5917,8 @@ window.testTicoFoodRationBuff = function(friendshipLevel = 4) {
   const originalRations = window.frontDesk.foodRations;
   window.frontDesk.handleTokenDrop('berries', 5);
   const expectedBase = 1;
-  const expectedBonus = Math.max(0, friendshipLevel - 3);
-  const expectedTotal = expectedBase + expectedBonus;
+  const expectedMultiplier = friendshipLevel >= 4 ? 1 + (friendshipLevel - 3) : 1;
+  const expectedTotal = expectedBase * expectedMultiplier;
   const actualGain = window.frontDesk.foodRations - originalRations;
   if (actualGain === expectedTotal) {
   } else {
@@ -5928,7 +5926,7 @@ window.testTicoFoodRationBuff = function(friendshipLevel = 4) {
   return {
     friendshipLevel,
     expectedBase,
-    expectedBonus,
+    expectedMultiplier,
     expectedTotal,
     actualGain,
     success: actualGain === expectedTotal

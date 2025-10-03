@@ -533,6 +533,7 @@ window.showAdvancedPrismViResponse = showAdvancedPrismViResponse;
 window.showAdvancedPrismViSpeech = showAdvancedPrismViSpeech;
 window.pokeSwariaCharacter = pokeSwariaCharacter;
 window.showSwariaCharacterSpeech = showSwariaCharacterSpeech;
+window.updateCoreBoostCard = updateCoreBoostCard;
 window.pokeMainPrismCharacter = pokeMainPrismCharacter;
 window.pokeAdvancedPrismCharacter = pokeAdvancedPrismCharacter;
 window.pokeViWithMainSpeechBubble = pokeViWithMainSpeechBubble;
@@ -1865,7 +1866,6 @@ window.testStableLightBuff = testStableLightBuff;
 
 // Test function for stable light percentages and caps
 window.testStableLightPercentages = function() {
-  console.log("Testing stable light percentage calculations:");
   
   // Test different light types with various amounts
   const testCases = [
@@ -1887,7 +1887,6 @@ window.testStableLightPercentages = function() {
     console.log(`${testCase.light}: ${testCase.amount.toString()} -> ${formatted} (${testCase.expected}) - At cap: ${isAtCap} - Capped amount: ${cappedAmount.toString()}`);
   });
   
-  console.log("Test completed! Check the percentages in the UI.");
 };
 
 // Test function to set specific stable light amounts
@@ -2068,7 +2067,7 @@ function renderAdvancedPrismUI() {
             <div id="viAdvancedPrismSpeechText"></div>
           </div>
         </div>
-        <div class="card" style="flex: 0 0 400px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #000000; border: 2px solid #333;">
+        <div id="prismCoreCard" class="card" style="flex: 0 0 400px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #000000; border: 2px solid #333;">
           <div style="text-align: center;">
             <h3 style="margin: 0 0 1rem 0; color: #B6E6ED;">Prism Core</h3>
             <div style="width: 150px; height: 150px; margin: 0 auto 1rem auto; position: relative; cursor: pointer; perspective: 900px;" onclick="attemptPrismCoreUpgrade()">
@@ -2763,7 +2762,30 @@ function updateCoreBoostCard() {
     const multiplierText = (typeof window.formatNumber === 'function') ?
       window.formatNumber(currentMultiplier) :
       (currentMultiplier.gt(1000000) ? currentMultiplier.toExponential(2) : currentMultiplier.toString());
-    let boostsHTML = `
+    
+    let boostsHTML = '';
+    
+    // Add charged prisma boost section if present
+    if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.lightBoostFromChargedPrisma) {
+      const chargedPrismaBoost = window.state.prismCoreSystem.lightBoostFromChargedPrisma;
+      if ((typeof chargedPrismaBoost.gt === 'function' && chargedPrismaBoost.gt(1)) || 
+          (typeof chargedPrismaBoost === 'number' && chargedPrismaBoost > 1)) {
+        const boostText = (typeof window.formatNumber === 'function') ?
+          window.formatNumber(chargedPrismaBoost) :
+          (chargedPrismaBoost.gt && chargedPrismaBoost.gt(1000000) ? chargedPrismaBoost.toExponential(2) : chargedPrismaBoost.toString());
+        boostsHTML += `
+          <div style="margin-bottom: 0.5rem; display: flex; align-items: center;">
+            <img src="assets/icons/charged prism token.png" style="width: 20px; height: 20px; margin-right: 8px;" alt="Charged Prisma">
+            <span style="color: #ff00ff; text-shadow: 0 0 3px #ff00ff, 1px 1px 2px rgba(0,0,0,0.8);">Charged Prisma:</span> 
+            <span style="color: #4CAF50; text-shadow: 0 0 3px #4CAF50, 1px 1px 2px rgba(0,0,0,0.8); margin-left: 8px;">x${boostText} to all light types</span>
+          </div>
+          <div style="border-bottom: 1px solid #444; margin: 1rem 0;"></div>
+        `;
+      }
+    }
+    
+    // Add core level boosts
+    boostsHTML += `
       <div style="margin-bottom: 0.5rem;"><span style="color: #7289DA; text-shadow: 0 0 3px #7289DA, 1px 1px 2px rgba(0,0,0,0.8);">Infinity Points:</span> <span style="color: #4CAF50; text-shadow: 0 0 3px #4CAF50, 1px 1px 2px rgba(0,0,0,0.8);">x${multiplierText}</span></div>
       <div style="margin-bottom: 0.5rem;"><span style="color: #ffffff; text-shadow: 0 0 3px #ffffff, 1px 1px 2px rgba(0,0,0,0.8);">Light:</span> <span style="color: #4CAF50; text-shadow: 0 0 3px #4CAF50, 1px 1px 2px rgba(0,0,0,0.8);">x${multiplierText}</span></div>
       <div style="margin-bottom: 0.5rem;"><span style="color: #ff6b6b; text-shadow: 0 0 3px #ff6b6b, 1px 1px 2px rgba(0,0,0,0.8);">Red Light:</span> <span style="color: #4CAF50; text-shadow: 0 0 3px #4CAF50, 1px 1px 2px rgba(0,0,0,0.8);">x${multiplierText}</span></div>
@@ -2778,6 +2800,7 @@ function updateCoreBoostCard() {
     if (currentLevel >= 4) {
       boostsHTML += `<div style="margin-bottom: 0.5rem;"><span style="color: #2196F3; text-shadow: 0 0 3px #2196F3, 1px 1px 2px rgba(0,0,0,0.8);">Blue Light:</span> <span style="color: #4CAF50; text-shadow: 0 0 3px #4CAF50, 1px 1px 2px rgba(0,0,0,0.8);">x${multiplierText}</span></div>`;
     }
+    
     boostsList.innerHTML = boostsHTML;
     let nextUnlockHTML = '';
     if (currentLevel === 1) {

@@ -1392,6 +1392,11 @@ function stopFluzzerAI() {
 }
 
 function handleFluzzerClick() {
+  // Track for KitoFox Challenge 2 quest
+  if (typeof window.trackKitoFox2FluzzerPoke === 'function') {
+    window.trackKitoFox2FluzzerPoke();
+  }
+  
   // Use appropriate upset speech based on fluzzer's state
   const isInEnhancedState = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3;
   
@@ -1642,6 +1647,8 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
   const totalPollenGained = terrariumPollen.sub(originalPollen).toNumber();
   const totalFlowerGained = terrariumFlowers.sub(originalFlowers).toNumber();
   
+
+  
   // Show popup with the correct total amounts
   if (typeof window.showTerrariumGainPopup === 'function') {
     if (totalPollenGained > 0) {
@@ -1741,17 +1748,17 @@ function findRustlingFlowersToCollect() {
   return rustlingFlowerIndices.slice(); // Return a copy of the array
 }
 
-// Automatically collect the newest ingredient token near a specific element
+// Automatically collect ingredient tokens near a specific element (for token bursts, collects all nearby tokens)
 function autoCollectNewestToken(sourceElement) {
   // Find all ingredient tokens on screen
   const tokens = document.querySelectorAll('.ingredient-token[data-collected="false"]');
   if (tokens.length === 0) return;
   
-  // Find the token closest to the source element (likely the newest one)
   const sourceRect = sourceElement.getBoundingClientRect();
-  let closestToken = null;
-  let closestDistance = Infinity;
+  const BURST_DETECTION_RADIUS = 150; // Pixels - tokens within this radius are considered part of a burst
+  const tokensNearSource = [];
   
+  // Find all tokens near the source element
   tokens.forEach(token => {
     const tokenRect = token.getBoundingClientRect();
     const distance = Math.sqrt(
@@ -1759,15 +1766,35 @@ function autoCollectNewestToken(sourceElement) {
       Math.pow(tokenRect.top - sourceRect.top, 2)
     );
     
-    if (distance < closestDistance) {
-      closestDistance = distance;
-      closestToken = token;
+    if (distance <= BURST_DETECTION_RADIUS) {
+      tokensNearSource.push({ token, distance });
     }
   });
   
-  // Auto-collect the closest token
-  if (closestToken && closestToken.onclick) {
-    closestToken.onclick();
+  if (tokensNearSource.length === 0) return;
+  
+  // If multiple tokens are close together (likely a token burst), collect all of them
+  if (tokensNearSource.length >= 3) {
+    // Sort by distance to ensure we collect them in order from closest to furthest
+    tokensNearSource.sort((a, b) => a.distance - b.distance);
+    
+    // Collect all tokens with a slight delay between each to avoid timing issues
+    tokensNearSource.forEach((tokenData, index) => {
+      setTimeout(() => {
+        if (tokenData.token && tokenData.token.onclick && tokenData.token.dataset.collected === 'false') {
+          tokenData.token.onclick();
+        }
+      }, index * 50); // 50ms delay between each collection
+    });
+  } else {
+    // Single token or just a few tokens - collect the closest one
+    const closestToken = tokensNearSource.reduce((closest, current) => 
+      current.distance < closest.distance ? current : closest
+    ).token;
+    
+    if (closestToken && closestToken.onclick) {
+      closestToken.onclick();
+    }
   }
 }
 
@@ -2442,7 +2469,7 @@ const fluzzerNormalSpeeches = [
     condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled
   },
   {
-    text: "OMG PEACHY IS THAT A SWA ELITE ON YOUR HEAD!? It's not? Oof thank the fluffs.",
+    text: "OMG PEACHY IS THAT 𝒯𝐻𝐸 𝒮𝒲𝒜 𝐸𝐿𝐼𝒯𝐸 ON YOUR HEAD!? It's not? Oof thank the fluffs.",
     condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled
   },
   {
@@ -3054,6 +3081,11 @@ function handlePollenWandClick(index, cols, rows) {
     if (idx < 0 || idx >= cols * rows) continue; 
     const flower = terrariumFlowerGrid[idx];
     if (flower && flower.health > 0) {
+      // Track flower click for KitoFox Challenge 2 immediately when flower is clicked
+      if (typeof window.trackKitoFox2FlowerClickedPollen === 'function') {
+        window.trackKitoFox2FlowerClickedPollen();
+      }
+      
       flower.health--;
       pollenGained++;
       if (flower.health === 0) {
@@ -7341,6 +7373,17 @@ function updateNectarizePreview() {
       infinityBoostApplied = true;
     }
   }
+  
+  // Apply glittering petal boost
+  if (window.state && window.state.deliverySystem && window.state.deliverySystem.nectarBoostFromGlitteringPetals) {
+    const glitteringPetalBoost = DecimalUtils.toDecimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals);
+    if (glitteringPetalBoost.gt(1)) {
+      finalNectarGained = finalNectarGained.mul(glitteringPetalBoost).floor();
+      const multiplier = glitteringPetalBoost.toFixed(2);
+      boostText.push(`Glittering Petals: ${multiplier}x nectar`);
+    }
+  }
+  
   const milestoneBonus = getNectarizeMilestoneBonus();
   const flowerUpgrade3Effect = getFlowerUpgrade3Effect(pollenValueUpgrade2Level);
   let pollenOoM = 0;
@@ -7596,6 +7639,14 @@ function getFinalNectarizeResetGain() {
   // Apply total infinity boost
   if (typeof window.applyTotalInfinityReachedBoost === 'function') {
     finalNectarGained = window.applyTotalInfinityReachedBoost(finalNectarGained);
+  }
+  
+  // Apply glittering petal boost
+  if (window.state && window.state.deliverySystem && window.state.deliverySystem.nectarBoostFromGlitteringPetals) {
+    const glitteringPetalBoost = DecimalUtils.toDecimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals);
+    if (glitteringPetalBoost.gt(1)) {
+      finalNectarGained = finalNectarGained.mul(glitteringPetalBoost).floor();
+    }
   }
   
   return finalNectarGained;
@@ -9035,6 +9086,11 @@ function initializeTerrariumVariables() {
     if (typeof checkNectarizeQuestProgress === 'function') {
       checkNectarizeQuestProgress();
     }
+  }
+  
+  // Check hard mode tab visibility now that terrarium data is loaded
+  if (typeof window.checkHardModeTabButtonVisibility === 'function') {
+    window.checkHardModeTabButtonVisibility();
   }
 }
 

@@ -402,6 +402,24 @@ function collectIngredientToken(type, token) {
     window.state.tokens[type] = window.state.tokens[type].add(tokenGainAmount);
     collectedResources[type] = tokenGainAmount;
     
+    // Track token collection for KitoFox Challenge
+    if (type === 'berries' && typeof window.trackHardModeBerryTokenCollection === 'function') {
+      window.trackHardModeBerryTokenCollection(tokenGainAmount);
+    }
+    if (type === 'stardust' && typeof window.trackHardModeStardustTokenCollection === 'function') {
+      window.trackHardModeStardustTokenCollection(tokenGainAmount);
+    }
+    
+    // Track water token collection during night hours for KitoFox Challenge 2
+    if (type === 'water' && typeof window.trackKitoFox2WaterTokenNightCollection === 'function') {
+      window.trackKitoFox2WaterTokenNightCollection(tokenGainAmount);
+    }
+    
+    // Track petal token collection for KitoFox Challenge 2
+    if (type === 'petals' && typeof window.trackKitoFox2PetalTokens === 'function') {
+      window.trackKitoFox2PetalTokens(tokenGainAmount);
+    }
+    
     showIngredientGainPopup(token, tokenGainAmount);
   }
 
@@ -426,6 +444,11 @@ function collectIngredientToken(type, token) {
   // Track token collection for front desk automator unlock progress
   if (window.frontDesk && typeof window.frontDesk.onTokenCollected === 'function') {
     window.frontDesk.onTokenCollected();
+  }
+  
+  // Track token collection for quest progress
+  if (typeof window.trackTokenCollection === 'function') {
+    window.trackTokenCollection(tokenGainAmount);
   }
   
   if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
@@ -496,6 +519,19 @@ function showTokenBurstNotification(sourceElement) {
   }, 2000);
 }
 
+// Centralized cooking completion handler to prevent duplicate tracking
+function completeCooking(recipeId, amount) {
+  if (typeof trackHardModeIngredientsCooked === 'function') {
+    trackHardModeIngredientsCooked(amount);
+  }
+  if (typeof window.trackKitoFox2IngredientsCooked === 'function') {
+    window.trackKitoFox2IngredientsCooked(amount);
+  }
+  if (typeof window.trackHardModeCookingAction === 'function') {
+    window.trackHardModeCookingAction(recipeId, amount);
+  }
+}
+
 function updateKitchenUI(forceUpdate = false) {
   const now = Date.now();
   if (!forceUpdate && (now - lastKitchenUIUpdate) < KITCHEN_UI_UPDATE_THROTTLE) {
@@ -536,29 +572,33 @@ function updateKitchenUI(forceUpdate = false) {
   if (swabucksEl) {
     swabucksEl.textContent = formatNumber(window.state.swabucks);
   }
+  
+  // Update cooking speed boost display
+  updateCookingSpeedBoostDisplay();
 }
 
 // Make updateKitchenUI globally accessible
 window.updateKitchenUI = updateKitchenUI;
 
-// Debug function to test kitchen UI update
-window.testKitchenUI = function() {
-    console.log("=== Kitchen UI Debug ===");
-    console.log("window.state.tokens:", window.state?.tokens);
-    
-    if (window.state && window.state.tokens) {
-        const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust'];
-        basicTokenTypes.forEach(type => {
-            const value = window.state.tokens[type];
-            const element = document.getElementById('ingredientCount-' + type);
-            console.log(`${type}: value=${value}, element=${element ? 'found' : 'not found'}`);
-        });
-    }
-    
-    console.log("Calling updateKitchenUI...");
-    updateKitchenUI(true);
-    console.log("=== End Debug ===");
-};
+// Function to update cooking speed boost display in mixing card
+function updateCookingSpeedBoostDisplay() {
+  const boostDisplay = document.getElementById('cookingSpeedBoostDisplay');
+  const boostText = document.getElementById('cookingSpeedBoostText');
+  
+  if (!boostDisplay || !boostText) return;
+  
+  // Check if mixing system exists and has mushroom soup
+  if (window.state && window.state.mixingSystem && window.state.mixingSystem.totalMushroomSoupGiven && window.state.mixingSystem.totalMushroomSoupGiven.gt(0)) {
+    const boostValue = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
+    boostText.textContent = `x${boostValue.toFixed(2)} cooking speed`;
+    boostDisplay.style.display = 'block';
+  } else {
+    boostDisplay.style.display = 'none';
+  }
+}
+
+// Make the function globally accessible
+window.updateCookingSpeedBoostDisplay = updateCookingSpeedBoostDisplay;
 
 const mysticIdleSpeeches = [
   { text: "Where's the seasoning? This dish is so bland, even Fluzzer wouldn't eat it!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
@@ -589,7 +629,7 @@ const mysticIdleSpeeches = [
   "If you see a floating spoon, it's not haunted—it's just me multitasking.",
   "No, you can't have dessert until you finish your berry plate.",
   "If you want to help, start by not touching anything.",
-  "I once made a dish so good, even the Swa elites asked for seconds.",
+  "I once made a dish so good, even 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 asked for seconds.",
   "If you can't pronounce the ingredient, you probably shouldn't eat it.",
   "A real chef never blames the oven. Unless it's actually the oven's fault.",
   "If you want to impress me, try not to spill anything for a whole day.",
@@ -606,7 +646,7 @@ const mysticIdleSpeeches = [
   { text: "What are you saying? You used the anomaly resolver on me and you're saying I'm 60% anomalous??? How fake!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I hear Tico's dealing with reality tears at the front desk, but here? Not a single dimensional hiccup in my kitchen!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "My kitchen is an anomaly-free sanctuary. The heat from my cooking keeps those dimensional disturbances away!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-  { text: "The Swa elites warned about reality fluctuations, but clearly they didn't account for culinary expertise!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 warned about reality fluctuations, but clearly they didn't account for culinary expertise!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I think the anomalies are scared of my kitchen knives. Smart choice - these blades cut through more than just ingredients!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "While reality tears apart elsewhere, my kitchen remains a bastion of stability. That's the power of proper organization!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I've noticed the anomalies won't even peek through my kitchen window. Professional intimidation at its finest!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
@@ -764,6 +804,7 @@ function stopMysticRandomSpeechTimer() {
   }
 })();
 window.spawnIngredientToken = spawnIngredientToken;
+window.completeCooking = completeCooking;
 window.INGREDIENT_TYPE_IMAGES = INGREDIENT_TYPE_IMAGES;
 window.showMysticSpeech = showMysticSpeech;
 window.getLepreTokenBurstChance = getLepreTokenBurstChance;
@@ -876,7 +917,14 @@ window.addEventListener('load', function() {
       cooking = true;
       cookingAmount = bulkAmount;
       cookingRecipeId = recipeId; 
-      const totalMs = time * 60 * 1000;
+      
+      // Apply cooking speed boost from mushroom soup
+      let adjustedTime = time;
+      if (window.state && window.state.mixingSystem && window.state.mixingSystem.cookingSpeedBoost && window.state.mixingSystem.cookingSpeedBoost.gt(1)) {
+        adjustedTime = time / window.state.mixingSystem.cookingSpeedBoost.toNumber();
+      }
+      
+      const totalMs = adjustedTime * 60 * 1000;
       cookingEndTime = Date.now() + totalMs;
       if (mixBulkInput) mixBulkInput.disabled = true;
       if (mixModalProgress) mixModalProgress.style.display = '';
@@ -899,10 +947,15 @@ window.addEventListener('load', function() {
           if (now < cookingEndTime) {
             const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
             const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-            mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+            mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
           } else {
             mixModalTimer.textContent = 'Done!';
           }
+        }
+        
+        // Update cooking status in mixing card
+        if (typeof updateCookingStatusDisplay === 'function') {
+          updateCookingStatusDisplay();
         }
       }
 
@@ -910,22 +963,7 @@ window.addEventListener('load', function() {
       cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
       cookingTimeout = setTimeout(function() {
         clearInterval(cookingInterval);
-        const recipe = recipes.find(r => r.id === cookingRecipeId);
-        if (recipe) {
-          if (!window.state) window.state = {};
-          if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
-            window.state[recipe.rewardProperty] = new Decimal(0);
-          }
-          window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
-          if (typeof trackHardModeIngredientsCooked === 'function') {
-            trackHardModeIngredientsCooked();
-          }
-          if (typeof window.trackFoodAchievement === 'function') {
-            window.trackFoodAchievement();
-          }
-        }
-        if (typeof saveGame === 'function') saveGame();
-        if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+        completeCooking(cookingRecipeId, cookingAmount);
         cooking = false;
         cookingRecipeId = null;
         updateGlobals();
@@ -976,7 +1014,7 @@ window.addEventListener('load', function() {
                     if (now < cookingEndTime) {
                       const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
                       const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-                      mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+                      mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
                     } else {
                       mixModalTimer.textContent = 'Done!';
                     }
@@ -986,22 +1024,7 @@ window.addEventListener('load', function() {
                 cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
                 cookingTimeout = setTimeout(function() {
                   clearInterval(cookingInterval);
-                  const recipe = recipes.find(r => r.id === cookingRecipeId);
-                  if (recipe) {
-                    if (!window.state) window.state = {};
-                    if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
-                      window.state[recipe.rewardProperty] = new Decimal(0);
-                    }
-                    window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
-                    if (typeof trackHardModeIngredientsCooked === 'function') {
-                      trackHardModeIngredientsCooked();
-                    }
-                    if (typeof window.trackFoodAchievement === 'function') {
-                      window.trackFoodAchievement();
-                    }
-                  }
-                  if (typeof saveGame === 'function') saveGame();
-                  if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+                  completeCooking(cookingRecipeId, cookingAmount);
                   cooking = false;
                   cookingRecipeId = null;
                   updateGlobals();
@@ -1039,6 +1062,11 @@ window.addEventListener('load', function() {
       clearTimeout(cookingTimeout);
       updateGlobals();
       saveCookingState();
+      
+      // Update cooking status display
+      if (typeof updateCookingStatusDisplay === 'function') {
+        updateCookingStatusDisplay();
+      }
     }
 
     function resumeCookingFromNight() {
@@ -1063,10 +1091,15 @@ window.addEventListener('load', function() {
           if (now < cookingEndTime) {
             const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
             const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-            mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+            mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
           } else {
             mixModalTimer.textContent = 'Done!';
           }
+        }
+        
+        // Update cooking status in mixing card
+        if (typeof updateCookingStatusDisplay === 'function') {
+          updateCookingStatusDisplay();
         }
       }
 
@@ -1100,6 +1133,11 @@ window.addEventListener('load', function() {
         clearCookingState();
       }, pausedRemainingMs);
       updateGlobals();
+      
+      // Update cooking status display
+      if (typeof updateCookingStatusDisplay === 'function') {
+        updateCookingStatusDisplay();
+      }
     }
     window.kitchenPauseCookingForNight = pauseCookingForNight;
     window.kitchenResumeCookingFromNight = resumeCookingFromNight;
@@ -1112,6 +1150,11 @@ window.addEventListener('load', function() {
         clearTimeout(cookingTimeout);
         updateGlobals();
         saveCookingState();
+        
+        // Update cooking status display
+        if (typeof updateCookingStatusDisplay === 'function') {
+          updateCookingStatusDisplay();
+        }
       };
       window.kitchenResumeCookingFromHidden = function() {
         if (!cooking || !pausedForHidden) return;
@@ -1134,32 +1177,23 @@ window.addEventListener('load', function() {
             if (now < cookingEndTime) {
               const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
               const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-              mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((cookingEndTime - now)/1000)}s left`;
+              mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
             } else {
               mixModalTimer.textContent = 'Done!';
             }
+          }
+          
+          // Update cooking status in mixing card
+          if (typeof updateCookingStatusDisplay === 'function') {
+            updateCookingStatusDisplay();
           }
         }
         updateProgress();
         cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
         cookingTimeout = setTimeout(function() {
           clearInterval(cookingInterval);
-          const recipe = recipes.find(r => r.id === cookingRecipeId);
-          if (recipe) {
-            if (!window.state) window.state = {};
-            if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
-              window.state[recipe.rewardProperty] = new Decimal(0);
-            }
-            window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
-            if (typeof trackHardModeIngredientsCooked === 'function') {
-              trackHardModeIngredientsCooked();
-            }
-            if (typeof window.trackFoodAchievement === 'function') {
-              window.trackFoodAchievement();
-            }
-          }
+          completeCooking(cookingRecipeId, cookingAmount);
           if (typeof saveGame === 'function') saveGame();
-          if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
           cooking = false;
           cookingRecipeId = null;
           updateGlobals();
@@ -1175,6 +1209,11 @@ window.addEventListener('load', function() {
           }, 1200);
         }, pausedHiddenRemainingMs);
         updateGlobals();
+        
+        // Update cooking status display
+        if (typeof updateCookingStatusDisplay === 'function') {
+          updateCookingStatusDisplay();
+        }
       };
     // Save state handled by centralized save system
     // window.addEventListener('beforeunload', function() {
@@ -1182,12 +1221,32 @@ window.addEventListener('load', function() {
     // });
 
     function clearCookingState() {
-      localStorage.removeItem('berryCookingState');
+      if (window.state && window.state.kitchenCooking) {
+        delete window.state.kitchenCooking;
+      }
+      
+      // Update display after clearing state
+      if (typeof updateCookingStatusDisplay === 'function') {
+        updateCookingStatusDisplay();
+      }
     }
 
-    // Stub function - cooking state now managed by centralized save system
+    // Save cooking state to window.state for persistence
     function saveCookingState() {
-      // No-op: State is automatically saved by centralized save system
+      if (!window.state) window.state = {};
+      if (!window.state.kitchenCooking) window.state.kitchenCooking = {};
+      
+      window.state.kitchenCooking = {
+        cooking: cooking,
+        pausedForNight: pausedForNight,
+        pausedRemainingMs: pausedRemainingMs,
+        cookingEndTime: cookingEndTime,
+        cookingAmount: cookingAmount,
+        cookingRecipeId: cookingRecipeId,
+        pausedForHidden: pausedForHidden,
+        pausedHiddenRemainingMs: pausedHiddenRemainingMs,
+        savedAt: Date.now()
+      };
     }
 
     // Load function removed - cooking state now managed by main save system
@@ -1247,7 +1306,11 @@ window.addEventListener('load', function() {
         const speedBoostPercent = window.friendship.Kitchen.level * 2; // 2% per level
         const speedMultiplier = 1 + (speedBoostPercent / 100); // Convert to multiplier
         time = time.div(speedMultiplier);
-
+      }
+      
+      // Apply mushroom soup cooking speed boost from mixing system
+      if (window.state && window.state.mixingSystem && window.state.mixingSystem.cookingSpeedBoost && window.state.mixingSystem.cookingSpeedBoost.gt(1)) {
+        time = time.div(window.state.mixingSystem.cookingSpeedBoost);
       }
       if (mixCookTime) mixCookTime.textContent = DecimalUtils.formatDecimal(time, 2);
       if (mixRecipeIngredients) {
@@ -1346,6 +1409,73 @@ window.addEventListener('load', function() {
         mixModalActions.appendChild(cookBtn);
       }
       if (mixBulkInput) mixBulkInput.disabled = cooking || night;
+      
+      // Update cooking status section
+      updateCookingStatusDisplay();
+    }
+    
+    function updateCookingStatusDisplay() {
+      const statusSection = document.getElementById('cookingStatusSection');
+      if (!statusSection) return;
+      
+      try {
+        if (cooking && cookingRecipeId && cookingAmount) {
+          const recipe = recipes.find(r => r.id === cookingRecipeId);
+          if (!recipe) {
+            statusSection.style.display = 'none';
+            return;
+          }
+          
+          const recipeElement = document.getElementById('cookingStatusRecipe');
+          const timeElement = document.getElementById('cookingStatusTimeText');
+          
+          if (recipeElement && timeElement) {
+            // Update recipe info
+            recipeElement.textContent = `${recipe.name} × ${cookingAmount}`;
+            
+            // Update time remaining with current state
+            let timeText = '';
+            if (pausedForNight) {
+              timeText = 'Paused for night';
+            } else if (pausedForHidden) {
+              timeText = 'Resuming...';
+            } else if (cookingEndTime) {
+              const remaining = Math.max(0, cookingEndTime - Date.now());
+              if (remaining > 0) {
+                timeText = formatTimeRemaining(remaining);
+              } else {
+                timeText = 'Completing...';
+              }
+            } else {
+              timeText = 'Starting...';
+            }
+            
+            timeElement.textContent = timeText;
+          }
+          
+          statusSection.style.display = '';
+        } else {
+          statusSection.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error updating cooking status display:', error);
+        statusSection.style.display = 'none';
+      }
+    }
+    
+    function formatTimeRemaining(milliseconds) {
+      const seconds = Math.ceil(milliseconds / 1000);
+      if (seconds < 60) {
+        return `${seconds}s`;
+      } else if (seconds < 3600) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+      } else {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+      }
     }
 
     function patchCookingButtonLiveUpdate() {
@@ -1390,16 +1520,17 @@ window.addEventListener('load', function() {
         updateMixModalUI();
       });
     }
-    window.addEventListener('DOMContentLoaded', function() {
-      const saved = null; // Cooking state now managed by main save system
-      if (saved && saved.amount) {
+    // Function to initialize/restore cooking state
+    function initializeCookingState() {
+      const saved = window.state?.kitchenCooking || null;
+      if (saved && saved.cookingAmount) {
         const now = Date.now();
         if (saved.pausedForNight) {
           cooking = true;
           pausedForNight = true;
           pausedRemainingMs = saved.pausedRemainingMs;
-          cookingAmount = saved.amount;
-          cookingRecipeId = saved.recipeId;
+          cookingAmount = saved.cookingAmount;
+          cookingRecipeId = saved.cookingRecipeId;
           cookingEndTime = now + pausedRemainingMs;
           updateGlobals();
           if (mixBulkInput) mixBulkInput.disabled = true;
@@ -1407,31 +1538,45 @@ window.addEventListener('load', function() {
           if (mixModalTimer) mixModalTimer.style.display = '';
           if (mixModalProgressBar) mixModalProgressBar.style.width = '0%';
           if (mixModalTimer) mixModalTimer.textContent = 'Paused for night';
-        } else if (saved.endTime && now >= saved.endTime) {
-          const recipe = recipes.find(r => r.id === saved.recipeId);
+        } else if (saved.cookingEndTime && now >= saved.cookingEndTime) {
+          const recipe = recipes.find(r => r.id === saved.cookingRecipeId);
           if (recipe) {
             if (!window.state) window.state = {};
-            if (typeof window.state[recipe.rewardProperty] !== 'number') {
-              window.state[recipe.rewardProperty] = 0;
+            if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+              window.state[recipe.rewardProperty] = new Decimal(0);
             }
-            window.state[recipe.rewardProperty] += saved.amount;
-            if (typeof trackHardModeIngredientsCooked === 'function') {
-              trackHardModeIngredientsCooked();
-            }
+            window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(saved.cookingAmount);
+            completeCooking(saved.cookingRecipeId, saved.cookingAmount);
           }
           if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
           clearCookingState();
           updateGlobals();
-        } else if (saved.endTime && saved.amount) {
+        } else if (saved.pausedForHidden) {
           cooking = true;
-          cookingAmount = saved.amount;
-          cookingRecipeId = saved.recipeId;
-          cookingEndTime = saved.endTime;
+          pausedForHidden = true;
+          pausedHiddenRemainingMs = saved.pausedHiddenRemainingMs;
+          cookingAmount = saved.cookingAmount;
+          cookingRecipeId = saved.cookingRecipeId;
+          cookingEndTime = now + pausedHiddenRemainingMs;
           updateGlobals();
           if (mixBulkInput) mixBulkInput.disabled = true;
           if (mixModalProgress) mixModalProgress.style.display = '';
           if (mixModalTimer) mixModalTimer.style.display = '';
-          const totalMs = saved.endTime - now;
+          if (mixModalProgressBar) mixModalProgressBar.style.width = '0%';
+          if (mixModalTimer) mixModalTimer.textContent = 'Resuming...';
+          // Resume cooking from hidden state
+          if (typeof window.kitchenResumeCookingFromHidden === 'function') {
+            window.kitchenResumeCookingFromHidden();
+          }
+        } else if (saved.cookingEndTime && saved.cookingAmount) {
+          cooking = true;
+          cookingAmount = saved.cookingAmount;
+          cookingRecipeId = saved.cookingRecipeId;
+          cookingEndTime = saved.cookingEndTime;
+          updateGlobals();
+          if (mixBulkInput) mixBulkInput.disabled = true;
+          if (mixModalProgress) mixModalProgress.style.display = '';
+          if (mixModalTimer) mixModalTimer.style.display = '';
 
           function updateProgress() {
             const updateNow = Date.now();
@@ -1441,53 +1586,84 @@ window.addEventListener('load', function() {
             lastCookingProgressUpdate = updateNow;
 
             const now2 = Date.now();
-            const elapsed = Math.max(0, saved.endTime - now2);
-            const percent = 100 - Math.min(100, (elapsed / (saved.endTime - (saved.endTime - saved.duration))) * 100);
-            if (mixModalProgressBar) mixModalProgressBar.style.width = percent + '%';
+            const remaining = Math.max(0, cookingEndTime - now2);
+            if (mixModalProgressBar) {
+              // Calculate progress based on remaining time
+              const recipe = recipes.find(r => r.id === cookingRecipeId);
+              if (recipe) {
+                const totalDuration = DecimalUtils.toDecimal(recipe.timePer).mul(cookingAmount).mul(1000).toNumber();
+                const elapsed = totalDuration - remaining;
+                const percent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                mixModalProgressBar.style.width = percent + '%';
+              }
+            }
             if (mixModalTimer) {
-              if (now2 < saved.endTime) {
-                mixModalTimer.textContent = `Cooking... ${Math.ceil((saved.endTime - now2)/1000)}s left`;
+              if (remaining > 0) {
+                mixModalTimer.textContent = `Cooking... ${formatTimeRemaining(remaining)}`;
               } else {
                 mixModalTimer.textContent = 'Done!';
               }
             }
+            
+            // Update cooking status display in mixing card
+            updateCookingStatusDisplay();
           }
 
           updateProgress();
           cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
-          cookingTimeout = setTimeout(function() {
-            clearInterval(cookingInterval);
-            cooking = false;
-            if (mixBulkInput) mixBulkInput.disabled = false;
-            if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
-            if (mixModalTimer) mixModalTimer.textContent = 'Done!';
-            const recipe = recipes.find(r => r.id === cookingRecipeId);
-            if (recipe) {
-              if (!window.state) window.state = {};
-              if (typeof window.state[recipe.rewardProperty] !== 'number') {
-                window.state[recipe.rewardProperty] = 0;
+          
+          const remaining = Math.max(0, cookingEndTime - now);
+          if (remaining > 0) {
+            cookingTimeout = setTimeout(function() {
+              clearInterval(cookingInterval);
+              cooking = false;
+              if (mixBulkInput) mixBulkInput.disabled = false;
+              if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
+              if (mixModalTimer) mixModalTimer.textContent = 'Done!';
+              const recipe = recipes.find(r => r.id === cookingRecipeId);
+              if (recipe) {
+                if (!window.state) window.state = {};
+                if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+                  window.state[recipe.rewardProperty] = new Decimal(0);
+                }
+                window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
+                if (typeof trackHardModeIngredientsCooked === 'function') {
+                  trackHardModeIngredientsCooked(cookingAmount);
+                }
+                if (typeof window.trackHardModeCookingAction === 'function') {
+                  window.trackHardModeCookingAction(cookingRecipeId, cookingAmount);
+                }
               }
-              window.state[recipe.rewardProperty] += cookingAmount;
-              if (typeof trackHardModeIngredientsCooked === 'function') {
-                trackHardModeIngredientsCooked();
-              }
-            }
-            if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
-            setTimeout(() => {
-              if (mixModalProgress) mixModalProgress.style.display = 'none';
-              if (mixModalTimer) mixModalTimer.style.display = 'none';
-              updateMixModalUI();
-            }, 1200);
-            updateGlobals();
-            saveCookingState();
-          }, totalMs);
+              if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+              clearCookingState();
+              updateGlobals();
+              updateCookingStatusDisplay();
+              setTimeout(() => {
+                if (mixModalProgress) mixModalProgress.style.display = 'none';
+                if (mixModalTimer) mixModalTimer.style.display = 'none';
+                updateMixModalUI();
+              }, 1200);
+              updateGlobals();
+              saveCookingState();
+            }, remaining);
+          }
         }
         updateMixModalUI();
         if (mixModal && mixModal.style.display !== 'none') {
           updateMixModalUI();
         }
       }
-    });
+      
+      // Update cooking status display after restoration
+      updateCookingStatusDisplay();
+    }
+    
+    // Make initialization function globally accessible
+    window.initializeCookingState = initializeCookingState;
+    window.updateCookingStatusDisplay = updateCookingStatusDisplay;
+    
+    // Initialize on DOM load
+    window.addEventListener('DOMContentLoaded', initializeCookingState);
     if (mixBulkInput) {
       mixBulkInput.addEventListener('input', updateMixModalUI);
       mixBulkInput.addEventListener('change', updateMixModalUI);
@@ -1533,7 +1709,7 @@ window.addEventListener('load', function() {
                 if (now2 < saved.endTime) {
                   const cookingRecipe = recipes.find(r => r.id === saved.recipeId);
                   const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-                  mixModalTimer.textContent = `Cooking ${recipeName}... ${Math.ceil((saved.endTime - now2)/1000)}s left`;
+                  mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(saved.endTime - now2)}`;
                 } else {
                   mixModalTimer.textContent = 'Done!';
                 }
@@ -1584,6 +1760,37 @@ window.addEventListener('load', function() {
       document.addEventListener('DOMContentLoaded', showHandler);
     }
   })();
+  
+  // Initialize kitchen UI and cooking speed boost display on page load
+  setTimeout(() => {
+    if (typeof updateKitchenUI === 'function') {
+      updateKitchenUI(true); // Force update to refresh all ingredient counts
+    }
+    if (typeof updateCookingSpeedBoostDisplay === 'function') {
+      updateCookingSpeedBoostDisplay();
+    }
+    // Ensure cooking state is restored (fallback)
+    if (typeof window.initializeCookingState === 'function') {
+      window.initializeCookingState();
+    }
+  }, 100);
+  
+  // Backup initialization to catch any timing issues
+  setTimeout(() => {
+    if (typeof updateKitchenUI === 'function') {
+      updateKitchenUI(true); // Second attempt to ensure ingredient counts are loaded
+    }
+  }, 500);
+});
+
+// Additional DOMContentLoaded listener specifically for kitchen ingredient loading
+document.addEventListener('DOMContentLoaded', function() {
+  // Wait a moment for state to be fully loaded, then update kitchen UI
+  setTimeout(() => {
+    if (typeof updateKitchenUI === 'function') {
+      updateKitchenUI(true);
+    }
+  }, 200);
 });
 (function() {
   let cooking = false;
@@ -1602,40 +1809,7 @@ window.addEventListener('load', function() {
     return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
   }
 
-  window.addEventListener('DOMContentLoaded', function() {
-    // Cooking state is now managed by main save system - no separate loading needed
-    const saved = null; // Remove loadCookingState() call
-    if (saved && saved.amount) {
-      const now = Date.now();
-      if (saved.pausedForNight) {
-        cooking = true;
-        pausedForNight = true;
-        pausedRemainingMs = saved.pausedRemainingMs;
-        cookingAmount = saved.amount;
-        cookingRecipeId = saved.recipeId;
-        cookingEndTime = now + pausedRemainingMs;
-      } else if (saved.endTime && now >= saved.endTime) {
-        const recipe = recipes.find(r => r.id === saved.recipeId);
-        if (recipe) {
-          if (!window.state) window.state = {};
-          if (typeof window.state[recipe.rewardProperty] !== 'number') {
-            window.state[recipe.rewardProperty] = 0;
-          }
-          window.state[recipe.rewardProperty] += saved.amount;
-          if (typeof trackHardModeIngredientsCooked === 'function') {
-            trackHardModeIngredientsCooked();
-          }
-        }
-        if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
-        clearCookingState();
-      } else if (saved.endTime && saved.amount) {
-        cooking = true;
-        cookingAmount = saved.amount;
-        cookingRecipeId = saved.recipeId;
-        cookingEndTime = saved.endTime;
-      }
-    }
-  });
+  // Duplicate DOMContentLoaded handler removed - cooking state handled by main system above
 })();
 
 // Debug function to test Lepre token burst

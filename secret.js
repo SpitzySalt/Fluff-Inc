@@ -313,7 +313,7 @@ const secretAchievements = {
     row: 4,
     position: 3,
     rewarded: false,
-    realDescription: 'Complete the impossible quest'
+    realDescription: 'Complete KitoFox Challenge 2'
   },
   secret19: {
     id: 'secret19',
@@ -526,7 +526,7 @@ window.initFluzzerNightOwlTracking = initFluzzerNightOwlTracking;
 window.trackUncommonBoxPurchaseWithHighFluff = trackUncommonBoxPurchaseWithHighFluff;
 window.trackSoapChargeConsumption = trackSoapChargeConsumption;
 window.trackExpansionIconClick = trackExpansionIconClick;
-window.trackHardModeQuestCompletion = trackHardModeQuestCompletion;
+window.trackHardModeQuestCompletion = trackKitoFoxChallenge2Completion;
 
 function trackPrismLabClick() {
   if (isInPrismLab) {
@@ -616,7 +616,7 @@ function trackExpansionIconClick() {
   }
 }
 
-function trackHardModeQuestCompletion() {
+function trackKitoFoxChallenge2Completion() {
   if (typeof window.updateSecretAchievementProgress === 'function') {
     window.updateSecretAchievementProgress('secret15', 1);
   }

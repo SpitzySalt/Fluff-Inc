@@ -1071,12 +1071,12 @@ const swariaQuotes = [
   { text: "Feeling SWULTRA today!", condition: () => true },
   { text: "Fluff it up!", condition: () => true },
   { text: "I love Swagambling!", condition: () => true },
-  { text: "Wing artifacts, the swa elites loves those!", condition: () => true },
+  { text: "Wing artifacts, 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 loves those!", condition: () => true },
   { text: "My name is Peachy btw.", condition: () => true },
   { text: "It would be so swawesome~", condition: () => true },
   { text: "Am I really a glorified news ticker?", condition: () => true },
   { text: "Real ones beats the game with no autoclicker.", condition: () => true },
-  { text: "The swa elites are so boring. But they do reward me with knowledge points.", condition: () => true },
+  { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 are so boring. But they do reward me with knowledge points.", condition: () => true },
   {
     text: "The swa council© makes us keep count of the amount of time we see the number 727 anywhere.",
     condition: () => true,
@@ -1097,11 +1097,11 @@ const swariaQuotes = [
   { text: "The boss of this facility is actually really nice, Swaltough I've never met them yet.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "There's Swactually someone else working in the prism lab named Vi, They seem shy, but nice.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "Is it just me or does it smell like chlorine inside the prism lab?", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
-  { text: "OMG MY KP IS GONE!!! NOOOOO!!! THE SWA ELITES TOOK THEM SWALL!!!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
+  { text: "OMG MY KP IS GONE!!! NOOOOO!!! 𝒯𝐻𝐸 𝒮𝒲𝒜 𝐸𝐿𝐼𝒯𝐸 TOOK THEM SWALL!!!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "How come Vi can handle the prism lab? I'm so jealous.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "I don't know why but I feel a strange feeling when discovering new Swalements...", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(3),},
   { text: "Swanother factory expansion, there goes my kp again...", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(3),},
-  { text: "So... The swa elites now wants feathers?", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(3),},
+  { text: "So... 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 now wants feathers?", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(3),},
   { text: "Oh, the prism now creates red light!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.eq(4),},
   { text: "It's so quiet at night... I can hear the boxes breathing.", condition: () => { if (!window.daynight || typeof window.daynight.getTime !== 'function') return false; const mins = window.daynight.getTime(); return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360); } },
   { text: "Sometimes I wonder if the boxes dream when it's dark.", condition: () => { if (!window.daynight || typeof window.daynight.getTime !== 'function') return false; const mins = window.daynight.getTime(); return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360); } },
@@ -1148,20 +1148,20 @@ const swariaQuotes = [
   // Anomaly-related quotes (only appear after doing an infinity reset at least once)
   { text: "Ever since the swinfinity reset, things have been... swardly different around here.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I keep hearing strange noises coming from the walls. Is that normal?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-  { text: "The anomaly resolver that the Swa elites gave us is really swhelpful to get rid of swanomalies.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "The anomaly resolver that 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 gave us is really swhelpful to get rid of swanomalies.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "Sometimes I see boxes flickering in and out of existence. Swat's up with that?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "The fabric of reality seems a bit torn lately. Is it just me?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I swaw something moving in the corner of my eye, but when I looked, nothing was there...", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "Ever since we broke through swinfinity, weird things have been happening. Coincidence? I think not!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I found a box that wasn't there a minute ago. Swanomalies are real!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-  { text: "The Swa elites warned us about these 'fluctations in reality'. I thought they were just being dramatic.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 warned us about these 'fluctations in reality'. I thought they were just being dramatic.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I tried to use the anomaly resolver on myself. Turns out I'm 1% swanomalous. Is that bad?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "Reality is swacting up again. Time to get the swanomaly resolver!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I swear the facility layout changed when I wasn't looking. These swanomalies are getting out of hand!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "The swanomaly resolver is my new favorite gadget. It's like a tv remote, to get rid of swanomalies.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "Reaching swinfinity apparently broke reality too. Whoops!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I found an swanomaly that looked exactly like a box, but when I touched it, my wing went right through. Spooky!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-  { text: "The Swa elites said swanomalies affect production. I must be on the lookout for any swanomalies in the factory.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 said swanomalies affect production. I must be on the lookout for any swanomalies in the factory.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
 ];
 
 // Make swaria-related variables globally accessible
@@ -1746,6 +1746,15 @@ function initPowerMinigame() {
   if (window._chargerRedTileReduction !== undefined) {
     numRed = Math.max(1, numRed - window._chargerRedTileReduction);
   }
+  
+  // KitoFox mode setup and minimum red tiles enforcement
+  const isKitoFoxMode = window.state && window.state.kitoFoxModeActive;
+  
+  // Ensure minimum 10 red tiles when KitoFox/hardcore mode is active
+  if (isKitoFoxMode && numRed < 10) {
+    numRed = 10;
+  }
+  
   const redIndices = new Set();
   while (redIndices.size < numRed) {
     redIndices.add(Math.floor(Math.random() * totalCells));
@@ -1755,7 +1764,6 @@ function initPowerMinigame() {
   
   // KitoFox mode flickering setup
   let flickerInterval = null;
-  const isKitoFoxMode = window.state && window.state.kitoFoxModeActive;
   
   for (let i = 0; i < totalCells; i++) {
     const cell = document.createElement('div');
@@ -1853,6 +1861,9 @@ function initPowerMinigame() {
 function completePowerRecharge() {
   if (typeof window.trackHardModePowerRefill === 'function') {
     window.trackHardModePowerRefill();
+  }
+  if (typeof window.trackKitoFox2PowerRefill === 'function') {
+    window.trackKitoFox2PowerRefill();
   }
   if (typeof window.resetPowerMinigameFailures === 'function') {
     window.resetPowerMinigameFailures();
@@ -4068,7 +4079,7 @@ const soapQuotes = [
   { text: "The generator hums a different tune when it's extra clean.", condition: () => true },
   { text: "I once tried to invent soap-powered boxes. It didn't work, but it was fun!", condition: () => true },
   { text: "If you ever need advice on soap, you know who to ask.", condition: () => true },
-  { text: "I bet even the Swa elites can't out-clean me!", condition: () => true },
+  { text: "I bet even 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 can't out-clean me!", condition: () => true },
   { text: "Sometimes I wonder if the bubbles are watching us back.", condition: () => true },
   { text: "Soap never panics. I just get extra foamy.", condition: () => true },
   { text: "If you see a bubble floating by, make a wish!", condition: () => true },
@@ -4106,7 +4117,7 @@ const soapQuotes = [
   { text: "I wonder how Vi is doing, I'll go talk to them on our break time.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "It smells like chlorine inside the prism lab? Oh that's just Vi ahah.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
   { text: "Vi told me you act very drunk while inside the prism lab.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(2),},
-  { text: "Each expansions, We're getting more and more materials from the Swa elites, I'm thinking of creating some sort of charger, but I'll need more ressources to do that.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.eq(3),},
+  { text: "Each expansions, We're getting more and more materials from 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒, I'm thinking of creating some sort of charger, but I'll need more ressources to do that.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.eq(3),},
   { text: "The charger's progress is going great, but its not ready to use yet.", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.eq(4),},
   { text: "Thanks to the facilities fifth expansion, I received the ressources to build a charger, and it's finally working!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.eq(5),},
   { text: "I tried to race Bijou once. They won just because you helped them! I call cheats on that!", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
@@ -4150,7 +4161,7 @@ const soapQuotes = [
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
     return level >= 4;
   }},
-  { text: "Between you and me, I think my auto recharge system is better than anything the Swa elites could make.", condition: () => {
+  { text: "Between you and me, I think my auto recharge system is better than anything 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 could make.", condition: () => {
     const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || 
                   (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0;
     return level >= 4;
@@ -4280,7 +4291,7 @@ const soapQuotes = [
     return level >= 7;
   }},
   { text: "I caught an anomaly trying to shut down the power, but I stopped it just in time!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-  { text: "The Swa elites warned us about reality fluctuations. Do you know what they mean by that?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 warned us about reality fluctuations. Do you know what they mean by that?", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I wanna see an anomaly that creates infinite soap bubbles!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "Sometimes I wonder if I'M the anomaly. I mean, who else loves soap this much? The anomaly resolver is saying I'm only 2% anomalous? I don't believe it.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "These anomalies are making the facility more interesting! Finally, something as unpredictable as my soap experiments. Hopefully these anomalies don't become dangerous.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
@@ -4725,6 +4736,14 @@ function getKpGainPreview() {
   // Apply total infinity reached boost to KP gain preview
   if (typeof window.applyTotalInfinityReachedBoost === 'function') {
     preview = window.applyTotalInfinityReachedBoost(preview);
+  }
+  
+  // Apply permanent berry plate boost to KP gain preview
+  if (window.state && window.state.deliverySystem && window.state.deliverySystem.kpBoostFromBerryPlates) {
+    const berryPlateBoost = DecimalUtils.toDecimal(window.state.deliverySystem.kpBoostFromBerryPlates);
+    if (berryPlateBoost.gt(1)) {
+      preview = preview.mul(berryPlateBoost);
+    }
   }
   
   return preview;
@@ -8023,7 +8042,19 @@ window.addEventListener('DOMContentLoaded', function() {
     'viCharacterSleeping',
     'viCharacterSleepTalking',
     // Power generator card for battery feeding
-    'powerGeneratorCard'
+    'powerGeneratorCard',
+    // Delivery card for berry plate feeding
+    'deliveryCard',
+    // Nectarize machine for glittering petal feeding
+    'terrariumNectarizeMachine',
+    // Light grid for charged prisma feeding
+    'lightGrid',
+    // Pyramid for charged prisma feeding (Advanced Prism tab)
+    'pyramid',
+    // Prism Core card for charged prisma feeding (Advanced Prism tab)
+    'prismCoreCard',
+    // Mixing card for mushroom soup feeding (Kitchen tab)
+    'mixingCard'
   ];
 
 // Move restoreSwariaImage to global scope to fix ReferenceError
@@ -8058,6 +8089,12 @@ window.restoreSwariaImage = restoreSwariaImage;
       case 'viCharacterSleeping': return 'Vivien';
       case 'viCharacterSleepTalking': return 'Vivien';
       case 'powerGeneratorCard': return 'PowerGenerator';
+      case 'deliveryCard': return 'DeliverySystem';
+      case 'terrariumNectarizeMachine': return 'NectarizeSystem';
+      case 'lightGrid': return 'PrismCore';
+      case 'pyramid': return 'PrismCore';
+      case 'prismCoreCard': return 'PrismCore';
+      case 'mixingCard': return 'MixingSystem';
       default: return 'Unknown';
     }
   }  function setupCharacterDropTargets() {
@@ -8079,11 +8116,17 @@ window.restoreSwariaImage = restoreSwariaImage;
           const isPowerGenerator = id === 'powerGeneratorCard';
           const isBatteryToken = window._draggingTokenType === 'batteries' || window._draggingTokenType === 'battery';
           const isViCharacter = id.startsWith('viCharacter') || id === 'viSpeechBubble';
+          const isDeliveryButton = id === 'deliveryCard';
+          const isBerryPlateToken = window._draggingTokenType === 'berryPlate';
           
           if (isPowerGenerator && isBatteryToken) {
             el.style.outline = '3px solid #4CAF50'; // Green for power generator with batteries
           } else if (isPowerGenerator && !isBatteryToken) {
             el.style.outline = '3px solid #ff4444'; // Red for power generator with non-battery tokens
+          } else if (isDeliveryButton && isBerryPlateToken) {
+            el.style.outline = '3px solid #4CAF50'; // Green for delivery button with berry plates
+          } else if (isDeliveryButton && !isBerryPlateToken) {
+            el.style.outline = '3px solid #ff4444'; // Red for delivery button with non-berry plate tokens
           } else if (isViCharacter) {
             el.style.outline = '3px solid #ff9500'; // Orange for Vi characters
           } else {
@@ -8148,9 +8191,9 @@ window.restoreSwariaImage = restoreSwariaImage;
           }
           
           // Token-specific restrictions
-          if (tokenType === 'berryPlate' && characterName !== 'Swaria') {
+          if (tokenType === 'berryPlate' && characterName !== 'Swaria' && characterName !== 'DeliverySystem') {
             el.style.outline = '3px solid #ff4444';
-            el.title = 'Berry Plates can only be given to Swaria!';
+            el.title = 'Berry Plates can only be given to Swaria or the Delivery System!';
             setTimeout(() => {
               el.style.outline = '';
               el.title = '';
@@ -8178,9 +8221,19 @@ window.restoreSwariaImage = restoreSwariaImage;
             return;
           }
           
-          if (tokenType === 'chargedPrisma' && characterName !== 'Vi') {
+          if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'PrismCore') {
             el.style.outline = '3px solid #ff4444';
-            el.title = 'Charged Prisma can only be given to Vi!';
+            el.title = 'Charged Prisma can only be given to Vi or the Prism Core!';
+            setTimeout(() => {
+              el.style.outline = '';
+              el.title = '';
+            }, 1200);
+            return;
+          }
+          
+          if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'MixingSystem') {
+            el.style.outline = '3px solid #ff4444';
+            el.title = 'Mushroom Soup can only be given to Mystic or the Mixing Card!';
             setTimeout(() => {
               el.style.outline = '';
               el.title = '';
@@ -8232,6 +8285,38 @@ window.restoreSwariaImage = restoreSwariaImage;
               // Reject non-battery tokens
               el.style.outline = '3px solid #ff4444';
               el.title = 'Power Generator only accepts batteries!';
+              setTimeout(() => {
+                el.style.outline = '';
+                el.title = '';
+              }, 1500);
+              return;
+            }
+          }
+          
+          // Special case for Delivery System berry plate feeding
+          if (characterName === 'DeliverySystem') {
+            if (tokenType === 'berryPlate') {
+              // Check if player has berry plates
+              const availableBerryPlates = DecimalUtils.toDecimal(window.state.berryPlate || 0);
+              if (availableBerryPlates.lte(0)) {
+                el.style.outline = '3px solid #ff4444';
+                el.title = 'You don\'t have any berry plates!';
+                setTimeout(() => {
+                  el.style.outline = '';
+                  el.title = '';
+                }, 1500);
+                return;
+              }
+              
+              // Use the existing showGiveTokenModal for consistency
+              showGiveTokenModal(tokenType, characterName);
+              el.style.outline = '';
+              el._tokenDropActive = false;
+              return;
+            } else {
+              // Reject non-berry plate tokens
+              el.style.outline = '3px solid #ff4444';
+              el.title = 'Delivery System only accepts berry plates!';
               setTimeout(() => {
                 el.style.outline = '';
                 el.title = '';
@@ -8345,7 +8430,7 @@ function getHardModeQuestCharacterImage(isTalking = false) {
   } else if (window.state && window.state.recorderModeActive) {
     return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
   } else {
-    return isTalking ? "swa talking.png" : "swa normal.png";
+    return isTalking ? "assets/icons/kitomode speech.png" : "assets/icons/kitomode.png";
   }
 }
 
@@ -8625,24 +8710,28 @@ function showCharacterSpeech(characterName, tokenType) {
       alert('Swa bucks cannot be given to characters!');
       return;
     }
-    if (tokenType === 'berryPlate' && characterName !== 'Swaria' && characterName !== 'Tico') {
-      alert('Berry Plates can only be given to Swaria!');
+    if (tokenType === 'berryPlate' && characterName !== 'Swaria' && characterName !== 'Tico' && characterName !== 'DeliverySystem') {
+      alert('Berry Plates can only be given to Swaria or the Delivery System!');
       return;
     }
-    if (tokenType === 'batteries' && characterName !== 'Soap' && characterName !== 'Fluzzer' && characterName !== 'Tico') {
-      alert('Batteries can only be given to Soap or Fluzzer!');
+    if (tokenType === 'batteries' && characterName !== 'Soap' && characterName !== 'Fluzzer' && characterName !== 'Tico' && characterName !== 'PowerGenerator') {
+      alert('Batteries can only be given to Soap, Fluzzer, or the Power Generator!');
       return;
     }
-    if (tokenType === 'glitteringPetals' && characterName !== 'Fluzzer' && characterName !== 'Tico') {
-      alert('Glittering Petals can only be given to Fluzzer!');
+    if ((tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal') && characterName !== 'Fluzzer' && characterName !== 'Tico' && characterName !== 'NectarizeSystem') {
+      alert('Glittering Petals can only be given to Fluzzer or the Nectarize Machine!');
       return;
     }
-    if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'Tico') {
-      alert('Charged Prisma can only be given to Vi!');
+    if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'Tico' && characterName !== 'PrismCore') {
+      alert('Charged Prisma can only be given to Vi or the Prism Core!');
       return;
     }
-    if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'Swaria' && characterName !== 'Tico') {
-      alert('Mushroom Soup can only be given to Mystic or Swaria!');
+    if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'Tico' && characterName !== 'MixingSystem') {
+      alert('Mushroom Soup can only be given to Mystic or the Mixing Card!');
+      return;
+    }
+    if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'Tico' && characterName !== 'MixingSystem') {
+      alert('Mushroom Soup can only be given to Mystic or the Mixing Card!');
       return;
     }
     
@@ -8708,6 +8797,18 @@ function showCharacterSpeech(characterName, tokenType) {
       }
     } else if (characterName === 'PowerGenerator') {
       title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to add to the Power Generator?`;
+      img.src = tokenImages[tokenType] || '';
+    } else if (characterName === 'DeliverySystem') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you wanna add to the next delivery load?`;
+      img.src = tokenImages[tokenType] || '';
+    } else if (characterName === 'NectarizeSystem') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you wanna add to the nectarizer?`;
+      img.src = tokenImages[tokenType] || '';
+    } else if (characterName === 'PrismCore') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you wanna add to the prism core?`;
+      img.src = tokenImages[tokenType] || '';
+    } else if (characterName === 'MixingSystem') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you wanna add to the mixer?`;
       img.src = tokenImages[tokenType] || '';
     } else {
       title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to give to ${characterName}?`;
@@ -8970,6 +9071,224 @@ function showCharacterSpeech(characterName, tokenType) {
         // Show success message
         const powerBonus = amount * 5;
         showBatteryFeedSuccessMessage(amount, powerBonus);
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
+      // Handle DeliverySystem berry plate loading
+      if (characterName === 'DeliverySystem' && tokenType === 'berryPlate') {
+        // Deduct berry plates from inventory
+        if (window.state && window.state.berryPlate) {
+          if (typeof window.state.berryPlate.minus === 'function') {
+            window.state.berryPlate = window.state.berryPlate.minus(amount);
+            if (window.state.berryPlate.lt(0)) window.state.berryPlate = new Decimal(0);
+          } else {
+            window.state.berryPlate = Math.max(0, Number(window.state.berryPlate) - amount);
+          }
+        }
+        
+        // Add berry plates to delivery load
+        if (!window.state.deliverySystem) {
+          window.state.deliverySystem = {
+            berryPlatesInLoad: new Decimal(0),
+            totalBerryPlatesGiven: new Decimal(0),
+            kpBoostFromBerryPlates: new Decimal(1)
+          };
+        }
+        
+        if (!DecimalUtils.isDecimal(window.state.deliverySystem.berryPlatesInLoad)) {
+          window.state.deliverySystem.berryPlatesInLoad = new Decimal(window.state.deliverySystem.berryPlatesInLoad || 0);
+        }
+        
+        window.state.deliverySystem.berryPlatesInLoad = window.state.deliverySystem.berryPlatesInLoad.add(amount);
+        
+        // Update inventory display
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
+        // Update delivery system UI
+        if (typeof updateDeliverySystemUI === 'function') {
+          updateDeliverySystemUI();
+        }
+        
+        // Success message removed - berry plate info shown in delivery card instead
+        // showBerryPlateLoadSuccessMessage(amount);
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
+      // Handle NectarizeSystem glittering petal loading
+      if (characterName === 'NectarizeSystem' && (tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal')) {
+        // Deduct glittering petals from inventory
+        if (window.state && window.state.glitteringPetals) {
+          if (typeof window.state.glitteringPetals.minus === 'function') {
+            window.state.glitteringPetals = window.state.glitteringPetals.minus(amount);
+            if (window.state.glitteringPetals.lt(0)) window.state.glitteringPetals = new Decimal(0);
+          } else {
+            window.state.glitteringPetals = Math.max(0, Number(window.state.glitteringPetals) - amount);
+          }
+        }
+        
+        // Add glittering petals to nectarizer
+        if (!window.state.deliverySystem) {
+          window.state.deliverySystem = {
+            berryPlatesInLoad: new Decimal(0),
+            totalBerryPlatesGiven: new Decimal(0),
+            kpBoostFromBerryPlates: new Decimal(1),
+            glitteringPetalsInNectarizer: new Decimal(0),
+            totalGlitteringPetalsGiven: new Decimal(0),
+            nectarBoostFromGlitteringPetals: new Decimal(1)
+          };
+        }
+        
+        if (!DecimalUtils.isDecimal(window.state.deliverySystem.glitteringPetalsInNectarizer)) {
+          window.state.deliverySystem.glitteringPetalsInNectarizer = new Decimal(window.state.deliverySystem.glitteringPetalsInNectarizer || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.deliverySystem.totalGlitteringPetalsGiven)) {
+          window.state.deliverySystem.totalGlitteringPetalsGiven = new Decimal(window.state.deliverySystem.totalGlitteringPetalsGiven || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals)) {
+          window.state.deliverySystem.nectarBoostFromGlitteringPetals = new Decimal(window.state.deliverySystem.nectarBoostFromGlitteringPetals || 1);
+        }
+        
+        // Apply boost immediately - no pending reset needed
+        window.state.deliverySystem.glitteringPetalsInNectarizer = window.state.deliverySystem.glitteringPetalsInNectarizer.add(amount);
+        window.state.deliverySystem.totalGlitteringPetalsGiven = window.state.deliverySystem.totalGlitteringPetalsGiven.add(amount);
+        window.state.deliverySystem.nectarBoostFromGlitteringPetals = new Decimal(1).add(window.state.deliverySystem.totalGlitteringPetalsGiven.mul(0.05));
+        
+        // Sync to terrarium state if needed
+        if (typeof syncTerrariumToState === 'function') {
+          syncTerrariumToState();
+        }
+        
+        // Update inventory display
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
+        // Update nectarize machine UI
+        if (typeof updateNectarizeMachineDisplay === 'function') {
+          updateNectarizeMachineDisplay();
+        }
+        if (typeof updateNectarizePreview === 'function') {
+          updateNectarizePreview();
+        }
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
+      // Handle PrismCore charged prisma loading
+      if (characterName === 'PrismCore' && tokenType === 'chargedPrisma') {
+        // Deduct charged prisma from inventory
+        if (window.state && window.state.chargedPrisma) {
+          if (typeof window.state.chargedPrisma.minus === 'function') {
+            window.state.chargedPrisma = window.state.chargedPrisma.minus(amount);
+            if (window.state.chargedPrisma.lt(0)) window.state.chargedPrisma = new Decimal(0);
+          } else {
+            window.state.chargedPrisma = Math.max(0, Number(window.state.chargedPrisma) - amount);
+          }
+        }
+        
+        // Add charged prisma to prism core
+        if (!window.state.prismCoreSystem) {
+          window.state.prismCoreSystem = {
+            chargedPrismaInCore: new Decimal(0),
+            totalChargedPrismaGiven: new Decimal(0),
+            lightBoostFromChargedPrisma: new Decimal(1)
+          };
+        }
+        
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.chargedPrismaInCore)) {
+          window.state.prismCoreSystem.chargedPrismaInCore = new Decimal(window.state.prismCoreSystem.chargedPrismaInCore || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.lightBoostFromChargedPrisma)) {
+          window.state.prismCoreSystem.lightBoostFromChargedPrisma = new Decimal(window.state.prismCoreSystem.lightBoostFromChargedPrisma || 1);
+        }
+        
+        // Apply boost immediately - 0.1x per charged prisma
+        window.state.prismCoreSystem.chargedPrismaInCore = window.state.prismCoreSystem.chargedPrismaInCore.add(amount);
+        window.state.prismCoreSystem.totalChargedPrismaGiven = window.state.prismCoreSystem.totalChargedPrismaGiven.add(amount);
+        window.state.prismCoreSystem.lightBoostFromChargedPrisma = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+        
+        // Update inventory display
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
+        // Update prism UI
+        if (typeof updatePrismUI === 'function') {
+          updatePrismUI();
+        }
+        
+        // Update core boost card display
+        if (typeof updateCoreBoostCard === 'function') {
+          updateCoreBoostCard();
+        }
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
+      // Handle MixingSystem mushroom soup feeding
+      if (characterName === 'MixingSystem' && tokenType === 'mushroomSoup') {
+        // Deduct mushroom soup from inventory
+        if (window.state && window.state.mushroomSoup) {
+          if (typeof window.state.mushroomSoup.minus === 'function') {
+            window.state.mushroomSoup = window.state.mushroomSoup.minus(amount);
+            if (window.state.mushroomSoup.lt(0)) window.state.mushroomSoup = new Decimal(0);
+          } else {
+            window.state.mushroomSoup = Math.max(0, Number(window.state.mushroomSoup) - amount);
+          }
+        }
+        
+        // Add mushroom soup to mixing system for cooking speed boost
+        if (!window.state.mixingSystem) {
+          window.state.mixingSystem = {
+            mushroomSoupInMixer: new Decimal(0),
+            totalMushroomSoupGiven: new Decimal(0),
+            cookingSpeedBoost: new Decimal(1)
+          };
+        }
+        
+        if (!DecimalUtils.isDecimal(window.state.mixingSystem.mushroomSoupInMixer)) {
+          window.state.mixingSystem.mushroomSoupInMixer = new Decimal(window.state.mixingSystem.mushroomSoupInMixer || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.mixingSystem.totalMushroomSoupGiven)) {
+          window.state.mixingSystem.totalMushroomSoupGiven = new Decimal(window.state.mixingSystem.totalMushroomSoupGiven || 0);
+        }
+        if (!DecimalUtils.isDecimal(window.state.mixingSystem.cookingSpeedBoost)) {
+          window.state.mixingSystem.cookingSpeedBoost = new Decimal(window.state.mixingSystem.cookingSpeedBoost || 1);
+        }
+        
+        // Apply cooking speed boost immediately - 0.01x per mushroom soup
+        window.state.mixingSystem.mushroomSoupInMixer = window.state.mixingSystem.mushroomSoupInMixer.add(amount);
+        window.state.mixingSystem.totalMushroomSoupGiven = window.state.mixingSystem.totalMushroomSoupGiven.add(amount);
+        window.state.mixingSystem.cookingSpeedBoost = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
+        
+        // Update inventory display
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
+        // Update kitchen UI
+        if (typeof updateKitchenUI === 'function') {
+          updateKitchenUI(true);
+        }
         
         // Close the modal
         const modal = document.getElementById('giveTokenModal');
@@ -9265,13 +9584,25 @@ function showCharacterSpeech(characterName, tokenType) {
       if (characterName === 'Swaria' && typeof state !== 'undefined' && state.hardModeQuestActive) {
         if (typeof state.hardModeQuestProgress !== 'undefined') {
           if (storageKey === 'berries') {
-            state.hardModeQuestProgress.berryTokens += amount;
+            if (!DecimalUtils.isDecimal(state.hardModeQuestProgress.berryTokens)) {
+              state.hardModeQuestProgress.berryTokens = new Decimal(state.hardModeQuestProgress.berryTokens || 0);
+            }
+            state.hardModeQuestProgress.berryTokens = state.hardModeQuestProgress.berryTokens.add(amount);
           } else if (storageKey === 'stardust') {
-            state.hardModeQuestProgress.stardustTokens += amount;
+            if (!DecimalUtils.isDecimal(state.hardModeQuestProgress.stardustTokens)) {
+              state.hardModeQuestProgress.stardustTokens = new Decimal(state.hardModeQuestProgress.stardustTokens || 0);
+            }
+            state.hardModeQuestProgress.stardustTokens = state.hardModeQuestProgress.stardustTokens.add(amount);
           } else if (tokenType === 'berryPlate') {
-            state.hardModeQuestProgress.berryPlateTokens += amount;
+            if (!DecimalUtils.isDecimal(state.hardModeQuestProgress.berryPlateTokens)) {
+              state.hardModeQuestProgress.berryPlateTokens = new Decimal(state.hardModeQuestProgress.berryPlateTokens || 0);
+            }
+            state.hardModeQuestProgress.berryPlateTokens = state.hardModeQuestProgress.berryPlateTokens.add(amount);
           } else if (tokenType === 'mushroomSoup') {
-            state.hardModeQuestProgress.mushroomSoupTokens += amount;
+            if (!DecimalUtils.isDecimal(state.hardModeQuestProgress.mushroomSoupTokens)) {
+              state.hardModeQuestProgress.mushroomSoupTokens = new Decimal(state.hardModeQuestProgress.mushroomSoupTokens || 0);
+            }
+            state.hardModeQuestProgress.mushroomSoupTokens = state.hardModeQuestProgress.mushroomSoupTokens.add(amount);
           }
           if (typeof window.updateHardModeQuestProgress === 'function') {
             window.updateHardModeQuestProgress();
@@ -11388,6 +11719,61 @@ function showBatteryFeedSuccessMessage(batteriesUsed, powerBonus) {
     }
   }, 3000);
 }
+
+function showBerryPlateLoadSuccessMessage(berryPlatesUsed) {
+  // Create a temporary success message
+  const message = document.createElement('div');
+  message.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #4CAF50;
+    color: white;
+    padding: 1em 2em;
+    border-radius: 12px;
+    font-size: 1.1em;
+    font-weight: bold;
+    z-index: 999999999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: fadeInOut 3s ease-in-out;
+  `;
+  
+  message.textContent = `Loaded ${berryPlatesUsed} ${berryPlatesUsed === 1 ? 'berry plate' : 'berry plates'} into the delivery truck!`;
+  
+  // Add animation CSS if not already added
+  if (!document.getElementById('berryPlateLoadAnimationCSS')) {
+    const style = document.createElement('style');
+    style.id = 'berryPlateLoadAnimationCSS';
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(message);
+  
+  setTimeout(() => {
+    if (message.parentNode) {
+      message.parentNode.removeChild(message);
+    }
+  }, 3000);
+}
+
+function updateDeliverySystemUI() {
+  // Update the delivery card with berry plate information
+  // This will be called from the main UI update cycle
+  updateUI(); // For now, just trigger a full UI update
+}
+
+// Make functions globally accessible
+window.showBerryPlateLoadSuccessMessage = showBerryPlateLoadSuccessMessage;
+window.updateDeliverySystemUI = updateDeliverySystemUI;
 
 function updateBatteryUpgradeDisplay() {
   const batteryUpgradeDisplay = document.querySelector('.battery-upgrade-display');
