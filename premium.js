@@ -620,6 +620,7 @@ const recorderQuotes = [
   { text: "It is I, the Random Recorder.", condition: () => true },
   { text: "I was just leveling up and then it hit me with that and I'm like what?", condition: () => true },
   { text: "antiswa dimenswans.", condition: () => true },
+  { text: "I am so smart, I know 3 numbers.", condition: () => true },
   { text: "Am I also a glorified news ticker?", condition: () => true },
   { text: "👀 Oh would you look at that you got a legendary box ooh I wonder how that happened wow guess we'll never know....👀", condition: () => true },
   { text: "I am the recorder of all things, the keeper of knowledge, the chronicler of events, the scribe of history, the archivist of memories, the documenter of facts, the transcriber of stories, the stenographer of conversations, the reporter of news, the journalist of happenings, the biographer of lives, the memoirist of experiences, the annalist of occurrences, the logkeeper of activities, the historian of times, the chronicler of eras, the recorder of ages.", condition: () => true },

@@ -788,7 +788,7 @@ window.SaveSystem = {
   },
 
   // Throttled import save data from string
-  importSave(importString) {
+  async importSave(importString) {
     // Check throttling
     if (!this.canImport()) {
       const timeLeft = Math.ceil((this.importThrottleDelay - (Date.now() - this.lastImportTime)) / 1000);
@@ -894,10 +894,11 @@ window.SaveSystem = {
         compressedImport = LZString.compressToUTF16(importSaveString);
       }
       
-      localStorage.setItem(this.getSaveKey(), compressedImport);
+      // Save to current storage system (IndexedDB or localStorage)
+      await this.setIndexedDBItem(this.getSaveKey(), compressedImport);
       
       // Load the imported data
-      const loadResult = this.loadGame();
+      const loadResult = await this.loadGame();
       
       this.lastImportTime = Date.now();
       this.isImporting = false;
@@ -954,6 +955,9 @@ window.SaveSystem = {
         if (typeof window.frontDesk.renderUI === 'function') {
           window.frontDesk.renderUI();
         }
+        if (typeof window.frontDesk.forceCheckUnlock === 'function') {
+          window.frontDesk.forceCheckUnlock();
+        }
       }
       
       // Re-initialize prism systems
@@ -965,6 +969,11 @@ window.SaveSystem = {
       }
       if (typeof window.updateLightGeneratorButtons === 'function') {
         window.updateLightGeneratorButtons();
+      }
+      
+      // Refresh premium state and character images
+      if (typeof window.refreshPremiumState === 'function') {
+        window.refreshPremiumState();
       }
       
       // Update all UI systems
@@ -1000,11 +1009,68 @@ window.SaveSystem = {
         window.boutique.updateUI();
       }
       
+      // Refresh terrarium UI if available
+      if (typeof window.refreshTerrariumUI === 'function') {
+        window.refreshTerrariumUI();
+      }
+      
+      // Update power and day/night state
+      if (typeof window.updatePowerEnergyStatusUI === 'function') {
+        window.updatePowerEnergyStatusUI();
+      }
+      if (typeof window.updateGlobalBlackoutOverlay === 'function') {
+        window.updateGlobalBlackoutOverlay();
+      }
+      if (typeof window.updateGlobalDimOverlay === 'function') {
+        window.updateGlobalDimOverlay();
+      }
+      
+      // Update achievement system
+      if (typeof window.reloadAchievementsForSlot === 'function') {
+        window.reloadAchievementsForSlot();
+      }
+      
+      // Force tab visibility updates
+      if (typeof window.forceTabVisibilityUpdate === 'function') {
+        window.forceTabVisibilityUpdate();
+      }
+      
+      // Update any infinity system displays
+      if (typeof window.infinitySystem?.restoreInfinityImages === 'function') {
+        window.infinitySystem.restoreInfinityImages();
+      }
+      
+      // Update grade UI and milestones
+      if (typeof window.updateGradeUI === 'function') {
+        window.updateGradeUI();
+      }
+      if (typeof window.updateMilestoneTable === 'function') {
+        window.updateMilestoneTable();
+      }
+      
+      // Update prism sub-tab visibility
+      if (typeof window.updatePrismSubTabVisibility === 'function') {
+        window.updatePrismSubTabVisibility();
+      }
+      
       // Refresh any active tabs
       const activeTab = document.querySelector('.tab.active');
       if (activeTab) {
         activeTab.click();
       }
+      
+      // Force a complete UI refresh after a short delay to ensure everything is updated
+      setTimeout(() => {
+        if (typeof window.updateUI === 'function') {
+          window.updateUI();
+        }
+        if (typeof window.renderGenerators === 'function') {
+          window.renderGenerators();
+        }
+        
+        // Show completion message
+        this.showSaveNotification('Game fully refreshed after import!');
+      }, 500);
       
       
     } catch (error) {
@@ -1239,8 +1305,8 @@ window.exportDeliveryResetBackup = function() {
   return window.SaveSystem.exportDeliveryResetBackup();
 };
 
-window.importSave = function(importString) {
-  return window.SaveSystem.importSave(importString);
+window.importSave = async function(importString) {
+  return await window.SaveSystem.importSave(importString);
 };
 
 // Modal Management Functions
@@ -1295,12 +1361,48 @@ window.showImportDialog = function() {
 
   // Add import function to the dialog
   window.doImport = function() {
-    const importData = textarea.value;
-    if (window.SaveSystem.importSave(importData)) {
-      dialog.remove();
-      updateSaveUI();
+    const importData = textarea.value.trim();
+    
+    if (!importData) {
+      window.SaveSystem.showSaveNotification('Please paste save data first!', true);
+      return;
     }
-    delete window.doImport;
+    
+    // Show importing status
+    const importButton = dialog.querySelector('button[onclick="doImport()"]');
+    const originalText = importButton.textContent;
+    importButton.textContent = 'Importing...';
+    importButton.disabled = true;
+    
+    // Use setTimeout to allow UI to update before processing
+    setTimeout(async () => {
+      try {
+        const importResult = await window.SaveSystem.importSave(importData);
+        if (importResult) {
+          dialog.remove();
+          updateSaveUI();
+          // Force an additional UI update after dialog closes
+          setTimeout(() => {
+            if (typeof window.updateUI === 'function') {
+              window.updateUI();
+            }
+            if (typeof window.renderGenerators === 'function') {
+              window.renderGenerators();
+            }
+          }, 100);
+        } else {
+          // Import failed, re-enable button
+          importButton.textContent = originalText;
+          importButton.disabled = false;
+        }
+      } catch (error) {
+        console.error('Import dialog error:', error);
+        window.SaveSystem.showSaveNotification(`Import failed: ${error.message}`, true);
+        importButton.textContent = originalText;
+        importButton.disabled = false;
+      }
+      delete window.doImport;
+    }, 50);
   };
 };
 
