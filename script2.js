@@ -8139,7 +8139,8 @@ window.restoreSwariaImage = restoreSwariaImage;
             const swariaImg = document.getElementById('swariaCharacter');
             if (swariaImg) {
               swariaImg._originalSrc = swariaImg.src; // Store original source
-              swariaImg.src = 'swa talking.png';
+              // Use proper function to get speaking image for current mode (recorder, KitoFox, etc.)
+              swariaImg.src = getMainCargoCharacterImage(true);
             }
           }
         }
