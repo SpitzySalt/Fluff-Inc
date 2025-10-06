@@ -519,6 +519,22 @@ const viSpeechPatterns = {
     "Thx to you, I can finally explore the facility without being stuck in that advanced prism lab all day.",
     "I'll make sure to explore more of the facility's departments on my break time, you've expanded the facility quite a lot with what I've seen.",
     "I've finally been able to meet some of the other department workers. Soap was ecstatic to see me again. Tico was really friendly, a bit too friendly... Lepre was glad to see me again as they gave me many tokens. Fluzzer actually scares me despite their soft demeanor, they just grinned at me for a minute straight. I've not met the tired one yet, I don't really know how to get to Lethargy's department, all I know is it's underground. And that Mystic one seems a bit... off.",
+  ],
+  purpleLightDenial: [
+    "Purple light? What are you talking about? I don't see any purple light.",
+    "There's no such thing as purple light in that spectrum.",
+    "I've analyzed every wavelength from 350nm to 1000nm. Purple isn't real.",
+    "My instruments don't detect anything beyond blue. You're imagining things.",
+    "Purple light is a myth. My condition makes me see the spectrum more accurately than most.",
+    "Everyone keeps talking about 'purple light' but I've never seen it. Because it doesn't exist.",
+    "That area you call 'purple' is just blurple.",
+    "Purple light? Never seen it.",
+    "I've spent years studying light wavelengths. Trust me, there's no purple light.",
+    "Stop trying to convince me purple exists. It doesn't.",
+    "The spectrum ends at blue. Anything beyond that is just unfiltered imagination.",
+    "Show me the wavelength data for 'purple light.' You can't, because it doesn't exist.",
+    "I've cross-referenced every light frequency. Purple is not in the data.",
+    "That X mark? It's blocking what people call purple, because to me that looks blue."
   ]
 };
 function isViSleepTime() {
@@ -816,8 +832,22 @@ function showAdvancedPrismViSpeech(tokenType) {
   }
   showViSpeech(customResponse, 4000);
 }
+
+// Function to trigger purple light denial dialogue when X scribble is clicked
+function triggerPurpleLightDenial() {
+  const responses = viSpeechPatterns.purpleLightDenial;
+  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+  showViSpeech(randomResponse, 5000);
+  
+  // Add a small friendship point for interacting with Vi's quirk
+  if (window.friendship && window.friendship.addPoints) {
+    window.friendship.addPoints('vi', new Decimal(0.3));
+  }
+}
+
 window.showAdvancedPrismViResponse = showAdvancedPrismViResponse;
 window.showAdvancedPrismViSpeech = showAdvancedPrismViSpeech;
+window.triggerPurpleLightDenial = triggerPurpleLightDenial;
 window.pokeSwariaCharacter = pokeSwariaCharacter;
 window.showSwariaCharacterSpeech = showSwariaCharacterSpeech;
 window.updateCoreBoostCard = updateCoreBoostCard;
@@ -2670,7 +2700,7 @@ function renderAdvancedPrismUI(forceUpdate = false) {
             <div style="position: absolute; top: 45px; left: 90%; color: #9988cc; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">ULTRAVIOLET</div>
             
             <!-- Black X scribble marker over purple and ultraviolet sections -->
-            <div style="position: absolute; top: -10px; left: 76%; width: 28%; height: 160%; display: flex; align-items: center; justify-content: center; z-index: 5; pointer-events: none;">
+            <div id="purpleLightDenialScribble" style="position: absolute; top: -10px; left: 76%; width: 28%; height: 160%; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer; pointer-events: auto;" onclick="triggerPurpleLightDenial()">
               <svg width="100%" height="100%" viewBox="0 0 180 80" style="position: absolute; top: 0; left: 0; overflow: visible;">
                 <!-- Main X pattern - top-left to bottom-right -->
                 <path d="M0,15 Q20,20 40,25 Q60,30 80,35 Q100,40 120,45 Q140,50 160,55 M-2,17 Q18,22 38,27 Q58,32 78,37 Q98,42 118,47 Q138,52 158,57 M2,13 Q22,18 42,23 Q62,28 82,33 Q102,38 122,43 Q142,48 162,53" 
