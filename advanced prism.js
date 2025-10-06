@@ -3457,10 +3457,10 @@ function updateStableLightCards(forceUpdate = false) {
     }
   });
   
-  // Update spectrum indicators
-  if (window.updateSpectrumIndicators) {
-    window.updateSpectrumIndicators();
-  }
+  // Update spectrum indicators - disabled
+  // if (window.updateSpectrumIndicators) {
+  //   window.updateSpectrumIndicators();
+  // }
 }
 
 function updateCoreBoostCard() {
