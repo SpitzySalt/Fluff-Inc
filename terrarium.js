@@ -135,6 +135,7 @@ function getTerrariumState() {
         terrariumFlowerUpgrade3Level: 0,
         terrariumFlowerUpgrade4Level: 0,
         terrariumFlowerUpgrade5Level: 0,
+        kpNectarUpgradeLevel: 0,
         nectarXpUpgradeLevel: 0,
         nectarValueUpgradeLevel: 0,
         nectarInfinityUpgradeLevel: 0,
@@ -169,6 +170,17 @@ let terrariumXP = DecimalUtils.isDecimal(terrarium.xp) ? terrarium.xp : new Deci
 let terrariumLevel = terrarium.level;
 let flowerFieldExpansionUpgradeLevel = terrarium.flowerFieldExpansionUpgradeLevel || 0;
 let pollenValueUpgradeLevel = terrarium.pollenValueUpgradeLevel || 0;
+let pollenValueUpgrade2Level = terrarium.pollenValueUpgrade2Level || 0;
+let flowerValueUpgradeLevel = terrarium.flowerValueUpgradeLevel || 0;
+let pollenFlowerNectarUpgradeLevel = terrarium.pollenFlowerNectarUpgradeLevel || 0;
+let pollenToolSpeedUpgradeLevel = terrarium.pollenToolSpeedUpgradeLevel || 0;
+let flowerXPUpgradeLevel = terrarium.flowerXPUpgradeLevel || 0;
+let extraChargeUpgradeLevel = terrarium.extraChargeUpgradeLevel || 0;
+let xpMultiplierUpgradeLevel = terrarium.xpMultiplierUpgradeLevel || 0;
+let kpNectarUpgradeLevel = terrarium.kpNectarUpgradeLevel || 0;
+let nectarXpUpgradeLevel = terrarium.nectarXpUpgradeLevel || 0;
+let nectarValueUpgradeLevel = terrarium.nectarValueUpgradeLevel || 0;
+let nectarInfinityUpgradeLevel = terrarium.nectarInfinityUpgradeLevel || 0;
 let flowerGridPermanentlyUnlocked = terrarium.flowerGridPermanentlyUnlocked || false;
 
 // Helper functions to sync local variables with state
@@ -201,6 +213,7 @@ function syncTerrariumToState() {
   window.state.terrarium.terrariumFlowerUpgrade5Level = window.terrariumFlowerUpgrade5Level || 0;
   
   // Sync nectar upgrade levels
+  window.state.terrarium.kpNectarUpgradeLevel = kpNectarUpgradeLevel;
   window.state.terrarium.nectarXpUpgradeLevel = nectarXpUpgradeLevel;
   window.state.terrarium.nectarValueUpgradeLevel = nectarValueUpgradeLevel;
   window.state.terrarium.nectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
@@ -244,9 +257,12 @@ function syncTerrariumToState() {
   window.pollenValueUpgrade2Level = pollenValueUpgrade2Level;
   window.flowerValueUpgradeLevel = flowerValueUpgradeLevel;
   window.pollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+  window.terrariumPollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
   window.terrariumPollenToolSpeedUpgradeLevel = pollenToolSpeedUpgradeLevel;
   window.terrariumFlowerXPUpgradeLevel = flowerXPUpgradeLevel;
   window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+  window.terrariumFlowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
+  window.terrariumKpNectarUpgradeLevel = kpNectarUpgradeLevel;
   window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
   window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
   window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
@@ -292,12 +308,19 @@ function syncStateToTerrarium() {
   window.pollenValueUpgrade2Level = window.state.terrarium.pollenValueUpgrade2Level || 0;
   window.flowerValueUpgradeLevel = window.state.terrarium.flowerValueUpgradeLevel || 0;
   window.pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel || 0;
+  window.terrariumPollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel || 0;
+  window.flowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel || 0;
+  window.terrariumFlowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel || 0;
   window.terrariumXpMultiplierUpgradeLevel = xpMultiplierUpgradeLevel;
   
   // Sync nectar upgrade levels to local variables and window variables
+  kpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel || 0;
   nectarXpUpgradeLevel = window.state.terrarium.nectarXpUpgradeLevel || 0;
   nectarValueUpgradeLevel = window.state.terrarium.nectarValueUpgradeLevel || 0;
   nectarInfinityUpgradeLevel = window.state.terrarium.nectarInfinityUpgradeLevel || 0;
+  
+  // Force direct assignment from state to window variables to prevent any override issues
+  window.terrariumKpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel || 0;
   window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
   window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
   window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
@@ -372,6 +395,17 @@ window.terrariumXP = terrariumXP;
 window.terrariumLevel = terrariumLevel;
 window.flowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
 window.pollenValueUpgradeLevel = pollenValueUpgradeLevel;
+window.pollenValueUpgrade2Level = pollenValueUpgrade2Level;
+window.flowerValueUpgradeLevel = flowerValueUpgradeLevel;
+window.pollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+window.terrariumPollenToolSpeedUpgradeLevel = pollenToolSpeedUpgradeLevel;
+window.terrariumFlowerXPUpgradeLevel = flowerXPUpgradeLevel;
+window.terrariumExtraChargeUpgradeLevel = extraChargeUpgradeLevel;
+window.terrariumXpMultiplierUpgradeLevel = xpMultiplierUpgradeLevel;
+window.terrariumKpNectarUpgradeLevel = kpNectarUpgradeLevel;
+window.terrariumNectarXpUpgradeLevel = nectarXpUpgradeLevel;
+window.terrariumNectarValueUpgradeLevel = nectarValueUpgradeLevel;
+window.terrariumNectarInfinityUpgradeLevel = nectarInfinityUpgradeLevel;
 window.flowerGridPermanentlyUnlocked = flowerGridPermanentlyUnlocked;
 
 function getCurrentFlowerGridDimensions() {
@@ -778,6 +812,109 @@ window.forceUpdateFlowerGridButton = function() {
   }
 };
 
+// Debug function to check terrarium upgrade variables
+window.debugTerrariumUpgrades = function() {
+  console.log('=== TERRARIUM UPGRADE DEBUG ===');
+  console.log('State values:');
+  console.log('  kpNectarUpgradeLevel (state):', window.state?.terrarium?.kpNectarUpgradeLevel);
+  console.log('  pollenFlowerNectarUpgradeLevel (state):', window.state?.terrarium?.pollenFlowerNectarUpgradeLevel);
+  console.log('  flowerFieldExpansionUpgradeLevel (state):', window.state?.terrarium?.flowerFieldExpansionUpgradeLevel);
+  
+  console.log('Local variables:');
+  console.log('  kpNectarUpgradeLevel (local):', typeof kpNectarUpgradeLevel !== 'undefined' ? kpNectarUpgradeLevel : 'UNDEFINED');
+  console.log('  pollenFlowerNectarUpgradeLevel (local):', typeof pollenFlowerNectarUpgradeLevel !== 'undefined' ? pollenFlowerNectarUpgradeLevel : 'UNDEFINED');
+  console.log('  flowerFieldExpansionUpgradeLevel (local):', typeof flowerFieldExpansionUpgradeLevel !== 'undefined' ? flowerFieldExpansionUpgradeLevel : 'UNDEFINED');
+  
+  console.log('Window variables:');
+  console.log('  window.terrariumKpNectarUpgradeLevel:', window.terrariumKpNectarUpgradeLevel);
+  console.log('  window.pollenFlowerNectarUpgradeLevel:', window.pollenFlowerNectarUpgradeLevel);
+  console.log('  window.terrariumPollenFlowerNectarUpgradeLevel:', window.terrariumPollenFlowerNectarUpgradeLevel);
+  console.log('  window.flowerFieldExpansionUpgradeLevel:', window.flowerFieldExpansionUpgradeLevel);
+  console.log('  window.terrariumFlowerFieldExpansionUpgradeLevel:', window.terrariumFlowerFieldExpansionUpgradeLevel);
+  
+  // Also check if state exists and is structured correctly
+  console.log('State structure check:');
+  console.log('  window.state exists:', !!window.state);
+  console.log('  window.state.terrarium exists:', !!window.state?.terrarium);
+  console.log('  Full terrarium state:', window.state?.terrarium);
+};
+
+// Debug function to manually sync terrarium upgrades
+window.forceSyncTerrariumUpgrades = function() {
+  console.log('Forcing terrarium upgrade sync...');
+  
+  if (window.state && window.state.terrarium) {
+    console.log('Before sync - State values:');
+    console.log('  state.kpNectarUpgradeLevel:', window.state.terrarium.kpNectarUpgradeLevel);
+    console.log('  state.pollenFlowerNectarUpgradeLevel:', window.state.terrarium.pollenFlowerNectarUpgradeLevel);
+    
+    // Force sync from state to local variables
+    kpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel || 0;
+    pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel || 0;
+    flowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel || 0;
+    
+    console.log('After local variable sync:');
+    console.log('  kpNectarUpgradeLevel:', kpNectarUpgradeLevel);
+    console.log('  pollenFlowerNectarUpgradeLevel:', pollenFlowerNectarUpgradeLevel);
+    
+    // Force sync to both window variable patterns
+    window.terrariumKpNectarUpgradeLevel = kpNectarUpgradeLevel;
+    window.pollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+    window.terrariumPollenFlowerNectarUpgradeLevel = pollenFlowerNectarUpgradeLevel;
+    window.flowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
+    window.terrariumFlowerFieldExpansionUpgradeLevel = flowerFieldExpansionUpgradeLevel;
+    
+    console.log('After window variable sync:');
+    console.log('  window.terrariumKpNectarUpgradeLevel:', window.terrariumKpNectarUpgradeLevel);
+    console.log('  window.terrariumPollenFlowerNectarUpgradeLevel:', window.terrariumPollenFlowerNectarUpgradeLevel);
+    
+    console.log('Sync complete!');
+    window.debugTerrariumUpgrades();
+  } else {
+    console.log('No terrarium state found!');
+  }
+};
+
+// Emergency fix function for kpNectarUpgradeLevel specifically
+window.fixKpNectarUpgrade = function() {
+  console.log('=== EMERGENCY FIX FOR KP NECTAR UPGRADE ===');
+  
+  // First, try to migrate from old system if state value is 0 but window value exists
+  if (window.state && window.state.terrarium) {
+    const stateValue = window.state.terrarium.kpNectarUpgradeLevel || 0;
+    const windowValue = window.terrariumKpNectarUpgradeLevel || 0;
+    
+    console.log('State value:', stateValue);
+    console.log('Window value:', windowValue);
+    
+    // If state has 0 but window has a value, migrate from window to state
+    if (stateValue === 0 && windowValue > 0) {
+      console.log('Migrating from old window system to new state system...');
+      window.state.terrarium.kpNectarUpgradeLevel = windowValue;
+      kpNectarUpgradeLevel = windowValue;
+      console.log('Migrated value:', windowValue);
+    } else {
+      // Use state value as source of truth
+      kpNectarUpgradeLevel = stateValue;
+      window.terrariumKpNectarUpgradeLevel = stateValue;
+      console.log('Using state value:', stateValue);
+    }
+    
+    console.log('Final verification:');
+    console.log('  kpNectarUpgradeLevel (local):', kpNectarUpgradeLevel);
+    console.log('  window.terrariumKpNectarUpgradeLevel:', window.terrariumKpNectarUpgradeLevel);
+    console.log('  window.state.terrarium.kpNectarUpgradeLevel:', window.state.terrarium.kpNectarUpgradeLevel);
+    
+    // Also sync to state to make sure it's persistent
+    if (typeof window.syncTerrariumToState === 'function') {
+      window.syncTerrariumToState();
+      console.log('Synced back to state');
+    }
+  } else {
+    console.log('No terrarium state found');
+  }
+};
+
 function getTerrariumXPRequirement(level) {
   if (level === 1) return new Decimal(100);
   let requirement = new Decimal(100); 
@@ -838,7 +975,13 @@ function syncTerrariumVarsFromWindow() {
   }
   // If flowerGridTrollLevel is already > 100 (troll active), keep the current value
   
+  // Debug: Log the sync operation for kpNectarUpgradeLevel
+  const oldKpValue = kpNectarUpgradeLevel;
   kpNectarUpgradeLevel = window.terrariumKpNectarUpgradeLevel || 0;
+  if (oldKpValue !== kpNectarUpgradeLevel) {
+    console.log('syncTerrariumVarsFromWindow: kpNectarUpgradeLevel changed from', oldKpValue, 'to', kpNectarUpgradeLevel, '(window value was', window.terrariumKpNectarUpgradeLevel, ')');
+  }
+  
   pollenFlowerNectarUpgradeLevel = window.terrariumPollenFlowerNectarUpgradeLevel || 0;
   nectarXpUpgradeLevel = window.terrariumNectarXpUpgradeLevel || 0;
   nectarValueUpgradeLevel = window.terrariumNectarValueUpgradeLevel || 0;
@@ -4031,7 +4174,7 @@ renderTerrariumUI = function() {
   updateFlowerUpgrade4CircleCost();
 };
 
-let pollenValueUpgrade2Level = 0;
+// pollenValueUpgrade2Level already declared at top of file
 const POLLEN_VALUE_UPGRADE_CAP = 1000;
 const POLLEN_VALUE_UPGRADE2_CAP = 1000;
 
@@ -4737,7 +4880,7 @@ buyMaxPollenValueUpgrade = function() {
 
 // Removed redundant function override - will be handled in the consolidated function below
 
-let flowerValueUpgradeLevel = 0;
+// flowerValueUpgradeLevel already declared at top of file
 const FLOWER_VALUE_UPGRADE_CAP = 1000;
 
 function getFlowerValueUpgradeCost(level) {
@@ -5160,11 +5303,14 @@ handleFluzzerWateringCanClick = function(index, cols, rows) {
   origHandleFluzzerWateringCanClick(index, cols, rows);
 };
 
-let extraChargeUpgradeLevel = 0;
+// extraChargeUpgradeLevel already declared at top of file
 const EXTRA_CHARGE_UPGRADE_CAP = 1000;
 const EXTRA_CHARGE_UPGRADE_BASE_COST = 2000;
 const EXTRA_CHARGE_UPGRADE_COST_MULT = 1.3;
-let xpMultiplierUpgradeLevel = window.terrariumXpMultiplierUpgradeLevel || 0;
+// xpMultiplierUpgradeLevel already declared at top of file
+if (window.terrariumXpMultiplierUpgradeLevel) {
+  xpMultiplierUpgradeLevel = window.terrariumXpMultiplierUpgradeLevel;
+}
 const XP_MULTIPLIER_UPGRADE_CAP = 1000;
 const XP_MULTIPLIER_UPGRADE_BASE_COST = 1e9;
 const XP_MULTIPLIER_UPGRADE_COST_MULT = 1.5;
@@ -5771,7 +5917,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-let pollenToolSpeedUpgradeLevel = 0;
+// pollenToolSpeedUpgradeLevel already declared at top of file
 if (typeof window.terrariumPollenToolSpeedUpgradeLevel === 'number') {
   pollenToolSpeedUpgradeLevel = window.terrariumPollenToolSpeedUpgradeLevel;
 }
@@ -6128,7 +6274,7 @@ function getTerrariumFlowerMultiplier(level) {
   return new Decimal(1.5).pow(level - 1);
 }
 
-let flowerXPUpgradeLevel = 0;
+// flowerXPUpgradeLevel already declared at top of file
 const FLOWER_XP_UPGRADE_CAP = 1000;
 let flowerUpgrade4Level = window.terrariumFlowerUpgrade4Level || 0;
 const FLOWER_UPGRADE_4_CAP = 1; 
@@ -8054,7 +8200,7 @@ function handlePollenUpgradeRightClick(upgradeType, e) {
   }
 }
 
-let kpNectarUpgradeLevel = 0;
+// kpNectarUpgradeLevel already declared at top of file
 const KP_NECTAR_UPGRADE_CAP = 1000;
 const KP_NECTAR_UPGRADE_BASE_COST = 10;
 const KP_NECTAR_UPGRADE_COST_MULT = 1.75;
@@ -8090,7 +8236,19 @@ function buyKpNectarUpgrade(count = 1) {
     kpNectarUpgradeLevel++;
     window.terrariumNectar = terrariumNectar;
     window.terrariumKpNectarUpgradeLevel = kpNectarUpgradeLevel;
+    
+    // CRITICAL: Update the centralized state system
+    if (window.state && window.state.terrarium) {
+      window.state.terrarium.kpNectarUpgradeLevel = kpNectarUpgradeLevel;
+      window.state.terrarium.nectar = terrariumNectar;
+    }
   }
+  
+  // Sync with state after upgrade (matching the pattern used in other upgrade functions)
+  if (typeof syncTerrariumToState === 'function') {
+    syncTerrariumToState();
+  }
+  
   updateNectarUpgradeSection();
   updateTerrariumUpgradeCurrencyCounts();
   updateKpNectarUpgradeModal();
@@ -8123,7 +8281,7 @@ function getKpNectarUpgradeCostToNext25() {
   return totalCost;
 }
 
-let pollenFlowerNectarUpgradeLevel = 0;
+// pollenFlowerNectarUpgradeLevel already declared at top of file
 const POLLEN_FLOWER_NECTAR_UPGRADE_CAP = 1000;
 const POLLEN_FLOWER_NECTAR_UPGRADE_BASE_COST = 10;
 const POLLEN_FLOWER_NECTAR_UPGRADE_COST_MULT = 1.5;
@@ -8196,7 +8354,7 @@ function getPollenFlowerNectarUpgradeCostToNext25() {
   return totalCost;
 }
 
-let nectarXpUpgradeLevel = 0;
+// nectarXpUpgradeLevel already declared at top of file
 const NECTAR_XP_UPGRADE_CAP = 1000;
 const NECTAR_XP_UPGRADE_BASE_COST = 1e10;
 const NECTAR_XP_UPGRADE_COST_MULT = 1.3;
@@ -8269,7 +8427,7 @@ function getNectarXpUpgradeCostToNext25() {
   return totalCost;
 }
 
-let nectarValueUpgradeLevel = 0;
+// nectarValueUpgradeLevel already declared at top of file
 const NECTAR_VALUE_UPGRADE_CAP = 1000;
 const NECTAR_VALUE_UPGRADE_BASE_COST = 1e15;
 const NECTAR_VALUE_UPGRADE_COST_MULT = 1.3;
@@ -8343,7 +8501,7 @@ function getNectarValueUpgradeCostToNext25() {
 }
 
 // Nectar Upgrade 5: Nectar Infinity Points
-let nectarInfinityUpgradeLevel = 0;
+// nectarInfinityUpgradeLevel already declared at top of file
 const NECTAR_INFINITY_UPGRADE_CAP = 1000;
 const NECTAR_INFINITY_UPGRADE_BASE_COST = 1e30;
 const NECTAR_INFINITY_UPGRADE_COST_MULT = 1.5;

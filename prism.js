@@ -94,6 +94,28 @@ function initializePrismState() {
     window.state.prismState.permanentUnlocks.orangeLightUnlocked = false;
   }
   
+  // Initialize advancedPrismState as a nested property within prismState
+  if (!window.state.prismState.advancedPrismState) {
+    // If advanced prism state exists at the top level, move it into prismState
+    if (window.state.advancedPrismState) {
+      window.state.prismState.advancedPrismState = window.state.advancedPrismState;
+      // Remove the old top-level reference after migration
+      delete window.state.advancedPrismState;
+    } else if (window.advancedPrismState) {
+      window.state.prismState.advancedPrismState = window.advancedPrismState;
+    }
+  }
+  
+  // Ensure the window.advancedPrismState reference points to the nested state
+  if (window.state.prismState.advancedPrismState) {
+    window.advancedPrismState = window.state.prismState.advancedPrismState;
+  }
+  
+  // Ensure advanced prism state initialization is called
+  if (typeof window.initializeAdvancedPrismState === 'function') {
+    window.initializeAdvancedPrismState();
+  }
+  
   // Create global reference for backward compatibility
   window.prismState = window.state.prismState;
 }
@@ -107,6 +129,9 @@ window.debugPrismState = function() {
     prismState: window.state?.prismState,
     prismStateRef: window.prismState,
     referencesMatch: window.prismState === window.state?.prismState,
+    advancedPrismStateNested: window.state?.prismState?.advancedPrismState,
+    advancedPrismStateRef: window.advancedPrismState,
+    advancedReferencesMatch: window.state?.prismState?.advancedPrismState === window.advancedPrismState,
     lightValues: window.prismState ? {
       light: window.prismState.light?.toString() || 'undefined',
       redlight: window.prismState.redlight?.toString() || 'undefined',
@@ -912,10 +937,27 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
     if (typeof window.addCurrency === 'function') {
       actualGainAmount = window.addCurrency(currencyName, tileGain);
     } else {
-      // Fallback direct addition - apply challenge nerfs manually
+      // Fallback direct addition - apply all nerfs manually since addCurrency is not available
       let processedGain = tileGain;
+      
+      // Apply challenge nerfs
       if (typeof window.applyChallengeNerfs === 'function') {
         processedGain = window.applyChallengeNerfs(processedGain, tileColor);
+      }
+      
+      // Apply calibration nerfs (only needed when addCurrency is not available)
+      if (typeof window.getCalibrationNerf === 'function') {
+        const prismStateName = currencyName === 'redLight' ? 'redlight' : 
+                              currencyName === 'orangeLight' ? 'orangelight' :
+                              currencyName === 'yellowLight' ? 'yellowlight' :
+                              currencyName === 'greenLight' ? 'greenlight' :
+                              currencyName === 'blueLight' ? 'bluelight' : 
+                              'light';
+        
+        const calibrationNerf = window.getCalibrationNerf(prismStateName);
+        if (calibrationNerf.gt(1)) {
+          processedGain = processedGain.div(calibrationNerf);
+        }
       }
       
       // Fallback direct addition
@@ -1085,7 +1127,7 @@ window.testVivienBonusLights = function() {
   return true;
 };
 
-function spawnNewLightTile() {
+function spawnNewLightTile(forceWhite = false) {
   // Prism lab operates independently of power status
   
   // Check if light spawning is locked due to vantablack click
@@ -1149,6 +1191,13 @@ function spawnNewLightTile() {
   if (window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.prismGreyAnomaly) {
     window.prismState.activeTileColor = 'greylight';
     randomTile.classList.add("active-tile", "grey-tile");
+    return;
+  }
+  
+  // If forceWhite is true, always spawn white tiles (for lab button clicks)
+  if (forceWhite) {
+    window.prismState.activeTileColor = 'light';
+    randomTile.classList.add("active-tile", "white-tile");
     return;
   }
   
@@ -1486,7 +1535,7 @@ function clickLightTile(index) {
       totalGain = totalGain.mul(friendshipMultiplier);
       totalGain = totalGain.floor(); 
       
-      // Use addCurrency to apply lab boost and anomaly debuff
+      // Use addCurrency to apply lab boost, anomaly debuff, and calibration nerfs
       const currencyName = color === 'redlight' ? 'redLight' : 
                           color === 'orangelight' ? 'orangeLight' :
                           color === 'yellowlight' ? 'yellowLight' :
@@ -1499,8 +1548,19 @@ function clickLightTile(index) {
         actualGain = window.addCurrency(currencyName, totalGain);
       } else {
         // Fallback to direct assignment if addCurrency not available
-        window.prismState[color] = window.prismState[color].add(totalGain);
-        actualGain = totalGain; // Assume no debuffs applied
+        // Note: Since addCurrency isn't available, we need to apply calibration nerfs manually here
+        let processedGain = totalGain;
+        
+        // Apply calibration nerfs (only needed in fallback since addCurrency handles this normally)
+        if (typeof window.getCalibrationNerf === 'function') {
+          const calibrationNerf = window.getCalibrationNerf(color);
+          if (calibrationNerf.gt(1)) {
+            processedGain = processedGain.div(calibrationNerf);
+          }
+        }
+        
+        window.prismState[color] = window.prismState[color].add(processedGain);
+        actualGain = processedGain;
       }
       
       // Track actual click gains for statistics
@@ -1999,7 +2059,14 @@ function handleLightGenClick(type) {
   
   if (!unlocked) {
     if (window.prismState[resource].gte(config.baseCost)) {
-      window.prismState[resource] = window.prismState[resource].sub(config.baseCost);
+      const newAmount = window.prismState[resource].sub(config.baseCost);
+      window.prismState[resource] = newAmount;
+      
+      // Also update centralized state to prevent restoration
+      if (window.state && window.state.prismState && window.state.prismState[resource]) {
+        window.state.prismState[resource] = newAmount;
+      }
+      
       window.prismState.generatorUnlocked[type] = true;
       if (type === 'redlightparticles' && typeof window.trackRedLightParticleGeneration === 'function') {
         window.trackRedLightParticleGeneration();
@@ -2013,8 +2080,21 @@ function handleLightGenClick(type) {
   }
   const cost = DecimalUtils.multiply(config.baseCost, new Decimal(10).pow(upgrades));
   if (window.prismState[resource].gte(cost)) {
-    window.prismState[resource] = window.prismState[resource].sub(cost);
+    const newAmount = window.prismState[resource].sub(cost);
+    window.prismState[resource] = newAmount;
+    
+    // Also update centralized state to prevent restoration
+    if (window.state && window.state.prismState && window.state.prismState[resource]) {
+      window.state.prismState[resource] = newAmount;
+    }
+    
     window.prismState.generatorUpgrades[type] = new Decimal(upgrades + 1);
+    
+    // Also update centralized state for save persistence
+    if (window.state && window.state.prismState && window.state.prismState.generatorUpgrades) {
+      window.state.prismState.generatorUpgrades[type] = new Decimal(upgrades + 1);
+    }
+    
     forceUpdateAllLightCounters();
     updateLightGeneratorButtons();
     showGainPopup(`${type}particleCount`, 1, `${type} upgrade`);
@@ -2060,7 +2140,15 @@ function tickLightGenerators(diff) {
     window.prismState[accKey] = window.prismState[accKey].add(rate.mul(diff));
     const whole = window.prismState[accKey].floor();
     if (whole.gt(0)) {
-      window.prismState[`${type}particle`] = window.prismState[`${type}particle`].add(whole);
+      // Apply calibration nerf to generator light production
+      let adjustedWhole = whole;
+      if (typeof window.getCalibrationNerf === 'function') {
+        const nerf = window.getCalibrationNerf(type);
+        if (nerf > 1) {
+          adjustedWhole = whole.div(nerf);
+        }
+      }
+      window.prismState[`${type}particle`] = window.prismState[`${type}particle`].add(adjustedWhole);
       window.prismState[accKey] = window.prismState[accKey].sub(whole);
       
       // Track light generator ticks for automator unlocks
@@ -2184,7 +2272,7 @@ function initPrism() {
   // Check and update permanent unlocks on initialization
   checkPermanentLightUnlocks();
   
-  spawnNewLightTile();
+  spawnNewLightTile(true); // Force white tiles when lab button is clicked
   ensureClickHandlers();
   forceUpdateAllLightCounters();
   updateLightGeneratorButtons();
@@ -3575,4 +3663,39 @@ window.forceSpawnColoredTile = function(color = 'random') {
     index: index,
     message: `Spawned ${actualColor} tile at index ${index}` 
   };
+};
+
+// Debug function for light generator upgrades
+window.debugLightGeneratorUpgrades = function() {
+  console.log("Light Generator Upgrade Debug:");
+  const lightTypes = ['red', 'green', 'blue', 'yellow', 'purple', 'white'];
+  
+  lightTypes.forEach(type => {
+    const oldUpgrades = window.prismState?.generatorUpgrades?.[type] || 0;
+    const newUpgrades = window.state?.prismState?.generatorUpgrades?.[type] || 0;
+    console.log(`${type}: old=${oldUpgrades}, new=${newUpgrades}`);
+  });
+};
+
+// Function to force sync light generator upgrades from old to new system
+window.forceSyncLightGeneratorUpgrades = function() {
+  console.log("Force syncing light generator upgrades...");
+  const lightTypes = ['red', 'green', 'blue', 'yellow', 'purple', 'white'];
+  
+  if (!window.state.prismState) {
+    window.state.prismState = {};
+  }
+  if (!window.state.prismState.generatorUpgrades) {
+    window.state.prismState.generatorUpgrades = {};
+  }
+  
+  lightTypes.forEach(type => {
+    if (window.prismState?.generatorUpgrades?.[type] !== undefined) {
+      window.state.prismState.generatorUpgrades[type] = DecimalUtils.isDecimal(window.prismState.generatorUpgrades[type]) ? 
+        window.prismState.generatorUpgrades[type] : new Decimal(window.prismState.generatorUpgrades[type] || 0);
+      console.log(`Synced ${type}: ${window.state.prismState.generatorUpgrades[type]}`);
+    }
+  });
+  
+  console.log("Light generator upgrade sync complete!");
 };

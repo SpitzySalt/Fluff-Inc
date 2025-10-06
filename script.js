@@ -1259,6 +1259,10 @@ function syncGlobalReferencesToState() {
   }
   if (state.advancedPrismState) {
     window.advancedPrismState = state.advancedPrismState;
+    // Sync advanced prism state with window.state after loading
+    if (typeof window.syncAdvancedPrismState === 'function') {
+      window.syncAdvancedPrismState();
+    }
   }
   
   // Sync front desk state
@@ -1607,6 +1611,11 @@ window.generatorUpgrades = state.generatorUpgrades;
 window.prismState = state.prismState;
 window.advancedPrismState = state.advancedPrismState;
 
+// Sync advanced prism state with window.state on initialization
+if (typeof window.syncAdvancedPrismState === 'function') {
+  window.syncAdvancedPrismState();
+}
+
 // Box generators array
 const generators = [
   { id: 0, name: "Common Box Generator", currency: "fluff", progress: 0, speed: 5, baseSpeed: 5, speedUpgrades: 0, speedMultiplier: 1, unlocked: false, upgrades: 0, reward: "common", baseCost: new Decimal(1e6), costMultiplier: 10 },
@@ -1843,6 +1852,25 @@ function addCurrency(currencyName, amount) {
     if (mainCurrencies.includes(currencyName) || lightCurrencies.includes(currencyName)) {
       const anomalyDebuff = window.getAnomalyDebuff();
       amount = amount.mul(anomalyDebuff);
+    }
+  }
+  
+  // Apply calibration nerfs to light currencies
+  if (typeof window.getCalibrationNerf === 'function') {
+    const lightCurrencies = ['light', 'redLight', 'orangeLight', 'yellowLight', 'greenLight', 'blueLight'];
+    if (lightCurrencies.includes(currencyName)) {
+      // Map currency names to prismState property names for nerf lookup
+      const prismStateName = currencyName === 'redLight' ? 'redlight' : 
+                            currencyName === 'orangeLight' ? 'orangelight' :
+                            currencyName === 'yellowLight' ? 'yellowlight' :
+                            currencyName === 'greenLight' ? 'greenlight' :
+                            currencyName === 'blueLight' ? 'bluelight' : 
+                            currencyName; // 'light' stays as 'light'
+      
+      const calibrationNerf = window.getCalibrationNerf(prismStateName);
+      if (calibrationNerf.gt(1)) {
+        amount = amount.div(calibrationNerf);
+      }
     }
   }
   
@@ -2131,6 +2159,24 @@ function gameTick() {
   // Decay calibration nerfs
   if (typeof window.decayCalibrationNerfs === 'function') {
     window.decayCalibrationNerfs(diff);
+  }
+  
+  // Update nerf display (throttled to ~1 second intervals)
+  if (typeof window.updateNerfDisplay === 'function') {
+    if (!window.lastNerfDisplayUpdate) window.lastNerfDisplayUpdate = 0;
+    if (now - window.lastNerfDisplayUpdate >= 1000) {
+      window.updateNerfDisplay();
+      window.lastNerfDisplayUpdate = now;
+    }
+  }
+  
+  // Update stable light displays in Advanced Prism UI (throttled to ~1 second intervals)
+  if (typeof window.updateStableLightDisplays === 'function') {
+    if (!window.lastStableLightDisplayUpdate) window.lastStableLightDisplayUpdate = 0;
+    if (now - window.lastStableLightDisplayUpdate >= 1000) {
+      window.updateStableLightDisplays();
+      window.lastStableLightDisplayUpdate = now;
+    }
   }
   
   // Update infinity display every tick
@@ -2978,6 +3024,11 @@ function resetGame() {
         DecimalUtils.toDecimal(window.state.deliverySystem.berryPlatesInLoad).gt(0)) {
       
       const berryPlatesInLoad = DecimalUtils.toDecimal(window.state.deliverySystem.berryPlatesInLoad);
+      
+      // Ensure totalBerryPlatesGiven is a Decimal before using it
+      if (!DecimalUtils.isDecimal(window.state.deliverySystem.totalBerryPlatesGiven)) {
+        window.state.deliverySystem.totalBerryPlatesGiven = new Decimal(window.state.deliverySystem.totalBerryPlatesGiven || 0);
+      }
       
       // Update permanent boost tracking first
       window.state.deliverySystem.totalBerryPlatesGiven = window.state.deliverySystem.totalBerryPlatesGiven.add(berryPlatesInLoad);
@@ -7585,7 +7636,9 @@ function trackHardModeIngredientsCooked(amount = 1) {
     if (!state.hardModeQuest.ingredientsCooked) {
       state.hardModeQuest.ingredientsCooked = 0;
     }
-    state.hardModeQuest.ingredientsCooked += amount;
+    // Convert amount to number to avoid concatenation issues
+    const numericAmount = DecimalUtils.isDecimal(amount) ? amount.toNumber() : Number(amount);
+    state.hardModeQuest.ingredientsCooked += numericAmount;
     updateHardModeQuestProgress();
   }
 }
@@ -7597,7 +7650,9 @@ function trackHardModeBerryPlateCooking(amount = 1) {
     if (!state.hardModeQuest.berryPlatesCookingActions) {
       state.hardModeQuest.berryPlatesCookingActions = 0;
     }
-    state.hardModeQuest.berryPlatesCookingActions += amount;
+    // Convert amount to number to avoid concatenation issues
+    const numericAmount = DecimalUtils.isDecimal(amount) ? amount.toNumber() : Number(amount);
+    state.hardModeQuest.berryPlatesCookingActions += numericAmount;
     updateHardModeQuestProgress();
   }
 }
@@ -7609,7 +7664,9 @@ function trackHardModeMushroomSoupCooking(amount = 1) {
     if (!state.hardModeQuest.mushroomSoupsCookingActions) {
       state.hardModeQuest.mushroomSoupsCookingActions = 0;
     }
-    state.hardModeQuest.mushroomSoupsCookingActions += amount;
+    // Convert amount to number to avoid concatenation issues
+    const numericAmount = DecimalUtils.isDecimal(amount) ? amount.toNumber() : Number(amount);
+    state.hardModeQuest.mushroomSoupsCookingActions += numericAmount;
     updateHardModeQuestProgress();
   }
 }
@@ -7663,7 +7720,9 @@ function trackHardModeBerryTokenCollection(amount = 1) {
     if (!state.hardModeQuest.berryTokensCollected) {
       state.hardModeQuest.berryTokensCollected = 0;
     }
-    state.hardModeQuest.berryTokensCollected += amount;
+    // Convert amount to number to avoid concatenation issues
+    const numericAmount = DecimalUtils.isDecimal(amount) ? amount.toNumber() : Number(amount);
+    state.hardModeQuest.berryTokensCollected += numericAmount;
     updateHardModeQuestProgress();
   }
 }
@@ -7699,7 +7758,9 @@ function trackHardModeStardustTokenCollection(amount = 1) {
     if (!state.hardModeQuest.stardustTokensCollected) {
       state.hardModeQuest.stardustTokensCollected = 0;
     }
-    state.hardModeQuest.stardustTokensCollected += amount;
+    // Convert amount to number to avoid concatenation issues
+    const numericAmount = DecimalUtils.isDecimal(amount) ? amount.toNumber() : Number(amount);
+    state.hardModeQuest.stardustTokensCollected += numericAmount;
     updateHardModeQuestProgress();
   }
 }

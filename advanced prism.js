@@ -1,4 +1,4 @@
-﻿let advancedPrismState = {
+let advancedPrismState = {
   unlocked: false,
   viSpeechActive: false,
   viSpeechTimeout: null,
@@ -58,9 +58,222 @@
     lastAnimationTime: 0,
     minigameInterval: null,
     drainInterval: null
+  },
+  prismCore: {
+    level: new Decimal(1),
+    potential: new Decimal(0),
+    upgradeCosts: [
+      new Decimal("1e100"),
+      new Decimal("1e200"),
+      new Decimal("1e360"),
+      new Decimal("1e727")
+    ]
   }
 };
 window.advancedPrismState = advancedPrismState;
+
+// Add advanced prism state to global window.state under prismState
+if (typeof window.state === 'undefined') {
+  window.state = {};
+}
+if (!window.state.prismState) {
+  window.state.prismState = {};
+}
+if (!window.state.prismState.advancedPrismState) {
+  window.state.prismState.advancedPrismState = window.advancedPrismState;
+}
+if (!window.state.stableLight) {
+  window.state.stableLight = window.advancedPrismState.calibration.stable;
+}
+
+// Helper function to sync advanced prism state with window.state
+function syncAdvancedPrismState() {
+  if (window.state) {
+    if (!window.state.prismState) {
+      window.state.prismState = {};
+    }
+    // Ensure window.state.prismState.advancedPrismState points to the same object as window.advancedPrismState
+    window.state.prismState.advancedPrismState = window.advancedPrismState;
+    // Keep stable light reference synced
+    window.state.stableLight = window.advancedPrismState.calibration.stable;
+  }
+}
+
+// Initialize or restore advanced prism state from window.state
+function initializeAdvancedPrismState() {
+  // Check for nested state first, then fallback to legacy locations
+  let savedState = null;
+  if (window.state && window.state.prismState && window.state.prismState.advancedPrismState) {
+    savedState = window.state.prismState.advancedPrismState;
+  } else if (window.state && window.state.advancedPrismState) {
+    // Handle legacy location - migrate it
+    savedState = window.state.advancedPrismState;
+    if (!window.state.prismState) {
+      window.state.prismState = {};
+    }
+    window.state.prismState.advancedPrismState = savedState;
+    delete window.state.advancedPrismState;
+  }
+  
+  if (savedState) {
+    
+    // Restore basic properties
+    if (savedState.unlocked !== undefined) {
+      window.advancedPrismState.unlocked = savedState.unlocked;
+    }
+    if (savedState.viSpeechActive !== undefined) {
+      window.advancedPrismState.viSpeechActive = savedState.viSpeechActive;
+    }
+    if (savedState.viCurrentState !== undefined) {
+      window.advancedPrismState.viCurrentState = savedState.viCurrentState;
+    }
+    if (savedState.viLastInteractionTime !== undefined) {
+      window.advancedPrismState.viLastInteractionTime = savedState.viLastInteractionTime;
+    }
+    if (savedState.imagesSwapped !== undefined) {
+      window.advancedPrismState.imagesSwapped = savedState.imagesSwapped;
+    }
+    if (savedState.advancedTabClicks !== undefined) {
+      window.advancedPrismState.advancedTabClicks = savedState.advancedTabClicks;
+    }
+    if (savedState.labTabClicks !== undefined) {
+      window.advancedPrismState.labTabClicks = savedState.labTabClicks;
+    }
+    if (savedState.hasCompletedLabClicks !== undefined) {
+      window.advancedPrismState.hasCompletedLabClicks = savedState.hasCompletedLabClicks;
+    }
+    if (savedState.hasShownLabDialogue !== undefined) {
+      window.advancedPrismState.hasShownLabDialogue = savedState.hasShownLabDialogue;
+    }
+    
+    // Restore calibration state
+    if (savedState.calibration) {
+      if (savedState.calibration.stable) {
+        Object.keys(savedState.calibration.stable).forEach(lightType => {
+          if (window.advancedPrismState.calibration.stable[lightType] && savedState.calibration.stable[lightType]) {
+            window.advancedPrismState.calibration.stable[lightType] = DecimalUtils.isDecimal(savedState.calibration.stable[lightType]) 
+              ? savedState.calibration.stable[lightType] 
+              : new Decimal(savedState.calibration.stable[lightType] || 0);
+          }
+        });
+      }
+      
+      if (savedState.calibration.nerfs) {
+        Object.keys(savedState.calibration.nerfs).forEach(lightType => {
+          if (window.advancedPrismState.calibration.nerfs[lightType] && savedState.calibration.nerfs[lightType]) {
+            window.advancedPrismState.calibration.nerfs[lightType] = DecimalUtils.isDecimal(savedState.calibration.nerfs[lightType]) 
+              ? savedState.calibration.nerfs[lightType] 
+              : new Decimal(savedState.calibration.nerfs[lightType] || 1);
+          }
+        });
+      }
+      
+      if (savedState.calibration.sessionPenalty) {
+        Object.keys(savedState.calibration.sessionPenalty).forEach(lightType => {
+          if (window.advancedPrismState.calibration.sessionPenalty[lightType] && savedState.calibration.sessionPenalty[lightType]) {
+            window.advancedPrismState.calibration.sessionPenalty[lightType] = DecimalUtils.isDecimal(savedState.calibration.sessionPenalty[lightType]) 
+              ? savedState.calibration.sessionPenalty[lightType] 
+              : new Decimal(savedState.calibration.sessionPenalty[lightType] || 1);
+          }
+        });
+      }
+      
+      if (savedState.calibration.totalTimeAccumulated) {
+        Object.keys(savedState.calibration.totalTimeAccumulated).forEach(lightType => {
+          if (window.advancedPrismState.calibration.totalTimeAccumulated[lightType] !== undefined && savedState.calibration.totalTimeAccumulated[lightType] !== undefined) {
+            window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = savedState.calibration.totalTimeAccumulated[lightType];
+          }
+        });
+      }
+      
+      // Restore other calibration properties
+      if (savedState.calibration.activeMinigame !== undefined) {
+        window.advancedPrismState.calibration.activeMinigame = savedState.calibration.activeMinigame;
+      }
+      if (savedState.calibration.minigameStartTime !== undefined) {
+        window.advancedPrismState.calibration.minigameStartTime = savedState.calibration.minigameStartTime;
+      }
+      if (savedState.calibration.lastSaveTime !== undefined) {
+        window.advancedPrismState.calibration.lastSaveTime = savedState.calibration.lastSaveTime;
+      }
+      if (savedState.calibration.lastSessionEfficiency !== undefined) {
+        window.advancedPrismState.calibration.lastSessionEfficiency = savedState.calibration.lastSessionEfficiency;
+      }
+      if (savedState.calibration.waveFrequency !== undefined) {
+        window.advancedPrismState.calibration.waveFrequency = savedState.calibration.waveFrequency;
+      }
+      if (savedState.calibration.optimalFrequency !== undefined) {
+        window.advancedPrismState.calibration.optimalFrequency = savedState.calibration.optimalFrequency;
+      }
+      if (savedState.calibration.wavePhase !== undefined) {
+        window.advancedPrismState.calibration.wavePhase = savedState.calibration.wavePhase;
+      }
+      if (savedState.calibration.lastAnimationTime !== undefined) {
+        window.advancedPrismState.calibration.lastAnimationTime = savedState.calibration.lastAnimationTime;
+      }
+    }
+    
+    // Restore reset layer state
+    if (savedState.resetLayer) {
+      if (savedState.resetLayer.points !== undefined) {
+        window.advancedPrismState.resetLayer.points = DecimalUtils.isDecimal(savedState.resetLayer.points) 
+          ? savedState.resetLayer.points 
+          : new Decimal(savedState.resetLayer.points || 0);
+      }
+      if (savedState.resetLayer.timesReset !== undefined) {
+        window.advancedPrismState.resetLayer.timesReset = DecimalUtils.isDecimal(savedState.resetLayer.timesReset) 
+          ? savedState.resetLayer.timesReset 
+          : new Decimal(savedState.resetLayer.timesReset || 0);
+      }
+      if (savedState.resetLayer.canReset !== undefined) {
+        window.advancedPrismState.resetLayer.canReset = savedState.resetLayer.canReset;
+      }
+    }
+  }
+  
+  // Always sync after initialization
+  syncAdvancedPrismState();
+}
+
+// Make initialization function globally accessible
+window.initializeAdvancedPrismState = initializeAdvancedPrismState;
+
+// Debug function to verify nested state structure
+window.debugAdvancedPrismIntegration = function() {
+  return {
+    nestedPath: window.state?.prismState?.advancedPrismState,
+    globalRef: window.advancedPrismState,
+    referencesMatch: window.state?.prismState?.advancedPrismState === window.advancedPrismState,
+    legacyTopLevel: window.state?.advancedPrismState,
+    hasNerfs: !!window.advancedPrismState?.calibration?.nerfs,
+    calibrationNerfFunction: typeof window.getCalibrationNerf,
+    decaySystemIntegration: {
+      usingMainTick: true,
+      mainTickInterval: "100ms",
+      decayFunction: typeof window.decayCalibrationNerfs,
+      enhancedDecayActive: (window.friendship?.Lab?.level || 0) >= 10
+    }
+  };
+};
+
+// Function to get optimal frequency range based on light type
+function getOptimalFrequencyForLightType(lightType) {
+  const frequencyRanges = {
+    light: { min: 0.4, max: 0.6 },        // White light - middle range
+    redlight: { min: 0.1, max: 0.3 },     // Red light - lower frequencies
+    orangelight: { min: 0.2, max: 0.4 },  // Orange light - low-mid frequencies  
+    yellowlight: { min: 0.3, max: 0.5 },  // Yellow light - mid frequencies
+    greenlight: { min: 0.4, max: 0.6 },   // Green light - mid-high frequencies
+    bluelight: { min: 0.7, max: 0.9 }     // Blue light - higher frequencies
+  };
+  
+  const range = frequencyRanges[lightType] || { min: 0.3, max: 0.7 };
+  return Math.random() * (range.max - range.min) + range.min;
+}
+
+// Ensure synchronization whenever stable light values are accessed
+window.syncStableLightState = syncAdvancedPrismState;
+window.getOptimalFrequencyForLightType = getOptimalFrequencyForLightType;
 const viTokenPreferences = {
   likes: ['prisma', 'water'],
   dislikes: ['sparks'],
@@ -241,7 +454,7 @@ function isViSleepTime() {
 }
 function updateViCharacterImage() {
   let normalImg, talkingImg, sleepingImg, sleepTalkingImg;
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     normalImg = document.getElementById('viCharacterNormalInMain');
     talkingImg = document.getElementById('viCharacterTalkingInMain');
     sleepingImg = document.getElementById('viCharacterSleepingInMain');
@@ -260,28 +473,28 @@ function updateViCharacterImage() {
   sleepingImg.style.display = 'none';
   sleepTalkingImg.style.display = 'none';
   const isNightTime = isViSleepTime();
-  const isSpeaking = advancedPrismState.viSpeechActive;
+  const isSpeaking = window.advancedPrismState.viSpeechActive;
   if (isNightTime) {
     if (isSpeaking) {
       sleepTalkingImg.style.display = 'block';
-      advancedPrismState.viCurrentState = 'sleepTalking';
+      window.advancedPrismState.viCurrentState = 'sleepTalking';
     } else {
       sleepingImg.style.display = 'block';
-      advancedPrismState.viCurrentState = 'sleeping';
+      window.advancedPrismState.viCurrentState = 'sleeping';
     }
   } else {
     if (isSpeaking) {
       talkingImg.style.display = 'block';
-      advancedPrismState.viCurrentState = 'talking';
+      window.advancedPrismState.viCurrentState = 'talking';
     } else {
       normalImg.style.display = 'block';
-      advancedPrismState.viCurrentState = 'normal';
+      window.advancedPrismState.viCurrentState = 'normal';
     }
   }
 }
 function showViSpeech(message, duration = 8000) {
   let speechBubble, speechText;
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     speechBubble = document.getElementById('speechBubble');
     speechText = speechBubble ? speechBubble.querySelector('.speech-text') : null;
   } else {
@@ -291,21 +504,21 @@ function showViSpeech(message, duration = 8000) {
   if (!speechBubble || !speechText) {
     return;
   }
-  if (advancedPrismState.viSpeechTimeout) {
-    clearTimeout(advancedPrismState.viSpeechTimeout);
+  if (window.advancedPrismState.viSpeechTimeout) {
+    clearTimeout(window.advancedPrismState.viSpeechTimeout);
   }
   speechText.textContent = message;
   speechBubble.style.display = 'block';
-  advancedPrismState.viSpeechActive = true;
+  window.advancedPrismState.viSpeechActive = true;
   updateViCharacterImage();
-  advancedPrismState.viSpeechTimeout = setTimeout(() => {
+  window.advancedPrismState.viSpeechTimeout = setTimeout(() => {
     speechBubble.style.display = 'none';
-    advancedPrismState.viSpeechActive = false;
+    window.advancedPrismState.viSpeechActive = false;
     updateViCharacterImage();
   }, duration);
 }
 function pokeMainPrismCharacter() {
-  if (!advancedPrismState.imagesSwapped) {
+  if (!window.advancedPrismState.imagesSwapped) {
     pokeSwariaCharacter();
   } else {
     pokeViWithMainSpeechBubble();
@@ -317,7 +530,7 @@ function pokeViWithMainSpeechBubble() {
     window.friendship.addPoints('vi', new Decimal(0.5));
   }
   const isNightTime = isViSleepTime();
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     if (isNightTime) {
       const sleepMessage = viSpeechPatterns.sleeping[Math.floor(Math.random() * viSpeechPatterns.sleeping.length)];
       showViInMainPrismSpeech(sleepMessage, 5000);
@@ -325,13 +538,13 @@ function pokeViWithMainSpeechBubble() {
       const swapMessage = viSpeechPatterns.swappedToMainPrism[Math.floor(Math.random() * viSpeechPatterns.swappedToMainPrism.length)];
       showViInMainPrismSpeech(swapMessage, 5000);
     }
-    advancedPrismState.viLastInteractionTime = now;
+    window.advancedPrismState.viLastInteractionTime = now;
     return;
   }
   if (!isNightTime && Math.random() < 0.3) {
     const randomMessage = viSpeechPatterns.randomSpeech[Math.floor(Math.random() * viSpeechPatterns.randomSpeech.length)];
     showViInMainPrismSpeech(randomMessage, 5000);
-    advancedPrismState.viLastInteractionTime = now;
+    window.advancedPrismState.viLastInteractionTime = now;
     return;
   }
   if (!isNightTime && Math.random() < 0.2) {
@@ -346,7 +559,7 @@ function pokeViWithMainSpeechBubble() {
     ];
     const explanation = prismPotentialExplanations[Math.floor(Math.random() * prismPotentialExplanations.length)];
     showViInMainPrismSpeech(explanation, 6000);
-    advancedPrismState.viLastInteractionTime = now;
+    window.advancedPrismState.viLastInteractionTime = now;
     return;
   }
   let messages;
@@ -357,12 +570,12 @@ function pokeViWithMainSpeechBubble() {
   }
   const randomMessage = messages[Math.floor(Math.random() * messages.length)];
   showViInMainPrismSpeech(randomMessage, 5000);
-  advancedPrismState.viLastInteractionTime = now;
+  window.advancedPrismState.viLastInteractionTime = now;
 }
 function pokeAdvancedPrismCharacter() {
-  if (!advancedPrismState.imagesSwapped) {
+  if (!window.advancedPrismState.imagesSwapped) {
     const now = Date.now();
-    const timeSinceLastInteraction = now - advancedPrismState.viLastInteractionTime;
+    const timeSinceLastInteraction = now - window.advancedPrismState.viLastInteractionTime;
     if (window.friendship && window.friendship.addPoints) {
       window.friendship.addPoints('vi', new Decimal(0.5));
     }
@@ -370,7 +583,7 @@ function pokeAdvancedPrismCharacter() {
     if (!isNightTime && Math.random() < 0.3) {
       const randomMessage = viSpeechPatterns.randomSpeech[Math.floor(Math.random() * viSpeechPatterns.randomSpeech.length)];
       showViSpeech(randomMessage, 4000);
-      advancedPrismState.viLastInteractionTime = now;
+      window.advancedPrismState.viLastInteractionTime = now;
       return;
     }
     if (!isNightTime && Math.random() < 0.2) {
@@ -383,7 +596,7 @@ function pokeAdvancedPrismCharacter() {
       ];
       const explanation = prismPotentialExplanations[Math.floor(Math.random() * prismPotentialExplanations.length)];
       showViSpeech(explanation, 6000);
-      advancedPrismState.viLastInteractionTime = now;
+      window.advancedPrismState.viLastInteractionTime = now;
       return;
     }
     let messages;
@@ -394,7 +607,7 @@ function pokeAdvancedPrismCharacter() {
     }
     const randomMessage = messages[Math.floor(Math.random() * messages.length)];
     showViSpeech(randomMessage, 3000);
-    advancedPrismState.viLastInteractionTime = now;
+    window.advancedPrismState.viLastInteractionTime = now;
   } else {
     pokeSwariaWithAdvancedSpeechBubble();
   }
@@ -408,7 +621,7 @@ function pokeSwariaWithAdvancedSpeechBubble() {
 }
 function showSwariaCharacterSpeech(message, duration = 4000) {
   let speechBubble, speechText;
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     speechBubble = document.getElementById('viAdvancedPrismSpeechBubble');
     speechText = document.getElementById('viAdvancedPrismSpeechText');
   } else {
@@ -418,12 +631,12 @@ function showSwariaCharacterSpeech(message, duration = 4000) {
   if (!speechBubble || !speechText) {
     return;
   }
-  if (advancedPrismState.swariaSpechTimeout) {
-    clearTimeout(advancedPrismState.swariaSpechTimeout);
+  if (window.advancedPrismState.swariaSpechTimeout) {
+    clearTimeout(window.advancedPrismState.swariaSpechTimeout);
   }
   speechText.textContent = message;
   speechBubble.style.display = 'block';
-  advancedPrismState.swariaSpechTimeout = setTimeout(() => {
+  window.advancedPrismState.swariaSpechTimeout = setTimeout(() => {
     speechBubble.style.display = 'none';
   }, duration);
 }
@@ -435,18 +648,18 @@ function showViInMainPrismSpeech(message, duration = 4000) {
   if (message.includes("I've finally been able to meet some of the other department workers")) {
     duration = 20000;
   }
-  if (advancedPrismState.viSpeechTimeout) {
-    clearTimeout(advancedPrismState.viSpeechTimeout);
+  if (window.advancedPrismState.viSpeechTimeout) {
+    clearTimeout(window.advancedPrismState.viSpeechTimeout);
   }
-  advancedPrismState.viSpeechActive = true;
+  window.advancedPrismState.viSpeechActive = true;
   updateViCharacterImage();
   speechBubble.textContent = message;
   speechBubble.style.display = 'block';
   speechBubble.classList.add('show');
-  advancedPrismState.viSpeechTimeout = setTimeout(() => {
+  window.advancedPrismState.viSpeechTimeout = setTimeout(() => {
     speechBubble.style.display = 'none';
     speechBubble.classList.remove('show');
-    advancedPrismState.viSpeechActive = false;
+    window.advancedPrismState.viSpeechActive = false;
     updateViCharacterImage();
   }, duration);
 }
@@ -484,14 +697,11 @@ function pokeSwariaCharacter() {
   }
 }
 function resetImageSwapState() {
-  if (advancedPrismState.imagesSwapped) {
-    advancedPrismState.imagesSwapped = false;
+  if (window.advancedPrismState.imagesSwapped) {
+    window.advancedPrismState.imagesSwapped = false;
     moveImagesToOriginalPositions();
     updateViCharacterImage();
     setupSwariaCharacterOverrides();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   }
 }
 function pokeVi() {
@@ -503,12 +713,12 @@ function showSwariaInAdvancedSpeech(message, duration = 4000) {
   if (!speechBubble || !speechText) {
     return;
   }
-  if (advancedPrismState.viSpeechTimeout) {
-    clearTimeout(advancedPrismState.viSpeechTimeout);
+  if (window.advancedPrismState.viSpeechTimeout) {
+    clearTimeout(window.advancedPrismState.viSpeechTimeout);
   }
   speechText.textContent = message;
   speechBubble.style.display = 'block';
-  advancedPrismState.viSpeechTimeout = setTimeout(() => {
+  window.advancedPrismState.viSpeechTimeout = setTimeout(() => {
     speechBubble.style.display = 'none';
   }, duration);
 }
@@ -555,7 +765,7 @@ function startViRandomSpeechTimer() {
   if (isViSleepTime()) {
     return;
   }
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     return;
   }
   if (!window.boughtElements || !window.boughtElements[25]) {
@@ -563,7 +773,7 @@ function startViRandomSpeechTimer() {
   }
   const randomDelay = Math.random() * 25000 + 20000;
   viRandomSpeechTimer = setTimeout(() => {
-    if (!isViSleepTime() && !advancedPrismState.imagesSwapped && window.boughtElements && window.boughtElements[25]) {
+    if (!isViSleepTime() && !window.advancedPrismState.imagesSwapped && window.boughtElements && window.boughtElements[25]) {
       showViRandomSpeech();
     } else {
     }
@@ -578,7 +788,7 @@ function stopViRandomSpeechTimer() {
   }
 }
 function showViRandomSpeech() {
-  if (advancedPrismState.viSpeechActive) {
+  if (window.advancedPrismState.viSpeechActive) {
     return;
   }
   let speechArray;
@@ -588,24 +798,21 @@ function showViRandomSpeech() {
     speechArray = viSpeechPatterns.randomSpeech;
   }
   const randomMessage = speechArray[Math.floor(Math.random() * speechArray.length)];
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     showSwariaCharacterSpeech(randomMessage, 5000);
   } else {
     showViSpeech(randomMessage, 5000);
   }
 }
 function showViLabDialogue() {
-  if (advancedPrismState.hasShownLabDialogue) {
+  if (window.advancedPrismState.hasShownLabDialogue) {
     return;
   }
   if (!window.boughtElements || !window.boughtElements[25]) {
     return;
   }
   const labDialogueMessage = "You seriously blown up the door? That was your epic solution? I must say, that was really epic! I'm finally free from this room thanks to you! I owe you eternal gratitude peachy!";
-  advancedPrismState.hasShownLabDialogue = true;
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
+  window.advancedPrismState.hasShownLabDialogue = true;
   showViSpeech(labDialogueMessage, 20000);
 }
 window.startViRandomSpeechTimer = startViRandomSpeechTimer;
@@ -658,23 +865,17 @@ window.testViLabDialogue = function() {
   showViLabDialogue();
 };
 window.resetViLabDialogue = function() {
-  advancedPrismState.hasShownLabDialogue = false;
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
+  window.advancedPrismState.hasShownLabDialogue = false;
 };
 window.checkViLabDialogueStatus = function() {
   return {
-    hasShown: advancedPrismState.hasShownLabDialogue,
+    hasShown: window.advancedPrismState.hasShownLabDialogue,
     element25Bought: !!(window.boughtElements && window.boughtElements[25]),
-    canShow: !!(window.boughtElements && window.boughtElements[25] && !advancedPrismState.hasShownLabDialogue)
+    canShow: !!(window.boughtElements && window.boughtElements[25] && !window.advancedPrismState.hasShownLabDialogue)
   };
 };
 window.forceSaveViLabDialogueFlag = function() {
-  if (typeof saveGame === 'function') {
-    saveGame();
-  } else {
-  }
+  // Save system disabled
 };
 window.testAdvancedPrismButtonClick = function() {
   const prismAdvancedBtn = document.getElementById('prismAdvancedBtn');
@@ -684,7 +885,7 @@ window.testAdvancedPrismButtonClick = function() {
   }
 };
 window.manualStartViTimer = function() {
-  advancedPrismState.unlocked = true;
+  window.advancedPrismState.unlocked = true;
   startViRandomSpeechTimer();
   setTimeout(() => {
     checkViRandomSpeechTimer();
@@ -698,7 +899,7 @@ window.forceSetupAdvancedButtonHook = function() {
   return result;
 };
 window.directStartTimer = function() {
-  advancedPrismState.unlocked = true;
+  window.advancedPrismState.unlocked = true;
   const prismTab = document.getElementById('prismSubTab');
   const isOnPrismTab = prismTab && prismTab.style.display !== 'none';
   const advancedBtn = document.getElementById('prismAdvancedBtn');
@@ -743,7 +944,7 @@ function setupSwariaCharacterOverrides() {
   if (window.showSwariaPrismSpeech && !window._originalShowSwariaPrismSpeech) {
     window._originalShowSwariaPrismSpeech = window.showSwariaPrismSpeech;
     window.showSwariaPrismSpeech = function() {
-      if (!advancedPrismState.imagesSwapped) {
+      if (!window.advancedPrismState.imagesSwapped) {
         window._originalShowSwariaPrismSpeech();
       }
     };
@@ -858,7 +1059,8 @@ function openCalibrationMinigame(lightType) {
     }
     return;
   }
-  advancedPrismState.calibration.activeMinigame = lightType;
+  if (!window.advancedPrismState) return;
+  window.advancedPrismState.calibration.activeMinigame = lightType;
   const lightTypeNames = {
     light: 'Stable Light',
     redlight: 'Red Stable Light',
@@ -869,10 +1071,10 @@ function openCalibrationMinigame(lightType) {
   };
   title.textContent = `${lightTypeNames[lightType]} Spectrum Calibration`;
   document.getElementById('calibrationStableLightLabel').textContent = lightTypeNames[lightType];
-  advancedPrismState.calibration.waveFrequency = 1;
-  advancedPrismState.calibration.optimalFrequency = Math.random() * 0.99 + 0.01;
-  document.getElementById('frequencyDisplay').textContent = '1.00';
-  const currentStableLight = advancedPrismState.calibration.stable[lightType];
+  window.advancedPrismState.calibration.waveFrequency = 0.5;
+  window.advancedPrismState.calibration.optimalFrequency = getOptimalFrequencyForLightType(lightType);
+  document.getElementById('frequencyDisplay').textContent = '0.50';
+  const currentStableLight = window.advancedPrismState.calibration.stable[lightType];
   let stableDisplayText;
   if (currentStableLight.gte(1000)) {
     stableDisplayText = formatNumber(currentStableLight);
@@ -880,20 +1082,20 @@ function openCalibrationMinigame(lightType) {
     stableDisplayText = currentStableLight.toFixed(1);
   }
   document.getElementById('calibrationStableLight').textContent = stableDisplayText;
-  const accumulatedTime = advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
+  const accumulatedTime = window.advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
   document.getElementById('calibrationTime').textContent = accumulatedTime.toFixed(1);
   const timeMultiplier = Math.pow(1.2, accumulatedTime / 1);
   document.getElementById('calibrationTimeMultiplier').textContent = `x${timeMultiplier.toFixed(1)}`;
   const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
   if (diminishingReturnsEl) {
-    const accumulatedTime = advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
+    const accumulatedTime = window.advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
     let calculatedPenalty;
     if (accumulatedTime > 20) {
       calculatedPenalty = Math.pow(1.05, accumulatedTime - 20);
     } else {
       calculatedPenalty = 1.0;
     }
-    advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(calculatedPenalty);
+    window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(calculatedPenalty);
     diminishingReturnsEl.textContent = `/${calculatedPenalty.toFixed(3)}`;
     if (calculatedPenalty <= 1.2) {
       diminishingReturnsEl.style.color = '#44ff44';
@@ -919,10 +1121,11 @@ function openCalibrationMinigame(lightType) {
   const handleScroll = function(event) {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.01 : 0.01;
-    let newFreq = advancedPrismState.calibration.waveFrequency + delta;
+    if (!window.advancedPrismState) return;
+    let newFreq = window.advancedPrismState.calibration.waveFrequency + delta;
     newFreq = Math.max(0.01, Math.min(1.00, newFreq));
     newFreq = Math.round(newFreq * 100) / 100;
-    advancedPrismState.calibration.waveFrequency = newFreq;
+    window.advancedPrismState.calibration.waveFrequency = newFreq;
     document.getElementById('frequencyDisplay').textContent = newFreq.toFixed(2);
     drawWave();
   };
@@ -931,7 +1134,8 @@ function openCalibrationMinigame(lightType) {
   modal._scrollArea = scrollArea;
 }
 function startCalibration() {
-  const lightType = advancedPrismState.calibration.activeMinigame;
+  if (!window.advancedPrismState) return;
+  const lightType = window.advancedPrismState.calibration.activeMinigame;
   if (!lightType) {
     return;
   }
@@ -939,22 +1143,23 @@ function startCalibration() {
     stopCalibration();
     return;
   }
-  advancedPrismState.calibration.optimalFrequency = Math.random() * 0.99 + 0.01;
-  advancedPrismState.calibration.minigameStartTime = Date.now();
-  advancedPrismState.calibration.lastSaveTime = Date.now();
-  advancedPrismState.calibration.lastSessionEfficiency = 1.0;
+  // Generate new optimal frequency based on light type
+  window.advancedPrismState.calibration.optimalFrequency = getOptimalFrequencyForLightType(lightType);
+  window.advancedPrismState.calibration.minigameStartTime = Date.now();
+  window.advancedPrismState.calibration.lastSaveTime = Date.now();
+  window.advancedPrismState.calibration.lastSessionEfficiency = 1.0;
   document.getElementById('activateCalibrationBtn').style.display = 'none';
   document.getElementById('stopCalibrationBtn').style.display = 'inline-block';
-  if (advancedPrismState.calibration.drainInterval) {
-    clearInterval(advancedPrismState.calibration.drainInterval);
-    advancedPrismState.calibration.drainInterval = null;
+  if (window.advancedPrismState.calibration.drainInterval) {
+    clearInterval(window.advancedPrismState.calibration.drainInterval);
+    window.advancedPrismState.calibration.drainInterval = null;
   }
-  if (advancedPrismState.calibration.minigameInterval) {
-    clearInterval(advancedPrismState.calibration.minigameInterval);
+  if (window.advancedPrismState.calibration.minigameInterval) {
+    clearInterval(window.advancedPrismState.calibration.minigameInterval);
   }
   let lastDrainTime = Date.now();
   try {
-    advancedPrismState.calibration.minigameInterval = setInterval(() => {
+    window.advancedPrismState.calibration.minigameInterval = setInterval(() => {
       const currentTime = Date.now();
       if (currentTime - lastDrainTime >= 100) {
         drainLightCurrency(lightType);
@@ -970,31 +1175,32 @@ function startCalibration() {
   }
 }
 function stopCalibration() {
-  if (advancedPrismState.calibration.minigameInterval) {
-    clearInterval(advancedPrismState.calibration.minigameInterval);
-    advancedPrismState.calibration.minigameInterval = null;
+  if (!window.advancedPrismState) return;
+  if (window.advancedPrismState.calibration.minigameInterval) {
+    clearInterval(window.advancedPrismState.calibration.minigameInterval);
+    window.advancedPrismState.calibration.minigameInterval = null;
   }
-  if (advancedPrismState.calibration.drainInterval) {
-    clearInterval(advancedPrismState.calibration.drainInterval);
-    advancedPrismState.calibration.drainInterval = null;
+  if (window.advancedPrismState.calibration.drainInterval) {
+    clearInterval(window.advancedPrismState.calibration.drainInterval);
+    window.advancedPrismState.calibration.drainInterval = null;
   }
-  const lightType = advancedPrismState.calibration.activeMinigame;
-  if (lightType && advancedPrismState.calibration.minigameStartTime > 0) {
-    const sessionTimeSeconds = (Date.now() - advancedPrismState.calibration.minigameStartTime) / 1000;
-    if (!advancedPrismState.calibration.totalTimeAccumulated[lightType]) {
-      advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
+  const lightType = window.advancedPrismState.calibration.activeMinigame;
+  if (lightType && window.advancedPrismState.calibration.minigameStartTime > 0) {
+    const sessionTimeSeconds = (Date.now() - window.advancedPrismState.calibration.minigameStartTime) / 1000;
+    if (!window.advancedPrismState.calibration.totalTimeAccumulated[lightType]) {
+      window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
     }
-    advancedPrismState.calibration.totalTimeAccumulated[lightType] += sessionTimeSeconds;
-    const totalTimeSeconds = advancedPrismState.calibration.totalTimeAccumulated[lightType];
+    window.advancedPrismState.calibration.totalTimeAccumulated[lightType] += sessionTimeSeconds;
+    const totalTimeSeconds = window.advancedPrismState.calibration.totalTimeAccumulated[lightType];
     const exponentialGrowth = new Decimal(5).pow(totalTimeSeconds);
-    advancedPrismState.calibration.nerfs[lightType] = new Decimal(1).mul(exponentialGrowth);
+    window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1).mul(exponentialGrowth);
   }
-  advancedPrismState.calibration.minigameStartTime = 0;
-  const activeLightType = advancedPrismState.calibration.activeMinigame;
+  window.advancedPrismState.calibration.minigameStartTime = 0;
+  const activeLightType = window.advancedPrismState.calibration.activeMinigame;
   if (activeLightType) {
     const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
     if (diminishingReturnsEl) {
-      const persistentPenalty = advancedPrismState.calibration.sessionPenalty[activeLightType] || new Decimal(1.0);
+      const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[activeLightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
@@ -1008,15 +1214,14 @@ function stopCalibration() {
       }
     }
   }
-  if (typeof saveGame === 'function') {
-    saveGame();
-  }
   document.getElementById('activateCalibrationBtn').style.display = 'inline-block';
   document.getElementById('stopCalibrationBtn').style.display = 'none';
 }
 function closeCalibrationModal() {
   stopCalibration();
-  advancedPrismState.calibration.activeMinigame = null;
+  if (window.advancedPrismState) {
+    window.advancedPrismState.calibration.activeMinigame = null;
+  }
   const modal = document.getElementById('calibrationModal');
   if (modal._scrollHandler && modal._scrollArea) {
     modal._scrollArea.removeEventListener('wheel', modal._scrollHandler);
@@ -1048,16 +1253,28 @@ function drainLightCurrency(lightType) {
   const drainAmount = currentAmount.mul(drainPercentage);
   const oldAmount = prismState[lightType];
   if (typeof oldAmount.sub === 'function') {
-    prismState[lightType] = oldAmount.sub(drainAmount);
+    const newAmount = oldAmount.sub(drainAmount);
+    prismState[lightType] = newAmount;
+    
+    // Also update the centralized state to prevent restoration
+    if (window.state && window.state.prismState && window.state.prismState[lightType]) {
+      window.state.prismState[lightType] = newAmount;
+    }
   } else {
     return;
   }
   if (prismState[lightType].lte(1)) {
     prismState[lightType] = new DecimalConstructor(0);
+    
+    // Also zero out centralized state
+    if (window.state && window.state.prismState && window.state.prismState[lightType]) {
+      window.state.prismState[lightType] = new DecimalConstructor(0);
+    }
+    
     stopCalibration();
     const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
     if (diminishingReturnsEl) {
-      const persistentPenalty = advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
+      const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
@@ -1081,9 +1298,9 @@ function drainLightCurrency(lightType) {
   }
 }
 function updateCalibrationMinigame(lightType) {
-  if (advancedPrismState.calibration.minigameStartTime === 0) return;
-  const sessionTimeSeconds = (Date.now() - advancedPrismState.calibration.minigameStartTime) / 1000;
-  const accumulatedTime = advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
+  if (window.advancedPrismState.calibration.minigameStartTime === 0) return;
+  const sessionTimeSeconds = (Date.now() - window.advancedPrismState.calibration.minigameStartTime) / 1000;
+  const accumulatedTime = window.advancedPrismState.calibration.totalTimeAccumulated[lightType] || 0;
   const totalTimeSeconds = accumulatedTime + sessionTimeSeconds;
   document.getElementById('calibrationTime').textContent = totalTimeSeconds.toFixed(1);
   const exponentialGrowth = new Decimal(5).pow(totalTimeSeconds);
@@ -1102,7 +1319,7 @@ function updateCalibrationMinigame(lightType) {
   if (isNaN(sessionPenalty) || sessionPenalty <= 0) {
     sessionPenalty = 1.0;
   }
-  advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
+  window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
   const efficiencyMultiplier = (efficiency / 100) * (1 + (efficiency / 100));
   const generationBeforePenalty = baseGeneration * efficiencyMultiplier * timeMultiplier / 20;
   const generation = generationBeforePenalty / sessionPenalty;
@@ -1110,12 +1327,12 @@ function updateCalibrationMinigame(lightType) {
   }
   if (generation > 0) {
     const generationDecimal = new Decimal(generation);
-    const newAmount = advancedPrismState.calibration.stable[lightType].add(generationDecimal);
+    const newAmount = window.advancedPrismState.calibration.stable[lightType].add(generationDecimal);
     
     // Apply hardcap
-    advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, newAmount);
+    window.advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, newAmount);
     
-    const stableAmount = advancedPrismState.calibration.stable[lightType];
+    const stableAmount = window.advancedPrismState.calibration.stable[lightType];
     let displayText;
     if (stableAmount.gte(1000)) {
       displayText = formatNumber(stableAmount);
@@ -1133,7 +1350,7 @@ function updateCalibrationMinigame(lightType) {
   }
   const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
   if (diminishingReturnsEl) {
-    if (advancedPrismState.calibration.minigameStartTime > 0) {
+    if (window.advancedPrismState.calibration.minigameStartTime > 0) {
       let sessionPenalty;
       if (totalTimeSeconds > 20) {
         sessionPenalty = Math.pow(1.05, totalTimeSeconds - 20);
@@ -1143,8 +1360,8 @@ function updateCalibrationMinigame(lightType) {
       if (isNaN(sessionPenalty) || sessionPenalty <= 0) {
         sessionPenalty = 1.0;
       }
-      advancedPrismState.calibration.lastSessionEfficiency = sessionPenalty;
-      advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
+      window.advancedPrismState.calibration.lastSessionEfficiency = sessionPenalty;
+      window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
       diminishingReturnsEl.textContent = `/${sessionPenalty.toFixed(3)}`;
       if (sessionPenalty <= 1.2) {
         diminishingReturnsEl.style.color = '#44ff44';
@@ -1156,7 +1373,7 @@ function updateCalibrationMinigame(lightType) {
         diminishingReturnsEl.style.color = '#ff4444';
       }
     } else {
-      const persistentPenalty = advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
+      const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
       if (penaltyValue <= 1.2) {
@@ -1179,14 +1396,14 @@ function updateCalibrationMinigame(lightType) {
   // Automatic save removed to prevent unwanted saves during regular prism tile clicking
   // Save will be handled by the main save system when appropriate
   const currentTime = Date.now();
-  if (currentTime - advancedPrismState.calibration.lastSaveTime >= 5000) {
-    advancedPrismState.calibration.lastSaveTime = currentTime;
+  if (currentTime - window.advancedPrismState.calibration.lastSaveTime >= 5000) {
+    window.advancedPrismState.calibration.lastSaveTime = currentTime;
   }
   drawWave();
 }
 function calculateCalibrationEfficiency() {
-  const current = advancedPrismState.calibration.waveFrequency;
-  const optimal = advancedPrismState.calibration.optimalFrequency;
+  const current = window.advancedPrismState.calibration.waveFrequency;
+  const optimal = window.advancedPrismState.calibration.optimalFrequency;
   const difference = Math.abs(current - optimal);
   const maxDifference = 0.99;
   const efficiency = Math.max(0, 100 - (difference / maxDifference) * 100);
@@ -1195,7 +1412,7 @@ function calculateCalibrationEfficiency() {
 function updateCalibrationEfficiency() {
   const efficiency = calculateCalibrationEfficiency();
   const efficiencyEl = document.getElementById('calibrationEfficiency');
-  const isMinigameActive = advancedPrismState.calibration.minigameStartTime > 0;
+  const isMinigameActive = window.advancedPrismState.calibration.minigameStartTime > 0;
   if (isMinigameActive) {
     efficiencyEl.textContent = efficiency.toFixed(1);
   } else {
@@ -1207,19 +1424,19 @@ function drawWave() {
   const ctx = canvas.getContext('2d');
   if (!canvas || !ctx) return;
   const currentTime = Date.now() / 1000;
-  if (advancedPrismState.calibration.lastAnimationTime === 0) {
-    advancedPrismState.calibration.lastAnimationTime = currentTime;
+  if (window.advancedPrismState.calibration.lastAnimationTime === 0) {
+    window.advancedPrismState.calibration.lastAnimationTime = currentTime;
   }
-  const deltaTime = currentTime - advancedPrismState.calibration.lastAnimationTime;
-  const frequency = advancedPrismState.calibration.waveFrequency;
+  const deltaTime = currentTime - window.advancedPrismState.calibration.lastAnimationTime;
+  const frequency = window.advancedPrismState.calibration.waveFrequency;
   const waveSpeed = frequency * 3;
-  advancedPrismState.calibration.wavePhase += deltaTime * waveSpeed * 2 * Math.PI;
-  if (advancedPrismState.calibration.wavePhase > 1000) {
-    advancedPrismState.calibration.wavePhase = advancedPrismState.calibration.wavePhase % (2 * Math.PI);
+  window.advancedPrismState.calibration.wavePhase += deltaTime * waveSpeed * 2 * Math.PI;
+  if (window.advancedPrismState.calibration.wavePhase > 1000) {
+    window.advancedPrismState.calibration.wavePhase = window.advancedPrismState.calibration.wavePhase % (2 * Math.PI);
   }
-  advancedPrismState.calibration.lastAnimationTime = currentTime;
+  window.advancedPrismState.calibration.lastAnimationTime = currentTime;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const lightType = advancedPrismState.calibration.activeMinigame;
+  const lightType = window.advancedPrismState.calibration.activeMinigame;
   const colors = {
     light: '#ffffff',
     redlight: '#ff4444',
@@ -1231,13 +1448,13 @@ function drawWave() {
   const waveColor = colors[lightType] || '#ffffff';
   const amplitude = 50;
   const centerY = canvas.height / 2;
-  const isMinigameActive = advancedPrismState.calibration.minigameStartTime > 0;
+  const isMinigameActive = window.advancedPrismState.calibration.minigameStartTime > 0;
   if (isMinigameActive) {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     for (let x = 0; x < canvas.width; x++) {
-      const y = centerY + amplitude * Math.sin((x / 80) * advancedPrismState.calibration.optimalFrequency * 2 * Math.PI);
+      const y = centerY + amplitude * Math.sin((x / 80) * window.advancedPrismState.calibration.optimalFrequency * 2 * Math.PI);
       if (x === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
@@ -1247,7 +1464,7 @@ function drawWave() {
   ctx.lineWidth = 3;
   ctx.beginPath();
   for (let x = 0; x < canvas.width; x++) {
-    const y = centerY + amplitude * Math.sin((x / 80) * frequency * 2 * Math.PI + advancedPrismState.calibration.wavePhase);
+    const y = centerY + amplitude * Math.sin((x / 80) * frequency * 2 * Math.PI + window.advancedPrismState.calibration.wavePhase);
     if (x === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
@@ -1263,51 +1480,69 @@ function respecStableLight() {
   if (!confirm('This will perform a Prism Core reset without rewards and remove all stable light and nerfs. Continue?')) {
     return;
   }
-  Object.keys(advancedPrismState.calibration.stable).forEach(lightType => {
-    advancedPrismState.calibration.stable[lightType] = new Decimal(0);
+  Object.keys(window.advancedPrismState.calibration.stable).forEach(lightType => {
+    window.advancedPrismState.calibration.stable[lightType] = new Decimal(0);
   });
-  Object.keys(advancedPrismState.calibration.nerfs).forEach(lightType => {
-    advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
+  Object.keys(window.advancedPrismState.calibration.nerfs).forEach(lightType => {
+    window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
   });
-  Object.keys(advancedPrismState.calibration.totalTimeAccumulated).forEach(lightType => {
-    advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
+  Object.keys(window.advancedPrismState.calibration.totalTimeAccumulated).forEach(lightType => {
+    window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
   });
-  Object.keys(advancedPrismState.calibration.sessionPenalty).forEach(lightType => {
-    advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(1.0);
+  Object.keys(window.advancedPrismState.calibration.sessionPenalty).forEach(lightType => {
+    window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(1.0);
   });
-  advancedPrismState.calibration.activeMinigame = null;
-  advancedPrismState.calibration.minigameStartTime = 0;
-  advancedPrismState.calibration.lastSaveTime = 0;
-  if (advancedPrismState.calibration.minigameInterval) {
-    clearInterval(advancedPrismState.calibration.minigameInterval);
-    advancedPrismState.calibration.minigameInterval = null;
+  window.advancedPrismState.calibration.activeMinigame = null;
+  window.advancedPrismState.calibration.minigameStartTime = 0;
+  window.advancedPrismState.calibration.lastSaveTime = 0;
+  if (window.advancedPrismState.calibration.minigameInterval) {
+    clearInterval(window.advancedPrismState.calibration.minigameInterval);
+    window.advancedPrismState.calibration.minigameInterval = null;
   }
-  if (advancedPrismState.calibration.drainInterval) {
-    clearInterval(advancedPrismState.calibration.drainInterval);
-    advancedPrismState.calibration.drainInterval = null;
+  if (window.advancedPrismState.calibration.drainInterval) {
+    clearInterval(window.advancedPrismState.calibration.drainInterval);
+    window.advancedPrismState.calibration.drainInterval = null;
   }
-  advancedPrismState.calibration.waveFrequency = 1;
-  advancedPrismState.calibration.optimalFrequency = 1;
-  advancedPrismState.calibration.wavePhase = 0;
-  advancedPrismState.calibration.lastAnimationTime = 0;
+  window.advancedPrismState.calibration.waveFrequency = 1;
+  window.advancedPrismState.calibration.optimalFrequency = 1;
+  window.advancedPrismState.calibration.wavePhase = 0;
+  window.advancedPrismState.calibration.lastAnimationTime = 0;
   performPrismCoreResetWithoutRewards();
   if (window.showViSpeech) {
     showViSpeech('Stable light calibration data wiped. All spectrum distortions removed.', 4000);
   }
 }
 function performPrismCoreResetWithoutRewards() {
+  const zero = new Decimal(0);
+  
+  // Reset window.prismState
   if (window.prismState) {
     Object.keys(window.prismState).forEach(key => {
       if (key.includes('light') && window.DecimalUtils && window.DecimalUtils.isDecimal(window.prismState[key])) {
-        window.prismState[key] = new Decimal(0);
+        window.prismState[key] = zero;
       }
     });
   }
   if (window.prismState && window.prismState.generatorUpgrades) {
     Object.keys(window.prismState.generatorUpgrades).forEach(lightType => {
-      window.prismState.generatorUpgrades[lightType] = new Decimal(0);
+      window.prismState.generatorUpgrades[lightType] = zero;
     });
   }
+  
+  // Also reset window.state.prismState to prevent restoration
+  if (window.state && window.state.prismState) {
+    Object.keys(window.state.prismState).forEach(key => {
+      if (key.includes('light') && window.DecimalUtils && window.DecimalUtils.isDecimal(window.state.prismState[key])) {
+        window.state.prismState[key] = zero;
+      }
+    });
+  }
+  if (window.state && window.state.prismState && window.state.prismState.generatorUpgrades) {
+    Object.keys(window.state.prismState.generatorUpgrades).forEach(lightType => {
+      window.state.prismState.generatorUpgrades[lightType] = zero;
+    });
+  }
+  
   if (window.forceUpdateAllLightCounters) {
     window.forceUpdateAllLightCounters();
   }
@@ -1317,88 +1552,68 @@ function performPrismCoreResetWithoutRewards() {
   updateAdvancedPrismUI();
 }
 function applyCalibrationNerfs() {
-  if (!window.prismState || !advancedPrismState.calibration) return;
-  Object.keys(advancedPrismState.calibration.nerfs).forEach(lightType => {
-    const nerf = advancedPrismState.calibration.nerfs[lightType];
-    if (nerf.gt(1) && window.prismState[lightType]) {
-    }
-  });
+  // This function is no longer needed as nerfs are applied in the addCurrency function in script.js
+  // Kept for compatibility but does nothing
+  return;
 }
 function getCalibrationNerf(lightType) {
-  if (!advancedPrismState.calibration || !advancedPrismState.calibration.nerfs[lightType]) {
+  if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.nerfs[lightType]) {
     return new Decimal(1);
   }
-  return advancedPrismState.calibration.nerfs[lightType];
+  return window.advancedPrismState.calibration.nerfs[lightType];
 }
 function decayCalibrationNerfs(deltaTime) {
-  if (!advancedPrismState.calibration || !advancedPrismState.calibration.nerfs) return;
+  if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.nerfs) return;
   let decayPercentage = 1;
   if (window.friendship && window.friendship.Lab && window.friendship.Lab.level >= 10) {
     const viLevel = window.friendship.Lab.level;
     decayPercentage = 1 + (viLevel - 9);
   }
-  Object.keys(advancedPrismState.calibration.nerfs).forEach(lightType => {
-    const currentNerf = advancedPrismState.calibration.nerfs[lightType];
+  Object.keys(window.advancedPrismState.calibration.nerfs).forEach(lightType => {
+    const currentNerf = window.advancedPrismState.calibration.nerfs[lightType];
     if (currentNerf.gt(1)) {
       const keepPercentage = (100 - decayPercentage) / 100;
       const decayRate = new Decimal(keepPercentage).pow(deltaTime);
       const newNerf = currentNerf.mul(decayRate);
       if (newNerf.lte(1.001)) {
-        advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
+        window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
       } else {
-        advancedPrismState.calibration.nerfs[lightType] = newNerf;
+        window.advancedPrismState.calibration.nerfs[lightType] = newNerf;
       }
     }
   });
 }
-let nerfDecayInterval = null;
-let lastNerfDecayTime = Date.now();
-function startEnhancedNerfDecaySystem() {
-  if (nerfDecayInterval) {
-    clearInterval(nerfDecayInterval);
-    nerfDecayInterval = null;
+// Nerf decay system integrated with main game tick system
+// This function is called by the main game tick (script.js gameTick) every 100ms
+// This ensures consistent timing with other game systems and better performance
+
+function enhancedDecayCalibrationNerfs(deltaTime) {
+  // Enhanced decay based on friendship level
+  if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.nerfs) return;
+  
+  let decayPercentage = 1; // Base decay rate
+  
+  // Enhanced decay for high friendship levels
+  if (window.friendship && window.friendship.Lab && window.friendship.Lab.level >= 10) {
+    const viLevel = window.friendship.Lab.level;
+    decayPercentage = 1 + (viLevel - 9);
   }
-  if (!window.friendship || !window.friendship.Lab || window.friendship.Lab.level < 15) {
-    return;
-  }
-  lastNerfDecayTime = Date.now();
-  updateNerfDisplayInterval(500);
-  nerfDecayInterval = setInterval(() => {
-    const currentTime = Date.now();
-    const deltaTime = (currentTime - lastNerfDecayTime) / 1000;
-    if (advancedPrismState.calibration && advancedPrismState.calibration.nerfs) {
-      const hasNerfs = Object.keys(advancedPrismState.calibration.nerfs).some(lightType => {
-        return advancedPrismState.calibration.nerfs[lightType].gt(1);
-      });
-      if (hasNerfs) {
-        originalDecayCalibrationNerfs(deltaTime);
+  
+  // Apply decay to all nerf values
+  Object.keys(window.advancedPrismState.calibration.nerfs).forEach(lightType => {
+    const currentNerf = window.advancedPrismState.calibration.nerfs[lightType];
+    if (currentNerf.gt(1)) {
+      const keepPercentage = (100 - decayPercentage) / 100;
+      const decayRate = new Decimal(keepPercentage).pow(deltaTime);
+      const newNerf = currentNerf.mul(decayRate);
+      
+      if (newNerf.lte(1.001)) {
+        window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
+      } else {
+        window.advancedPrismState.calibration.nerfs[lightType] = newNerf;
       }
     }
-    lastNerfDecayTime = currentTime;
-  }, 500);
-}
-function stopEnhancedNerfDecaySystem() {
-  if (nerfDecayInterval) {
-    clearInterval(nerfDecayInterval);
-    nerfDecayInterval = null;
-    updateNerfDisplayInterval(1000);
-  }
-}
-function checkAndUpdateNerfDecaySystem() {
-  const shouldUseEnhanced = window.friendship && window.friendship.Lab && window.friendship.Lab.level >= 15;
-  const isCurrentlyRunning = !!nerfDecayInterval;
-  if (shouldUseEnhanced && !isCurrentlyRunning) {
-    startEnhancedNerfDecaySystem();
-  } else if (!shouldUseEnhanced && isCurrentlyRunning) {
-    stopEnhancedNerfDecaySystem();
-  }
-}
-const originalDecayCalibrationNerfs = decayCalibrationNerfs;
-function enhancedDecayCalibrationNerfs(deltaTime) {
-  if (nerfDecayInterval) {
-    return;
-  }
-  originalDecayCalibrationNerfs(deltaTime);
+  });
 }
 window.openCalibrationMinigame = openCalibrationMinigame;
 window.startCalibration = startCalibration;
@@ -1406,10 +1621,8 @@ window.stopCalibration = stopCalibration;
 window.closeCalibrationModal = closeCalibrationModal;
 window.respecStableLight = respecStableLight;
 window.getCalibrationNerf = getCalibrationNerf;
+window.applyCalibrationNerfs = applyCalibrationNerfs;
 window.decayCalibrationNerfs = enhancedDecayCalibrationNerfs;
-window.startEnhancedNerfDecaySystem = startEnhancedNerfDecaySystem;
-window.stopEnhancedNerfDecaySystem = stopEnhancedNerfDecaySystem;
-window.checkAndUpdateNerfDecaySystem = checkAndUpdateNerfDecaySystem;
 window.updateNerfDisplayInterval = updateNerfDisplayInterval;
 function hookLightGainFunctions() {
   const originalGetLightGain = window.getLightGain;
@@ -1769,16 +1982,22 @@ const stableLightBuffs = {
     }
   }
 };
+
+// Make stableLightBuffs globally accessible
+window.stableLightBuffs = stableLightBuffs;
+
 function getStableLightBuff(lightType) {
-  const buff = stableLightBuffs[lightType];
+  if (typeof window.stableLightBuffs === 'undefined') return new Decimal(1);
+  const buff = window.stableLightBuffs[lightType];
   if (!buff) return new Decimal(1);
-  const stableAmount = advancedPrismState.calibration.stable[lightType];
+  const stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
   return buff.calculate(stableAmount);
 }
 function getStableLightBuffDisplay(lightType) {
-  const buff = stableLightBuffs[lightType];
+  if (typeof window.stableLightBuffs === 'undefined') return '';
+  const buff = window.stableLightBuffs[lightType];
   if (!buff) return '';
-  const stableAmount = advancedPrismState.calibration.stable[lightType];
+  const stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
   if (!stableAmount || stableAmount.lte(0)) return '';
   const buffValue = buff.calculate(stableAmount);
   const formattedValue = buff.format(buffValue);
@@ -1857,7 +2076,7 @@ window.isStableLightAtCap = isStableLightAtCap;
 window.applyStableLightCap = applyStableLightCap;
 window.stableLightCaps = stableLightCaps;
 function testStableLightBuff() {
-  advancedPrismState.calibration.stable.light = new Decimal(200000);
+  window.advancedPrismState.calibration.stable.light = new Decimal(200000);
   updateAdvancedPrismUI();
   const testRate = new Decimal(100);
   const buffedRate = applyWhiteStableLightBuff(testRate);
@@ -1891,17 +2110,17 @@ window.testStableLightPercentages = function() {
 
 // Test function to set specific stable light amounts
 window.setStableLightForTesting = function(lightType, amount) {
-  if (!advancedPrismState.calibration.stable[lightType]) {
+  if (!window.advancedPrismState.calibration.stable[lightType]) {
     console.error(`Invalid light type: ${lightType}`);
     return;
   }
   
   const decimalAmount = new Decimal(amount);
-  advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, decimalAmount);
+  window.advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, decimalAmount);
   updateAdvancedPrismUI(true);
   
-  const percentage = calculateStableLightPercentage(lightType, advancedPrismState.calibration.stable[lightType]);
-  console.log(`Set ${lightType} to ${advancedPrismState.calibration.stable[lightType].toString()} (${formatStableLightPercentage(percentage)})`);
+  const percentage = calculateStableLightPercentage(lightType, window.advancedPrismState.calibration.stable[lightType]);
+  console.log(`Set ${lightType} to ${window.advancedPrismState.calibration.stable[lightType].toString()} (${formatStableLightPercentage(percentage)})`);
 };
 
 // Test function to demonstrate the hardcap system
@@ -1926,7 +2145,7 @@ window.testStableLightHardcaps = function() {
     console.log(`${lightType}: Tried ${originalAmount.toString()}, got ${cappedAmount.toString()}, cap is ${cap.toString()}`);
     
     // Set the capped amount in the game state
-    advancedPrismState.calibration.stable[lightType] = cappedAmount;
+    window.advancedPrismState.calibration.stable[lightType] = cappedAmount;
   });
   
   // Update UI to show the results
@@ -2000,7 +2219,7 @@ window.testVivienEnhancedDecayTicks = function(level = 15) {
     window.advancedPrismState.calibration.nerfs = {};
   }
   window.advancedPrismState.calibration.nerfs.light = new Decimal(3);
-  window.checkAndUpdateNerfDecaySystem();
+  // Nerf decay system now integrated with main game tick
   let tickCount = 0;
   const startValue = window.advancedPrismState.calibration.nerfs.light.toNumber();
   const monitorInterval = setInterval(() => {
@@ -2012,25 +2231,69 @@ window.testVivienEnhancedDecayTicks = function(level = 15) {
       clearInterval(monitorInterval);
       if (currentValue <= 1.01) {
       }
-      const isRunning = !!window.nerfDecayInterval;
+      // Now using main game tick system instead of separate interval
     }
   }, 500);
   return true;
 };
 window.checkNerfDecaySystemStatus = function() {
   const viLevel = window.friendship?.Lab?.level || 0;
-  const shouldRun = viLevel >= 15;
-  const isRunning = !!nerfDecayInterval;
+  const hasEnhancedDecay = viLevel >= 10;
   const nerfs = window.advancedPrismState?.calibration?.nerfs || {};
   const activeNerfs = Object.keys(nerfs).filter(lightType => nerfs[lightType].gt(1));
   return {
     level: viLevel,
-    shouldRun: shouldRun,
-    isRunning: isRunning,
+    hasEnhancedDecay: hasEnhancedDecay,
+    decayRate: hasEnhancedDecay ? (1 + (viLevel - 9)) + "%/second" : "1%/second",
+    usingMainTick: true,
+    tickRate: "100ms (main game tick)",
     activeNerfs: activeNerfs
   };
 };
 function renderAdvancedPrismUI() {
+  // Define light types for use in the UI - using proper objects with id and name
+  const lightTypes = [
+    {
+      id: 'light',
+      name: 'Stable Light',
+      color: '#ffffff',
+      description: 'The fundamental building block of all light-based research.'
+    },
+    {
+      id: 'redlight',
+      name: 'Red Stable Light',
+      color: '#ff4444',
+      description: 'Energetic red wavelengths, useful for heating applications.'
+    },
+    {
+      id: 'orangelight',
+      name: 'Orange Stable Light',
+      color: '#ff8844',
+      description: 'Warm orange wavelengths, promotes growth and vitality.'
+    },
+    {
+      id: 'yellowlight',
+      name: 'Yellow Stable Light',
+      color: '#ffdd44',
+      description: 'Bright yellow wavelengths, enhances mental clarity.'
+    },
+    {
+      id: 'greenlight',
+      name: 'Green Stable Light',
+      color: '#44ff44',
+      description: 'Balanced green wavelengths, stabilizes other light types.'
+    },
+    {
+      id: 'bluelight',
+      name: 'Blue Stable Light',
+      color: '#4444ff',
+      description: 'High-energy blue wavelengths, accelerates reactions.'
+    }
+  ];
+  
+  // Ensure advanced prism state is properly synced with window.state
+  syncAdvancedPrismState();
+  
   // First check for the specific advanced prism content container
   let container = document.getElementById('advancedPrismContent');
   
@@ -2050,7 +2313,7 @@ function renderAdvancedPrismUI() {
   const content = `
     <div style="display: flex; flex-direction: column; gap: 2rem; padding: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem;">
-        <div class="card" style="flex: 0 0 300px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+        <div class="card" style="flex: 0 0 300px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8);">
           <img id="viCharacterNormal" src="assets/icons/vivien.png" alt="Vi"
                style="width: 250px; height: 250px; border-radius: 12px; cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block;"
                onclick="pokeVi()">
@@ -2170,7 +2433,7 @@ function renderAdvancedPrismUI() {
             </button>
           </div>
         </div>
-        <div class="card" style="flex: 0 0 300px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; padding: 1rem;">
+        <div class="card" style="flex: 0 0 300px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; padding: 1rem; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8);">
           <div style="text-align: center; width: 100%;">
             <h3 style="margin: 0 0 2.5rem 0; color: #4a9eff; font-size: 1.2rem;">Prism Core Boosts</h3>
             <div id="coreBoostsList" style="text-align: left; font-size: 1rem; color: #ffffff; line-height: 1.8; font-weight: 500;">
@@ -2182,10 +2445,106 @@ function renderAdvancedPrismUI() {
           </div>
         </div>
       </div>
-      <div style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; margin: 2rem auto; max-width: 1000px; flex-wrap: wrap;">
+      
+      <!-- Light Spectrum Chart -->
+      <div style="display: flex; justify-content: center; margin: 1.5rem auto; max-width: 1200px; width: 100%;">
+        <div class="card" style="width: 95%; min-width: 800px; height: 80px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; padding: 1rem 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: visible; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8);">
+          <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); color: #00cccc; font-size: 0.9rem; font-weight: bold; z-index: 3; text-shadow: 0 0 8px rgba(0,255,255,0.6), 0 1px 2px rgba(0,0,0,0.3);">Light Spectrum</div>
+          <div id="lightSpectrumBar" style="width: 95%; height: 35px; border-radius: 18px; position: relative; margin-top: 8px; background: linear-gradient(to right, 
+            #660000 0%,     /* Near Infrared */
+            #880000 8%,     /* Infrared */
+            #aa0000 16%,    /* Deep Red IR */
+            #ff0000 24%,    /* Red */
+            #ff4500 32%,    /* Red-Orange */
+            #ffa500 40%,    /* Orange */
+            #ffff00 48%,    /* Yellow */
+            #9acd32 56%,    /* Yellow-Green */
+            #00ff00 64%,    /* Green */
+            #0000ff 72%,    /* Blue */
+            #8000ff 82%,    /* Purple/Violet */
+            #4b0082 92%,    /* Deep Purple/Indigo */
+            #2d004d 100%    /* Near Ultraviolet (350nm) */
+          ); box-shadow: inset 0 3px 6px rgba(0,0,0,0.4), 0 0 20px rgba(74, 158, 255, 0.4), 0 4px 8px rgba(0,0,0,0.2); z-index: 2;">
+            <!-- Wavelength markers -->
+            <!-- Infrared Section -->
+            <div style="position: absolute; top: -20px; left: 0%; color: #cc6666; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">1000nm</div>
+            <div style="position: absolute; top: -20px; left: 8%; color: #dd7777; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">850nm</div>
+            <div style="position: absolute; top: -20px; left: 16%; color: #ee8888; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">750nm</div>
+            <!-- Visible Light Section -->
+            <div style="position: absolute; top: -20px; left: 24%; color: #ff6666; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">700nm</div>
+            <div style="position: absolute; top: -20px; left: 32%; color: #ff8844; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">620nm</div>
+            <div style="position: absolute; top: -20px; left: 40%; color: #ffaa66; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">590nm</div>
+            <div style="position: absolute; top: -20px; left: 48%; color: #ffff66; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">570nm</div>
+            <div style="position: absolute; top: -20px; left: 56%; color: #aaff66; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">530nm</div>
+            <div style="position: absolute; top: -20px; left: 64%; color: #66ff66; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">495nm</div>
+            <div style="position: absolute; top: -20px; left: 72%; color: #6688ff; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">450nm</div>
+            <div style="position: absolute; top: -20px; left: 80%; color: #aa66ff; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">380nm</div>
+            <!-- Ultraviolet Section -->
+            <div style="position: absolute; top: -20px; left: 100%; color: #9966cc; font-size: 0.7rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap;">350nm</div>
+            
+            <!-- Light collection indicators -->
+            <div id="spectrumIndicators" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; z-index: 4;">
+              <!-- These will be populated by JavaScript based on collected light amounts -->
+            </div>
+            
+            <!-- Vertical section separators -->
+            <div style="position: absolute; top: -5px; left: 24%; width: 2px; height: 45px; background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.4), rgba(255,255,255,0.8)); z-index: 6; border-radius: 1px; box-shadow: 0 0 4px rgba(255,255,255,0.6);"></div>
+            <div style="position: absolute; top: -5px; left: 80%; width: 2px; height: 45px; background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.4), rgba(255,255,255,0.8)); z-index: 6; border-radius: 1px; box-shadow: 0 0 4px rgba(255,255,255,0.6);"></div>
+            
+            <!-- Section labels -->
+            <div style="position: absolute; top: 45px; left: 12%; color: #cc8888; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">INFRARED</div>
+            <div style="position: absolute; top: 45px; left: 52%; color: #ffffff; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">VISIBLE LIGHT</div>
+            <div style="position: absolute; top: 45px; left: 90%; color: #9988cc; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">ULTRAVIOLET</div>
+            
+            <!-- Black X scribble marker over purple and ultraviolet sections -->
+            <div style="position: absolute; top: -10px; left: 76%; width: 28%; height: 160%; display: flex; align-items: center; justify-content: center; z-index: 5; pointer-events: none;">
+              <svg width="100%" height="100%" viewBox="0 0 180 80" style="position: absolute; top: 0; left: 0; overflow: visible;">
+                <!-- Main X pattern - top-left to bottom-right -->
+                <path d="M0,15 Q20,20 40,25 Q60,30 80,35 Q100,40 120,45 Q140,50 160,55 M-2,17 Q18,22 38,27 Q58,32 78,37 Q98,42 118,47 Q138,52 158,57 M2,13 Q22,18 42,23 Q62,28 82,33 Q102,38 122,43 Q142,48 162,53" 
+                      stroke="#000000" 
+                      stroke-width="10" 
+                      fill="none" 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round"
+                      opacity="1.0"
+                      style="filter: drop-shadow(0 0 6px rgba(0,0,0,0.9));">
+                </path>
+                <!-- Main X pattern - top-right to bottom-left -->
+                <path d="M160,15 Q140,20 120,25 Q100,30 80,35 Q60,40 40,45 Q20,50 0,55 M162,17 Q142,22 122,27 Q102,32 82,37 Q62,42 42,47 Q22,52 2,57 M158,13 Q138,18 118,23 Q98,28 78,33 Q58,38 38,43 Q18,48 -2,53" 
+                      stroke="#000000" 
+                      stroke-width="10" 
+                      fill="none" 
+                      stroke-linecap="round" 
+                      stroke-linejoin="round"
+                      opacity="1.0"
+                      style="filter: drop-shadow(0 0 6px rgba(0,0,0,0.9));">
+                </path>
+                <!-- Additional X strokes for extra thickness -->
+                <path d="M6,20 Q28,25 50,30 Q72,35 94,40 Q116,45 138,50 Q160,55 182,60 M154,20 Q132,25 110,30 Q88,35 66,40 Q44,45 22,50 Q0,55 -22,60" 
+                      stroke="#000000" 
+                      stroke-width="8" 
+                      fill="none" 
+                      stroke-linecap="round" 
+                      opacity="0.9">
+                </path>
+                <!-- Extra thick center strokes -->
+                <path d="M12,25 Q38,30 64,35 Q90,40 116,45 Q142,50 168,55 M142,25 Q116,30 90,35 Q64,40 38,45 Q12,50 -14,55" 
+                      stroke="#000000" 
+                      stroke-width="6" 
+                      fill="none" 
+                      stroke-linecap="round" 
+                      opacity="0.9">
+                </path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; justify-content: center; align-items: center; gap: 0.75rem; margin: 1.5rem auto; max-width: 1000px; flex-wrap: wrap;">
         <button id="respecStableLightBtn"
                 onclick="respecStableLight()"
-                style="height: 50px; width: 120px; background: linear-gradient(135deg, #ff4444, #ff6666); color: white; border: none; border-radius: 25px; cursor: pointer; transition: all 0.3s; font-size: 0.7rem; font-weight: bold; box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2); text-shadow: 0 1px 2px rgba(0,0,0,0.3);"
+                style="height: 40px; width: 120px; background: linear-gradient(135deg, #ff4444, #ff6666); color: white; border: none; border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 0.65rem; font-weight: bold; box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2); text-shadow: 0 1px 2px rgba(0,0,0,0.3);"
                 onmouseover="this.style.background='linear-gradient(135deg, #ff6666, #ff8888)'; this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 6px 12px rgba(255, 68, 68, 0.4), inset 0 1px 2px rgba(255,255,255,0.3)'"
                 onmouseout="this.style.background='linear-gradient(135deg, #ff4444, #ff6666)'; this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 8px rgba(255, 68, 68, 0.3), inset 0 1px 2px rgba(255,255,255,0.2)'">
           Respec Stable Light
@@ -2239,12 +2598,12 @@ function renderAdvancedPrismUI() {
           return `
           <div class="card light-type-card spectrum-button" data-light-type="${light.id}"
                onclick="openCalibrationMinigame('${light.id}')"
-               style="height: 65px; width: 120px; background: ${style.background}; border-radius: 25px; cursor: pointer; transition: all 0.3s ease; border: none; box-shadow: 0 4px 8px ${style.shadowColor}, inset 0 1px 2px rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.25rem; position: relative; overflow: hidden; --shadow-color: ${style.shadowColor}; --glow-color: ${style.glowColor};"
+               style="height: 50px; width: 120px; background: ${style.background}; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; border: none; box-shadow: 0 4px 8px ${style.shadowColor}, inset 0 1px 2px rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.2rem; position: relative; overflow: hidden; --shadow-color: ${style.shadowColor}; --glow-color: ${style.glowColor};"
                onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 6px 12px ${style.shadowColor}, 0 0 20px ${style.glowColor}, inset 0 1px 2px rgba(255,255,255,0.3)'"
                onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 8px ${style.shadowColor}, inset 0 1px 2px rgba(255,255,255,0.2)'">
-            <span style="color: ${style.textColor}; font-size: 0.6rem; font-weight: bold; text-shadow: ${style.textShadow}; margin-bottom: 1px; z-index: 2;">${light.name}</span>
-            <div style="color: ${style.textColor}; font-size: 0.7rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; line-height: 1.1; z-index: 2;" id="${light.id}Amount">0</div>
-            <div style="color: ${style.textColor}; font-size: 0.55rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; margin-top: 2px; z-index: 2;" id="${light.id}Percentage">0.000%</div>
+            <span style="color: ${style.textColor}; font-size: 0.55rem; font-weight: bold; text-shadow: ${style.textShadow}; margin-bottom: 0px; z-index: 2;">${light.name}</span>
+            <div style="color: ${style.textColor}; font-size: 0.65rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; line-height: 1.0; z-index: 2;" id="${light.id}Amount">0</div>
+            <div style="color: ${style.textColor}; font-size: 0.5rem; font-weight: bold; text-shadow: ${style.textShadow}; text-align: center; margin-top: 1px; z-index: 2;" id="${light.id}Percentage">0.000%</div>
             <div id="${light.id}Buff" style="z-index: 2;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%); pointer-events: none; z-index: 1;"></div>
           </div>
@@ -2253,32 +2612,32 @@ function renderAdvancedPrismUI() {
       </div>
     </div>
     <div id="calibrationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; margin: 0; padding: 0; background: rgba(0,0,0,0.8); z-index: 10000; box-sizing: border-box;">
-      <div style="background: #1a1a2e; border-radius: 15px; padding: 1.5rem; width: 500px; max-width: 75vw; max-height: 85vh; overflow-y: auto; text-align: center; border: 2px solid #4a9eff; box-shadow: 0 0 30px rgba(74, 158, 255, 0.3); position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; line-height: 1.4;">
-        <h2 id="calibrationTitle" style="color: #4a9eff; margin-bottom: 1rem;">Light Spectrum Calibration</h2>
+      <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; padding: 1.5rem; width: 500px; max-width: 75vw; max-height: 85vh; overflow-y: auto; text-align: center; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8); position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; line-height: 1.4;">
+        <h2 id="calibrationTitle" style="color: #00cccc; margin-bottom: 1rem; text-shadow: 0 0 8px rgba(0,255,255,0.6), 0 1px 2px rgba(0,0,0,0.3);">Stable Light Spectrum Calibration</h2>
         <canvas id="waveCanvas" width="420" height="180" style="border: 2px solid #333; border-radius: 8px; background: #000; margin: 0.8rem 0; max-width: 100%;"></canvas>
         <div style="margin: 1rem 0;">
-          <label style="color: #fff; display: block; margin-bottom: 0.5rem;">Wave Frequency: <span id="frequencyDisplay">1.00</span> Hz</label>
-          <div id="frequencyScrollArea" style="width: 80%; height: 60px; margin: 0 auto; border: 2px solid #4a9eff; border-radius: 8px; background: linear-gradient(135deg, #2a2a4e, #3a3a5e); display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);"
-               onmouseover="this.style.background='linear-gradient(135deg, #3a3a5e, #4a4a6e)'; this.style.borderColor='#6ab7ff'"
-               onmouseout="this.style.background='linear-gradient(135deg, #2a2a4e, #3a3a5e)'; this.style.borderColor='#4a9eff'">
-            <span style="color: #fff; font-size: 0.9rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">??? Scroll to adjust frequency</span>
+          <label style="color: #333; display: block; margin-bottom: 0.5rem; font-weight: bold; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">Wave Frequency: <span id="frequencyDisplay">1.00</span> Hz</label>
+          <div id="frequencyScrollArea" style="width: 80%; height: 60px; margin: 0 auto; border: 2px solid #00ffff; border-radius: 8px; background: linear-gradient(135deg, #e0f8ff, #b0e8ff); display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,255,255,0.2), 0 0 10px rgba(0,255,255,0.3);"
+               onmouseover="this.style.background='linear-gradient(135deg, #f0f8ff, #d0e8ff)'; this.style.borderColor='#33ffff'; this.style.boxShadow='inset 0 2px 4px rgba(0,255,255,0.3), 0 0 15px rgba(0,255,255,0.5)'"
+               onmouseout="this.style.background='linear-gradient(135deg, #e0f8ff, #b0e8ff)'; this.style.borderColor='#00ffff'; this.style.boxShadow='inset 0 2px 4px rgba(0,255,255,0.2), 0 0 10px rgba(0,255,255,0.3)'">
+            <span style="color: #006666; font-size: 0.9rem; font-weight: bold; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">??? Scroll to adjust frequency</span>
           </div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin: 1rem 0; color: #fff;">
-          <div><span id="calibrationStableLightLabel">Stable Light</span>: <span id="calibrationStableLight">0</span></div>
-          <div>Time: <span id="calibrationTime">0</span>s</div>
+        <div style="display: flex; justify-content: space-between; margin: 1rem 0; color: #333; font-weight: bold; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">
+          <div><span id="calibrationStableLightLabel">Stable Light</span>: <span id="calibrationStableLight">0.0</span></div>
+          <div>Time: <span id="calibrationTime">0.0</span>s</div>
         </div>
-        <div style="margin: 0.5rem 0; color: #ffffff; font-weight: bold; text-align: center;">
-          Current Light: <span id="calibrationCurrentLight">0</span>
+        <div style="margin: 0.5rem 0; color: #333; font-weight: bold; text-align: center; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">
+          Current Light: <span id="calibrationCurrentLight">73.2Qa</span>
         </div>
-        <div style="margin: 0.5rem 0; color: #4CAF50; font-weight: bold; text-align: center;">
+        <div style="margin: 0.5rem 0; color: #00aa00; font-weight: bold; text-align: center; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">
           Stable Light Rate: <span id="calibrationTimeMultiplier">x1.0</span>
         </div>
-        <div style="margin: 0.5rem 0; color: #44ff44; font-weight: bold; text-align: center;">
+        <div style="margin: 0.5rem 0; color: #00cc00; font-weight: bold; text-align: center; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">
           Session Efficiency: <span id="calibrationDiminishingReturns">/1.000</span>
         </div>
-        <div style="margin: 0.5rem 0; color: #ff6666; font-weight: bold; text-align: center;">
-          Current Nerf: /<span id="calibrationCurrentNerf">1</span> to light gain
+        <div style="margin: 0.5rem 0; color: #cc0000; font-weight: bold; text-align: center; text-shadow: 0 1px 2px rgba(255,255,255,0.8);">
+          Current Nerf: /<span id="calibrationCurrentNerf">1.0</span> to light gain
         </div>
         <div style="margin-top: 1.5rem;">
           <button id="activateCalibrationBtn" onclick="startCalibration()"
@@ -2378,6 +2737,17 @@ function renderAdvancedPrismUI() {
         0% { transform: translateX(-100%) translateY(-100%) rotate(-45deg); }
         100% { transform: translateX(100%) translateY(100%) rotate(-45deg); }
       }
+
+      @keyframes spectrumIndicatorPulse {
+        0%, 100% { 
+          transform: translate(-50%, -50%) scale(1);
+          box-shadow: 0 0 8px rgba(255,255,255,0.8), 0 0 4px rgba(74, 158, 255, 0.6);
+        }
+        50% { 
+          transform: translate(-50%, -50%) scale(1.3);
+          box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 8px rgba(74, 158, 255, 0.8);
+        }
+      }
     </style>
   `;
   
@@ -2388,6 +2758,7 @@ function renderAdvancedPrismUI() {
   setTimeout(() => {
     initializeViTokenDrops();
     updateAdvancedPrismUI(true); // Force immediate update when rendering
+    updateStableLightDisplays(); // Update stable light displays immediately after rendering
     initializeImageSwap();
     const lightCards = document.querySelectorAll('.light-type-card');
     lightCards.forEach(card => {
@@ -2460,20 +2831,15 @@ function playPrismCoreUpgradeAnimation(callback) {
     }, 3000);
   }, 3000);
 }
-let prismCoreState = {
-  level: new Decimal(1),
-  potential: new Decimal(0),
-  upgradeCosts: [
-    new Decimal("1e100"),
-    new Decimal("1e200"),
-    new Decimal("1e360"),
-    new Decimal("1e727")
-  ]
-};
+// Reference prismCore from advancedPrismState for backward compatibility
+let prismCoreState = window.advancedPrismState ? window.advancedPrismState.prismCore : null;
+
 if (typeof window.prismState === 'undefined') {
   window.prismState = {};
 }
-window.prismState.prismcore = prismCoreState;
+if (prismCoreState) {
+  window.prismState.prismcore = prismCoreState;
+}
 function calculatePrismPotential() {
   let potential = new Decimal(1);
   lightTypes.forEach(light => {
@@ -2486,18 +2852,25 @@ function calculatePrismPotential() {
     }
     potential = potential.mul(amount);
   });
-  prismCoreState.potential = potential;
+  if (window.advancedPrismState && window.advancedPrismState.prismCore) {
+    window.advancedPrismState.prismCore.potential = potential;
+  }
   return potential;
 }
 function getPrismCoreUpgradeCost() {
-  const level = prismCoreState.level.toNumber();
-  if (level <= prismCoreState.upgradeCosts.length) {
-    return prismCoreState.upgradeCosts[level - 1] || new Decimal(Math.pow(10, level * 2));
+  if (!window.advancedPrismState || !window.advancedPrismState.prismCore) {
+    // Return default cost for level 1 if state not available
+    return new Decimal("1e100");
+  }
+  const level = window.advancedPrismState.prismCore.level.toNumber();
+  if (level <= window.advancedPrismState.prismCore.upgradeCosts.length) {
+    return window.advancedPrismState.prismCore.upgradeCosts[level - 1] || new Decimal(Math.pow(10, level * 2));
   }
   return new Decimal(Math.pow(10, level * 2));
 }
 function getPrismCoreMultiplier() {
-  const level = prismCoreState.level.toNumber();
+  if (!window.advancedPrismState || !window.advancedPrismState.prismCore) return new Decimal(1);
+  const level = window.advancedPrismState.prismCore.level.toNumber();
   if (level <= 1) return new Decimal(1);
   return new Decimal(5).pow(level - 1);
 }
@@ -2532,18 +2905,18 @@ function performPrismCoreReset() {
       window.prismState[accKey] = new Decimal(0);
     }
   });
-  if (advancedPrismState.calibration) {
+  if (window.advancedPrismState.calibration) {
     lightTypes.forEach(lightType => {
-      advancedPrismState.calibration.stable[lightType] = new Decimal(0);
+      window.advancedPrismState.calibration.stable[lightType] = new Decimal(0);
     });
     lightTypes.forEach(lightType => {
-      advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
+      window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(1);
     });
     lightTypes.forEach(lightType => {
-      advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
+      window.advancedPrismState.calibration.totalTimeAccumulated[lightType] = 0;
     });
-    advancedPrismState.calibration.activeMinigame = null;
-    advancedPrismState.calibration.minigameStartTime = 0;
+    window.advancedPrismState.calibration.activeMinigame = null;
+    window.advancedPrismState.calibration.minigameStartTime = 0;
   }
   if (window.clearPrismDOMCache) {
     window.clearPrismDOMCache();
@@ -2553,15 +2926,13 @@ function attemptPrismCoreUpgrade() {
   const cost = getPrismCoreUpgradeCost();
   const potential = calculatePrismPotential();
   if (potential.gte(cost)) {
-    const previousLevel = prismCoreState.level.toNumber();
-    prismCoreState.level = prismCoreState.level.add(1);
-    const newLevel = prismCoreState.level.toNumber();
-    window.prismState.prismcore = prismCoreState;
+    if (!window.advancedPrismState || !window.advancedPrismState.prismCore) return;
+    const previousLevel = window.advancedPrismState.prismCore.level.toNumber();
+    window.advancedPrismState.prismCore.level = window.advancedPrismState.prismCore.level.add(1);
+    const newLevel = window.advancedPrismState.prismCore.level.toNumber();
+    window.prismState.prismcore = window.advancedPrismState.prismCore;
     playPrismCoreUpgradeAnimation(() => {
       performPrismCoreReset();
-      if (typeof saveGame === 'function') {
-        saveGame();
-      }
       if (previousLevel === 1 && newLevel === 2) {
         if (window.prismState) {
           if (!window.prismState.yellowlight || window.prismState.yellowlight.eq(0)) {
@@ -2574,9 +2945,9 @@ function attemptPrismCoreUpgrade() {
         if (window.updatePrismUI) {
           window.updatePrismUI();
         }
-        showViSpeech(`Prism Core upgraded to level ${prismCoreState.level}! The enhanced crystal resonance has unlocked Yellow Light production! All previous progress has been reset to harness the new energy.`, 6000);
+        showViSpeech(`Prism Core upgraded to level ${window.advancedPrismState.prismCore.level}! The enhanced crystal resonance has unlocked Yellow Light production! All previous progress has been reset to harness the new energy.`, 6000);
       } else {
-        showViSpeech(`Prism Core upgraded to level ${prismCoreState.level}! The crystalline structure grows more complex. All previous progress has been reset to stabilize the new configuration.`, 5000);
+        showViSpeech(`Prism Core upgraded to level ${window.advancedPrismState.prismCore.level}! The crystalline structure grows more complex. All previous progress has been reset to stabilize the new configuration.`, 5000);
       }
       updateAdvancedPrismUI();
       if (window.forceUpdateAllLightCounters) {
@@ -2598,14 +2969,21 @@ function updateAdvancedPrismUI(forceUpdate = false) {
     return;
   }
   lastAdvancedPrismUIUpdateTime = now;
+  
+  // Sync stable light state with window.state
+  syncAdvancedPrismState();
 
   const potential = calculatePrismPotential();
   const potentialEl = document.getElementById('prismPotential');
   if (potentialEl) potentialEl.textContent = formatNumber(potential);
   const coreLevelEl = document.getElementById('prismCoreLevel');
   const coreLevelDisplayEl = document.getElementById('prismCoreLevelDisplay');
-  if (coreLevelEl) coreLevelEl.textContent = prismCoreState.level.toString();
-  if (coreLevelDisplayEl) coreLevelDisplayEl.textContent = prismCoreState.level.toString();
+  if (coreLevelEl && window.advancedPrismState && window.advancedPrismState.prismCore) {
+    coreLevelEl.textContent = window.advancedPrismState.prismCore.level.toString();
+  }
+  if (coreLevelDisplayEl && window.advancedPrismState && window.advancedPrismState.prismCore) {
+    coreLevelDisplayEl.textContent = window.advancedPrismState.prismCore.level.toString();
+  }
   const upgradeBtn = document.getElementById('prismCoreUpgradeBtn');
   if (upgradeBtn) {
     const cost = getPrismCoreUpgradeCost();
@@ -2629,7 +3007,7 @@ function updateAdvancedPrismUI(forceUpdate = false) {
     const percentageEl = document.getElementById(`${light.id}Percentage`);
     const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
     if (amountEl && cardEl) {
-      const stableAmount = advancedPrismState.calibration.stable[light.id];
+      const stableAmount = window.advancedPrismState.calibration.stable[light.id];
       let displayText = '0';
       const regularLightAmount = window.prismState && window.prismState[light.id] ? window.prismState[light.id] : new Decimal(0);
       if (regularLightAmount.lte(0)) {
@@ -2700,7 +3078,7 @@ function updateStableLightCards(forceUpdate = false) {
     const percentageEl = document.getElementById(`${light.id}Percentage`);
     const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
     if (amountEl && cardEl) {
-      const stableAmount = advancedPrismState.calibration.stable[light.id];
+      const stableAmount = window.advancedPrismState.calibration.stable[light.id];
       let displayText = '0';
       
       if (stableAmount && stableAmount.gt(0)) {
@@ -2750,6 +3128,11 @@ function updateStableLightCards(forceUpdate = false) {
       }
     }
   });
+  
+  // Update spectrum indicators
+  if (window.updateSpectrumIndicators) {
+    window.updateSpectrumIndicators();
+  }
 }
 
 function updateCoreBoostCard() {
@@ -2757,7 +3140,8 @@ function updateCoreBoostCard() {
     const boostsList = document.getElementById('coreBoostsList');
     const nextUnlockInfo = document.getElementById('nextUnlockInfo');
     if (!boostsList || !nextUnlockInfo) return;
-    const currentLevel = prismCoreState.level.toNumber();
+    const currentLevel = (window.advancedPrismState && window.advancedPrismState.prismCore) ? 
+      window.advancedPrismState.prismCore.level.toNumber() : 1;
     const currentMultiplier = getPrismCoreMultiplier();
     const multiplierText = (typeof window.formatNumber === 'function') ?
       window.formatNumber(currentMultiplier) :
@@ -2827,7 +3211,7 @@ function updateCoreBoostCard() {
   }
 }
 function attemptAdvancedPrismReset() {
-  if (!advancedPrismState.resetLayer.canReset) {
+  if (!window.advancedPrismState.resetLayer.canReset) {
     showViSpeech("You don't have enough progress to reset yet. Keep working on the regular prism features first.", 4000);
     return;
   }
@@ -2848,7 +3232,7 @@ function checkAdvancedPrismUnlock() {
   const element25Bought = window.boughtElements && (window.boughtElements[25] || window.boughtElements["25"]);
   const storyModalSeen = window.state && window.state.seenElement25StoryModal;
   if (element25Bought && storyModalSeen) {
-    advancedPrismState.unlocked = true;
+    window.advancedPrismState.unlocked = true;
     const advancedBtn = document.getElementById('prismAdvancedBtn');
     if (advancedBtn) {
       advancedBtn.style.display = 'block';
@@ -2872,13 +3256,15 @@ function initAdvancedPrism() {
   if (window.prismState && window.prismState.prismcore) {
     try {
       const savedCore = window.prismState.prismcore;
-      if (savedCore && savedCore.level) {
-        prismCoreState.level = new Decimal(savedCore.level);
+      if (savedCore && savedCore.level && window.advancedPrismState && window.advancedPrismState.prismCore) {
+        window.advancedPrismState.prismCore.level = new Decimal(savedCore.level);
       }
-      if (savedCore && savedCore.potential) {
-        prismCoreState.potential = new Decimal(savedCore.potential);
+      if (savedCore && savedCore.potential && window.advancedPrismState && window.advancedPrismState.prismCore) {
+        window.advancedPrismState.prismCore.potential = new Decimal(savedCore.potential);
       }
-      window.prismState.prismcore = prismCoreState;
+      if (window.advancedPrismState && window.advancedPrismState.prismCore) {
+        window.prismState.prismcore = window.advancedPrismState.prismCore;
+      }
     } catch (error) {
     }
     
@@ -2895,14 +3281,14 @@ function initAdvancedPrism() {
           if (savedAdvanced.calibration.stable[lightType] !== undefined) {
             const loadedAmount = new Decimal(savedAdvanced.calibration.stable[lightType]);
             // Apply hardcap when loading saved values
-            advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, loadedAmount);
+            window.advancedPrismState.calibration.stable[lightType] = applyStableLightCap(lightType, loadedAmount);
           }
         });
       }
       if (savedAdvanced.calibration && savedAdvanced.calibration.nerfs) {
         Object.keys(savedAdvanced.calibration.nerfs).forEach(lightType => {
           if (savedAdvanced.calibration.nerfs[lightType] !== undefined) {
-            advancedPrismState.calibration.nerfs[lightType] = new Decimal(savedAdvanced.calibration.nerfs[lightType]);
+            window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(savedAdvanced.calibration.nerfs[lightType]);
           }
         });
       }
@@ -2910,22 +3296,22 @@ function initAdvancedPrism() {
         if (savedAdvanced.calibration.sessionPenalty) {
           Object.keys(savedAdvanced.calibration.sessionPenalty).forEach(lightType => {
             if (savedAdvanced.calibration.sessionPenalty[lightType] !== undefined) {
-              advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(savedAdvanced.calibration.sessionPenalty[lightType]);
+              window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(savedAdvanced.calibration.sessionPenalty[lightType]);
             }
           });
         }
         if (savedAdvanced.calibration.totalTimeAccumulated) {
-          Object.assign(advancedPrismState.calibration.totalTimeAccumulated, savedAdvanced.calibration.totalTimeAccumulated);
+          Object.assign(window.advancedPrismState.calibration.totalTimeAccumulated, savedAdvanced.calibration.totalTimeAccumulated);
         }
       }
       if (savedAdvanced.unlocked !== undefined) {
-        advancedPrismState.unlocked = savedAdvanced.unlocked;
+        window.advancedPrismState.unlocked = savedAdvanced.unlocked;
       }
       if (savedAdvanced.imagesSwapped !== undefined) {
-        advancedPrismState.imagesSwapped = savedAdvanced.imagesSwapped;
+        window.advancedPrismState.imagesSwapped = savedAdvanced.imagesSwapped;
       }
       if (savedAdvanced.hasCompletedLabClicks !== undefined) {
-        advancedPrismState.hasCompletedLabClicks = savedAdvanced.hasCompletedLabClicks;
+        window.advancedPrismState.hasCompletedLabClicks = savedAdvanced.hasCompletedLabClicks;
       }
     } catch (error) {
     }
@@ -2933,28 +3319,70 @@ function initAdvancedPrism() {
   if (window.prismState) {
     window.prismState.advancedPrismState = advancedPrismState;
   }
-  Object.keys(advancedPrismState.calibration.stable).forEach(lightType => {
-    if (!DecimalUtils.isDecimal(advancedPrismState.calibration.stable[lightType])) {
-      advancedPrismState.calibration.stable[lightType] = new Decimal(advancedPrismState.calibration.stable[lightType] || 0);
+  Object.keys(window.advancedPrismState.calibration.stable).forEach(lightType => {
+    if (!DecimalUtils.isDecimal(window.advancedPrismState.calibration.stable[lightType])) {
+      window.advancedPrismState.calibration.stable[lightType] = new Decimal(window.advancedPrismState.calibration.stable[lightType] || 0);
     }
   });
-  Object.keys(advancedPrismState.calibration.nerfs).forEach(lightType => {
-    if (!DecimalUtils.isDecimal(advancedPrismState.calibration.nerfs[lightType])) {
-      advancedPrismState.calibration.nerfs[lightType] = new Decimal(advancedPrismState.calibration.nerfs[lightType] || 1);
+  Object.keys(window.advancedPrismState.calibration.nerfs).forEach(lightType => {
+    if (!DecimalUtils.isDecimal(window.advancedPrismState.calibration.nerfs[lightType])) {
+      window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(window.advancedPrismState.calibration.nerfs[lightType] || 1);
     }
   });
-  Object.keys(advancedPrismState.calibration.sessionPenalty).forEach(lightType => {
-    if (!DecimalUtils.isDecimal(advancedPrismState.calibration.sessionPenalty[lightType])) {
-      advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(advancedPrismState.calibration.sessionPenalty[lightType] || 1.0);
+  Object.keys(window.advancedPrismState.calibration.sessionPenalty).forEach(lightType => {
+    if (!DecimalUtils.isDecimal(window.advancedPrismState.calibration.sessionPenalty[lightType])) {
+      window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(window.advancedPrismState.calibration.sessionPenalty[lightType] || 1.0);
     }
   });
+  
+  // Function to update spectrum indicators based on collected light amounts
+  window.updateSpectrumIndicators = function() {
+    const indicatorsContainer = document.getElementById('spectrumIndicators');
+    if (!indicatorsContainer || !window.prismState) return;
+    
+    // Light types with their spectrum positions (as percentages)
+    const lightPositions = {
+      'redlight': 12.5,
+      'orangelight': 25,
+      'yellowlight': 37.5,
+      'greenlight': 62.5,
+      'bluelight': 75,
+      'purplelight': 87.5,
+      'deeppurplelight': 100
+    };
+    
+    // Clear existing indicators
+    indicatorsContainer.innerHTML = '';
+    
+    // Create indicators for each light type that has been collected
+    Object.entries(lightPositions).forEach(([lightType, position]) => {
+      const lightAmount = window.prismState[lightType] || new Decimal(0);
+      if (DecimalUtils.toDecimal(lightAmount).gt(0)) {
+        const indicator = document.createElement('div');
+        indicator.style.position = 'absolute';
+        indicator.style.left = `${position}%`;
+        indicator.style.top = '50%';
+        indicator.style.width = '8px';
+        indicator.style.height = '8px';
+        indicator.style.borderRadius = '50%';
+        indicator.style.background = '#ffffff';
+        indicator.style.border = '2px solid #4a9eff';
+        indicator.style.transform = 'translate(-50%, -50%)';
+        indicator.style.boxShadow = '0 0 8px rgba(255,255,255,0.8), 0 0 4px rgba(74, 158, 255, 0.6)';
+        indicator.style.animation = 'spectrumIndicatorPulse 2s ease-in-out infinite';
+        indicator.style.zIndex = '4';
+        indicatorsContainer.appendChild(indicator);
+      }
+    });
+  };
+  
   checkAdvancedPrismUnlock();
   window.showAdvancedPrismViResponse = showAdvancedPrismViResponse;
   window.showAdvancedPrismViSpeech = showAdvancedPrismViSpeech;
   hookIntoTokenSystem();
   resetImageSwapState();
   setupSubTabResetHooks();
-  if (advancedPrismState.unlocked) {
+  if (window.advancedPrismState.unlocked) {
     renderAdvancedPrismUI();
   }
   if (window.daynight && typeof window.daynight.onTimeChange === 'function') {
@@ -2970,17 +3398,69 @@ window.attemptAdvancedPrismReset = attemptAdvancedPrismReset;
 window.updateAdvancedPrismUI = updateAdvancedPrismUI;
 window.updateStableLightCards = updateStableLightCards;
 window.initAdvancedPrism = initAdvancedPrism;
+// Function to update stable light display values in the Advanced Prism UI
+function updateStableLightDisplays() {
+  const lightTypes = [
+    { id: 'light', name: 'Stable Light' },
+    { id: 'redlight', name: 'Red Stable Light' },
+    { id: 'orangelight', name: 'Orange Stable Light' },
+    { id: 'yellowlight', name: 'Yellow Stable Light' },
+    { id: 'greenlight', name: 'Green Stable Light' },
+    { id: 'bluelight', name: 'Blue Stable Light' }
+  ];
+
+  if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.stable) {
+    return;
+  }
+
+  let totalStableLight = new Decimal(0);
+  
+  lightTypes.forEach(lightType => {
+    const amountElement = document.getElementById(lightType.id + 'Amount');
+    const percentageElement = document.getElementById(lightType.id + 'Percentage');
+    
+    if (amountElement && percentageElement) {
+      const stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      totalStableLight = totalStableLight.add(stableAmount);
+      
+      // Format the amount
+      let displayText;
+      if (stableAmount.gte(1000)) {
+        displayText = formatNumber(stableAmount);
+      } else {
+        displayText = stableAmount.toFixed(1);
+      }
+      
+      amountElement.textContent = displayText;
+    }
+  });
+  
+  // Calculate percentages after getting total
+  lightTypes.forEach(lightType => {
+    const percentageElement = document.getElementById(lightType.id + 'Percentage');
+    
+    if (percentageElement) {
+      const stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      let percentage = 0;
+      
+      if (totalStableLight.gt(0)) {
+        percentage = stableAmount.div(totalStableLight).mul(100).toNumber();
+      }
+      
+      percentageElement.textContent = percentage.toFixed(3) + '%';
+    }
+  });
+}
+
 window.renderAdvancedPrismUI = renderAdvancedPrismUI;
+window.updateStableLightDisplays = updateStableLightDisplays;
 window.checkAdvancedPrismUnlock = checkAdvancedPrismUnlock;
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAdvancedPrism);
 } else {
   setTimeout(initAdvancedPrism, 100);
 }
-setTimeout(() => {
-  checkAndUpdateNerfDecaySystem();
-  setInterval(checkAndUpdateNerfDecaySystem, 5000);
-}, 2000);
+// Nerf decay system now integrated with main game tick - no separate interval needed
 if (window.gameTick && !window._advancedPrismGameTickPatched) {
   const originalGameTick = window.gameTick;
   window.gameTick = function() {
@@ -3017,7 +3497,7 @@ hookIntoAdvancedPrismTab();
 setTimeout(hookIntoAdvancedPrismTab, 1000);
 setTimeout(setupSwariaCharacterOverrides, 1500);
 setTimeout(() => {
-  advancedPrismState.imagesSwapped = false;
+  window.advancedPrismState.imagesSwapped = false;
 }, 500);
 setTimeout(setupSubTabResetHooks, 2000);
 window.testViTokenDrop = function(tokenType = 'prisma') {
@@ -3054,16 +3534,13 @@ function attemptImageSwap() {
   if (!element25Bought || !seenElement25Story) {
     return;
   }
-  if (!advancedPrismState.hasCompletedLabClicks) {
+  if (!window.advancedPrismState.hasCompletedLabClicks) {
     return;
   }
   const roll = Math.random();
   if (roll < 0.1) {
-    advancedPrismState.imagesSwapped = !advancedPrismState.imagesSwapped;
+    window.advancedPrismState.imagesSwapped = !window.advancedPrismState.imagesSwapped;
     performImageSwap();
-    if (typeof saveGame === 'function') {
-      saveGame();
-    }
   } else {
   }
 }
@@ -3078,7 +3555,7 @@ function performImageSwap() {
   if (!prismCharacterImg || !viCharacterNormal) {
     return;
   }
-  if (advancedPrismState.imagesSwapped) {
+  if (window.advancedPrismState.imagesSwapped) {
     moveImagesToSwappedPositions();
   } else {
     moveImagesToOriginalPositions();
@@ -3112,7 +3589,7 @@ function moveImagesToSwappedPositions() {
     };
     prismCharacterImg.style.display = 'none';
     viCharacterContainer.appendChild(swariaClone);
-    const currentViState = advancedPrismState.viCurrentState || 'normal';
+    const currentViState = window.advancedPrismState.viCurrentState || 'normal';
     viCharacters.forEach((img, index) => {
       if (img) {
         const shouldBeVisible = (
@@ -3172,21 +3649,18 @@ function addImageSwapToLabButton() {
     const originalOnClick = labBtn.onclick;
     labBtn.onclick = function() {
       if (originalOnClick) originalOnClick.call(this);
-      if (!advancedPrismState.hasCompletedLabClicks) {
-        advancedPrismState.labTabClicks++;
-        if (advancedPrismState.labTabClicks >= 10) {
-          advancedPrismState.hasCompletedLabClicks = true;
-          if (typeof saveGame === 'function') {
-            saveGame();
-          }
+      if (!window.advancedPrismState.hasCompletedLabClicks) {
+        window.advancedPrismState.labTabClicks++;
+        if (window.advancedPrismState.labTabClicks >= 10) {
+          window.advancedPrismState.hasCompletedLabClicks = true;
         }
       } else {
       }
       attemptImageSwap();
-      if (window.boughtElements && window.boughtElements[25] && !advancedPrismState.hasShownLabDialogue) {
-        if (!advancedPrismState.hasShownLabDialogue) {
+      if (window.boughtElements && window.boughtElements[25] && !window.advancedPrismState.hasShownLabDialogue) {
+        if (!window.advancedPrismState.hasShownLabDialogue) {
           setTimeout(() => {
-            if (!advancedPrismState.hasShownLabDialogue) {
+            if (!window.advancedPrismState.hasShownLabDialogue) {
               showViLabDialogue();
             } else {
             }
@@ -3194,7 +3668,7 @@ function addImageSwapToLabButton() {
         } else {
         }
       } else {
-        if (advancedPrismState.hasShownLabDialogue) {
+        if (window.advancedPrismState.hasShownLabDialogue) {
         } else if (!window.boughtElements || !window.boughtElements[25]) {
         }
       }
@@ -3233,12 +3707,12 @@ function addClickCounterToAdvancedButton() {
   if (currentOnClick) {
     prismAdvancedBtn.onclick = function() {
       const result = currentOnClick.call(this);
-      advancedPrismState.advancedTabClicks++;
-      if (advancedPrismState.unlocked) {
+      window.advancedPrismState.advancedTabClicks++;
+      if (window.advancedPrismState.unlocked) {
         renderAdvancedPrismUI();
       }
       attemptImageSwap();
-      if (advancedPrismState.unlocked) {
+      if (window.advancedPrismState.unlocked) {
         setTimeout(() => {
           startViRandomSpeechTimer();
         }, 100);
@@ -3268,25 +3742,16 @@ function updateNerfDisplayInterval(intervalMs) {
 }
 window.testVivienEnhancedDecayTicks = function() {
   if (!window.friendship || !window.friendship.Lab || window.friendship.Lab.level < 15) {
-    return;
+    return "Enhanced decay requires Vi friendship level 15+";
   }
-  if (!nerfDecayInterval) {
-    startEnhancedNerfDecaySystem();
-  } else {
-  }
-  const hasNerfs = Object.keys(advancedPrismState.calibration.nerfs).some(lightType => {
-    return advancedPrismState.calibration.nerfs[lightType].gt(1);
+  
+  const hasNerfs = Object.keys(window.advancedPrismState.calibration.nerfs).some(lightType => {
+    return window.advancedPrismState.calibration.nerfs[lightType].gt(1);
   });
+  
+  return `Enhanced decay system active. Has nerfs: ${hasNerfs}. Using main game tick (100ms).`;
 };
-window.checkNerfDecaySystemStatus = function() {
-  if (advancedPrismState.calibration?.nerfs) {
-    Object.keys(advancedPrismState.calibration.nerfs).forEach(lightType => {
-      const nerf = advancedPrismState.calibration.nerfs[lightType];
-      if (nerf.gt(1)) {
-      }
-    });
-  }
-};
+// Duplicate function removed - using main definition above
 let nerfDisplayUpdateTimes = [];
 let nerfDisplayTrackingEnabled = false;
 window.startTrackingNerfDisplayUpdates = function() {
@@ -3333,3 +3798,11 @@ function applyNighttimeTextColor(element, defaultColor) {
   element.style.color = isNightTime ? '#fff' : defaultColor;
 }
 window.applyNighttimeTextColor = applyNighttimeTextColor;
+
+// Make functions globally available
+window.syncAdvancedPrismState = syncAdvancedPrismState;
+window.initializeAdvancedPrismState = initializeAdvancedPrismState;
+
+// Initialize the advanced prism state on load
+initializeAdvancedPrismState();
+

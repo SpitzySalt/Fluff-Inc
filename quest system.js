@@ -1719,6 +1719,9 @@ function showQuestAcceptedMessage(quest) {
 function checkQuestProgress() {
   if (!window.state || !window.state.questSystem || !window.state.questSystem.questProgress) return;
   
+  // Initialize hardModeProgress reference to avoid ReferenceError
+  const hardModeProgress = window.state.hardModeQuest || {};
+  
   window.state.questSystem.activeQuests.forEach(questId => {
     const quest = questDefinitions[questId];
     const progress = window.state.questSystem.questProgress[questId];
@@ -1776,23 +1779,23 @@ function checkQuestProgress() {
       }
     }
     
-    // Special handling for KitoFox Challenge quest - use existing hard mode progress
+    // Special handling for KitoFox Challenge quest - use quest system progress (not legacy hard mode)
     if (quest.id === 'kitofox_challenge') {
-      const hardModeProgress = window.state.hardModeQuest || {};
+      // Use the quest system's own progress tracking, not legacy hardModeQuest
       
       // Check berry tokens collected (track collection actions, not inventory)
       if (quest.objectives.berryTokens) {
-        const berryTokenCount = DecimalUtils.isDecimal(hardModeProgress.berryTokensCollected) ? hardModeProgress.berryTokensCollected : new Decimal(hardModeProgress.berryTokensCollected || 0);
-        progress.berryTokens = berryTokenCount;
+        const berryTokenCount = progress.berryTokens || new Decimal(0);
+        progress.berryTokens = berryTokenCount; // Ensure it's set
         if (berryTokenCount.lt(quest.objectives.berryTokens)) {
           objectivesMet = false;
         }
       }
       
-      // Check stardust tokens collected (track collection actions, not inventory)
+      // Check stardust tokens collected (track collection actions, not inventory)  
       if (quest.objectives.stardustTokens) {
-        const stardustTokenCount = DecimalUtils.isDecimal(hardModeProgress.stardustTokensCollected) ? hardModeProgress.stardustTokensCollected : new Decimal(hardModeProgress.stardustTokensCollected || 0);
-        progress.stardustTokens = stardustTokenCount;
+        const stardustTokenCount = progress.stardustTokens || new Decimal(0);
+        progress.stardustTokens = stardustTokenCount; // Ensure it's set
         if (stardustTokenCount.lt(quest.objectives.stardustTokens)) {
           objectivesMet = false;
         }

@@ -797,7 +797,7 @@ window.infinitySystem = {
                 'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
                 'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
                 'greenlightparticle', 'bluelightparticle'
-            ].forEach(key => window.prismState[key] = 0);
+            ].forEach(key => window.prismState[key] = zero);
             
             window.prismState.generatorUpgrades = {
                 light: 0, redlight: 0, orangelight: 0, yellowlight: 0, greenlight: 0, bluelight: 0
@@ -805,6 +805,30 @@ window.infinitySystem = {
             window.prismState.generatorUnlocked = {
                 light: false, redlight: false, orangelight: false, yellowlight: false, greenlight: false, bluelight: false
             };
+        }
+        
+        // Reset centralized prism state
+        if (typeof window.state !== 'undefined' && window.state.prismState) {
+            [
+                'light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight',
+                'lightparticle', 'redlightparticle', 'orangelightparticle', 'yellowlightparticle', 
+                'greenlightparticle', 'bluelightparticle'
+            ].forEach(key => {
+                if (window.state.prismState[key]) {
+                    window.state.prismState[key] = zero;
+                }
+            });
+            
+            if (window.state.prismState.generatorUpgrades) {
+                window.state.prismState.generatorUpgrades = {
+                    light: zero, redlight: zero, orangelight: zero, yellowlight: zero, greenlight: zero, bluelight: zero
+                };
+            }
+            if (window.state.prismState.generatorUnlocked) {
+                window.state.prismState.generatorUnlocked = {
+                    light: false, redlight: false, orangelight: false, yellowlight: false, greenlight: false, bluelight: false
+                };
+            }
         }
         
         // Reset stable light calibration progress (but preserve prism core level)
@@ -851,6 +875,10 @@ window.infinitySystem = {
         if (typeof window.charger !== 'undefined' && window.charger.charge) window.charger.charge = zero;
         
         // Reset KP to 1 (not 0 since it's the main progression currency)
+        if (typeof window.state !== 'undefined' && window.state.kp) {
+            window.state.kp = one;
+        }
+        // Legacy fallback for old save system
         if (typeof swariaKnowledge !== 'undefined' && swariaKnowledge.kp) {
             swariaKnowledge.kp = one;
         }
@@ -988,6 +1016,7 @@ window.infinitySystem = {
             window.state.terrarium.pollenValueUpgradeLevel = 0;
             window.state.terrarium.pollenValueUpgrade2Level = 0;
             window.state.terrarium.flowerValueUpgradeLevel = 0;
+            window.state.terrarium.xpMultiplierUpgradeLevel = 0;
             window.state.terrarium.pollenFlowerNectarUpgradeLevel = 0;
             window.state.terrarium.terrariumFlowerUpgrade1Level = 0;
             window.state.terrarium.terrariumFlowerUpgrade2Level = 0;
@@ -995,10 +1024,17 @@ window.infinitySystem = {
             window.state.terrarium.terrariumFlowerUpgrade4Level = 0;
             window.state.terrarium.terrariumFlowerUpgrade5Level = 0;
             
+            // Reset nectar upgrades in centralized state
+            window.state.terrarium.kpNectarUpgradeLevel = 0;
+            window.state.terrarium.nectarXpUpgradeLevel = 0;
+            window.state.terrarium.nectarValueUpgradeLevel = 0;
+            window.state.terrarium.nectarInfinityUpgradeLevel = 0;
+            
             // Reset nectarize system in centralized state
+            window.state.terrarium.nectarizeTier = 0;
             window.state.terrarium.nectarizeMachineLevel = 1;
             window.state.terrarium.nectarizeResets = 0;
-            window.state.terrarium.nectarizeMachineRepaired = false;
+            window.state.terrarium.nectarizeMachineRepaired = true;
             window.state.terrarium.nectarizeQuestActive = false;
             window.state.terrarium.nectarizeQuestProgress = 0;
             window.state.terrarium.nectarizeQuestGivenBattery = 0;
@@ -1055,8 +1091,10 @@ window.infinitySystem = {
         }
         
         // Reset legacy nectarize system
+        if (typeof window.nectarizeTier !== 'undefined') window.nectarizeTier = 0;
         if (typeof window.nectarizeResets !== 'undefined') window.nectarizeResets = 0;
         if (typeof window.nectarizeMachineLevel !== 'undefined') window.nectarizeMachineLevel = 1;
+        if (typeof window.nectarizeMachineRepaired !== 'undefined') window.nectarizeMachineRepaired = true;
         if (typeof window.nectarizePostResetTokenRequirement !== 'undefined') window.nectarizePostResetTokenRequirement = 0;
         if (typeof window.nectarizePostResetTokensGiven !== 'undefined') window.nectarizePostResetTokensGiven = 0;
         if (typeof window.nectarizePostResetTokenType !== 'undefined') window.nectarizePostResetTokenType = 'petals';
