@@ -2977,12 +2977,12 @@
       const deliveryPercentage = automator.deliveryPercentage || 5;
       const deliveryAmount = DecimalUtils.multiply(kpGain, new Decimal(deliveryPercentage / 100));
       if (deliveryAmount.gt(0)) {
-        const swariaKnowledgeRef = window.swariaKnowledge || (typeof swariaKnowledge !== 'undefined' ? swariaKnowledge : null);
-        if (swariaKnowledgeRef) {
-          if (!DecimalUtils.isDecimal(swariaKnowledgeRef.kp)) {
-            swariaKnowledgeRef.kp = new Decimal(swariaKnowledgeRef.kp || 0);
+        // Add KP to centralized state system
+        if (window.state && window.state.kp !== undefined) {
+          if (!DecimalUtils.isDecimal(window.state.kp)) {
+            window.state.kp = new Decimal(window.state.kp || 0);
           }
-          swariaKnowledgeRef.kp = swariaKnowledgeRef.kp.add(deliveryAmount);
+          window.state.kp = window.state.kp.add(deliveryAmount);
           this.makeWorkerSpeak(worker, `Gained ${window.formatNumber(deliveryAmount)} KP from delivering to the Swa elites!`, 3000);
           if (typeof window.updateUI === 'function') {
             window.updateUI();

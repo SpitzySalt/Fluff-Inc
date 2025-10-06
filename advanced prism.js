@@ -756,6 +756,7 @@ const STABLE_LIGHT_CARDS_UPDATE_THROTTLE = 50; // Update cards at most every 50m
 let lastAdvancedPrismUIUpdateTime = 0;
 let lastCalibrationMinigameUpdateTime = 0;
 let lastStableLightCardsUpdateTime = 0;
+let isAdvancedPrismUIRendered = false;
 
 let viRandomSpeechTimer = null;
 function startViRandomSpeechTimer() {
@@ -1095,6 +1096,19 @@ function openCalibrationMinigame(lightType) {
     } else {
       calculatedPenalty = 1.0;
     }
+    
+    // Ensure sessionPenalty object exists
+    if (!window.advancedPrismState.calibration.sessionPenalty) {
+      window.advancedPrismState.calibration.sessionPenalty = {
+        light: new Decimal(1.0),
+        redlight: new Decimal(1.0),
+        orangelight: new Decimal(1.0),
+        yellowlight: new Decimal(1.0),
+        greenlight: new Decimal(1.0),
+        bluelight: new Decimal(1.0)
+      };
+    }
+    
     window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(calculatedPenalty);
     diminishingReturnsEl.textContent = `/${calculatedPenalty.toFixed(3)}`;
     if (calculatedPenalty <= 1.2) {
@@ -1200,6 +1214,17 @@ function stopCalibration() {
   if (activeLightType) {
     const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
     if (diminishingReturnsEl) {
+      // Ensure sessionPenalty object exists
+      if (!window.advancedPrismState.calibration.sessionPenalty) {
+        window.advancedPrismState.calibration.sessionPenalty = {
+          light: new Decimal(1.0),
+          redlight: new Decimal(1.0),
+          orangelight: new Decimal(1.0),
+          yellowlight: new Decimal(1.0),
+          greenlight: new Decimal(1.0),
+          bluelight: new Decimal(1.0)
+        };
+      }
       const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[activeLightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
@@ -1274,6 +1299,17 @@ function drainLightCurrency(lightType) {
     stopCalibration();
     const diminishingReturnsEl = document.getElementById('calibrationDiminishingReturns');
     if (diminishingReturnsEl) {
+      // Ensure sessionPenalty object exists
+      if (!window.advancedPrismState.calibration.sessionPenalty) {
+        window.advancedPrismState.calibration.sessionPenalty = {
+          light: new Decimal(1.0),
+          redlight: new Decimal(1.0),
+          orangelight: new Decimal(1.0),
+          yellowlight: new Decimal(1.0),
+          greenlight: new Decimal(1.0),
+          bluelight: new Decimal(1.0)
+        };
+      }
       const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
@@ -1361,6 +1397,19 @@ function updateCalibrationMinigame(lightType) {
         sessionPenalty = 1.0;
       }
       window.advancedPrismState.calibration.lastSessionEfficiency = sessionPenalty;
+      
+      // Ensure sessionPenalty object exists before assignment
+      if (!window.advancedPrismState.calibration.sessionPenalty) {
+        window.advancedPrismState.calibration.sessionPenalty = {
+          light: new Decimal(1.0),
+          redlight: new Decimal(1.0),
+          orangelight: new Decimal(1.0),
+          yellowlight: new Decimal(1.0),
+          greenlight: new Decimal(1.0),
+          bluelight: new Decimal(1.0)
+        };
+      }
+      
       window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(sessionPenalty);
       diminishingReturnsEl.textContent = `/${sessionPenalty.toFixed(3)}`;
       if (sessionPenalty <= 1.2) {
@@ -1373,6 +1422,17 @@ function updateCalibrationMinigame(lightType) {
         diminishingReturnsEl.style.color = '#ff4444';
       }
     } else {
+      // Ensure sessionPenalty object exists
+      if (!window.advancedPrismState.calibration.sessionPenalty) {
+        window.advancedPrismState.calibration.sessionPenalty = {
+          light: new Decimal(1.0),
+          redlight: new Decimal(1.0),
+          orangelight: new Decimal(1.0),
+          yellowlight: new Decimal(1.0),
+          greenlight: new Decimal(1.0),
+          bluelight: new Decimal(1.0)
+        };
+      }
       const persistentPenalty = window.advancedPrismState.calibration.sessionPenalty[lightType] || new Decimal(1.0);
       const penaltyValue = DecimalUtils.isDecimal(persistentPenalty) ? persistentPenalty.toNumber() : persistentPenalty;
       diminishingReturnsEl.textContent = `/${penaltyValue.toFixed(3)}`;
@@ -2250,7 +2310,23 @@ window.checkNerfDecaySystemStatus = function() {
     activeNerfs: activeNerfs
   };
 };
-function renderAdvancedPrismUI() {
+function renderAdvancedPrismUI(forceUpdate = false) {
+  // Throttle UI rendering to prevent performance issues from rapid clicks
+  const now = Date.now();
+  if (!forceUpdate && (now - lastAdvancedPrismUIUpdateTime < ADVANCED_PRISM_UI_UPDATE_THROTTLE)) {
+    return;
+  }
+  lastAdvancedPrismUIUpdateTime = now;
+
+  // If UI is already rendered and this isn't a forced update, just update the existing UI
+  if (!forceUpdate && isAdvancedPrismUIRendered) {
+    updateAdvancedPrismUI(true); // Force update the existing UI
+    return;
+  }
+
+  // Mark that we're rendering the full UI
+  isAdvancedPrismUIRendered = true;
+
   // Define light types for use in the UI - using proper objects with id and name
   const lightTypes = [
     {
@@ -2760,6 +2836,10 @@ function renderAdvancedPrismUI() {
     updateAdvancedPrismUI(true); // Force immediate update when rendering
     updateStableLightDisplays(); // Update stable light displays immediately after rendering
     initializeImageSwap();
+    // Apply current swap state if images are swapped
+    if (window.advancedPrismState && window.advancedPrismState.imagesSwapped) {
+      performImageSwap();
+    }
     const lightCards = document.querySelectorAll('.light-type-card');
     lightCards.forEach(card => {
       // Prevent duplicate event listeners by checking for marker attribute
@@ -3555,6 +3635,10 @@ function performImageSwap() {
   if (!prismCharacterImg || !viCharacterNormal) {
     return;
   }
+  
+  // Always clean up any existing swapped state first to ensure consistency
+  cleanupSwappedState();
+  
   if (window.advancedPrismState.imagesSwapped) {
     moveImagesToSwappedPositions();
   } else {
@@ -3726,10 +3810,49 @@ function addClickCounterToAdvancedButton() {
     return false;
   }
 }
+function cleanupSwappedState() {
+  // Remove any existing cloned characters to ensure clean state
+  const swariaClone = document.getElementById('swariaInAdvanced');
+  const viClones = [
+    document.getElementById('viCharacterNormalInMain'),
+    document.getElementById('viCharacterTalkingInMain'),
+    document.getElementById('viCharacterSleepingInMain'),
+    document.getElementById('viCharacterSleepTalkingInMain')
+  ];
+  
+  if (swariaClone) {
+    swariaClone.remove();
+  }
+  
+  viClones.forEach(clone => {
+    if (clone) clone.remove();
+  });
+  
+  // Ensure original characters are visible and in default state
+  const originalSwaria = document.getElementById('prismCharacter');
+  if (originalSwaria) {
+    originalSwaria.style.display = 'block';
+  }
+  
+  const originalViImages = [
+    document.getElementById('viCharacterNormal'),
+    document.getElementById('viCharacterTalking'),
+    document.getElementById('viCharacterSleeping'),
+    document.getElementById('viCharacterSleepTalking')
+  ];
+  
+  originalViImages.forEach(img => {
+    if (img) {
+      img.style.display = 'none'; // Will be set correctly by updateViCharacterImage
+    }
+  });
+}
+
 function initializeImageSwap() {
   addClickCounterToAdvancedButton();
   addImageSwapToLabButton();
 }
+
 function updateNerfDisplayInterval(intervalMs) {
   if (window.prismNerfDisplayInterval) {
     clearInterval(window.prismNerfDisplayInterval);
@@ -3799,8 +3922,14 @@ function applyNighttimeTextColor(element, defaultColor) {
 }
 window.applyNighttimeTextColor = applyNighttimeTextColor;
 
+// Reset function for performance optimization
+function resetAdvancedPrismUIFlag() {
+  isAdvancedPrismUIRendered = false;
+}
+
 // Make functions globally available
 window.syncAdvancedPrismState = syncAdvancedPrismState;
+window.resetAdvancedPrismUIFlag = resetAdvancedPrismUIFlag;
 window.initializeAdvancedPrismState = initializeAdvancedPrismState;
 
 // Initialize the advanced prism state on load

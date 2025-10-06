@@ -4373,6 +4373,8 @@ function applySettings() {
   document.getElementById("colorSelect").value = settings.colour;
   document.getElementById("styleSelect").value = settings.style;
   document.getElementById("notationSelect").value = settings.notation;
+  // Sync notation to localStorage for decimal_utils compatibility
+  localStorage.setItem('notationPreference', settings.notation);
   document.getElementById("disableOfflineProgressToggle").checked = settings.disableOfflineProgress;
   document.getElementById("confirmResetToggle").checked = settings.confirmReset;
   const nectarizeResetLabel = document.getElementById("confirmNectarizeResetLabel");
@@ -4888,6 +4890,11 @@ function setupPrismSubTabButtons() {
       // Stop Vi's random speech timer when leaving advanced prism tab
       if (typeof window.stopViRandomSpeechTimer === 'function') {
         window.stopViRandomSpeechTimer();
+      }
+      
+      // Reset advanced prism UI render flag so it can be recreated fresh when needed
+      if (typeof window.resetAdvancedPrismUIFlag === 'function') {
+        window.resetAdvancedPrismUIFlag();
       }
     };
     

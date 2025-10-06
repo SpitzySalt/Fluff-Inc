@@ -22,8 +22,13 @@ window.DecimalUtils = {
     
     if (decimal.eq(0)) return '0';
     
-    // Check if notation scramble anomaly is active and use scrambled notation
-    let notation = localStorage.getItem('notationPreference') || 'numeral';
+    // Check centralized settings first, then fall back to localStorage
+    let notation = 'numeral';
+    if (window.settings && window.settings.notation) {
+      notation = window.settings.notation;
+    } else {
+      notation = localStorage.getItem('notationPreference') || 'numeral';
+    }
     
     // If notation scramble anomaly is active, use the scrambled notation
     if (window.anomalySystem && 
