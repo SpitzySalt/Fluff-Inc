@@ -68,6 +68,11 @@ let advancedPrismState = {
       new Decimal("1e360"),
       new Decimal("1e727")
     ]
+  },
+  wavelength: {
+    current: 620, // Current wavelength in nm, starts at 620nm
+    target: 620,  // Target wavelength based on frequency
+    lastUpdateTime: 0
   }
 };
 window.advancedPrismState = advancedPrismState;
@@ -213,6 +218,19 @@ function initializeAdvancedPrismState() {
       }
     }
     
+    // Restore wavelength state
+    if (savedState.wavelength) {
+      if (savedState.wavelength.current !== undefined) {
+        window.advancedPrismState.wavelength.current = savedState.wavelength.current;
+      }
+      if (savedState.wavelength.target !== undefined) {
+        window.advancedPrismState.wavelength.target = savedState.wavelength.target;
+      }
+      if (savedState.wavelength.lastUpdateTime !== undefined) {
+        window.advancedPrismState.wavelength.lastUpdateTime = savedState.wavelength.lastUpdateTime;
+      }
+    }
+    
     // Restore reset layer state
     if (savedState.resetLayer) {
       if (savedState.resetLayer.points !== undefined) {
@@ -271,9 +289,68 @@ function getOptimalFrequencyForLightType(lightType) {
   return Math.random() * (range.max - range.min) + range.min;
 }
 
+// Function to get wavelength caps based on prism core level
+function getWavelengthCaps(coreLevel) {
+  const level = Number(coreLevel);
+  if (level <= 1) {
+    return { min: 0, max: 0 }; // Level 1: no wavelengths available
+  }
+  
+  if (level === 2) {
+    return { min: 590, max: 650 }; // Level 2: 590-650nm range
+  }
+  
+  // Level 3+: Each level increases range by 30nm in each direction from 620nm center
+  const rangeExtension = (level - 1) * 30;
+  return {
+    min: Math.max(350, 620 - rangeExtension), // Don't go below visible spectrum
+    max: Math.min(1000, 620 + rangeExtension)  // Don't go above visible spectrum
+  };
+}
+
+// Function to calculate wavelength movement based on frequency deviation from 0.5 Hz
+function calculateWavelengthMovement(frequency, deltaTime) {
+  const targetFreq = 0.5;
+  const deviation = frequency - targetFreq;
+  
+  // Movement rate: 1nm per second per 0.1 Hz deviation
+  const movementRate = deviation * 10; // nm/s
+  
+  return movementRate * (deltaTime / 1000); // Convert to seconds
+}
+
+// Function to update wavelength based on current frequency
+function updateWavelength(frequency) {
+  if (!window.advancedPrismState.wavelength) return;
+  
+  const now = Date.now();
+  const deltaTime = now - (window.advancedPrismState.wavelength.lastUpdateTime || now);
+  
+  if (deltaTime > 0 && deltaTime < 5000) { // Only update if reasonable time delta
+    const movement = calculateWavelengthMovement(frequency, deltaTime);
+    const caps = getWavelengthCaps(window.advancedPrismState.prismCore.level);
+    
+    // Update current wavelength with movement
+    let newWavelength = window.advancedPrismState.wavelength.current - movement; // Lower freq = higher wavelength
+    
+    // Clamp to caps
+    newWavelength = Math.max(caps.min, Math.min(caps.max, newWavelength));
+    
+    window.advancedPrismState.wavelength.current = newWavelength;
+    window.advancedPrismState.wavelength.target = newWavelength;
+  }
+  
+  window.advancedPrismState.wavelength.lastUpdateTime = now;
+}
+
 // Ensure synchronization whenever stable light values are accessed
 window.syncStableLightState = syncAdvancedPrismState;
 window.getOptimalFrequencyForLightType = getOptimalFrequencyForLightType;
+window.getWavelengthCaps = getWavelengthCaps;
+window.calculateWavelengthMovement = calculateWavelengthMovement;
+window.updateWavelength = updateWavelength;
+window.updateWavelengthArrow = updateWavelengthArrow;
+window.updateWavelengthCapDimming = updateWavelengthCapDimming;
 const viTokenPreferences = {
   likes: ['prisma', 'water'],
   dislikes: ['sparks'],
@@ -1182,6 +1259,8 @@ function startCalibration() {
       // Throttle minigame UI updates to prevent performance issues
       if (currentTime - lastCalibrationMinigameUpdateTime >= CALIBRATION_MINIGAME_UPDATE_THROTTLE) {
         updateCalibrationMinigame(lightType);
+        // Update wavelength based on current frequency
+        updateWavelength(window.advancedPrismState.calibration.waveFrequency);
         lastCalibrationMinigameUpdateTime = currentTime;
       }
     }, CALIBRATION_MINIGAME_UPDATE_THROTTLE);
@@ -1848,6 +1927,8 @@ function calculateStableLightPercentage(lightType, currentAmount) {
   
   // Calculate percentage based on logarithmic scale
   const percentage = (currentLog / capLog) * 100;
+  
+
   
   // Ensure we don't go below 0% or above 100%
   return Math.max(0, Math.min(100, percentage));
@@ -2563,6 +2644,22 @@ function renderAdvancedPrismUI(forceUpdate = false) {
               <!-- These will be populated by JavaScript based on collected light amounts -->
             </div>
             
+            <!-- Wavelength Arrow Indicator -->
+            <div id="wavelengthArrow" style="position: absolute; top: -15px; left: 32%; transform: translateX(-50%); z-index: 10; transition: left 0.3s ease;">
+              <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 12px solid #00ffff; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); animation: arrowPulse 2s ease-in-out infinite;"></div>
+              <div id="wavelengthDisplay" style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: #00ffff; font-size: 0.8rem; font-weight: bold; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 0 6px rgba(0,255,255,0.6);">620nm</div>
+            </div>
+            
+            <!-- Wavelength Cap Dimming Overlay -->
+            <div id="wavelengthCapOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 7; pointer-events: none; transition: all 0.5s ease; border-radius: 18px; overflow: hidden;">
+              <!-- Left dimming area (wavelengths above cap) -->
+              <div id="leftDimArea" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: linear-gradient(to right, rgba(0,0,0,0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.5)); transition: width 0.5s ease; backdrop-filter: blur(2px);"></div>
+              <!-- Right dimming area (wavelengths below cap) -->
+              <div id="rightDimArea" style="position: absolute; top: 0; right: 0; height: 100%; width: 0%; background: linear-gradient(to left, rgba(0,0,0,0.9), rgba(0,0,0,0.7), rgba(0,0,0,0.5)); transition: width 0.5s ease; backdrop-filter: blur(2px);"></div>
+              <!-- Subtle border highlights on allowed range -->
+              <div id="allowedRangeHighlight" style="position: absolute; top: -2px; left: 0%; width: 0%; height: calc(100% + 4px); border-left: 2px solid rgba(255,215,0,0.8); border-right: 2px solid rgba(255,215,0,0.8); transition: all 0.5s ease; box-shadow: inset 0 0 12px rgba(255,215,0,0.4);"></div>
+            </div>
+            
             <!-- Vertical section separators -->
             <div style="position: absolute; top: -5px; left: 24%; width: 2px; height: 45px; background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.4), rgba(255,255,255,0.8)); z-index: 6; border-radius: 1px; box-shadow: 0 0 4px rgba(255,255,255,0.6);"></div>
             <div style="position: absolute; top: -5px; left: 80%; width: 2px; height: 45px; background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.4), rgba(255,255,255,0.8)); z-index: 6; border-radius: 1px; box-shadow: 0 0 4px rgba(255,255,255,0.6);"></div>
@@ -2824,6 +2921,17 @@ function renderAdvancedPrismUI(forceUpdate = false) {
           box-shadow: 0 0 12px rgba(255,255,255,1), 0 0 8px rgba(74, 158, 255, 0.8);
         }
       }
+
+      @keyframes arrowPulse {
+        0%, 100% {
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 8px rgba(0,255,255,0.6));
+          transform: scale(1);
+        }
+        50% {
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 12px rgba(0,255,255,1));
+          transform: scale(1.1);
+        }
+      }
     </style>
   `;
   
@@ -3042,6 +3150,144 @@ function attemptPrismCoreUpgrade() {
     showViSpeech(`You need ${formatNumber(needed)} more prism potential to upgrade the core. Try gathering more light types!`, 4000);
   }
 }
+// Function to update wavelength arrow position and display
+function updateWavelengthArrow() {
+  if (!window.advancedPrismState.wavelength) return;
+  
+  const arrow = document.getElementById('wavelengthArrow');
+  const display = document.getElementById('wavelengthDisplay');
+  
+  if (!arrow || !display) return;
+  
+  const currentWavelength = window.advancedPrismState.wavelength.current;
+  const caps = getWavelengthCaps(window.advancedPrismState.prismCore.level);
+  
+  // Convert wavelength to position on spectrum (1000nm at 0%, 350nm at 100%)
+  // The visible spectrum roughly spans from 750nm to 380nm on our gradient
+  // 620nm should be at approximately 32% (orange-red area)
+  let position;
+  if (currentWavelength >= 750) {
+    // Infrared region (0% to 24%)
+    position = (1000 - currentWavelength) / (1000 - 750) * 24;
+  } else if (currentWavelength >= 380) {
+    // Visible spectrum (24% to 80%)
+    position = 24 + (750 - currentWavelength) / (750 - 380) * 56;
+  } else {
+    // Ultraviolet region (80% to 100%)
+    position = 80 + (380 - currentWavelength) / (380 - 350) * 20;
+  }
+  
+  // Clamp position to valid range
+  position = Math.max(0, Math.min(100, position));
+  
+  // Update arrow position
+  arrow.style.left = `${position}%`;
+  
+  // Update wavelength display
+  display.textContent = `${Math.round(currentWavelength)}nm`;
+  
+  // Change arrow color based on core level restrictions
+  const arrowElement = arrow.querySelector('div');
+  if (currentWavelength <= caps.min || currentWavelength >= caps.max) {
+    // At the cap - show in gold
+    arrowElement.style.borderTopColor = '#FFD700';
+    display.style.color = '#FFD700';
+  } else {
+    // Normal - show in cyan
+    arrowElement.style.borderTopColor = '#00ffff';
+    display.style.color = '#00ffff';
+  }
+}
+
+// Function to update wavelength cap dimming overlay
+function updateWavelengthCapDimming() {
+  if (!window.advancedPrismState.prismCore) return;
+  
+  const leftDimArea = document.getElementById('leftDimArea');
+  const rightDimArea = document.getElementById('rightDimArea');
+  const highlight = document.getElementById('allowedRangeHighlight');
+  
+  if (!leftDimArea || !rightDimArea || !highlight) return;
+  
+  const caps = getWavelengthCaps(window.advancedPrismState.prismCore.level);
+  
+  // Convert wavelength caps to position percentages on spectrum
+  // Based on the actual HTML marker positions
+  function wavelengthToPosition(wavelength) {
+    // Use linear interpolation between known marker points
+    const markers = [
+      { nm: 1000, pos: 0 },
+      { nm: 850, pos: 8 },
+      { nm: 750, pos: 16 },
+      { nm: 700, pos: 24 },
+      { nm: 620, pos: 32 }, // This is our target for level 1
+      { nm: 590, pos: 40 },
+      { nm: 570, pos: 48 },
+      { nm: 530, pos: 56 },
+      { nm: 495, pos: 64 },
+      { nm: 450, pos: 72 },
+      { nm: 380, pos: 80 },
+      { nm: 350, pos: 100 }
+    ];
+    
+    // Find the two markers that bracket our wavelength
+    for (let i = 0; i < markers.length - 1; i++) {
+      const current = markers[i];
+      const next = markers[i + 1];
+      
+      if (wavelength >= next.nm && wavelength <= current.nm) {
+        // Linear interpolation between the two points
+        const ratio = (wavelength - next.nm) / (current.nm - next.nm);
+        return next.pos + ratio * (current.pos - next.pos);
+      }
+    }
+    
+    // Handle edge cases
+    if (wavelength >= 1000) return 0;
+    if (wavelength <= 350) return 100;
+    
+    return 32; // Default to 620nm position if something goes wrong
+  }
+  
+  // For core level 1, dim the entire spectrum (no wavelengths available)
+  if (window.advancedPrismState.prismCore.level.lte(1)) {
+    // At level 1, dim everything - no wavelengths are usable yet
+    leftDimArea.style.width = '100%';
+    rightDimArea.style.width = '0%';
+    
+    // Hide the highlight completely
+    highlight.style.left = '0%';
+    highlight.style.width = '0%';
+    highlight.style.borderColor = 'transparent';
+    highlight.style.boxShadow = 'none';
+  } else {
+    // For higher levels, use normal range dimming
+    const minPosition = wavelengthToPosition(caps.max); // Higher wavelength = lower position %
+    const maxPosition = wavelengthToPosition(caps.min); // Lower wavelength = higher position %
+    
+    // Clamp positions to valid range
+    const clampedMinPos = Math.max(0, Math.min(100, minPosition));
+    const clampedMaxPos = Math.max(0, Math.min(100, maxPosition));
+    
+    // Calculate dimming areas
+    const leftDimWidth = clampedMinPos; // Dim from 0% to min allowed position
+    const rightDimWidth = 100 - clampedMaxPos; // Dim from max allowed position to 100%
+    
+    // Update dimming overlay dimensions
+    leftDimArea.style.width = `${leftDimWidth}%`;
+    rightDimArea.style.width = `${rightDimWidth}%`;
+    
+    // Update allowed range highlight
+    const allowedWidth = clampedMaxPos - clampedMinPos;
+    highlight.style.left = `${clampedMinPos}%`;
+    highlight.style.width = `${allowedWidth}%`;
+    
+    // Normal cyan highlight for higher levels
+    highlight.style.borderColor = 'rgba(0,255,255,0.4)';
+    highlight.style.boxShadow = 'inset 0 0 8px rgba(0,255,255,0.2)';
+  }
+}
+
 function updateAdvancedPrismUI(forceUpdate = false) {
   // Throttle UI updates to prevent performance issues
   const now = Date.now();
@@ -3082,6 +3328,8 @@ function updateAdvancedPrismUI(forceUpdate = false) {
   }
   updateViCharacterImage();
   updateCoreBoostCard();
+  updateWavelengthArrow();
+  updateWavelengthCapDimming();
   lightTypes.forEach(light => {
     const amountEl = document.getElementById(`${light.id}Amount`);
     const percentageEl = document.getElementById(`${light.id}Percentage`);
@@ -3515,19 +3763,16 @@ function updateStableLightDisplays() {
     }
   });
   
-  // Calculate percentages after getting total
+  // Calculate percentages using the proper logarithmic function
   lightTypes.forEach(lightType => {
     const percentageElement = document.getElementById(lightType.id + 'Percentage');
     
     if (percentageElement) {
       const stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
-      let percentage = 0;
+      const percentage = calculateStableLightPercentage(lightType.id, stableAmount);
+      const formattedPercentage = formatStableLightPercentage(percentage);
       
-      if (totalStableLight.gt(0)) {
-        percentage = stableAmount.div(totalStableLight).mul(100).toNumber();
-      }
-      
-      percentageElement.textContent = percentage.toFixed(3) + '%';
+      percentageElement.textContent = formattedPercentage;
     }
   });
 }
