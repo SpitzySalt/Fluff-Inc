@@ -3348,11 +3348,13 @@ function updateAdvancedPrismUI(forceUpdate = false) {
       upgradeBtn.disabled = false;
       upgradeBtn.style.background = '#4CAF50';
       upgradeBtn.style.cursor = 'pointer';
+      upgradeBtn.style.pointerEvents = 'auto';
       upgradeBtn.textContent = `Upgrade Core (${formatNumber(cost)})`;
     } else {
       upgradeBtn.disabled = true;
       upgradeBtn.style.background = '#666';
       upgradeBtn.style.cursor = 'not-allowed';
+      upgradeBtn.style.pointerEvents = 'none';
       upgradeBtn.textContent = `Upgrade Core (${formatNumber(cost)})`;
     }
   }
@@ -3753,6 +3755,7 @@ function initAdvancedPrism() {
 }
 window.pokeVi = pokeVi;
 window.attemptAdvancedPrismReset = attemptAdvancedPrismReset;
+window.attemptPrismCoreUpgrade = attemptPrismCoreUpgrade;
 window.updateAdvancedPrismUI = updateAdvancedPrismUI;
 window.updateStableLightCards = updateStableLightCards;
 window.initAdvancedPrism = initAdvancedPrism;
