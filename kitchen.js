@@ -521,6 +521,27 @@ function showTokenBurstNotification(sourceElement) {
 
 // Centralized cooking completion handler to prevent duplicate tracking
 function completeCooking(recipeId, amount) {
+  // Find the recipe to get reward property
+  const recipe = recipes.find(r => r.id === recipeId);
+  if (recipe) {
+    // Initialize state if needed
+    if (!window.state) window.state = {};
+    
+    // Ensure the reward property exists and is properly initialized
+    if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
+      window.state[recipe.rewardProperty] = new Decimal(window.state[recipe.rewardProperty] || 0);
+    }
+    
+    // Add the cooked amount to the player's inventory
+    window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(amount);
+    
+    // Update UI to reflect the new inventory
+    if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+    if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
+    if (typeof window.updateInventoryModal === 'function') window.updateInventoryModal(true);
+  }
+  
+  // Track quest progress
   if (typeof trackHardModeIngredientsCooked === 'function') {
     trackHardModeIngredientsCooked(amount);
   }
@@ -1107,30 +1128,20 @@ window.addEventListener('load', function() {
       cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
       cookingTimeout = setTimeout(function() {
         clearInterval(cookingInterval);
+        completeCooking(cookingRecipeId, cookingAmount);
         cooking = false;
+        cookingRecipeId = null;
+        updateGlobals();
+        saveCookingState();
+        clearCookingState();
         if (mixBulkInput) mixBulkInput.disabled = false;
         if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
         if (mixModalTimer) mixModalTimer.textContent = 'Done!';
-        const recipe = recipes.find(r => r.id === cookingRecipeId);
-        if (recipe) {
-          if (!window.state) window.state = {};
-          if (typeof window.state[recipe.rewardProperty] !== 'number') {
-            window.state[recipe.rewardProperty] = 0;
-          }
-          window.state[recipe.rewardProperty] += cookingAmount;
-          if (typeof trackHardModeIngredientsCooked === 'function') {
-            trackHardModeIngredientsCooked();
-          }
-        }
-        if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
         setTimeout(() => {
           if (mixModalProgress) mixModalProgress.style.display = 'none';
           if (mixModalTimer) mixModalTimer.style.display = 'none';
           updateMixModalUI();
         }, 1200);
-        updateGlobals();
-        saveCookingState(); 
-        clearCookingState();
       }, pausedRemainingMs);
       updateGlobals();
       
@@ -1352,18 +1363,7 @@ window.addEventListener('load', function() {
             cookBtn.classList.remove('not-enough');
             cookBtn.disabled = false;
             cookBtn.onclick = function() {
-              const cookedRecipe = recipes.find(r => r.id === cookingRecipeId);
-              if (cookedRecipe) {
-                if (!window.state) window.state = {};
-                if (!DecimalUtils.isDecimal(window.state[cookedRecipe.rewardProperty])) {
-                  window.state[cookedRecipe.rewardProperty] = new Decimal(0);
-                }
-                window.state[cookedRecipe.rewardProperty] = window.state[cookedRecipe.rewardProperty].add(cookingAmount);
-                if (typeof trackHardModeIngredientsCooked === 'function') {
-                  trackHardModeIngredientsCooked();
-                }
-              }
-              if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+              completeCooking(cookingRecipeId, cookingAmount);
               cooking = false;
               cookingRecipeId = null;
               updateGlobals();
@@ -1539,16 +1539,8 @@ window.addEventListener('load', function() {
           if (mixModalProgressBar) mixModalProgressBar.style.width = '0%';
           if (mixModalTimer) mixModalTimer.textContent = 'Paused for night';
         } else if (saved.cookingEndTime && now >= saved.cookingEndTime) {
-          const recipe = recipes.find(r => r.id === saved.cookingRecipeId);
-          if (recipe) {
-            if (!window.state) window.state = {};
-            if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
-              window.state[recipe.rewardProperty] = new Decimal(0);
-            }
-            window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(saved.cookingAmount);
-            completeCooking(saved.cookingRecipeId, saved.cookingAmount);
-          }
-          if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
+          // Cooking was completed while the game was closed, give rewards
+          completeCooking(saved.cookingRecipeId, saved.cookingAmount);
           clearCookingState();
           updateGlobals();
         } else if (saved.pausedForHidden) {
@@ -1616,35 +1608,21 @@ window.addEventListener('load', function() {
           if (remaining > 0) {
             cookingTimeout = setTimeout(function() {
               clearInterval(cookingInterval);
+              completeCooking(cookingRecipeId, cookingAmount);
               cooking = false;
+              cookingRecipeId = null;
+              updateGlobals();
+              saveCookingState();
+              clearCookingState();
               if (mixBulkInput) mixBulkInput.disabled = false;
               if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
               if (mixModalTimer) mixModalTimer.textContent = 'Done!';
-              const recipe = recipes.find(r => r.id === cookingRecipeId);
-              if (recipe) {
-                if (!window.state) window.state = {};
-                if (!DecimalUtils.isDecimal(window.state[recipe.rewardProperty])) {
-                  window.state[recipe.rewardProperty] = new Decimal(0);
-                }
-                window.state[recipe.rewardProperty] = window.state[recipe.rewardProperty].add(cookingAmount);
-                if (typeof trackHardModeIngredientsCooked === 'function') {
-                  trackHardModeIngredientsCooked(cookingAmount);
-                }
-                if (typeof window.trackHardModeCookingAction === 'function') {
-                  window.trackHardModeCookingAction(cookingRecipeId, cookingAmount);
-                }
-              }
-              if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
-              clearCookingState();
-              updateGlobals();
               updateCookingStatusDisplay();
               setTimeout(() => {
                 if (mixModalProgress) mixModalProgress.style.display = 'none';
                 if (mixModalTimer) mixModalTimer.style.display = 'none';
                 updateMixModalUI();
               }, 1200);
-              updateGlobals();
-              saveCookingState();
             }, remaining);
           }
         }
@@ -1722,30 +1700,20 @@ window.addEventListener('load', function() {
             cookingInterval = setInterval(updateProgress, COOKING_PROGRESS_UPDATE_THROTTLE);
             cookingTimeout = setTimeout(function() {
               clearInterval(cookingInterval);
+              completeCooking(cookingRecipeId, cookingAmount);
               cooking = false;
+              cookingRecipeId = null;
+              updateGlobals();
+              saveCookingState();
+              clearCookingState();
               if (mixBulkInput) mixBulkInput.disabled = false;
               if (mixModalProgressBar) mixModalProgressBar.style.width = '100%';
               if (mixModalTimer) mixModalTimer.textContent = 'Done!';
-              const recipe = recipes.find(r => r.id === cookingRecipeId);
-              if (recipe) {
-                if (!window.state) window.state = {};
-                if (typeof window.state[recipe.rewardProperty] !== 'number') {
-                  window.state[recipe.rewardProperty] = 0;
-                }
-                window.state[recipe.rewardProperty] += cookingAmount;
-                if (typeof trackHardModeIngredientsCooked === 'function') {
-                  trackHardModeIngredientsCooked();
-                }
-              }
-              if (typeof window.updateCafeteriaUI === 'function') window.updateCafeteriaUI();
               setTimeout(() => {
                 if (mixModalProgress) mixModalProgress.style.display = 'none';
                 if (mixModalTimer) mixModalTimer.style.display = 'none';
                 updateMixModalUI();
               }, 1200);
-              updateGlobals();
-              saveCookingState();
-              clearCookingState();
             }, saved.endTime - Date.now());
             updateGlobals();
           }

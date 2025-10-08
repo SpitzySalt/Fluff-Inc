@@ -93,6 +93,10 @@ window.anomalySystem = {
     // Box generator freeze anomaly variables
     frozenGeneratorId: null, // Which generator is frozen (0-4)
     
+    // Dramatic wind anomaly variables
+    dramaticWindTokensLost: 0, // Total tokens lost during this anomaly
+    dramaticWindMaxLoss: 50, // Maximum tokens that can be lost (AFK protection)
+    
     // Helper functions for KitoFox mode adjustments
     getMaxAnomalies: function() {
         return (window.state && window.state.kitoFoxModeActive) ? 5 : this.maxAnomalies;
@@ -440,6 +444,7 @@ window.anomalySystem = {
         this.analyzing = false;
         this.searching = false;
         this.findModeActive = false;
+        this.dramaticWindTokensLost = 0;
         
         // Clear anomaly-related intervals and timers
         if (this.darkVoidProgressTimer) {
@@ -3464,7 +3469,8 @@ window.anomalySystem = {
             nextId: this.nextId,
             lastSpawnTime: this.lastSpawnTime,
             anomalyAffectedItem: this.anomalyAffectedItem, // Save the current affected item
-            frozenGeneratorId: this.frozenGeneratorId // Save frozen generator ID
+            frozenGeneratorId: this.frozenGeneratorId, // Save frozen generator ID
+            dramaticWindTokensLost: this.dramaticWindTokensLost || 0 // Save token loss counter
         };
         
         try {
@@ -3491,6 +3497,7 @@ window.anomalySystem = {
             this.lastSpawnTime = state.lastSpawnTime || 0;
             this.anomalyAffectedItem = state.anomalyAffectedItem || null; // Restore affected item
             this.frozenGeneratorId = state.frozenGeneratorId || null; // Restore frozen generator ID
+            this.dramaticWindTokensLost = state.dramaticWindTokensLost || 0; // Restore token loss counter
             this.activeAnomalies = state.activeAnomalies || { 
                 clockAnomaly: false, 
                 backwardClockAnomaly: false,
@@ -7223,7 +7230,6 @@ window.anomalySystem.updateTabDataAttribute = function() {
         document.body.removeAttribute('data-current-tab');
     }
     
-    console.log("Tab detection - Current tab:", currentTab, "Body data-current-tab:", document.body.getAttribute('data-current-tab'));
     return currentTab;
 };
 
@@ -9135,6 +9141,10 @@ window.anomalySystem.spawnDramaticWindAnomaly = function() {
 
 window.anomalySystem.startDramaticWindAnomaly = function(anomaly) {
 
+    // Initialize token loss counter
+    this.dramaticWindTokensLost = 0;
+    this.dramaticWindMaxLoss = 50; // Cap at 50 tokens lost
+    
     // Add wind styles to the page
     this.addDramaticWindStyles(anomaly);
     
@@ -9714,6 +9724,11 @@ window.anomalySystem.startTokenLossMechanic = function() {
     // Start losing tokens every 500ms (twice per second)
     this.dramaticWindTokenLossInterval = setInterval(() => {
         if (this.activeAnomalies.dramaticWindAnomaly) {
+            // Check if we've reached the token loss cap
+            if (this.dramaticWindTokensLost >= this.dramaticWindMaxLoss) {
+                return; // Stop losing tokens but keep anomaly active for visual effects
+            }
+            
             // Check token limit before spawning new ones
             if (this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
                 // Clean up oldest tokens first
@@ -9742,6 +9757,11 @@ window.anomalySystem.startTokenLossMechanic = function() {
 };
 
 window.anomalySystem.loseRandomToken = function() {
+    // Check if we've reached the token loss cap before doing anything
+    if (this.dramaticWindTokensLost >= this.dramaticWindMaxLoss) {
+        return; // Stop losing tokens
+    }
+    
     // Prevent spawning if too many tokens are already active
     if (this.activeBlownTokens && this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
         return;
@@ -9750,14 +9770,18 @@ window.anomalySystem.loseRandomToken = function() {
     // Clean up any orphaned tokens (DOM elements removed but still in array)
     this.cleanupOrphanedTokens();
     
-    // 10% chance to lose 2 tokens instead of 1
-    const tokensToLose = Math.random() < 0.1 ? 2 : 1;
-    console.log(`[Dramatic Wind] Attempting to blow away ${tokensToLose} token(s)`);
+    // 10% chance to lose 2 tokens instead of 1, but respect the cap
+    const remainingTokensCanLose = this.dramaticWindMaxLoss - this.dramaticWindTokensLost;
+    const tokensToLose = Math.min(Math.random() < 0.1 ? 2 : 1, remainingTokensCanLose);
     
     for (let tokenCount = 0; tokenCount < tokensToLose; tokenCount++) {
+        // Double-check if we've reached the cap during this loop
+        if (this.dramaticWindTokensLost >= this.dramaticWindMaxLoss) {
+            break;
+        }
+        
         // Check if we've reached the max token limit
         if (this.activeBlownTokens && this.activeBlownTokens.length >= this.maxActiveBlownTokens) {
-            console.log(`[Dramatic Wind] Max tokens reached, stopping at ${tokenCount + 1}/${tokensToLose}`);
             break;
         }
         
@@ -9765,7 +9789,6 @@ window.anomalySystem.loseRandomToken = function() {
         const availableTokens = this.getAvailableTokensForLoss();
         
         if (availableTokens.length === 0) {
-            console.warn(`[Dramatic Wind] No tokens available to blow away (attempt ${tokenCount + 1}/${tokensToLose})`);
             break; // No tokens to lose
         }
         
@@ -9773,20 +9796,21 @@ window.anomalySystem.loseRandomToken = function() {
         const selectedToken = this.selectRandomTokenByProbability();
         
         if (!selectedToken) {
-            console.warn(`[Dramatic Wind] No valid token selected (attempt ${tokenCount + 1}/${tokensToLose})`);
             break; // No valid token selected
         }
         
         // Check if player has this token
         const tokenAmount = this.getTokenAmount(selectedToken.type);
         if (!tokenAmount || tokenAmount.lte(0)) {
-            console.warn(`[Dramatic Wind] Player doesn't have ${selectedToken.type} (attempt ${tokenCount + 1}/${tokensToLose})`);
             break; // Player doesn't have this token
         }
         
         // Remove one token from player's inventory
         this.removeTokenFromInventory(selectedToken.type, new Decimal(1));
-        console.log(`[Dramatic Wind] Lost 1 ${selectedToken.type} token (${tokenCount + 1}/${tokensToLose})`);
+        
+        // Increment the lost token counter
+        this.dramaticWindTokensLost++;
+        
         
         // Spawn blown token animation
         this.spawnBlownToken(selectedToken);
@@ -10343,6 +10367,9 @@ window.anomalySystem.fixDramaticWindAnomaly = function() {
     // Stop token loss mechanic
     this.stopTokenLossMechanic();
     
+    // Reset token loss counter
+    this.dramaticWindTokensLost = 0;
+    
     // Remove from anomalies list
     this.anomalies = this.anomalies.filter(anomaly => anomaly.type !== 'dramaticWind');
     this.activeAnomalies.dramaticWindAnomaly = false;
@@ -10515,6 +10542,8 @@ window.anomalySystem.restoreDramaticWindAnomaly = function(savedAnomaly) {
     
     // Set up detection (this might not be called in startDramaticWindAnomaly for restored anomalies)
     this.setupDramaticWindDetection();
+    
+    // Note: Token loss counter is restored in loadAnomalyState()
 
 };
 
@@ -10523,6 +10552,30 @@ window.testDramaticWindAnomaly = function() {
 
     window.anomalySystem.spawnDramaticWindAnomaly();
 
+};
+
+// Test function for dramatic wind token loss cap
+window.testDramaticWindTokenCap = function() {
+    
+    // Artificially set counter near the cap to test
+    window.anomalySystem.dramaticWindTokensLost = 48;
+    
+    // Force a token loss to test the cap
+    if (window.anomalySystem.activeAnomalies.dramaticWindAnomaly) {
+        window.anomalySystem.loseRandomToken();
+        
+        // Try one more to hit the cap
+        window.anomalySystem.loseRandomToken();
+        
+        // Try one more to test cap prevention
+        window.anomalySystem.loseRandomToken();
+    } else {
+    }
+};
+
+// Reset dramatic wind token loss counter for testing
+window.resetDramaticWindTokenCounter = function() {
+    window.anomalySystem.dramaticWindTokensLost = 0;
 };
 
 // Debug function to check dramatic wind anomaly state
@@ -10540,6 +10593,9 @@ window.debugDramaticWindAnomaly = function() {
     const windParticles = document.querySelectorAll('.wind-particle');
     const windFeathers = document.querySelectorAll('.wind-feather');
     const windLeaves = document.querySelectorAll('.wind-leaf');
+    
+    // Show token loss status
+    const tokenLossActive = window.anomalySystem.dramaticWindTokensLost < window.anomalySystem.dramaticWindMaxLoss;
 
 
 
