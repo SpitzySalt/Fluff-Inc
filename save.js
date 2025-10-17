@@ -822,6 +822,90 @@ window.SaveSystem = {
     }
   },
 
+  // Export expansion reset backup as code
+  exportExpansionResetBackup() {
+    try {
+      const saveSlotNumber = this.currentSlot;
+      const backupKey = saveSlotNumber ? 
+        `expansionResetBackup_slot${saveSlotNumber}` : 
+        'expansionResetBackup';
+      
+      const backupDataString = localStorage.getItem(backupKey);
+      if (!backupDataString) {
+        this.showSaveNotification('No expansion reset backup found!', true);
+        return null;
+      }
+      
+      const backupData = JSON.parse(backupDataString);
+      const exportString = btoa(JSON.stringify(backupData));
+      
+      // Copy to clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(exportString).then(() => {
+          this.showSaveNotification('Expansion reset backup exported to clipboard!');
+        }).catch(() => {
+          this.showExportDialog(exportString);
+        });
+      } else {
+        this.showExportDialog(exportString);
+      }
+      
+      // Update backup info display if the function is available
+      if (typeof window.updateLastExpansionInfo === 'function') {
+        window.updateLastExpansionInfo(backupData);
+      }
+      
+      return exportString;
+      
+    } catch (error) {
+      console.error('Expansion reset export failed:', error);
+      this.showSaveNotification('Export failed! Please try again.', true);
+      return null;
+    }
+  },
+
+  // Export infinity reset backup as code
+  exportInfinityResetBackup() {
+    try {
+      const saveSlotNumber = this.currentSlot;
+      const backupKey = saveSlotNumber ? 
+        `infinityResetBackup_slot${saveSlotNumber}` : 
+        'infinityResetBackup';
+      
+      const backupDataString = localStorage.getItem(backupKey);
+      if (!backupDataString) {
+        this.showSaveNotification('No infinity reset backup found!', true);
+        return null;
+      }
+      
+      const backupData = JSON.parse(backupDataString);
+      const exportString = btoa(JSON.stringify(backupData));
+      
+      // Copy to clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(exportString).then(() => {
+          this.showSaveNotification('Infinity reset backup exported to clipboard!');
+        }).catch(() => {
+          this.showExportDialog(exportString);
+        });
+      } else {
+        this.showExportDialog(exportString);
+      }
+      
+      // Update backup info display if the function is available
+      if (typeof window.updateLastInfinityInfo === 'function') {
+        window.updateLastInfinityInfo(backupData);
+      }
+      
+      return exportString;
+      
+    } catch (error) {
+      console.error('Infinity reset export failed:', error);
+      this.showSaveNotification('Export failed! Please try again.', true);
+      return null;
+    }
+  },
+
   // Throttled import save data from string
   async importSave(importString) {
     // Check throttling
@@ -1376,6 +1460,69 @@ window.exportSave = function() {
 
 window.exportDeliveryResetBackup = function() {
   return window.SaveSystem.exportDeliveryResetBackup();
+};
+
+window.exportExpansionResetBackup = function() {
+  return window.SaveSystem.exportExpansionResetBackup();
+};
+
+window.exportInfinityResetBackup = function() {
+  return window.SaveSystem.exportInfinityResetBackup();
+};
+
+// Functions for the HTML recovery buttons
+window.exportLastExpansionReset = function() {
+  return window.SaveSystem.exportExpansionResetBackup();
+};
+
+window.exportLastInfinityReset = function() {
+  return window.SaveSystem.exportInfinityResetBackup();
+};
+
+// Function to get expansion reset backup info for display
+window.getExpansionResetBackupInfo = function() {
+  const currentSlot = window.SaveSystem ? window.SaveSystem.currentSlot : 1;
+  const backupKey = `expansionResetBackup_slot${currentSlot}`;
+  const backupData = localStorage.getItem(backupKey);
+  
+  if (!backupData) {
+    return null;
+  }
+  
+  try {
+    const backup = JSON.parse(backupData);
+    return {
+      timestamp: backup.timestamp || Date.now(),
+      grade: (backup.expansionInfo && backup.expansionInfo.currentGrade) ? backup.expansionInfo.currentGrade : 'Unknown',
+      kp: (backup.expansionInfo && backup.expansionInfo.kp) ? backup.expansionInfo.kp : '0'
+    };
+  } catch (error) {
+    console.warn('Error parsing expansion reset backup:', error);
+    return null;
+  }
+};
+
+// Function to get infinity reset backup info for display
+window.getInfinityResetBackupInfo = function() {
+  const currentSlot = window.SaveSystem ? window.SaveSystem.currentSlot : 1;
+  const backupKey = `infinityResetBackup_slot${currentSlot}`;
+  const backupData = localStorage.getItem(backupKey);
+  
+  if (!backupData) {
+    return null;
+  }
+  
+  try {
+    const backup = JSON.parse(backupData);
+    return {
+      timestamp: backup.timestamp || Date.now(),
+      infinityPoints: (backup.infinityInfo && backup.infinityInfo.infinityPoints) ? backup.infinityInfo.infinityPoints : '0',
+      totalInfinityEarned: (backup.infinityInfo && backup.infinityInfo.totalInfinityEarned) ? backup.infinityInfo.totalInfinityEarned : '0'
+    };
+  } catch (error) {
+    console.warn('Error parsing infinity reset backup:', error);
+    return null;
+  }
 };
 
 window.importSave = async function(importString) {

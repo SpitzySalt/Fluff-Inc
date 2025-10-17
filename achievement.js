@@ -1037,14 +1037,24 @@ function createAchievementCard(achievement) {
 function switchAchievementsSubTab(tabId) {
   document.getElementById('achievementsNormalTab').style.display = 'none';
   document.getElementById('achievementsSecretTab').style.display = 'none';
+  document.getElementById('achievementsTrophyTab').style.display = 'none';
   document.getElementById('achievementsNormalTabBtn').classList.remove('active');
   document.getElementById('achievementsSecretTabBtn').classList.remove('active');
+  document.getElementById('achievementsTrophyTabBtn').classList.remove('active');
+  
   if (tabId === 'achievementsNormalTab') {
     document.getElementById('achievementsNormalTab').style.display = 'block';
     document.getElementById('achievementsNormalTabBtn').classList.add('active');
   } else if (tabId === 'achievementsSecretTab') {
     document.getElementById('achievementsSecretTab').style.display = 'block';
     document.getElementById('achievementsSecretTabBtn').classList.add('active');
+  } else if (tabId === 'achievementsTrophyTab') {
+    document.getElementById('achievementsTrophyTab').style.display = 'block';
+    document.getElementById('achievementsTrophyTabBtn').classList.add('active');
+    // Render trophies when tab is opened
+    if (typeof window.renderTrophies === 'function') {
+      window.renderTrophies();
+    }
   }
 }
 
@@ -1286,6 +1296,69 @@ style.textContent = `
       opacity: 0;
     }
   }
+  
+  .trophy-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    z-index: 10000;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border: 3px solid #f39c12;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .trophy-notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .trophy-notification-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .trophy-notification-icon {
+    flex-shrink: 0;
+  }
+
+  .trophy-notification-icon .trophy-3d {
+    width: 60px;
+    height: 60px;
+    animation: trophyShine 2s ease-in-out infinite;
+  }
+
+  .trophy-notification-text {
+    color: white;
+    text-align: left;
+  }
+
+  .trophy-notification-text h3 {
+    margin: 0 0 10px 0;
+    color: #f39c12;
+    font-size: 1.4em;
+    font-weight: bold;
+  }
+
+  .trophy-notification-text h4 {
+    margin: 0 0 8px 0;
+    color: #ecf0f1;
+    font-size: 1.1em;
+  }
+
+  .trophy-notification-text p {
+    margin: 0;
+    color: #bdc3c7;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
 `;
 document.head.appendChild(style);
 window.trackClick = trackClick;
@@ -1322,6 +1395,469 @@ function stopAchievementTracking() {
     achievementTrackingInterval = null;
   }
 }
+
+// Trophy System - For Minigame Challenges
+const trophies = {
+  powerGeneratorChallenge: {
+    id: 'powerGeneratorChallenge',
+    name: 'Power Generator Challenge',
+    description: 'Survive the Power Generator Challenge',
+    icon: 'assets/icons/bronze power challenge.png',
+    type: 'challenge',
+    category: 'trophy',
+    tiers: {
+      bronze: {
+        requirement: 60,
+        unlocked: false,
+        name: 'Bronze Power Survivor',
+        description: 'Survive the Power Generator Challenge for 60+ seconds',
+        icon: 'assets/icons/bronze power challenge.png'
+      },
+      silver: {
+        requirement: 80,
+        unlocked: false,
+        name: 'Silver Power Survivor', 
+        description: 'Survive the Power Generator Challenge for 80+ seconds',
+        icon: 'assets/icons/silver power challenge.png'
+      },
+      gold: {
+        requirement: 100,
+        unlocked: false,
+        name: 'Gold Power Survivor',
+        description: 'Survive the Power Generator Challenge for 100+ seconds',
+        icon: 'assets/icons/gold power challenge.png'
+      }
+    },
+    slot: '1-1',
+    unlockedTier: null
+  }
+};
+
+function renderTrophies() {
+  const trophyGrid = document.getElementById('trophyAchievementsGrid');
+  if (!trophyGrid) return;
+  
+  trophyGrid.innerHTML = '';
+  
+  // Create two 3D wood plank trophy shelves
+  const shelf1 = document.createElement('div');
+  shelf1.className = 'trophy-shelf';
+  shelf1.innerHTML = `
+    <div class="shelf-background">
+      <div class="shelf-slots">
+        <div class="trophy-slot empty" data-slot="1-1"></div>
+        <div class="trophy-slot empty" data-slot="1-2"></div>
+        <div class="trophy-slot empty" data-slot="1-3"></div>
+        <div class="trophy-slot empty" data-slot="1-4"></div>
+        <div class="trophy-slot empty" data-slot="1-5"></div>
+      </div>
+      <div class="shelf-surface"></div>
+    </div>
+  `;
+  
+  const shelf2 = document.createElement('div');
+  shelf2.className = 'trophy-shelf';
+  shelf2.innerHTML = `
+    <div class="shelf-background">
+      <div class="shelf-slots">
+        <div class="trophy-slot empty" data-slot="2-1"></div>
+        <div class="trophy-slot empty" data-slot="2-2"></div>
+        <div class="trophy-slot empty" data-slot="2-3"></div>
+        <div class="trophy-slot empty" data-slot="2-4"></div>
+        <div class="trophy-slot empty" data-slot="2-5"></div>
+      </div>
+      <div class="shelf-surface"></div>
+    </div>
+  `;
+  
+  trophyGrid.appendChild(shelf1);
+  trophyGrid.appendChild(shelf2);
+  
+  // Load existing trophies from state with a delay to ensure DOM is ready
+  setTimeout(() => {
+    if (window.state && window.state.trophies) {
+      Object.keys(window.state.trophies).forEach(trophyId => {
+        const trophyState = window.state.trophies[trophyId];
+        const trophy = trophies[trophyId];
+        if (trophy && trophyState.unlockedTier) {
+          addTrophyToSlot(trophy.slot, trophyState.unlockedTier, trophyId);
+        }
+      });
+    }
+  }, 100);
+  
+  // Update trophy progress display
+  updateTrophyProgressDisplay();
+  
+  // Add observer to ensure trophies stay visible
+  observeTrophyVisibility();
+}
+
+function updateTrophyProgressDisplay() {
+  const unlockedCountEl = document.getElementById('trophyUnlockedCount');
+  const totalCountEl = document.getElementById('trophyTotalCount');
+  const progressPercentEl = document.getElementById('trophyProgressPercent');
+  
+  if (!unlockedCountEl || !totalCountEl || !progressPercentEl) return;
+  
+  const totalTrophies = Object.keys(trophies).length;
+  let unlockedTrophies = 0;
+  
+  if (window.state && window.state.trophies) {
+    Object.keys(window.state.trophies).forEach(trophyId => {
+      const trophyState = window.state.trophies[trophyId];
+      if (trophyState.unlockedTier) {
+        unlockedTrophies++;
+      }
+    });
+  }
+  
+  const progressPercent = totalTrophies > 0 ? Math.floor((unlockedTrophies / totalTrophies) * 100) : 0;
+  
+  unlockedCountEl.textContent = unlockedTrophies;
+  totalCountEl.textContent = totalTrophies;
+  progressPercentEl.textContent = progressPercent;
+}
+
+// Function to add a 3D trophy to a specific slot (for future use)
+function addTrophyToSlot(slotId, trophyType = 'gold', trophyId = null) {
+  const slot = document.querySelector(`[data-slot="${slotId}"]`);
+  if (slot && slot.classList.contains('empty')) {
+    slot.classList.remove('empty');
+    slot.classList.add('filled');
+    
+    const trophy3D = document.createElement('div');
+    trophy3D.className = 'trophy-3d';
+    
+    // Check if this is the power generator challenge trophy
+    if (trophyId === 'powerGeneratorChallenge') {
+      const trophy = trophies[trophyId];
+      const tierIcon = trophy?.tiers?.[trophyType]?.icon;
+      
+      if (tierIcon) {
+        // Create tooltip content for power generator challenge
+        let buffText = '';
+        let multiplier = 1;
+        if (trophyType === 'bronze') {
+          multiplier = 1.1;
+          buffText = '+10% Power Cap Boost';
+        } else if (trophyType === 'silver') {
+          multiplier = 1.25;
+          buffText = '+25% Power Cap Boost';
+        } else if (trophyType === 'gold') {
+          multiplier = 1.5;
+          buffText = '+50% Power Cap Boost';
+        }
+        
+        const tierInfo = trophy.tiers[trophyType];
+        const tooltipContent = `
+          <div class="trophy-tooltip-title">${tierInfo.name}</div>
+          <div class="trophy-tooltip-description">${tierInfo.description}</div>
+          <div class="trophy-tooltip-buff">${buffText}</div>
+        `;
+        
+        // Create image element first and ensure it loads
+        const img = document.createElement('img');
+        img.src = tierIcon;
+        img.alt = `${trophyType} power challenge trophy`;
+        img.className = 'trophy-png';
+        img.loading = 'eager';
+        img.style.cssText = `
+          width: 75px !important;
+          height: 75px !important;
+          object-fit: contain;
+          display: block !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          position: relative;
+          z-index: 3;
+        `;
+        
+        // Create tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'trophy-tooltip';
+        tooltip.innerHTML = tooltipContent;
+        
+        // Create container
+        const container = document.createElement('div');
+        container.className = 'trophy-image-container';
+        container.appendChild(img);
+        container.appendChild(tooltip);
+        
+        // Use PNG image for power generator challenge
+        trophy3D.innerHTML = `<div class="trophy-base"></div>`;
+        trophy3D.appendChild(container);
+        
+        // Force image to stay visible
+        img.onload = () => {
+          img.style.opacity = '1';
+          img.style.visibility = 'visible';
+          img.style.display = 'block';
+        };
+        
+        // Ensure image stays loaded even if src changes
+        img.onerror = () => {
+          console.error('Failed to load trophy image:', img.src);
+          // Try reloading the image
+          setTimeout(() => {
+            img.src = tierIcon;
+          }, 100);
+        };
+      } else {
+        // Fallback to original design
+        trophy3D.innerHTML = `
+          <div class="trophy-base"></div>
+          <div class="trophy-cup ${trophyType}"></div>
+        `;
+      }
+    } else {
+      // Use original design for other trophies
+      trophy3D.innerHTML = `
+        <div class="trophy-base"></div>
+        <div class="trophy-cup ${trophyType}"></div>
+      `;
+    }
+    
+    slot.innerHTML = '';
+    slot.appendChild(trophy3D);
+    
+    // Add trophy shine effect with a longer delay to ensure everything is loaded
+    setTimeout(() => {
+      trophy3D.style.animation = 'trophyShine 2s ease-in-out';
+    }, 300);
+  }
+}
+
+function checkTrophyProgress() {
+  // Check all trophy progress
+  Object.keys(trophies).forEach(trophyId => {
+    const trophy = trophies[trophyId];
+    if (trophy.type === 'challenge') {
+      checkChallengeTrophy(trophyId);
+    }
+  });
+}
+
+function checkChallengeTrophy(trophyId) {
+  const trophy = trophies[trophyId];
+  if (!trophy || !window.state.trophies) return;
+  
+  if (trophyId === 'powerGeneratorChallenge') {
+    const bestTime = window.state.powerChallengePersonalBest || 0;
+    
+    // Check each tier from highest to lowest
+    let newTier = null;
+    if (bestTime >= trophy.tiers.gold.requirement) {
+      newTier = 'gold';
+    } else if (bestTime >= trophy.tiers.silver.requirement) {
+      newTier = 'silver';
+    } else if (bestTime >= trophy.tiers.bronze.requirement) {
+      newTier = 'bronze';
+    }
+    
+    // Only unlock if we have a new tier or no tier unlocked yet
+    const currentTier = window.state.trophies[trophyId]?.unlockedTier;
+    if (newTier && newTier !== currentTier) {
+      unlockTrophy(trophyId, newTier);
+    }
+  }
+}
+
+function unlockTrophy(trophyId, tier = 'gold') {
+  const trophy = trophies[trophyId];
+  if (!trophy) return;
+  
+  // Initialize trophy state if not exists
+  if (!window.state.trophies) window.state.trophies = {};
+  if (!window.state.trophies[trophyId]) {
+    window.state.trophies[trophyId] = { unlockedTier: null };
+  }
+  
+  // Update trophy state
+  window.state.trophies[trophyId].unlockedTier = tier;
+  trophy.unlockedTier = tier;
+  
+  // Add trophy to the display
+  addTrophyToSlot(trophy.slot, tier, trophyId);
+  
+  // Show trophy notification
+  showTrophyNotification(trophy, tier);
+  
+  // Update trophy display counts
+  updateTrophyProgressDisplay();
+  
+  // If this is a power generator challenge trophy, update power UI to reflect new cap
+  if (trophyId === 'powerGeneratorChallenge') {
+    // Force immediate power cap recalculation
+    if (typeof window.calculatePowerGeneratorCap === 'function') {
+      const newCap = window.calculatePowerGeneratorCap();
+      window.state.powerMaxEnergy = newCap;
+      console.log('Trophy unlocked! New power cap:', newCap.toString());
+    }
+    
+    // Update UI
+    if (typeof window.updatePowerGeneratorUI === 'function') {
+      setTimeout(() => {
+        window.updatePowerGeneratorUI();
+      }, 100);
+    }
+  }
+}
+
+function showTrophyNotification(trophy, tier) {
+  const tierInfo = trophy.tiers[tier];
+  if (!tierInfo) return;
+  
+  // Create trophy notification
+  const notification = document.createElement('div');
+  notification.className = 'trophy-notification';
+  
+  // Check if this is the power generator challenge trophy
+  let trophyIconHTML;
+  if (trophy.id === 'powerGeneratorChallenge' && tierInfo.icon) {
+    // Add power buff information to notification
+    let buffText = '';
+    if (tier === 'bronze') {
+      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+10% Power Cap Boost!</div>';
+    } else if (tier === 'silver') {
+      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+25% Power Cap Boost!</div>';
+    } else if (tier === 'gold') {
+      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+50% Power Cap Boost!</div>';
+    }
+    
+    // Use PNG image for power generator challenge
+    trophyIconHTML = `
+      <div class="trophy-notification-icon">
+        <img src="${tierInfo.icon}" alt="${tier} power challenge trophy" style="width: 85px; height: 85px; object-fit: contain; display: block; opacity: 1;" loading="eager" />
+      </div>
+    `;
+    
+    // Modify the description to include the buff
+    tierInfo.description = tierInfo.description + buffText;
+  } else {
+    // Use original 3D design for other trophies
+    trophyIconHTML = `
+      <div class="trophy-notification-icon">
+        <div class="trophy-3d">
+          <div class="trophy-base"></div>
+          <div class="trophy-cup ${tier}"></div>
+        </div>
+      </div>
+    `;
+  }
+  
+  notification.innerHTML = `
+    <div class="trophy-notification-content">
+      ${trophyIconHTML}
+      <div class="trophy-notification-text">
+        <h3>Trophy Unlocked!</h3>
+        <h4>${tierInfo.name}</h4>
+        <p>${tierInfo.description}</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Animate in
+  setTimeout(() => notification.classList.add('show'), 100);
+  
+  // Remove after delay
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 4000);
+}
+
+// Observer to ensure trophy images stay visible
+function observeTrophyVisibility() {
+  if (typeof window.trophyObserver !== 'undefined') {
+    window.trophyObserver.disconnect();
+  }
+  
+  window.trophyObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList' || mutation.type === 'attributes') {
+        // Check if any trophy images have become invisible
+        const trophyImages = document.querySelectorAll('.trophy-png');
+        trophyImages.forEach((img) => {
+          if (img.style.display === 'none' || img.style.opacity === '0' || img.style.visibility === 'hidden') {
+            // Force the image to be visible
+            img.style.display = 'block';
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+          }
+        });
+        
+        // Check if any trophy tooltips have become invisible
+        const trophyTooltips = document.querySelectorAll('.trophy-tooltip');
+        trophyTooltips.forEach((tooltip) => {
+          if (tooltip.style.display === 'none') {
+            tooltip.style.display = 'block';
+          }
+        });
+      }
+    });
+  });
+  
+  // Start observing
+  const trophyGrid = document.getElementById('trophyAchievementsGrid');
+  if (trophyGrid) {
+    window.trophyObserver.observe(trophyGrid, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+  }
+}
+
+// Function to get the current power cap multiplier from trophies
+function getTrophyPowerCapMultiplier() {
+  if (window.state.trophies && window.state.trophies.powerGeneratorChallenge && window.state.trophies.powerGeneratorChallenge.unlockedTier) {
+    const tier = window.state.trophies.powerGeneratorChallenge.unlockedTier;
+    
+    if (tier === 'bronze') {
+      return 1.1;
+    } else if (tier === 'silver') {
+      return 1.25;
+    } else if (tier === 'gold') {
+      return 1.5;
+    }
+  }
+  
+  return 1; // No trophy = no multiplier
+}
+
+// Function to manually refresh power cap (for testing)
+function refreshPowerCapForTrophies() {
+  if (typeof window.calculatePowerGeneratorCap === 'function') {
+    const newCap = window.calculatePowerGeneratorCap();
+    window.state.powerMaxEnergy = newCap;
+    
+    // Update UI
+    if (typeof window.updatePowerGeneratorUI === 'function') {
+      window.updatePowerGeneratorUI();
+    }
+    
+    console.log('Power cap refreshed to:', newCap.toString());
+    return newCap;
+  }
+  return null;
+}
+
+// Expose trophy functions globally
+window.trophies = trophies;
+window.renderTrophies = renderTrophies;
+window.addTrophyToSlot = addTrophyToSlot;
+window.checkTrophyProgress = checkTrophyProgress;
+window.checkChallengeTrophy = checkChallengeTrophy;
+window.observeTrophyVisibility = observeTrophyVisibility;
+window.getTrophyPowerCapMultiplier = getTrophyPowerCapMultiplier;
+window.refreshPowerCapForTrophies = refreshPowerCapForTrophies;
+window.unlockTrophy = unlockTrophy;
+window.showTrophyNotification = showTrophyNotification;
+window.updateTrophyProgressDisplay = updateTrophyProgressDisplay;
 
 window.updateAchievementsDisplay = updateAchievementsDisplay;
 window.stopAchievementTracking = stopAchievementTracking;

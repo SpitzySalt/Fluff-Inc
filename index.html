@@ -67,6 +67,12 @@
       gap: 2rem;
       margin-top: 1rem;
     }
+    .button-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
     .swaria-box {
       display: flex;
       flex-direction: column;
@@ -405,6 +411,472 @@ html, body {
 body {
   min-height: 100vh;
 }
+
+/* Halloween Event Styles */
+.halloween-theme {
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 50%, #1a0d00 100%) !important;
+  min-height: 100vh !important;
+  height: 100% !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+  position: relative !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure Halloween page covers entire viewport */
+.halloween-theme::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 50%, #1a0d00 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Remove any margins/padding when Halloween theme is active */
+body.halloween-active {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 50%, #1a0d00 100%) !important;
+}
+
+html.halloween-active {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 50%, #1a0d00 100%) !important;
+}
+
+.halloween-container {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.halloween-card {
+  background: linear-gradient(135deg, #2d0f00 0%, #4a1700 50%, #2d0f00 100%);
+  border: 2px solid #ff6b35;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3), inset 0 1px 0 rgba(255, 165, 0, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.halloween-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(255, 149, 0, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.header-card {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.halloween-back-btn {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff9500 100%);
+  color: #000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}
+
+.halloween-back-btn:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ffaa44 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.5);
+}
+
+.halloween-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .halloween-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.halloween-activity {
+  background: rgba(74, 23, 0, 0.3);
+  border: 1px solid #ff6b35;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.halloween-action-btn {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff9500 100%);
+  color: #000;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.halloween-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff9500 0%, #ffaa44 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.5);
+}
+
+.halloween-action-btn:disabled {
+  background: #666;
+  color: #aaa;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.halloween-decorations {
+  text-align: center;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid #ff9500;
+}
+
+.halloween-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.halloween-shop-item {
+  background: rgba(74, 23, 0, 0.2);
+  border: 1px solid #ff9500;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.halloween-shop-btn {
+  background: linear-gradient(135deg, #ff9500 0%, #ffaa44 100%);
+  color: #000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(255, 149, 0, 0.4);
+  margin-top: 0.5rem;
+}
+
+.halloween-shop-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ffaa44 0%, #ffcc77 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(255, 149, 0, 0.5);
+}
+
+.halloween-shop-btn:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Halloween themed scrollbar */
+.halloween-theme ::-webkit-scrollbar {
+  width: 12px;
+}
+
+.halloween-theme ::-webkit-scrollbar-track {
+  background: #1a0d00;
+  border-radius: 6px;
+}
+
+.halloween-theme ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ff6b35, #ff9500);
+  border-radius: 6px;
+  border: 2px solid #1a0d00;
+}
+
+.halloween-theme ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ff9500, #ffaa44);
+}
+
+/* Halloween Sub-Tab Navigation */
+.halloween-sub-tab-bar {
+  margin: 1.5rem 0;
+  background: rgba(45, 15, 0, 0.6);
+  border: 2px solid #ff6b35;
+  border-radius: 12px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.halloween-sub-tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.halloween-sub-tab-btn {
+  background: linear-gradient(135deg, #2d0f00 0%, #4a1700 100%);
+  color: #ff9500;
+  border: 2px solid #ff6b35;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.halloween-sub-tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 149, 0, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.halloween-sub-tab-btn:hover::before {
+  left: 100%;
+}
+
+.halloween-sub-tab-btn:hover {
+  background: linear-gradient(135deg, #4a1700 0%, #662100 100%);
+  color: #ffaa44;
+  border-color: #ff9500;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+}
+
+.halloween-sub-tab-btn.active {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff9500 100%);
+  color: #000;
+  border-color: #ffaa44;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.6);
+  transform: none;
+}
+
+.halloween-sub-tab-btn.active:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ffaa44 100%);
+  transform: translateY(-1px);
+}
+
+/* Halloween Sub-Content */
+.halloween-sub-content {
+  display: none;
+}
+
+.halloween-sub-content.active {
+  display: block;
+}
+
+/* Tree Display Styling */
+.tree-display {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ff6b35;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tree-upgrades {
+  margin-top: 1.5rem;
+}
+
+/* Halloween Currency Display */
+.halloween-currency-display {
+  margin: 1rem 0;
+}
+
+/* Halloween Character Container */
+.halloween-character-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.halloween-character-display {
+  width: 100%;
+  max-width: 500px;
+}
+
+.halloween-character-stats {
+  margin-top: 1rem;
+}
+
+/* Halloween Speech Bubble */
+.halloween-speech {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-18px);
+  background: linear-gradient(135deg, #ff6b35 0%, #ff9500 100%);
+  color: #000;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+  font-size: 1rem;
+  max-width: 260px;
+  z-index: 2000;
+  border: 2px solid #ffaa44;
+  font-weight: bold;
+}
+
+.halloween-speech::before {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 8px solid transparent;
+  border-left-color: #ff6b35;
+}
+
+.halloween-speech.show {
+  display: block !important;
+}
+
+.halloween-peachy-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Responsive design for character card */
+@media (max-width: 768px) {
+  .halloween-character-display {
+    max-width: 100%;
+  }
+  
+  .halloween-speech {
+    left: 50%;
+    top: 100%;
+    right: auto;
+    transform: translateX(-50%) translateY(18px);
+    max-width: 200px;
+  }
+  
+  .halloween-speech::before {
+    left: 50%;
+    top: 0%;
+    transform: translateX(-50%) translateY(-100%);
+    border-left-color: transparent;
+    border-bottom-color: #ff6b35;
+  }
+}
+
+/* Halloween Bottom Navigation */
+#halloweenBottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 50%, #1a0d00 100%);
+  border-top: 3px solid #ff6b35;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 1000;
+  box-shadow: 0 -4px 16px rgba(255, 107, 53, 0.3);
+}
+
+.halloween-nav-btn {
+  background: linear-gradient(135deg, #2d0f00 0%, #4a1700 100%);
+  color: #ff9500;
+  border: 2px solid #ff6b35;
+  border-radius: 12px;
+  padding: 0.875rem 2rem;
+  font-weight: bold;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  max-width: 200px;
+}
+
+.halloween-nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 149, 0, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.halloween-nav-btn:hover::before {
+  left: 100%;
+}
+
+.halloween-nav-btn:hover {
+  background: linear-gradient(135deg, #4a1700 0%, #662100 100%);
+  color: #ffaa44;
+  border-color: #ff9500;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+}
+
+.halloween-nav-btn.active {
+  background: linear-gradient(135deg, #ff6b35 0%, #ff9500 100%);
+  color: #000;
+  border-color: #ffaa44;
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.7);
+  transform: translateY(-2px);
+}
+
+.halloween-nav-btn.active:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ffaa44 100%);
+  transform: translateY(-4px);
+}
+
+@media (max-width: 768px) {
+  #halloweenBottomNav {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+  
+  .halloween-nav-btn {
+    padding: 0.75rem 1rem;
+    font-size: 1em;
+  }
+}
 </style>
       <div id="subTabNavBar">
         <div id="subTabNav">
@@ -442,6 +914,13 @@ body {
   <div class="achievementsSubTabNav">
     <button id="achievementsNormalTabBtn" class="achievementsSubTabBtn active" onclick="switchAchievementsSubTab('achievementsNormalTab')">Achievements</button>
     <button id="achievementsSecretTabBtn" class="achievementsSubTabBtn" onclick="switchAchievementsSubTab('achievementsSecretTab')">Secret Achievements</button>
+    <button id="achievementsTrophyTabBtn" class="achievementsSubTabBtn" onclick="switchAchievementsSubTab('achievementsTrophyTab')">Trophy</button>
+  </div>
+</div>
+<div id="cafeteriaSubTabBar" class="cafeteriaSubTabBar" style="display:none;">
+  <div id="cafeteriaSubTabNav" class="cafeteriaSubTabNav">
+    <button onclick="switchCafeteriaSubTab('cafeteriaMainSubTab')" id="cafeteriaMainTabBtn" class="cafeteriaSubTabBtn active">Main Hall</button>
+    <button onclick="switchCafeteriaSubTab('kitchenSubTab')" id="kitchenTabBtn" class="cafeteriaSubTabBtn" style="display:none;">Kitchen</button>
   </div>
 </div>
 <div id="gameContainer">
@@ -495,10 +974,16 @@ body {
             </div>
           </div>
           <div class="bottom-row">
-          <div id="stairsCard" class="floor-btn" onclick="window.currentFloor=2;const labBtn=document.getElementById('prismSubTabBtn');const genBtn=document.getElementById('generatorSubTabBtn');if(labBtn)labBtn.style.setProperty('display','none','important');if(genBtn)genBtn.style.setProperty('display','none','important');updateFloor2Visibility();">
-        <span style="font-size:1.5em;margin-right:0.5em;">▲</span>
-        <span>Go to the second floor</span>
-          </div>
+            <div class="button-column">
+              <div id="stairsCard" class="floor-btn" onclick="window.currentFloor=2;const labBtn=document.getElementById('prismSubTabBtn');const genBtn=document.getElementById('generatorSubTabBtn');if(labBtn)labBtn.style.setProperty('display','none','important');if(genBtn)genBtn.style.setProperty('display','none','important');updateFloor2Visibility();">
+                <span style="font-size:1.5em;margin-right:0.5em;">▲</span>
+                <span>Go to the second floor</span>
+              </div>
+              <div id="halloweenEventCard" class="floor-btn halloween-event-btn" onclick="switchToHalloweenEvent();" style="display: none;">
+                <span style="font-size:1.5em;margin-right:0.5em;">🍬</span>
+                <span>Halloween Event</span>
+              </div>
+            </div>
             <div class="card swaria-box">
               <div class="swaria-container">
                 <img id="swariaCharacter" src="swa normal.png" alt="Swaria Character">
@@ -984,6 +1469,15 @@ body {
         <div id="secretAchievementsGrid" class="achievements-grid">
         </div>
       </div>
+      <div id="achievementsTrophyTab" class="achievements-subtab" style="display:none;">
+        <div class="achievements-header">
+          <div class="achievements-progress">
+            <span id="trophyUnlockedCount">0</span>/<span id="trophyTotalCount">0</span> Trophies unlocked (<span id="trophyProgressPercent">0</span>%)
+          </div>
+        </div>
+        <div id="trophyAchievementsGrid" class="achievements-grid">
+        </div>
+      </div>
     </section>
     <section id="settings" class="page">
       <div id="settingsSavesTab" class="settings-subtab" style="display:block;">
@@ -1122,6 +1616,95 @@ body {
               
             </div>
           </div>
+          
+          <!-- Expansion Reset Recovery Card (Initially Hidden) -->
+          <div class="card" id="expansionResetRecoveryCard" style="display: none;">
+            <div style="text-align: center; margin: 2em 0;">
+              <h3>Expansion Reset Recovery</h3>
+              <p style="margin-bottom: 2em; color: #666;">Export your game data from the last expansion reset for backup purposes.</p>
+              
+              <div class="recovery-info" style="margin: 1.5em 0; padding: 1em; background: rgba(255, 152, 0, 0.1); border-radius: 8px; color: #333; font-size: 0.9em; text-align: left;">
+                <!-- Backup info will be populated by JavaScript -->
+              </div>
+              
+              <div style="margin: 2em 0;">
+                <button id="exportLastExpansionBtn" onclick="exportLastExpansionReset()" style="
+                  padding: 1.2em 2em; 
+                  border: none; 
+                  border-radius: 12px; 
+                  background: linear-gradient(135deg, #FF9800, #F57C00); 
+                  color: white; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  font-size: 1.2em; 
+                  transition: all 0.3s; 
+                  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                  min-width: 300px;
+                ">
+                  Export Code from Last Expansion Reset
+                </button>
+                
+                <div id="lastExpansionInfo" style="
+                  margin-top: 1.5em; 
+                  padding: 1em; 
+                  background: #f5f5f5; 
+                  border-radius: 8px; 
+                  color: #666; 
+                  font-size: 0.9em;
+                  display: none;
+                ">
+                  <div id="lastExpansionTimestamp"></div>
+                  <div id="lastExpansionGrade"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Infinity Reset Recovery Card (Initially Hidden) -->
+          <div class="card" id="infinityResetRecoveryCard" style="display: none;">
+            <div style="text-align: center; margin: 2em 0;">
+              <h3>Infinity Reset Recovery</h3>
+              <p style="margin-bottom: 2em; color: #666;">Export your game data from the last infinity reset for backup purposes.</p>
+              
+              <div class="recovery-info" style="margin: 1.5em 0; padding: 1em; background: rgba(156, 39, 176, 0.1); border-radius: 8px; color: #333; font-size: 0.9em; text-align: left;">
+                <!-- Backup info will be populated by JavaScript -->
+              </div>
+              
+              <div style="margin: 2em 0;">
+                <button id="exportLastInfinityBtn" onclick="exportLastInfinityReset()" style="
+                  padding: 1.2em 2em; 
+                  border: none; 
+                  border-radius: 12px; 
+                  background: linear-gradient(135deg, #9C27B0, #7B1FA2); 
+                  color: white; 
+                  font-weight: bold; 
+                  cursor: pointer; 
+                  font-size: 1.2em; 
+                  transition: all 0.3s; 
+                  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+                  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                  min-width: 300px;
+                ">
+                  Export Code from Last Infinity Reset
+                </button>
+                
+                <div id="lastInfinityInfo" style="
+                  margin-top: 1.5em; 
+                  padding: 1em; 
+                  background: #f5f5f5; 
+                  border-radius: 8px; 
+                  color: #666; 
+                  font-size: 0.9em;
+                  display: none;
+                ">
+                  <div id="lastInfinityTimestamp"></div>
+                  <div id="lastInfinityGrade"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
       <div id="settingsHardModeTab" class="settings-subtab" style="display:none;">
@@ -1147,10 +1730,20 @@ body {
   <button class="navBtn" data-target="achievements">Achievements</button>
   <button class="navBtn" data-target="settings">Settings</button>
 </nav>
+
+<!-- Halloween Bottom Navigation -->
+<nav id="halloweenBottomNav" style="display:none;">
+  <button class="halloween-nav-btn active" onclick="switchHalloweenSubTab('hub')" id="halloweenHubNavBtn">
+    Halloween event hub
+  </button>
+  <button class="halloween-nav-btn" onclick="switchHalloweenSubTab('treeOfHorrors')" id="halloweenTreeNavBtn">
+    Tree of Horrors
+  </button>
+</nav>
 <div id="inventoryModal" style="display:none;position:fixed;left:0;right:0;bottom:0;width:100vw;z-index:9999999999999;justify-content:center;align-items:flex-end;pointer-events:auto;">
   <div style="margin:0;background:rgba(255,255,255,0.97);border-radius:24px 24px 0 0;box-shadow:0 -4px 32px #0006;padding:1.2em 0.5em 0.7em 0.5em;width:100%;min-height:64px;display:flex;flex-direction:column;align-items:center;">
     <div style="font-size:1.5em;font-weight:bold;color:#222;margin-bottom:1em;">Inventory</div>
-    <div id="inventoryTokens" style="display:flex;gap:2em;flex-wrap:wrap;justify-content:center;">
+    <div id="inventoryTokens" style="display:flex;gap:1.5em;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;width:100%;max-width:100%;padding:0 1em;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;">
       <div style="display:flex;flex-direction:column;align-items:center;gap:0.5em;">
         <img src="assets/icons/Swa Buck.png" class="icon" alt="Swa Bucks Icon" style="width:48px;height:48px;">
         <span id="inventoryCount-swabucks">0</span>
@@ -1333,12 +1926,6 @@ body {
   </div>
 </section>
 <section id="cafeteria" class="page" style="display:none;">
-  <div id="cafeteriaSubTabBar" class="cafeteriaSubTabBar">
-    <div id="cafeteriaSubTabNav" class="cafeteriaSubTabNav">
-      <button onclick="switchCafeteriaSubTab('cafeteriaMainSubTab')" id="cafeteriaMainTabBtn" class="cafeteriaSubTabBtn active">Main Hall</button>
-      <button onclick="switchCafeteriaSubTab('kitchenSubTab')" id="kitchenTabBtn" class="cafeteriaSubTabBtn" style="display:none;">Kitchen</button>
-    </div>
-  </div>
   <div id="cafeteriaMainSubTab" class="cafeteria-subtab sub-tab" style="display:block;">
     <div id="cafeteriaTopCounter" style="display:flex; justify-content:center; align-items:center; gap:1rem; margin:2rem 0; padding:1rem; background:var(--card-bg); border:2px solid var(--card-border); border-radius:var(--radius); max-width:600px; margin-left:auto; margin-right:auto;">
       <div style="text-align:center; flex:1;">
@@ -1359,13 +1946,13 @@ body {
         </div>
       </div>
       <div id="mixingCard" class="card mixing-card">
-        <h3>Mixing</h3>
+        <h3 id="mixingCardTitle">Mixing</h3>
         <div>
           <p>Combine your ingredients here!</p>
           <button id="mixButton">Mix Ingredients</button>
           <div id="cookingStatusSection" style="margin-top: 10px; padding: 8px; border-radius: 8px; background: linear-gradient(135deg, #fff3e0, #ffecb3); border: 2px solid #ff9800; display: none; text-align: center;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px;">
-              <span style="color: #e65100; font-weight: bold;">Currently cooking</span>
+              <span id="currentlyCookingLabel" style="color: #e65100; font-weight: bold;">Currently cooking</span>
             </div>
             <div id="cookingStatusContent" style="font-size: 0.9em; color: #bf360c;">
               <div id="cookingStatusRecipe" style="font-weight: bold; margin-bottom: 2px;"></div>
@@ -1377,7 +1964,7 @@ body {
           </div>
           <div id="cookingSpeedBoostDisplay" style="margin-top: 10px; font-size: 0.9em; color: #666; display: none;">
             <img src="assets/icons/mushroom soup token.png" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">
-            <span id="cookingSpeedBoostText">x1.0 cooking speed</span>
+            <span id="cookingSpeedBoostText">x1.0 <span id="cookingSpeedLabel">cooking speed</span></span>
           </div>
         </div>
       </div>
@@ -1418,6 +2005,69 @@ body {
             <img src="assets/icons/stardust token.png" class="icon" alt="Stardust Icon" style="background:#e6e6ff; border-radius:8px;">
             <span id="ingredientCount-stardust">0</span>
             <span style="font-size:0.95em; color:#444; margin-left:0.3em;">Stardust</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="halloweenEvent" class="page halloween-theme" style="display:none;">
+  <div class="container halloween-container">
+    <div class="header-card halloween-card">
+      <h1 style="margin:0; color:#ff6b35; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Halloween Event</h1>
+      <p style="color:#ff9500; margin:0.5rem 0;">Welcome to the super duper spooky Halloween event!</p>
+      <button onclick="switchPage('home')" class="halloween-back-btn">← Back to Main</button>
+    </div>
+    
+
+    
+    <!-- Halloween Hub Content (default content) -->
+    <div id="halloweenHubContent" class="halloween-sub-content active">
+      <div class="halloween-content">
+        <!-- Currency Card -->
+        <div class="halloween-card">
+          <h2 style="color:#ff6b35; margin-top:0;">Currency</h2>
+          <div class="halloween-currency-display">
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid #ff6b35;">
+              <img src="assets/icons/swandy.png" class="icon" alt="Swandy Icon" style="width: 48px; height: 48px; background: #ff9500; border-radius: 8px; padding: 4px;">
+              <div>
+                <div style="color: #ff9500; font-size: 1.4em; font-weight: bold;">
+                  Swandy: <span id="swandyCount">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Halloween Peachy Character Card -->
+        <div class="halloween-card">
+          <div class="halloween-character-container">
+            <div class="halloween-character-display">
+              <div style="text-align: center; margin: 1rem 0; position: relative;">
+                <div class="halloween-peachy-container" style="position: relative; display: inline-block;" onclick="interactWithHalloweenPeachy()">
+                  <img id="halloweenPeachyCharacter" src="assets/icons/halloween peachy.png" alt="Halloween Peachy" style="width: 180px; height: 180px; object-fit: contain; transform: scaleX(-1); cursor: pointer; border-radius: 20px;">
+                  <div id="halloweenPeachySpeech" class="halloween-speech" style="display: none;">
+                    I'm ready for some Halloween mischief!
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    
+    <!-- Tree of Horrors Content -->
+    <div id="halloweenTreeContent" class="halloween-sub-content" style="display:none;">
+      <div style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
+        <div class="card halloween-card" style="max-width: 400px; text-align: center; background: linear-gradient(135deg, #ff6600, #cc4400); border: 2px solid #ff8800; box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);">
+          <h3 style="color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 1em;">Halloween event - Part 2</h3>
+          <p style="text-align: center; font-size: 1.2em; color: #ffe6cc; margin: 2em 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+            Part 2 aint out yet buddy
+          </p>
+          <div style="text-align: center; color: #ffcc99; font-size: 0.9em; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+            Coming soon... 
           </div>
         </div>
       </div>
@@ -2260,6 +2910,7 @@ body {
 <script src="decimal_utils.js"></script>
 <script src="save.js"></script>
 <script src="script.js"></script>
+<script src="halloween event.js"></script>
 <script src="script2.js"></script>
 <script src="script3.js"></script>
 <script src="infinity.js"></script>
@@ -2304,7 +2955,7 @@ body {
         <div id="mixRecipeIngredients" style="font-size:1.1em;">
         </div>
       </div>
-      <div style="font-size:1.1em;margin-top:0.5em;">Cooking time: <span id="mixCookTime">5</span> min</div>
+      <div style="font-size:1.1em;margin-top:0.5em;"><span id="mixCookingTimeLabel">Cooking time:</span> <span id="mixCookTime">5</span> min</div>
       <div style="display:flex;align-items:center;gap:0.7em;margin-top:1.2em;">
         <input id="mixBulkInput" type="number" min="1" value="1" style="width:3em;text-align:center;font-size:1.2em;">
         <span id="mixBulkUnit" style="font-size:1em;color:#888;">plates</span>

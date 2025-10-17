@@ -117,6 +117,21 @@
   animation: infinityChallengeGlow 3s ease-in-out infinite;
 }
 
+/* Halloween Vines - Use a low z-index that's above background but below UI elements */
+#pageHalloweenVines,
+#terrariumHalloweenVines {
+  z-index: 2 !important;
+}
+
+/* Floor 2 Navigation Adjustments */
+body.floor-2 nav#bottomNav {
+  display: none !important;
+}
+
+body.floor-2 #subTabNavBar {
+  bottom: 0 !important;
+}
+
 :root {
   --card-bg: #ddffee;
   --card-border: #66ccaa;
@@ -571,7 +586,7 @@ select {
 #subTabNav {
   display: flex;
   gap: 1rem;
-  background: var(--card-border);
+  background: transparent;
 }
 #subTabNav button {
   padding: 0.5rem 1.5rem;
@@ -589,6 +604,12 @@ select {
    background: color-mix(in srgb, var(--card-border) 70%, black);
    transform: translateY(-1px);
    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+#subTabNav button.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+  transform: translateY(-1px);
 }
 .gain-popup {
   display: inline-block;
@@ -807,19 +828,30 @@ html, body {
 #knowledgeSubTabNav {
   display: flex;
   gap: 0.8rem;
-  background: var(--card-border);
+  background: transparent;
 }
 #knowledgeSubTabNav button {
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.5rem;
   border: none;
   border-radius: 10px;
   background: color-mix(in srgb, var(--card-border) 50%, black);
   color: white;
   font-weight: bold;
   cursor: pointer;
+  transition: background 0.3s ease,
+              transform 0.2s ease,
+              box-shadow 0.3s ease;
 }
 #knowledgeSubTabNav button:hover {
   background: color-mix(in srgb, var(--card-border) 70%, black);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+#knowledgeSubTabNav button.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+  transform: translateY(-1px);
 }
 .graduation-card {
   max-width: 820px;
@@ -4903,6 +4935,20 @@ html,
   box-shadow: 0 4px 24px rgba(120, 80, 180, 0.18);
   background: linear-gradient(135deg, #d1bfff 60%, #a48cff 100%);
 }
+
+/* Halloween Event Button Styling */
+.halloween-event-btn {
+  background: linear-gradient(135deg, #ff6b35 60%, #2d0f00 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ff9500 !important;
+  box-shadow: 0 2px 12px rgba(255, 107, 53, 0.3) !important;
+}
+
+.halloween-event-btn:hover {
+  background: linear-gradient(135deg, #ff9500 60%, #1a0d00 100%) !important;
+  box-shadow: 0 4px 24px rgba(255, 107, 53, 0.5) !important;
+  transform: translateY(-1px);
+}
 .floor2-tab-btn {
   background: var(--card-border);
   color: white;
@@ -5583,10 +5629,22 @@ html[data-theme="night"] .prism-top-row {
   position: fixed;
   z-index: 10;
 }
+.cafeteriaSubTabBar {
+  position: fixed;
+  bottom: 55px;
+  left: 0;
+  width: 100%;
+  background: var(--card-border);
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+  z-index: 10;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
 .cafeteriaSubTabNav {
   display: flex;
   gap: 1rem;
-  background: var(--card-border);
+  background: transparent;
   z-index: 10;
 }
 .cafeteriaSubTabBtn {
@@ -5598,11 +5656,21 @@ html[data-theme="night"] .prism-top-row {
   font-weight: bold;
   cursor: pointer;
   font-size: 1rem;
-  transition: background 0.2s;
+  transition: background 0.3s ease,
+              transform 0.2s ease,
+              box-shadow 0.3s ease;
   z-index: 10;
 }
 .cafeteriaSubTabBtn:hover {
   background: color-mix(in srgb, var(--card-border) 70%, black);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.cafeteriaSubTabBtn.active {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+  transform: translateY(-1px);
 }
 .kitchen-row {
   display: flex;
@@ -5726,15 +5794,45 @@ html[data-theme="night"] .prism-top-row {
   align-items: center;
   padding: 1.2em 0.5em 0.7em 0.5em;
 }
+#inventoryTokens {
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) rgba(0,0,0,0.1);
+  /* Add margin to ensure scroll indicators are visible */
+  margin-bottom: 1em;
+}
+
+#inventoryTokens::-webkit-scrollbar {
+  height: 8px;
+}
+
+#inventoryTokens::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+#inventoryTokens::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+}
+
+#inventoryTokens::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.5);
+}
+
 #inventoryTokens img {
   box-shadow: 0 2px 8px #0002;
   border-radius: 12px;
   background: #fff;
 }
+
 #inventoryTokens > div {
   transition: transform 0.1s;
   padding: 2px;
+  flex-shrink: 0; /* Prevent tokens from shrinking in horizontal scroll */
+  min-width: 70px; /* Ensure consistent token width */
 }
+
 #inventoryTokens > div:hover {
   transform: scale(1.05);
 }
@@ -6028,6 +6126,374 @@ html[data-theme="night"] .prism-top-row {
   100% {
     box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
   }
+}
+
+/* Trophy Shelf Styles - 3D Wood Planks on Wall */
+.trophy-shelf {
+  margin: 30px 0;
+  width: 100%;
+  perspective: 1000px;
+}
+
+.shelf-background {
+  background: linear-gradient(180deg, #2C1810 0%, #3D2418 30%, #4A2E1C 100%);
+  border-radius: 15px;
+  padding: 20px 20px 30px 20px;
+  box-shadow: 
+    0 15px 35px rgba(0,0,0,0.4),
+    inset 0 2px 8px rgba(0,0,0,0.3),
+    inset 0 -2px 8px rgba(255,255,255,0.1);
+  position: relative;
+  border: 2px solid #1A0F08;
+  display: flex;
+  flex-direction: column;
+}
+
+.shelf-background::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: linear-gradient(45deg, #1A0F08 0%, #2C1810 50%, #1A0F08 100%);
+  border-radius: 18px;
+  z-index: -1;
+}
+
+.shelf-surface {
+  height: 20px;
+  background: linear-gradient(180deg, #D2B48C 0%, #CD853F 25%, #A0522D 50%, #8B4513 75%, #654321 100%);
+  border-radius: 10px;
+  margin-top: auto;
+  box-shadow: 
+    0 8px 16px rgba(0,0,0,0.4),
+    inset 0 3px 6px rgba(255,255,255,0.3),
+    inset 0 -3px 6px rgba(0,0,0,0.2);
+  position: relative;
+  transform: rotateX(15deg) translateZ(20px);
+  transform-style: preserve-3d;
+}
+
+.shelf-surface::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(139,69,19,0.3) 20%, 
+    rgba(160,82,45,0.3) 40%,
+    rgba(205,133,63,0.3) 60%,
+    rgba(139,69,19,0.3) 80%,
+    transparent 100%);
+  border-radius: 10px;
+}
+
+.shelf-surface::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: linear-gradient(180deg, rgba(107,67,33,0.8) 0%, transparent 100%);
+  transform: rotateX(-45deg);
+  transform-origin: top;
+  border-radius: 0 0 8px 8px;
+}
+
+.shelf-slots {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-end;
+  min-height: 100px;
+  padding: 0 15px;
+  position: relative;
+  flex: 1;
+}
+
+.trophy-slot {
+  width: 90px;
+  height: 110px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.trophy-slot.empty {
+  background: none;
+  border: none;
+}
+
+.trophy-slot.empty::after {
+  content: '';
+  width: 60px;
+  height: 80px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transform: translateZ(10px);
+}
+
+.trophy-slot.empty::before {
+  content: '';
+  color: transparent;
+  font-size: 0;
+  position: absolute;
+  z-index: 1;
+  transform: translateZ(20px);
+}
+
+.trophy-slot.empty:hover {
+  transform: translateY(-3px) translateZ(15px);
+}
+
+.trophy-slot.empty:hover::after {
+  border: none;
+  background: transparent;
+}
+
+/* 3D Trophy Styles for when trophies are added */
+.trophy-slot.filled {
+  background: none;
+  border: none;
+}
+
+.trophy-3d {
+  width: 75px;
+  height: 90px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(25px);
+  transition: all 0.3s ease;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.trophy-3d:hover {
+  transform: translateZ(35px) rotateY(15deg);
+}
+
+.trophy-base {
+  width: 40px;
+  height: 15px;
+  background: linear-gradient(45deg, #2C1810 0%, #654321 50%, #2C1810 100%);
+  border-radius: 20px;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) rotateX(75deg);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.trophy-cup {
+  width: 35px;
+  height: 45px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 
+    inset 2px 2px 8px rgba(255,255,255,0.3),
+    inset -2px -2px 8px rgba(0,0,0,0.2),
+    0 8px 20px rgba(255,215,0,0.4);
+}
+
+.trophy-cup::before {
+  content: '';
+  width: 8px;
+  height: 20px;
+  background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 0 8px 8px 0;
+  position: absolute;
+  right: -6px;
+  top: 10px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+
+.trophy-cup::after {
+  content: '';
+  width: 8px;
+  height: 20px;
+  background: linear-gradient(180deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 8px 0 0 8px;
+  position: absolute;
+  left: -6px;
+  top: 10px;
+  box-shadow: -2px 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Trophy Animation Effects */
+@keyframes trophyShine {
+  0% {
+    transform: translateZ(25px) scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: translateZ(35px) scale(1.1);
+    filter: brightness(1.5) drop-shadow(0 0 20px rgba(255,215,0,0.8));
+  }
+  100% {
+    transform: translateZ(25px) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes shelfGlow {
+  0%, 100% {
+    box-shadow: 
+      0 15px 35px rgba(0,0,0,0.4),
+      inset 0 2px 8px rgba(0,0,0,0.3),
+      inset 0 -2px 8px rgba(255,255,255,0.1);
+  }
+  50% {
+    box-shadow: 
+      0 15px 35px rgba(0,0,0,0.4),
+      inset 0 2px 8px rgba(0,0,0,0.3),
+      inset 0 -2px 8px rgba(255,255,255,0.1),
+      0 0 30px rgba(139,69,19,0.3);
+  }
+}
+
+.shelf-background:hover {
+  animation: shelfGlow 3s ease-in-out infinite;
+}
+
+/* Trophy rarity variants */
+.trophy-cup.bronze {
+  background: linear-gradient(135deg, #CD7F32 0%, #B87333 50%, #A0522D 100%);
+  box-shadow: 
+    inset 2px 2px 8px rgba(255,255,255,0.2),
+    inset -2px -2px 8px rgba(0,0,0,0.3),
+    0 8px 20px rgba(205,127,50,0.4);
+}
+
+.trophy-cup.silver {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 50%, #808080 100%);
+  box-shadow: 
+    inset 2px 2px 8px rgba(255,255,255,0.4),
+    inset -2px -2px 8px rgba(0,0,0,0.2),
+    0 8px 20px rgba(192,192,192,0.4);
+}
+
+.trophy-cup.gold {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+  box-shadow: 
+    inset 2px 2px 8px rgba(255,255,255,0.3),
+    inset -2px -2px 8px rgba(0,0,0,0.2),
+    0 8px 20px rgba(255,215,0,0.4);
+}
+
+.trophy-cup.platinum {
+  background: linear-gradient(135deg, #E5E4E2 0%, #C9C9C9 50%, #A8A8A8 100%);
+  box-shadow: 
+    inset 2px 2px 8px rgba(255,255,255,0.5),
+    inset -2px -2px 8px rgba(0,0,0,0.1),
+    0 8px 20px rgba(229,228,226,0.5);
+}
+
+/* PNG Trophy Container */
+.trophy-image-container {
+  width: 80px;
+  height: 85px;
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.trophy-png {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+  transition: all 0.3s ease;
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: none;
+  visibility: visible !important;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  min-width: 75px;
+  min-height: 75px;
+}
+
+.trophy-3d:hover .trophy-png {
+  transform: scale(1.1);
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5)) brightness(1.1);
+}
+
+/* Trophy Hover Tooltip */
+.trophy-tooltip {
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.trophy-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.trophy-3d:hover .trophy-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.trophy-tooltip-title {
+  font-weight: bold;
+  color: #f39c12;
+  margin-bottom: 4px;
+}
+
+.trophy-tooltip-description {
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.trophy-tooltip-buff {
+  color: #4caf50;
+  font-weight: bold;
 }
 .achievement-popup {
   position: fixed;
@@ -7834,4 +8300,581 @@ html.night-time span#yellowlightPercentage {
     opacity: 1;
     transform: translateX(25px) translateY(0) scale(1);
   }
+}
+
+/* Halloween Theme for Cargo Tab */
+body.halloween-cargo-active {
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 30%, #4a1a00 60%, #1a0d00 100%) !important;
+}
+
+body.halloween-cargo-active #home .card {
+  background: linear-gradient(135deg, #2d1a0d 0%, #3d2313 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+  position: relative;
+}
+
+/* Spider web decorations for cards */
+body.halloween-cargo-active #home .card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 40px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L20 38 M2 20 L38 20 M6 6 L34 34 M34 6 L6 34 M20 8 Q12 12 8 20 Q12 28 20 32 Q28 28 32 20 Q28 12 20 8' stroke='%23666' stroke-width='0.8' fill='none' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23333'/%3E%3C/svg%3E");
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Alternative spider web in top-left corner for some cards */
+body.halloween-cargo-active #home .card:nth-child(even)::before {
+  top: -2px;
+  left: -2px;
+  right: auto;
+}
+
+/* Halloween themed text colors */
+body.halloween-cargo-active #home .card h2 {
+  color: #ff9500 !important;
+  text-shadow: 0 0 8px rgba(255, 149, 0, 0.4) !important;
+}
+
+body.halloween-cargo-active #home .card p {
+  color: #ffccaa !important;
+}
+
+/* Halloween themed buttons */
+body.halloween-cargo-active #home .card button {
+  background: linear-gradient(135deg, #ff6b35 0%, #cc3300 100%) !important;
+  color: #fff !important;
+  border: 1px solid #ff9500 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3) !important;
+}
+
+body.halloween-cargo-active #home .card button:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ff3300 100%) !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5) !important;
+}
+
+/* Halloween character container */
+body.halloween-cargo-active .swaria-box {
+  background: linear-gradient(135deg, #2d1a0d 0%, #4a1a00 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  position: relative;
+  overflow: visible;
+}
+
+
+
+/* Halloween themed delivery card with special effects */
+body.halloween-cargo-active #deliveryCard {
+  background: linear-gradient(135deg, #2d1a0d 0%, #4a1a00 50%, #2d1a0d 100%) !important;
+  border: 3px solid #ff9500 !important;
+  box-shadow: 0 0 25px rgba(255, 149, 0, 0.4), inset 0 0 15px rgba(255, 107, 53, 0.2) !important;
+}
+
+/* Pulsing Halloween glow effect */
+body.halloween-cargo-active #deliveryCard::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpath d='M30 5 L30 55 M5 30 L55 30 M12 12 L48 48 M48 12 L12 48 M30 15 Q20 20 15 30 Q20 40 30 45 Q40 40 45 30 Q40 20 30 15' stroke='%23ff6b35' stroke-width='1' fill='none' opacity='0.4'/%3E%3Ccircle cx='30' cy='30' r='2' fill='%23ff9500'/%3E%3C/svg%3E");
+  animation: halloweenWebPulse 4s ease-in-out infinite;
+}
+
+@keyframes halloweenWebPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Halloween themed stairs/floor button */
+body.halloween-cargo-active #stairsCard {
+  background: linear-gradient(135deg, #4a1a00 0%, #2d0f00 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  color: #ff9500 !important;
+}
+
+body.halloween-cargo-active #stairsCard:hover {
+  background: linear-gradient(135deg, #6b2400 0%, #4a1a00 100%) !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4) !important;
+}
+
+
+
+/* Halloween themed navigation bar */
+body.halloween-cargo-active nav#bottomNav {
+  background: linear-gradient(135deg, #2d1a0d 0%, #4a1a00 100%) !important;
+  border-top: 2px solid #ff6b35 !important;
+  box-shadow: 0 -4px 20px rgba(255, 107, 53, 0.3) !important;
+}
+
+body.halloween-cargo-active .navBtn {
+  color: #ffccaa !important;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+body.halloween-cargo-active .navBtn:hover {
+  background: rgba(255, 107, 53, 0.2) !important;
+  border: 1px solid #ff6b35 !important;
+  color: #ff9500 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+body.halloween-cargo-active .navBtn.active {
+  background: linear-gradient(135deg, #ff6b35 0%, #cc3300 100%) !important;
+  color: #fff !important;
+  border: 1px solid #ff9500 !important;
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+}
+
+/* Halloween atmosphere animation */
+@keyframes halloweenAtmosphere {
+  0%, 100% { 
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  33% { 
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  66% { 
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+/* Halloween Sub-Tab Navigation Styling */
+body.halloween-cargo-active #subTabNavBar,
+body.halloween-cargo-active .settingsSubTabBar,
+body.halloween-cargo-active .achievementsSubTabBar,
+body.halloween-cargo-active .cafeteriaSubTabBar,
+body.halloween-cargo-active #knowledgeSubTabBar,
+body.halloween-event-active #subTabNavBar,
+body.halloween-event-active .settingsSubTabBar,
+body.halloween-event-active .achievementsSubTabBar,
+body.halloween-event-active .cafeteriaSubTabBar,
+body.halloween-event-active #knowledgeSubTabBar {
+  background: linear-gradient(135deg, #3a2318 0%, #5d2a0f 100%) !important;
+  border-top: 2px solid #ff8c42 !important;
+  border-bottom: 2px solid #ff8c42 !important;
+  box-shadow: 0 -4px 20px rgba(255, 140, 66, 0.4), 0 2px 15px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px 0 !important;
+}
+
+/* Halloween Sub-Tab Buttons */
+body.halloween-cargo-active #subTabNavBar button,
+body.halloween-cargo-active .settingsSubTabBar button,
+body.halloween-cargo-active .achievementsSubTabBar button,
+body.halloween-cargo-active .cafeteriaSubTabNav button,
+body.halloween-cargo-active .cafeteriaSubTabBtn,
+body.halloween-cargo-active #knowledgeSubTabBar button,
+body.halloween-cargo-active .generator-feature-btn,
+body.halloween-cargo-active .prism-feature-btn,
+body.halloween-cargo-active .terrarium-feature-btn,
+body.halloween-event-active #subTabNavBar button,
+body.halloween-event-active .settingsSubTabBar button,
+body.halloween-event-active .achievementsSubTabBar button,
+body.halloween-event-active .cafeteriaSubTabNav button,
+body.halloween-event-active .cafeteriaSubTabBtn,
+body.halloween-event-active #knowledgeSubTabBar button,
+body.halloween-event-active .generator-feature-btn,
+body.halloween-event-active .prism-feature-btn,
+body.halloween-event-active .terrarium-feature-btn {
+  background: linear-gradient(135deg, #6b4226 0%, #a0522d 100%) !important;
+  color: #fff !important;
+  border: 2px solid #daa520 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8) !important;
+  transition: all 0.3s ease !important;
+  padding: 0.6rem 1.2rem !important;
+}
+
+/* Halloween Sub-Tab Button Hover */
+body.halloween-cargo-active #subTabNavBar button:hover,
+body.halloween-cargo-active .settingsSubTabBar button:hover,
+body.halloween-cargo-active .achievementsSubTabBar button:hover,
+body.halloween-cargo-active .cafeteriaSubTabNav button:hover,
+body.halloween-cargo-active .cafeteriaSubTabBtn:hover,
+body.halloween-cargo-active #knowledgeSubTabBar button:hover,
+body.halloween-cargo-active .generator-feature-btn:hover,
+body.halloween-cargo-active .prism-feature-btn:hover,
+body.halloween-cargo-active .terrarium-feature-btn:hover,
+body.halloween-event-active #subTabNavBar button:hover,
+body.halloween-event-active .settingsSubTabBar button:hover,
+body.halloween-event-active .achievementsSubTabBar button:hover,
+body.halloween-event-active .cafeteriaSubTabNav button:hover,
+body.halloween-event-active .cafeteriaSubTabBtn:hover,
+body.halloween-event-active #knowledgeSubTabBar button:hover,
+body.halloween-event-active .generator-feature-btn:hover,
+body.halloween-event-active .prism-feature-btn:hover,
+body.halloween-event-active .terrarium-feature-btn:hover {
+  background: linear-gradient(135deg, #ff8c42 0%, #d2691e 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ffa500 !important;
+  box-shadow: 0 6px 18px rgba(255, 140, 66, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+}
+
+/* Halloween Sub-Tab Button Active */
+body.halloween-cargo-active #subTabNavBar button.active,
+body.halloween-cargo-active .settingsSubTabBar button.active,
+body.halloween-cargo-active .achievementsSubTabBar button.active,
+body.halloween-cargo-active .cafeteriaSubTabNav button.active,
+body.halloween-cargo-active .cafeteriaSubTabBtn.active,
+body.halloween-cargo-active #knowledgeSubTabBar button.active,
+body.halloween-cargo-active .generator-feature-btn.active,
+body.halloween-cargo-active .prism-feature-btn.active,
+body.halloween-cargo-active .terrarium-feature-btn.active,
+body.halloween-event-active #subTabNavBar button.active,
+body.halloween-event-active .settingsSubTabBar button.active,
+body.halloween-event-active .achievementsSubTabBar button.active,
+body.halloween-event-active .cafeteriaSubTabNav button.active,
+body.halloween-event-active .cafeteriaSubTabBtn.active,
+body.halloween-event-active #knowledgeSubTabBar button.active,
+body.halloween-event-active .generator-feature-btn.active,
+body.halloween-event-active .prism-feature-btn.active,
+body.halloween-event-active .terrarium-feature-btn.active {
+  background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%) !important;
+  color: #fff !important;
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 25px rgba(255, 149, 0, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.2) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 700 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Halloween Sub-Tab Button Active Hover */
+body.halloween-cargo-active #subTabNavBar button.active:hover,
+body.halloween-cargo-active .settingsSubTabBar button.active:hover,
+body.halloween-cargo-active .achievementsSubTabBar button.active:hover,
+body.halloween-cargo-active .cafeteriaSubTabNav button.active:hover,
+body.halloween-cargo-active .cafeteriaSubTabBtn.active:hover,
+body.halloween-cargo-active #knowledgeSubTabBar button.active:hover,
+body.halloween-cargo-active #knowledgeSubTabNav button.active:hover,
+body.halloween-cargo-active .generator-feature-btn.active:hover,
+body.halloween-cargo-active .prism-feature-btn.active:hover,
+body.halloween-cargo-active .terrarium-feature-btn.active:hover,
+body.halloween-event-active #subTabNavBar button.active:hover,
+body.halloween-event-active .settingsSubTabBar button.active:hover,
+body.halloween-event-active .achievementsSubTabBar button.active:hover,
+body.halloween-event-active .cafeteriaSubTabNav button.active:hover,
+body.halloween-event-active .cafeteriaSubTabBtn.active:hover,
+body.halloween-event-active #knowledgeSubTabBar button.active:hover,
+body.halloween-event-active #knowledgeSubTabNav button.active:hover,
+body.halloween-event-active .generator-feature-btn.active:hover,
+body.halloween-event-active .prism-feature-btn.active:hover,
+body.halloween-event-active .terrarium-feature-btn.active:hover {
+  background: linear-gradient(135deg, #ffcc66 0%, #ff9500 100%) !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 30px rgba(255, 204, 102, 1.0), inset 0 2px 0 rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-2px) scale(1.08) !important;
+}
+
+/* Additional Halloween Polish for Navigation Containers */
+body.halloween-cargo-active .cafeteriaSubTabNav,
+body.halloween-event-active .cafeteriaSubTabNav {
+  justify-content: center !important;
+  padding: 8px 0 !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+body.halloween-cargo-active #knowledgeSubTabNav,
+body.halloween-event-active #knowledgeSubTabNav {
+  justify-content: center !important;
+  padding: 8px 0 !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* Halloween Navigation Button Spacing */
+body.halloween-cargo-active #subTabNavBar,
+body.halloween-cargo-active .settingsSubTabBar,
+body.halloween-cargo-active .achievementsSubTabBar,
+body.halloween-cargo-active .cafeteriaSubTabNav,
+body.halloween-cargo-active #knowledgeSubTabBar,
+body.halloween-cargo-active #knowledgeSubTabNav,
+body.halloween-event-active #subTabNavBar,
+body.halloween-event-active .settingsSubTabBar,
+body.halloween-event-active .achievementsSubTabBar,
+body.halloween-event-active .cafeteriaSubTabNav,
+body.halloween-event-active #knowledgeSubTabBar,
+body.halloween-event-active #knowledgeSubTabNav {
+  gap: 0.8rem !important;
+}
+
+/* Halloween Front Desk Content */
+body.halloween-cargo-active #frontdesk,
+body.halloween-event-active #frontdesk {
+  background: linear-gradient(135deg, #1a0d00 0%, #2d0f00 30%, #4a1a00 60%, #1a0d00 100%) !important;
+}
+
+body.halloween-cargo-active #frontdesk .frontdesk-container,
+body.halloween-event-active #frontdesk .frontdesk-container {
+  color: #ffccaa !important;
+}
+
+/* Halloween Front Desk Character Cards */
+body.halloween-cargo-active #frontdesk .card,
+body.halloween-cargo-active #frontdesk .swaria-character-box,
+body.halloween-event-active #frontdesk .card,
+body.halloween-event-active #frontdesk .swaria-character-box {
+  background: linear-gradient(135deg, #2d1a0d 0%, #3d2313 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+  position: relative;
+}
+
+/* Spider web decorations for front desk cards */
+body.halloween-cargo-active #frontdesk .card::before,
+body.halloween-cargo-active #frontdesk .swaria-character-box::before,
+body.halloween-event-active #frontdesk .card::before,
+body.halloween-event-active #frontdesk .swaria-character-box::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 40px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L20 38 M2 20 L38 20 M6 6 L34 34 M34 6 L6 34 M20 8 Q12 12 8 20 Q12 28 20 32 Q28 28 32 20 Q28 12 20 8' stroke='%23666' stroke-width='0.8' fill='none' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23333'/%3E%3C/svg%3E");
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Halloween Front Desk Text Styling */
+body.halloween-cargo-active #frontdesk h3,
+body.halloween-event-active #frontdesk h3 {
+  color: #ff9500 !important;
+  text-shadow: 0 0 8px rgba(255, 149, 0, 0.4) !important;
+}
+
+body.halloween-cargo-active #frontdesk .worker-placeholder,
+body.halloween-event-active #frontdesk .worker-placeholder {
+  color: #ff8c42 !important;
+}
+
+/* Halloween Front Desk Available Worker Slots */
+body.halloween-cargo-active #frontdesk .available-worker-slot,
+body.halloween-event-active #frontdesk .available-worker-slot {
+  border: 2px dashed #ff6b35 !important;
+  background: rgba(45, 26, 13, 0.7) !important;
+  color: #ffccaa !important;
+}
+
+/* Halloween Cafeteria Main Hall Content */
+body.halloween-cargo-active #cafeteriaMainSubTab,
+body.halloween-event-active #cafeteriaMainSubTab {
+  background: transparent !important;
+  color: #ffccaa !important;
+}
+
+body.halloween-cargo-active #cafeteriaTopCounter,
+body.halloween-event-active #cafeteriaTopCounter {
+  background: linear-gradient(135deg, #2d1a0d 0%, #3d2313 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+  position: relative;
+}
+
+/* Halloween Cafeteria Counter Spider Web */
+body.halloween-cargo-active #cafeteriaTopCounter::before,
+body.halloween-event-active #cafeteriaTopCounter::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 40px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L20 38 M2 20 L38 20 M6 6 L34 34 M34 6 L6 34 M20 8 Q12 12 8 20 Q12 28 20 32 Q28 28 32 20 Q28 12 20 8' stroke='%23666' stroke-width='0.8' fill='none' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23333'/%3E%3C/svg%3E");
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+body.halloween-cargo-active #cafeteriaTopCounter h3,
+body.halloween-event-active #cafeteriaTopCounter h3 {
+  color: #ff9500 !important;
+  text-shadow: 0 0 8px rgba(255, 149, 0, 0.4) !important;
+}
+
+body.halloween-cargo-active #cafeteriaTopCounter div,
+body.halloween-event-active #cafeteriaTopCounter div {
+  color: #ffccaa !important;
+}
+
+/* Remove theme background from Break Times card - keep neutral appearance */
+#cafeteriaTopCounter {
+  background: #f5f5f5 !important;
+  border: 2px solid #ddd !important;
+}
+
+/* Halloween Kitchen Content */
+body.halloween-cargo-active #kitchenSubTab,
+body.halloween-event-active #kitchenSubTab {
+  background: transparent !important;
+  color: #ffccaa !important;
+}
+
+/* Halloween Kitchen Cards */
+body.halloween-cargo-active #kitchenSubTab .card,
+body.halloween-cargo-active #kitchenSubTab .kitchen-character-card,
+body.halloween-cargo-active #kitchenSubTab .mixing-card,
+body.halloween-cargo-active #kitchenSubTab .ingredient-card,
+body.halloween-event-active #kitchenSubTab .card,
+body.halloween-event-active #kitchenSubTab .kitchen-character-card,
+body.halloween-event-active #kitchenSubTab .mixing-card,
+body.halloween-event-active #kitchenSubTab .ingredient-card {
+  background: linear-gradient(135deg, #2d1a0d 0%, #3d2313 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+  position: relative;
+}
+
+/* Spider web decorations for kitchen cards */
+body.halloween-cargo-active #kitchenSubTab .card::before,
+body.halloween-event-active #kitchenSubTab .card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 40px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L20 38 M2 20 L38 20 M6 6 L34 34 M34 6 L6 34 M20 8 Q12 12 8 20 Q12 28 20 32 Q28 28 32 20 Q28 12 20 8' stroke='%23666' stroke-width='0.8' fill='none' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23333'/%3E%3C/svg%3E");
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Halloween Kitchen Text Styling */
+body.halloween-cargo-active #kitchenSubTab h3,
+body.halloween-event-active #kitchenSubTab h3 {
+  color: #ff9500 !important;
+  text-shadow: 0 0 8px rgba(255, 149, 0, 0.4) !important;
+}
+
+body.halloween-cargo-active #kitchenSubTab p,
+body.halloween-event-active #kitchenSubTab p {
+  color: #ffccaa !important;
+}
+
+/* Halloween Kitchen Buttons */
+body.halloween-cargo-active #kitchenSubTab button,
+body.halloween-event-active #kitchenSubTab button {
+  background: linear-gradient(135deg, #ff6b35 0%, #cc3300 100%) !important;
+  color: #fff !important;
+  border: 1px solid #ff9500 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3) !important;
+}
+
+body.halloween-cargo-active #kitchenSubTab button:hover,
+body.halloween-event-active #kitchenSubTab button:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ff3300 100%) !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5) !important;
+}
+
+/* Halloween Settings Cards */
+body.halloween-cargo-active #settings .card,
+body.halloween-event-active #settings .card {
+  background: linear-gradient(135deg, #2d1a0d 0%, #3d2313 100%) !important;
+  border: 2px solid #ff6b35 !important;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3) !important;
+  position: relative;
+}
+
+/* Spider web decorations for settings cards */
+body.halloween-cargo-active #settings .card::before,
+body.halloween-event-active #settings .card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 40px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M20 2 L20 38 M2 20 L38 20 M6 6 L34 34 M34 6 L6 34 M20 8 Q12 12 8 20 Q12 28 20 32 Q28 28 32 20 Q28 12 20 8' stroke='%23666' stroke-width='0.8' fill='none' opacity='0.6'/%3E%3Ccircle cx='20' cy='20' r='1.5' fill='%23333'/%3E%3C/svg%3E");
+  background-size: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Halloween Settings Text Styling */
+body.halloween-cargo-active #settings h2,
+body.halloween-cargo-active #settings h3,
+body.halloween-cargo-active #settings h4,
+body.halloween-event-active #settings h2,
+body.halloween-event-active #settings h3,
+body.halloween-event-active #settings h4 {
+  color: #ff9500 !important;
+  text-shadow: 0 0 8px rgba(255, 149, 0, 0.4) !important;
+}
+
+body.halloween-cargo-active #settings p,
+body.halloween-cargo-active #settings label,
+body.halloween-cargo-active #settings span:not(.close),
+body.halloween-event-active #settings p,
+body.halloween-event-active #settings label,
+body.halloween-event-active #settings span:not(.close) {
+  color: #ffccaa !important;
+}
+
+/* Halloween Settings Buttons */
+body.halloween-cargo-active #settings button,
+body.halloween-event-active #settings button {
+  background: linear-gradient(135deg, #ff6b35 0%, #cc3300 100%) !important;
+  color: #fff !important;
+  border: 1px solid #ff9500 !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3) !important;
+}
+
+body.halloween-cargo-active #settings button:hover,
+body.halloween-event-active #settings button:hover {
+  background: linear-gradient(135deg, #ff9500 0%, #ff3300 100%) !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5) !important;
+}
+
+/* Halloween Settings Form Elements */
+body.halloween-cargo-active #settings select,
+body.halloween-cargo-active #settings input[type="text"],
+body.halloween-cargo-active #settings input[type="range"],
+body.halloween-event-active #settings select,
+body.halloween-event-active #settings input[type="text"],
+body.halloween-event-active #settings input[type="range"] {
+  background: rgba(45, 26, 13, 0.8) !important;
+  border: 1px solid #ff6b35 !important;
+  color: #ffccaa !important;
+}
+
+body.halloween-cargo-active #settings input[type="checkbox"],
+body.halloween-event-active #settings input[type="checkbox"] {
+  accent-color: #ff6b35 !important;
+}
+
+/* Halloween Settings Background Areas */
+body.halloween-cargo-active #settings,
+body.halloween-event-active #settings {
+  background: transparent !important;
+  color: #ffccaa !important;
+}
+
+/* Halloween Redeem Code History */
+body.halloween-cargo-active #redeemCodeHistory,
+body.halloween-event-active #redeemCodeHistory {
+  background: rgba(45, 26, 13, 0.6) !important;
+  border: 1px solid #ff6b35 !important;
+  color: #ffccaa !important;
+}
+
+/* Remove Halloween background from Generator Box Gen Area */
+body.halloween-cargo-active #generatorBoxGenArea,
+body.halloween-event-active #generatorBoxGenArea {
+  background: transparent !important;
+}
+
+/* Halloween + Recorder Ghost Dimming Effect */
+.halloween-recorder-ghost {
+  opacity: 0.1 !important;
+  filter: brightness(0.1) !important;
+  transition: opacity 0.3s ease, filter 0.3s ease;
 }

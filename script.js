@@ -111,6 +111,10 @@ let state = {
   powerStatus: 'online', 
   powerLastTick: Date.now(),
   powerGeneratorBatteryUpgrades: new Decimal(0),
+  powerChallengePersonalBest: 0,
+  powerChallengeCooldown: 0, // Timestamp when cooldown ends
+  powerChallengeCooldownDuration: 0, // Duration of current cooldown in ms
+  trophies: {},
   // Soap's auto recharge system (level 4+ friendship buff)
   soapAutoRecharge: {
     timer: 600000, // 10 minutes in milliseconds (600 seconds * 1000)
@@ -156,7 +160,8 @@ let state = {
     mushroom: new Decimal(0),
     water: new Decimal(0),
     prisma: new Decimal(0),
-    stardust: new Decimal(0)
+    stardust: new Decimal(0),
+    candy: new Decimal(0)
   },
   friendship: {
     Cargo: { level: 0, points: new Decimal(0) },
@@ -419,14 +424,18 @@ let state = {
   // Unlocked features from redeem codes
   unlockedFeatures: {
     recorderMode: false,
-    kitoFoxMode: false
+    kitoFoxMode: false,
+    halloweenEvent: false
   },
   
   // Recorder mode state
   recorderModeActive: false,
   
   // KitoFox mode state
-  kitoFoxModeActive: false
+  kitoFoxModeActive: false,
+  
+  // Halloween event state
+  halloweenEventActive: false
 };
 let settings = {
   theme: "light",
@@ -1645,6 +1654,17 @@ if (localStorage.getItem('currentSaveSlot')) {
 }
 let debugFluffGain = false;
 
+// Macro detection system for power generator challenge
+let macroDetection = {
+    clickTimestamps: [],
+    suspiciousPatterns: 0,
+    isDetected: false,
+    penaltyApplied: false,
+    clickHistory: [],
+    mouseMovements: [],
+    lastMouseMove: 0
+};
+
 // Make generators and navigation variables globally accessible
 window.generators = generators;
 window.currentHomeSubTab = currentHomeSubTab;
@@ -1687,6 +1707,117 @@ function sanityCheckCurrencies() {
 // Make these functions globally accessible
 window.toggleFluffGainLogging = toggleFluffGainLogging;
 window.sanityCheckCurrencies = sanityCheckCurrencies;
+
+// Mouse movement tracking for macro detection
+function trackMouseMovement(event) {
+    const currentTime = Date.now();
+    window.lastMouseX = event.clientX;
+    window.lastMouseY = event.clientY;
+    macroDetection.lastMouseMove = currentTime;
+    
+    // Record mouse movements for analysis
+    macroDetection.mouseMovements.push({
+        time: currentTime,
+        x: event.clientX,
+        y: event.clientY
+    });
+    
+    // Keep only last 50 movements
+    if (macroDetection.mouseMovements.length > 50) {
+        macroDetection.mouseMovements.shift();
+    }
+}
+
+// Analyze clicking patterns for macro detection
+function analyzeMacroPatterns() {
+    if (macroDetection.isDetected) return;
+    
+    let suspiciousScore = 0;
+    const clicks = macroDetection.clickTimestamps;
+    const clickHistory = macroDetection.clickHistory;
+    
+    // Pattern 1: Extremely consistent timing (inhuman precision)
+    if (clicks.length >= 10) { // Need more clicks to be sure
+        const intervals = [];
+        for (let i = 1; i < clicks.length; i++) {
+            intervals.push(clicks[i] - clicks[i-1]);
+        }
+        
+        // Check for suspiciously consistent intervals (within 5ms variance AND very fast)
+        const avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
+        const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
+        
+        // Much stricter: must be extremely consistent AND extremely fast
+        if (variance < 25 && avgInterval < 80 && intervals.length >= 8) { // Less than 5ms standard deviation, inhuman speed, sustained
+            suspiciousScore += 4;
+        }
+    }
+    
+    // Pattern 2: No mouse movement between clicks (teleporting cursor)
+    if (clickHistory.length >= 6) { // Need more evidence
+        let noMovementClicks = 0;
+        for (let i = 1; i < clickHistory.length; i++) {
+            const prev = clickHistory[i-1];
+            const curr = clickHistory[i];
+            const distance = Math.sqrt(Math.pow(curr.x - prev.x, 2) + Math.pow(curr.y - prev.y, 2));
+            
+            // Much stricter: cursor teleports AND extremely fast clicking
+            if (distance > 150 && (curr.time - prev.time) < 30) { // Larger distance, faster time
+                noMovementClicks++;
+            }
+        }
+        
+        // Need many more teleporting clicks to be suspicious
+        if (noMovementClicks >= 5) {
+            suspiciousScore += 3;
+        }
+    }
+    
+    // Pattern 3: No natural pauses over sustained clicking (15+ clicks with no 50ms pause)
+    if (clicks.length >= 15) {
+        const hasNaturalPause = clicks.some((click, i) => {
+            if (i === 0) return false;
+            return (click - clicks[i-1]) > 50; // 50ms pause is minimum natural
+        });
+        
+        // Suspicious if no pauses at all over 15+ clicks
+        if (!hasNaturalPause) {
+            suspiciousScore += 3;
+        }
+    }
+    
+    // Update suspicious patterns counter
+    macroDetection.suspiciousPatterns += suspiciousScore;
+    
+    // Much higher threshold - need overwhelming evidence
+    if (macroDetection.suspiciousPatterns >= 12) {
+        triggerMacroDetection();
+    }
+}
+
+// Trigger macro detection and apply penalties
+function triggerMacroDetection() {
+    if (macroDetection.isDetected) return;
+    
+    macroDetection.isDetected = true;
+    macroDetection.penaltyApplied = true;
+    
+    // Immediately end the challenge with no rewards
+    endChallengeWithMacroPenalty();
+}
+
+// Reset macro detection state
+function resetMacroDetection() {
+    macroDetection = {
+        clickTimestamps: [],
+        suspiciousPatterns: 0,
+        isDetected: false,
+        penaltyApplied: false,
+        clickHistory: [],
+        mouseMovements: [],
+        lastMouseMove: 0
+    };
+}
 
 // Function to validate and fix Decimal objects across the game state
 window.validateAndFixDecimals = function() {
@@ -3007,7 +3138,7 @@ function buyBox(type) {
 
 function resetGame() {
   if (state.artifacts.gte(50)) {
-    let kpGain = getKpGainPreview();
+    let kpGain = (typeof window.getKpGainPreview === 'function') ? getKpGainPreview() : new Decimal(0);
     if (settings.confirmReset) {
       if (!confirm(`Reset and gain ${formatNumber(kpGain)} Knowledge Points?`)) return;
     }
@@ -3038,7 +3169,7 @@ function resetGame() {
       window.state.deliverySystem.berryPlatesInLoad = new Decimal(0);
       
       // Recalculate KP gain with the new permanent boost
-      kpGain = getKpGainPreview();
+      kpGain = (typeof window.getKpGainPreview === 'function') ? getKpGainPreview() : new Decimal(0);
     }
     
     // Clear glittering petals from nectarizer display (boost remains active)
@@ -3596,7 +3727,7 @@ function updateUI() {
   {
   const kpPreview = document.getElementById("kpPreview");
   if (kpPreview) {
-    let preview = getKpGainPreview();
+    let preview = (typeof window.getKpGainPreview === 'function') ? getKpGainPreview() : new Decimal(0);
     let isSoftcapped = preview.gte(new Decimal("1e20")) && preview.lt(new Decimal("1e40"));
     let isMildcapped = preview.gte(new Decimal("1e40"));
     let capLabel = isMildcapped ? ' (mildcap)' : (isSoftcapped ? ' (softcap)' : '');
@@ -3699,6 +3830,11 @@ function updateUI() {
   
   // Check if control center should be unlocked
   checkControlCenterUnlock();
+  
+  // Update minigame challenge button visibility
+  if (typeof updateMinigameChallengeButton === 'function') {
+    updateMinigameChallengeButton();
+  }
   
   // Update infinity reset button if infinity research is visible
   const infinityResetTab = document.getElementById('infinityReset');
@@ -5282,16 +5418,16 @@ function switchInfinityResearchSubTab(tabId) {
 // Enhanced confirmation dialog for infinity reset
 function showInfinityResetConfirmation(infinityGain, currenciesWithInfinity, callback) {
   // Create detailed confirmation message
-  let confirmMessage = `⚠️ INFINITY RESET CONFIRMATION ⚠️\n\n`;
+  let confirmMessage = ` INFINITY RESET CONFIRMATION \n\n`;
   confirmMessage += `You will gain: ${infinityGain} ∞ infinity currency\n\n`;
-  confirmMessage += `🔄 THIS WILL RESET:\n`;
+  confirmMessage += ` THIS WILL RESET:\n`;
   confirmMessage += `• All currencies to their starting values\n`;
   confirmMessage += `• All expansion levels and content\n`;
   confirmMessage += `• All elements and terrarium progress\n`;
   confirmMessage += `• All generator upgrades and purchases\n\n`;
   
   if (currenciesWithInfinity.length > 0) {
-    confirmMessage += `📊 CURRENCIES READY FOR RESET:\n`;
+    confirmMessage += `CURRENCIES READY FOR RESET:\n`;
     currenciesWithInfinity.forEach(currency => {
       const displayName = currency.name.charAt(0).toUpperCase() + currency.name.slice(1);
       confirmMessage += `• ${displayName}: ${currency.count} ∞\n`;
@@ -5299,7 +5435,7 @@ function showInfinityResetConfirmation(infinityGain, currenciesWithInfinity, cal
     confirmMessage += `\n`;
   }
   
-  confirmMessage += `💡 Your infinity currency will allow you to:\n`;
+  confirmMessage += `Your infinity currency will allow you to:\n`;
   confirmMessage += `• Purchase powerful infinity upgrades\n`;
   confirmMessage += `• Unlock new infinity research\n`;
   confirmMessage += `• Access infinity challenges\n\n`;
@@ -5311,7 +5447,7 @@ function showInfinityResetConfirmation(infinityGain, currenciesWithInfinity, cal
   
   if (userConfirmed) {
     // Double confirmation for safety
-    const doubleCheck = confirm(`⚠️ FINAL CONFIRMATION ⚠️\n\nThis action cannot be undone!\n\nClick OK to perform the Infinity Reset.`);
+    const doubleCheck = confirm(` FINAL CONFIRMATION \n\nThis action cannot be undone!\n\nClick OK to perform the Infinity Reset.`);
     if (doubleCheck && callback) {
       callback();
     }
@@ -5640,6 +5776,27 @@ if (typeof window._originalUpdateUI === 'undefined' && typeof updateUI !== 'unde
     const mainTab = document.getElementById('infinityResearchMain');
     if (mainTab && mainTab.classList.contains('active')) {
       updateInfinityBenefits();
+    }
+    // Update Halloween character images if Halloween mode is active
+    if (window.state && window.state.halloweenEventActive) {
+      if (typeof window.updateHalloweenSoapImages === 'function') {
+        window.updateHalloweenSoapImages();
+      }
+      if (typeof window.updateHalloweenMysticImages === 'function') {
+        window.updateHalloweenMysticImages();
+      }
+      if (typeof window.updateHalloweenTicoImages === 'function') {
+        window.updateHalloweenTicoImages();
+      }
+      if (typeof window.updateHalloweenLepreImages === 'function') {
+        window.updateHalloweenLepreImages();
+      }
+      if (typeof window.updateHalloweenFluzzerImages === 'function') {
+        window.updateHalloweenFluzzerImages();
+      }
+      if (typeof window.updateHalloweenPeachyImages === 'function') {
+        window.updateHalloweenPeachyImages();
+      }
     }
   };
 }
@@ -6227,6 +6384,12 @@ function renderGenerators() {
     <button id="powerRechargeBtn" onclick="startPowerRechargeMinigame()">
       Recharge Generator
     </button>
+    <button id="minigameChallengeBtn" onclick="startMinigameChallenge()" style="display: none;">
+      Power Generator Challenge
+    </button>
+    <div id="powerChallengePB" style="text-align: center; margin: 8px 0; font-size: 0.85em; color: #f39c12; font-weight: bold; display: none;">
+      PB: <span id="pbTimeValue">0</span>s
+    </div>
     <div class="power-info">
       <small>Energy depletes at 1 per 5 seconds</small><br>
       <small>Click recharge anytime to restore energy</small>
@@ -6235,13 +6398,17 @@ function renderGenerators() {
     ${autoRechargeHTML}
   `;
   leftCol.appendChild(powerGeneratorCard);
+  
+  // Update minigame challenge button visibility based on quest completion
+  updateMinigameChallengeButton();
+  
   const swariaCard = document.createElement("div");
   swariaCard.className = "card swaria-box";
-  let soapImageSrc = "assets/icons/soap.png";
+  let soapImageSrc = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
   if (window.daynight && typeof window.daynight.getTime === 'function') {
     const mins = window.daynight.getTime();
     if ((mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360)) {
-      soapImageSrc = "assets/icons/soap sleeping.png";
+      soapImageSrc = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
     }
   }
   swariaCard.innerHTML = `
@@ -6256,13 +6423,13 @@ function renderGenerators() {
     const soapImg = document.getElementById("swariaGeneratorCharacter");
     if ((mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360)) {
       window.isSoapSleeping = true;
-      if (soapImg) soapImg.src = "assets/icons/soap sleeping.png";
+      if (soapImg) soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
       var soapSpeech = document.getElementById("swariaGeneratorSpeech");
       if (soapSpeech) soapSpeech.style.display = "none";
       if (typeof stopSoapRandomSpeechTimer === 'function') stopSoapRandomSpeechTimer();
     } else {
       window.isSoapSleeping = false;
-      if (soapImg) soapImg.src = "assets/icons/soap.png";
+      if (soapImg) soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
       if (typeof startSoapRandomSpeechTimer === 'function') startSoapRandomSpeechTimer();
     }
   }
@@ -7375,6 +7542,10 @@ function switchSettingsSubTab(tabId) {
   } else if (tabId === 'settingsRecoveryTab') {
     const btn = document.getElementById('settingsRecoveryTabBtn');
     if (btn) btn.classList.add('active');
+    // Update recovery card visibility and info when switching to recovery tab
+    if (typeof window.updateRecoveryCardVisibility === 'function') {
+      window.updateRecoveryCardVisibility();
+    }
   } else if (tabId === 'settingsHardModeTab') {
     const btn = document.getElementById('settingsHardModeTabBtn');
     if (btn) btn.classList.add('active');
@@ -7604,8 +7775,8 @@ function trackHardModeCommonBox() {
     }
     
     const progress = window.state.questSystem.questProgress['kitofox_challenge'];
-    if (!progress.commonBoxesClicks) {
-      progress.commonBoxesClicks = new Decimal(0);
+    if (!progress.commonBoxesClicks || !DecimalUtils.isDecimal(progress.commonBoxesClicks)) {
+      progress.commonBoxesClicks = new Decimal(progress.commonBoxesClicks || 0);
     }
     
     progress.commonBoxesClicks = progress.commonBoxesClicks.add(1);
@@ -7710,8 +7881,8 @@ function trackHardModeBerryTokenCollection(amount = 1) {
     }
     
     const progress = window.state.questSystem.questProgress['kitofox_challenge'];
-    if (!progress.berryTokens) {
-      progress.berryTokens = new Decimal(0);
+    if (!progress.berryTokens || !DecimalUtils.isDecimal(progress.berryTokens)) {
+      progress.berryTokens = new Decimal(progress.berryTokens || 0);
     }
     
     // Ensure amount is a Decimal and add properly
@@ -7748,8 +7919,8 @@ function trackHardModeStardustTokenCollection(amount = 1) {
     }
     
     const progress = window.state.questSystem.questProgress['kitofox_challenge'];
-    if (!progress.stardustTokens) {
-      progress.stardustTokens = new Decimal(0);
+    if (!progress.stardustTokens || !DecimalUtils.isDecimal(progress.stardustTokens)) {
+      progress.stardustTokens = new Decimal(progress.stardustTokens || 0);
     }
     
     // Ensure amount is a Decimal and add properly
@@ -9540,10 +9711,1600 @@ window.testTimerDecrement = function() {
             window.state.fluzzerGlitteringPetalsBoost -= 1000;
         }
         
+    }
+}
+
+// Minigame Challenge System
+function updateMinigameChallengeButton() {
+    const minigameBtn = document.getElementById('minigameChallengeBtn');
+    const pbDisplay = document.getElementById('powerChallengePB');
+    const pbTimeValue = document.getElementById('pbTimeValue');
+    
+    if (!minigameBtn) return;
+    
+    // Check if Soap's Quest 5 is completed
+    const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
+    
+    if (questCompleted) {
+        // Check if cooldown is active
+        const currentTime = Date.now();
+        const cooldownActive = window.state.powerChallengeCooldown && currentTime < window.state.powerChallengeCooldown;
         
-        // Update display
-        if (typeof window.updateBoostDisplay === 'function') {
-            window.updateBoostDisplay();
+        minigameBtn.style.display = 'block';
+        
+        if (cooldownActive) {
+            // Calculate remaining time
+            const remainingTime = window.state.powerChallengeCooldown - currentTime;
+            const minutes = Math.floor(remainingTime / (1000 * 60));
+            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+            const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+            
+            // Determine if this is a macro penalty
+            const isMacroPenalty = window.state.powerChallengeCooldownDuration >= 60 * 60 * 1000;
+            const buttonText = isMacroPenalty ? `Locked (${timeText})` : `Cooldown (${timeText})`;
+            const buttonColor = isMacroPenalty ? '#e74c3c' : '#95a5a6';
+            
+            minigameBtn.textContent = buttonText;
+            minigameBtn.style.background = buttonColor;
+            minigameBtn.style.cursor = 'not-allowed';
+        } else {
+            // Clear any expired cooldown
+            window.state.powerChallengeCooldown = 0;
+            window.state.powerChallengeCooldownDuration = 0;
+            
+            minigameBtn.textContent = 'Power Generator Challenge';
+            minigameBtn.style.background = '#f39c12';
+            minigameBtn.style.cursor = 'pointer';
+        }
+        
+        // Show and update PB display
+        if (pbDisplay && pbTimeValue) {
+            const pbTime = window.state.powerChallengePersonalBest || 0;
+            if (pbTime > 0) {
+                pbDisplay.style.display = 'block';
+                pbTimeValue.textContent = pbTime;
+            } else {
+                pbDisplay.style.display = 'none';
+            }
+        }
+    } else {
+        minigameBtn.style.display = 'none';
+        if (pbDisplay) {
+            pbDisplay.style.display = 'none';
         }
     }
-};
+    
+    // Also update any PB displays that might exist in other areas (charger area)
+    const allPBDisplays = document.querySelectorAll('[id^="powerChallengePB"]');
+    const allPBTimeValues = document.querySelectorAll('[id^="pbTimeValue"]');
+    
+    allPBDisplays.forEach((display, index) => {
+        if (questCompleted && window.state.powerChallengePersonalBest > 0) {
+            display.style.display = 'block';
+            if (allPBTimeValues[index]) {
+                allPBTimeValues[index].textContent = window.state.powerChallengePersonalBest;
+            }
+        } else {
+            display.style.display = 'none';
+        }
+    });
+}
+
+function startMinigameChallenge() {
+    // Check if cooldown is active
+    const currentTime = Date.now();
+    if (window.state.powerChallengeCooldown && currentTime < window.state.powerChallengeCooldown) {
+        const remainingTime = window.state.powerChallengeCooldown - currentTime;
+        showChallengeCooldownModal(remainingTime);
+        return;
+    }
+    
+    // Clear any expired cooldown
+    if (currentTime >= window.state.powerChallengeCooldown) {
+        window.state.powerChallengeCooldown = 0;
+        window.state.powerChallengeCooldownDuration = 0;
+    }
+    
+    // Show the challenge instructions modal
+    showPowerGeneratorChallengeModal();
+}
+
+function showPowerGeneratorChallengeModal() {
+    // Remove any existing modal first
+    const existingModal = document.getElementById('powerChallengeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create simple modal with minimal styling
+    const modal = document.createElement('div');
+    modal.id = 'powerChallengeModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: #2c3e50; border: 2px solid #e74c3c; border-radius: 10px; padding: 25px; max-width: 450px; width: 90%; color: white; text-align: center;">
+                <h2 style="color: #e74c3c; margin: 0 0 15px 0;"> Power Generator Challenge </h2>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: left;">
+                    <p style="margin: 0 0 10px 0;"><strong>Goal:</strong> Keep recharging the power and survive as long as possible! The challenge ends when you run out of power.</p>
+                    <p style="margin: 0 0 10px 0;"><strong>Hint:</strong> The tiles will start shifting colors after a certain time, don't let that fool you and keep clicking the real red tiles.</p>
+                    <p style="margin: 0;"><strong>Rewards:</strong> Earn 1 random token per 3 seconds survived.</p>
+                </div>
+                <button onclick="startPowerGeneratorChallenge(); document.getElementById('powerChallengeModal').remove();" style="background: #27ae60; border: none; color: white; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">Start</button>
+                <button onclick="document.getElementById('powerChallengeModal').remove();" style="background: #e74c3c; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showChallengeCooldownModal(remainingTime) {
+    // Remove any existing modal first
+    const existingModal = document.getElementById('challengeCooldownModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Calculate time remaining
+    const minutes = Math.floor(remainingTime / (1000 * 60));
+    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+    const timeText = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+    
+    // Determine if this is a macro penalty or normal cooldown
+    const isMacroPenalty = window.state.powerChallengeCooldownDuration >= 60 * 60 * 1000; // 60 minutes
+    const titleText = isMacroPenalty ? 'Challenge Locked - Macro Detected' : 'Challenge Cooldown';
+    const messageText = isMacroPenalty ? 
+        'You were detected using a macros in your last attempt. Soap is not happy.' :
+        'You recently attempted the challenge, wait for Soap to repair the challenge inner mechanism.';
+    const titleColor = isMacroPenalty ? '#e74c3c' : '#f39c12';
+    
+    const modal = document.createElement('div');
+    modal.id = 'challengeCooldownModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: #2c3e50; border: 2px solid ${titleColor}; border-radius: 10px; padding: 25px; max-width: 450px; width: 90%; color: white; text-align: center;">
+                <h2 style="color: ${titleColor}; margin: 0 0 15px 0;">${titleText}</h2>
+                <p style="margin: 0 0 15px 0; line-height: 1.5;">${messageText}</p>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p style="margin: 0; font-size: 1.2em; font-weight: bold; color: ${titleColor};">Time remaining: ${timeText}</p>
+                </div>
+                <button onclick="document.getElementById('challengeCooldownModal').remove();" style="background: #95a5a6; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    Weehh?
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closePowerGeneratorChallengeModal() {
+    const modal = document.getElementById('powerChallengeModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function startPowerGeneratorChallenge() {
+    // Initialize challenge state
+    window.powerChallenge = {
+        active: true,
+        timeElapsed: 0,
+        countdownActive: true,
+        countdownTime: 3,
+        powerDrainRate: 0,
+        tokensEarned: 0,
+        intervalId: null,
+        drainIntervalId: null,
+        countdownIntervalId: null,
+        uiUpdateIntervalId: null,
+        hardmodeActive: false,
+        darknessActive: false,
+        electricityActive: false,
+        extremeModeActive: false,
+        redTilesRemaining: 0,
+        currentGrid: [],
+        tokensAwarded: {} // Track specific tokens awarded
+    };
+    
+    // Save original power state and set to max
+    window.powerChallenge.originalPower = window.state.powerEnergy.toNumber();
+    window.state.powerEnergy = window.state.powerMaxEnergy;
+    
+    // Show the challenge recharge modal
+    showChallengeRechargeModal();
+}
+
+function showChallengeRechargeModal() {
+    // Remove any existing modals
+    const existingModal = document.getElementById('rechargeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create challenge modal with timer and countdown
+    const modal = document.createElement('div');
+    modal.id = 'rechargeModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            
+            <!-- Main Challenge Container -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                
+                <!-- Challenge Info Bar -->
+                <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
+                    <!-- Challenge Timer -->
+                    <div id="challengeTimer" style="background: #1a1a1a; border: 2px solid #ffa500; border-radius: 8px; padding: 12px 20px; color: #ffa500; font-size: 1.4em; font-weight: bold; text-align: center; font-family: 'Orbitron', monospace; box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);">
+                        Time: <span id="timerDisplay">0</span>s
+                    </div>
+                    
+                    <!-- Challenge Power Display -->
+                    <div id="challengePowerDisplay" style="background: #2c2c2c; border: 2px solid #ffa500; border-radius: 8px; padding: 12px 20px; color: #ffa500; font-size: 1.4em; font-weight: bold; text-align: center; font-family: 'Orbitron', monospace; box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);">
+                        Power: <span id="challengePowerCurrent">0</span>/<span id="challengePowerMax">0</span>
+                    </div>
+                </div>
+                
+                <!-- Countdown Display - Centered independently -->
+                <div id="countdownDisplay" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #e74c3c; border: 2px solid #c0392b; border-radius: 10px; padding: 20px; color: white; font-size: 2em; font-weight: bold; text-align: center; min-width: 200px; z-index: 10001;">
+                    Starting in: <span id="countdownNumber">3</span>
+                </div>
+                
+                <!-- Recharge Grid Container -->
+                <div style="background: linear-gradient(135deg, #2c3e50, #34495e); border: 3px solid #3498db; border-radius: 20px; padding: 25px; color: white; text-align: center; max-width: 90vw; max-height: 70vh; overflow-y: auto;">
+                    <h3 style="margin: 0 0 15px 0; color: #3498db;">Generator Recharging</h3>
+                    <p style="margin: 0 0 20px 0; color: #bdc3c7;">Click the red energy cells to fully recharge the generator!</p>
+                    
+                    <!-- Power Grid -->
+                    <div id="powerGrid" style="display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(5, 60px); gap: 8px; justify-content: center; margin-bottom: 20px;">
+                        <!-- Grid will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- End Challenge Button -->
+                    <button onclick="endChallengeEarly()" style="background: #e74c3c; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        End Challenge Early
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Initialize grid with grey tiles
+    initializeChallengeGrid();
+    
+    // Start countdown
+    startChallengeCountdown();
+}
+
+function initializeChallengeGrid() {
+    const grid = document.getElementById('powerGrid');
+    grid.innerHTML = '';
+    
+    // Create 25 grey tiles during countdown
+    for (let i = 0; i < 25; i++) {
+        const tile = document.createElement('div');
+        tile.style.cssText = `
+            width: 60px;
+            height: 60px;
+            background: #7f8c8d;
+            border-radius: 8px;
+            cursor: not-allowed;
+        `;
+        grid.appendChild(tile);
+    }
+}
+
+function startChallengeCountdown() {
+    const countdownDisplay = document.getElementById('countdownNumber');
+    let countdown = 3;
+    
+    window.powerChallenge.countdownIntervalId = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            countdownDisplay.textContent = countdown;
+        } else {
+            // Countdown finished, start challenge
+            document.getElementById('countdownDisplay').style.display = 'none';
+            
+            window.powerChallenge.countdownActive = false;
+            startChallengeGame();
+            
+            clearInterval(window.powerChallenge.countdownIntervalId);
+        }
+    }, 1000);
+}
+
+function startChallengeGame() {
+    // Reset macro detection
+    resetMacroDetection();
+    
+    // Add mouse movement tracking during challenge
+    document.addEventListener('mousemove', trackMouseMovement);
+    
+    // Store mouse tracker for cleanup
+    window.powerChallenge.mouseTracker = trackMouseMovement;
+    
+    // Start the main game timer (once per second)
+    window.powerChallenge.intervalId = setInterval(() => {
+        // Skip time progression if macro detected
+        if (macroDetection.isDetected) return;
+        window.powerChallenge.timeElapsed++;
+        window.powerChallenge.powerDrainRate = window.powerChallenge.timeElapsed;
+        
+        // Award tokens every 3 seconds
+        if (window.powerChallenge.timeElapsed % 3 === 0) {
+            window.powerChallenge.tokensEarned++;
+        }
+        
+        // Start hardmode after 20 seconds - tiles begin shifting colors
+        if (window.powerChallenge.timeElapsed >= 20) {
+            startHardmodeColorShifting();
+        }
+        
+        // Start darkness effect after 40 seconds
+        if (window.powerChallenge.timeElapsed >= 40 && !window.powerChallenge.darknessActive) {
+            startChallengeDarkness();
+        }
+        
+        // Start electricity effect after 60 seconds and increase color shift intensity
+        if (window.powerChallenge.timeElapsed >= 60 && !window.powerChallenge.electricityActive) {
+            startChallengeElectricity();
+        }
+        
+        // Extreme mode after 80 seconds - modal shaking and intense electricity
+        if (window.powerChallenge.timeElapsed >= 80 && !window.powerChallenge.extremeModeActive) {
+            startChallengeExtremeMode();
+        }
+    }, 1000);
+    
+    // Start UI update timer (10 times per second for smooth display)
+    window.powerChallenge.uiUpdateIntervalId = setInterval(() => {
+        if (!window.powerChallenge.countdownActive) {
+            // Calculate fractional seconds for smooth display
+            const currentTime = Date.now();
+            const timeElapsedPrecise = window.powerChallenge.timeElapsed + 
+                ((currentTime - window.powerChallenge.lastSecondUpdate) / 1000);
+            
+            // Update timer display with precise timing
+            document.getElementById('timerDisplay').textContent = Math.floor(timeElapsedPrecise);
+            
+            // Update challenge power display
+            const currentPower = Math.floor(window.state.powerEnergy.toNumber());
+            const maxPower = calculatePowerGeneratorCap();
+            document.getElementById('challengePowerCurrent').textContent = currentPower;
+            document.getElementById('challengePowerMax').textContent = maxPower;
+        }
+    }, 100);
+    
+    // Track when each second starts for precise timing
+    window.powerChallenge.lastSecondUpdate = Date.now();
+    setInterval(() => {
+        window.powerChallenge.lastSecondUpdate = Date.now();
+    }, 1000);
+    
+    // Start power drain (smooth per second)
+    window.powerChallenge.drainIntervalId = setInterval(() => {
+        if (!window.powerChallenge.countdownActive) {
+            // Drain power smoothly - drain 1/10th of the rate every 100ms
+            const drainAmount = window.powerChallenge.powerDrainRate / 10;
+            window.state.powerEnergy = window.state.powerEnergy.sub(drainAmount);
+            
+            // Check if power is depleted
+            if (window.state.powerEnergy.lte(0)) {
+                window.state.powerEnergy = new Decimal(0);
+                endChallenge();
+            }
+            
+            // Update power UI
+            if (typeof updatePowerGeneratorUI === 'function') {
+                updatePowerGeneratorUI();
+            }
+        }
+    }, 100);
+    
+    // Generate first grid
+    generateChallengeGrid();
+}
+
+function generateChallengeGrid() {
+    const grid = document.getElementById('powerGrid');
+    grid.innerHTML = '';
+    
+    // Determine number of red tiles (10-15)
+    const redTileCount = Math.floor(Math.random() * 6) + 10; // 10-15 red tiles
+    window.powerChallenge.redTilesRemaining = redTileCount;
+    
+    // Create array of tile types
+    const tiles = [];
+    for (let i = 0; i < 25; i++) {
+        tiles.push(i < redTileCount ? 'red' : 'green');
+    }
+    
+    // Shuffle the array
+    for (let i = tiles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+    
+    // Create grid tiles
+    tiles.forEach((type, index) => {
+        const tile = document.createElement('div');
+        const redGradient = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #a93226 100%)';
+        const greenGradient = 'linear-gradient(135deg, #27ae60 0%, #229954 50%, #1e8449 100%)';
+        
+        // Store original type and current display type for hardmode
+        tile.originalType = type;
+        tile.currentDisplayType = type;
+        tile.tileIndex = index;
+        
+        tile.style.cssText = `
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: ${type === 'red' ? redGradient : greenGradient};
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 
+                        0 2px 4px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+            border: 1px solid ${type === 'red' ? '#a93226' : '#1e8449'};
+            transition: all 0.3s ease;
+        `;
+        
+        // Add hover effects
+        tile.addEventListener('mouseenter', () => {
+            if (tile.onclick) {
+                tile.style.transform = 'translateY(-2px)';
+                tile.style.boxShadow = `0 6px 12px rgba(0, 0, 0, 0.4), 
+                                       0 3px 6px rgba(0, 0, 0, 0.3),
+                                       inset 0 1px 2px rgba(255, 255, 255, 0.3)`;
+            }
+        });
+        
+        tile.addEventListener('mouseleave', () => {
+            if (tile.onclick) {
+                tile.style.transform = 'translateY(0)';
+                tile.style.boxShadow = `0 4px 8px rgba(0, 0, 0, 0.3), 
+                                       0 2px 4px rgba(0, 0, 0, 0.2),
+                                       inset 0 1px 2px rgba(255, 255, 255, 0.2)`;
+            }
+        });
+        
+        // Set click handlers based on original type (not display type)
+        if (type === 'red') {
+            tile.onclick = () => clickRedTile(tile);
+        } else {
+            tile.onclick = () => clickGreenTile();
+        }
+        
+        grid.appendChild(tile);
+    });
+    
+    // Update progress
+    updateChallengeProgress();
+}
+
+function clickRedTile(tile) {
+    const currentTime = Date.now();
+    const mouseX = window.lastMouseX || 0;
+    const mouseY = window.lastMouseY || 0;
+    
+    // Record click data for macro detection
+    macroDetection.clickTimestamps.push(currentTime);
+    macroDetection.clickHistory.push({
+        time: currentTime,
+        x: mouseX,
+        y: mouseY,
+        tileIndex: tile.tileIndex || 0
+    });
+    
+    // Keep only last 20 clicks for analysis
+    if (macroDetection.clickTimestamps.length > 20) {
+        macroDetection.clickTimestamps.shift();
+        macroDetection.clickHistory.shift();
+    }
+    
+    // Analyze for macro patterns
+    if (macroDetection.clickTimestamps.length >= 5) {
+        analyzeMacroPatterns();
+    }
+    
+    // If macro detected, don't process the click normally
+    if (macroDetection.isDetected) {
+        showMacroDetectionWarning();
+        return;
+    }
+    
+    // Normal tile click processing
+    tile.style.background = 'linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #5d6d7e 100%)';
+    tile.style.boxShadow = 'inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2)';
+    tile.style.border = '1px solid #34495e';
+    tile.style.transform = 'translateY(0)';
+    tile.onclick = null;
+    tile.style.cursor = 'not-allowed';
+    
+    window.powerChallenge.redTilesRemaining--;
+    updateChallengeProgress();
+    
+    // Check if all red tiles cleared
+    if (window.powerChallenge.redTilesRemaining <= 0) {
+        // Recharge power to max
+        window.state.powerEnergy = window.state.powerMaxEnergy;
+        
+        // Update power UI
+        if (typeof updatePowerGeneratorUI === 'function') {
+            updatePowerGeneratorUI();
+        }
+        
+        // Flash modal border green for power refill
+        flashModalBorder('green');
+        
+        // Generate new grid immediately
+        setTimeout(() => {
+            generateChallengeGrid();
+            
+            // If hardmode is active, shift colors on the new grid after 2 seconds
+            if (window.powerChallenge.hardmodeActive) {
+                setTimeout(() => {
+                    shiftRandomTileColors();
+                    
+                    // If extreme mode is active, add a second color shift 1 second later
+                    if (window.powerChallenge.extremeModeActive) {
+                        setTimeout(() => {
+                            shiftRandomTileColors();
+                        }, 1000); // Second shift 1 second after first
+                    }
+                }, 2000); // Wait 2 seconds after grid refresh
+            }
+        }, 100);
+    }
+}
+
+function clickGreenTile() {
+    // Flash modal border red for penalty
+    flashModalBorder('red');
+    
+    // Penalty for clicking green tile - refresh the grid (lose progress)
+    generateChallengeGrid();
+    
+    // Show penalty message
+    if (typeof showBubble === 'function') {
+        showBubble(`❌ Wrong tile! Grid refreshed - progress lost!`, 2000);
+    }
+}
+
+function updateChallengeProgress() {
+    const progressBar = document.getElementById('rechargeProgress');
+    const progressText = document.getElementById('rechargeProgressText');
+    
+    if (!progressBar || !progressText) return;
+    
+    const totalRed = window.powerChallenge.redTilesRemaining + (window.powerChallenge.currentGrid.filter(t => t === 'cleared').length || 0);
+    const cleared = totalRed - window.powerChallenge.redTilesRemaining;
+    const percentage = totalRed > 0 ? (cleared / totalRed) * 100 : 0;
+    
+    progressBar.style.width = `${percentage}%`;
+    progressText.textContent = `${window.powerChallenge.redTilesRemaining} red cells remaining`;
+}
+
+function endChallengeEarly() {
+    endChallenge();
+}
+
+function endChallenge() {
+    // Clean up macro detection
+    if (window.powerChallenge.mouseTracker) {
+        document.removeEventListener('mousemove', window.powerChallenge.mouseTracker);
+        window.powerChallenge.mouseTracker = null;
+    }
+    
+    // Check for macro detection before showing results
+    if (macroDetection.isDetected) {
+        endChallengeWithMacroPenalty();
+        return;
+    }
+    
+    // Clear all intervals
+    if (window.powerChallenge.intervalId) {
+        clearInterval(window.powerChallenge.intervalId);
+    }
+    if (window.powerChallenge.drainIntervalId) {
+        clearInterval(window.powerChallenge.drainIntervalId);
+    }
+    if (window.powerChallenge.countdownIntervalId) {
+        clearInterval(window.powerChallenge.countdownIntervalId);
+    }
+    if (window.powerChallenge.uiUpdateIntervalId) {
+        clearInterval(window.powerChallenge.uiUpdateIntervalId);
+    }
+    
+    // End darkness effect
+    endChallengeDarkness();
+    
+    // End electricity effect
+    endChallengeElectricity();
+    
+    // End extreme mode effect
+    endChallengeExtremeMode();
+    
+    // Remove recharge modal
+    const rechargeModal = document.getElementById('rechargeModal');
+    if (rechargeModal) {
+        rechargeModal.remove();
+    }
+    
+    // Restore original power and refill to maximum
+    const maxPower = calculatePowerGeneratorCap();
+    window.state.powerEnergy = new Decimal(maxPower);
+    
+    // Award tokens
+    awardChallengeTokens();
+    
+    // Show results modal
+    showChallengeResults();
+    
+    // Clean up
+    window.powerChallenge.active = false;
+    
+    // Update power UI
+    if (typeof updatePowerGeneratorUI === 'function') {
+        updatePowerGeneratorUI();
+    }
+}
+
+// Hardmode color shifting functions
+function startHardmodeColorShifting() {
+    // Only activate if not already active
+    if (window.powerChallenge.hardmodeActive) return;
+    
+    window.powerChallenge.hardmodeActive = true;
+    
+    // Shift colors 2 seconds after hardmode activates
+    setTimeout(() => {
+        shiftRandomTileColors();
+    }, 2000);
+}
+
+function shiftRandomTileColors() {
+    const grid = document.getElementById('powerGrid');
+    if (!grid) return;
+    
+    const tiles = Array.from(grid.children);
+    const activeTiles = tiles.filter(tile => tile.onclick && !tile.classList.contains('clicked'));
+    
+    if (activeTiles.length === 0) return;
+    
+    // Shift more tiles if electricity is active (2-4 normally, 5-7 with electricity)
+    const baseShift = Math.floor(Math.random() * 3) + 2; // 2-4 tiles
+    const electricityBonus = window.powerChallenge.electricityActive ? 3 : 0; // +3 tiles if electricity active
+    const tilesToShift = Math.min(baseShift + electricityBonus, activeTiles.length);
+    const shuffledTiles = [...activeTiles].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < tilesToShift; i++) {
+        const tile = shuffledTiles[i];
+        shiftTileColor(tile);
+    }
+}
+
+function shiftTileColor(tile) {
+    const redGradient = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #a93226 100%)';
+    const greenGradient = 'linear-gradient(135deg, #27ae60 0%, #229954 50%, #1e8449 100%)';
+    
+    // Toggle the display color (but keep original type for click behavior)
+    if (tile.currentDisplayType === 'red') {
+        tile.currentDisplayType = 'green';
+        tile.style.background = greenGradient;
+        tile.style.borderColor = '#1e8449';
+    } else {
+        tile.currentDisplayType = 'red';
+        tile.style.background = redGradient;
+        tile.style.borderColor = '#a93226';
+    }
+}
+
+function awardChallengeTokens() {
+    const tokensToAward = window.powerChallenge.tokensEarned;
+    window.powerChallenge.tokensAwarded = {};
+    
+    // Define available token types with their probabilities and display names
+    const basicTokens = [
+        { key: 'tokens.berries', name: 'Berry Token', weight: 14 },
+        { key: 'tokens.sparks', name: 'Spark Token', weight: 14 },
+        { key: 'tokens.stardust', name: 'Stardust Token', weight: 14 },
+        { key: 'tokens.water', name: 'Water Token', weight: 14 },
+        { key: 'tokens.petals', name: 'Petal Token', weight: 14 },
+        { key: 'tokens.prisma', name: 'Prisma Shard Token', weight: 14 },
+        { key: 'tokens.mushroom', name: 'Mushroom Token', weight: 14 }
+    ];
+    
+    // Add candy tokens only if Halloween mode is active
+    if (window.state && window.state.halloweenEventActive) {
+        basicTokens.push({ key: 'tokens.candy', name: 'Candy Token', weight: 14 });
+    }
+    
+    const premiumTokens = [
+        { key: 'swabucks', name: 'Swa Buck', weight: 0.33 },
+        { key: 'berryPlate', name: 'Berry Plate Token', weight: 0.33 },
+        { key: 'batteries', name: 'Battery Token', weight: 0.33 },
+        { key: 'chargedPrisma', name: 'Charged Prisma Token', weight: 0.33 },
+        { key: 'glitteringPetals', name: 'Glittering Petal Token', weight: 0.33 },
+        { key: 'mushroomSoup', name: 'Mushroom Soup Token', weight: 0.35 }
+    ];
+    
+    // Distribute tokens across multiple types
+    let remainingTokens = tokensToAward;
+    
+    // Always guarantee at least 2-4 different token types if we have enough tokens
+    const minTokenTypes = Math.min(Math.max(2, Math.floor(tokensToAward / 3)), 4);
+    const selectedTokenTypes = [];
+    
+    // First, select premium tokens (about 2% chance overall)
+    const premiumTokenCount = Math.floor(tokensToAward * 0.02) + (Math.random() < 0.5 ? 1 : 0);
+    if (premiumTokenCount > 0 && remainingTokens > 0) {
+        const premiumToken = premiumTokens[Math.floor(Math.random() * premiumTokens.length)];
+        const amount = Math.min(premiumTokenCount, remainingTokens);
+        selectedTokenTypes.push({ token: premiumToken, amount: amount });
+        remainingTokens -= amount;
+    }
+    
+    // Then distribute basic tokens across multiple types
+    while (remainingTokens > 0 && selectedTokenTypes.length < minTokenTypes) {
+        const basicToken = basicTokens[Math.floor(Math.random() * basicTokens.length)];
+        
+        // Don't duplicate tokens
+        if (selectedTokenTypes.find(t => t.token.key === basicToken.key)) {
+            continue;
+        }
+        
+        // Allocate 1-4 tokens of this type
+        const amount = Math.min(Math.floor(Math.random() * 4) + 1, remainingTokens);
+        selectedTokenTypes.push({ token: basicToken, amount: amount });
+        remainingTokens -= amount;
+    }
+    
+    // Distribute any remaining tokens to existing types
+    while (remainingTokens > 0 && selectedTokenTypes.length > 0) {
+        const randomType = selectedTokenTypes[Math.floor(Math.random() * selectedTokenTypes.length)];
+        const amount = Math.min(Math.floor(Math.random() * 3) + 1, remainingTokens);
+        randomType.amount += amount;
+        remainingTokens -= amount;
+    }
+    
+    // Award the tokens and track them
+    for (const { token, amount } of selectedTokenTypes) {
+        // Handle nested token properties (e.g., 'tokens.candy')
+        if (token.key.startsWith('tokens.')) {
+            const tokenType = token.key.split('.')[1];
+            if (window.state.tokens && window.state.tokens[tokenType] !== undefined) {
+                window.state.tokens[tokenType] = DecimalUtils.isDecimal(window.state.tokens[tokenType]) 
+                    ? window.state.tokens[tokenType].add(amount)
+                    : new Decimal(window.state.tokens[tokenType] || 0).add(amount);
+            } else {
+                // Fallback to berry tokens if the token type doesn't exist
+                window.state.tokens.berries = DecimalUtils.isDecimal(window.state.tokens.berries)
+                    ? window.state.tokens.berries.add(amount)
+                    : new Decimal(window.state.tokens.berries || 0).add(amount);
+            }
+        } else if (window.state[token.key] !== undefined) {
+            // Handle regular properties (including Decimal types for premium tokens)
+            if (DecimalUtils.isDecimal(window.state[token.key])) {
+                window.state[token.key] = window.state[token.key].add(amount);
+            } else {
+                window.state[token.key] = new Decimal(window.state[token.key] || 0).add(amount);
+            }
+        } else {
+            // Fallback to berry tokens if the token type doesn't exist
+            window.state.tokens.berries = DecimalUtils.isDecimal(window.state.tokens.berries)
+                ? window.state.tokens.berries.add(amount)
+                : new Decimal(window.state.tokens.berries || 0).add(amount);
+        }
+        
+        // Track the awarded token
+        window.powerChallenge.tokensAwarded[token.name] = amount;
+    }
+}
+
+function showChallengeResults() {
+    // Set normal 10-minute cooldown for legitimate completion
+    const cooldownDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
+    window.state.powerChallengeCooldown = Date.now() + cooldownDuration;
+    window.state.powerChallengeCooldownDuration = cooldownDuration;
+    
+    // Check and update personal best
+    const currentTime = window.powerChallenge.timeElapsed;
+    let isPersonalBest = false;
+    
+    if (!window.state.powerChallengePersonalBest || typeof window.state.powerChallengePersonalBest !== 'number') {
+        window.state.powerChallengePersonalBest = 0;
+    }
+    
+    if (currentTime > window.state.powerChallengePersonalBest) {
+        window.state.powerChallengePersonalBest = currentTime;
+        isPersonalBest = true;
+        
+        // Check for trophy unlocks when PB is updated
+        if (typeof window.checkChallengeTrophy === 'function') {
+            setTimeout(() => {
+                window.checkChallengeTrophy('powerGeneratorChallenge');
+            }, 1000); // Delay to show PB message first
+        }
+    }
+    
+    // Create token rewards text
+    let tokenRewardsText = '';
+    if (Object.keys(window.powerChallenge.tokensAwarded).length > 0) {
+        const tokenEntries = Object.entries(window.powerChallenge.tokensAwarded);
+        tokenRewardsText = tokenEntries.map(([tokenName, count]) => 
+            `+${count} ${tokenName}${count > 1 ? 's' : ''}`
+        ).join('<br>');
+    } else {
+        tokenRewardsText = 'No tokens earned';
+    }
+    
+    // Personal best indicator
+    const pbText = isPersonalBest ? '<div style="color: #f1c40f; font-weight: bold; margin-top: 8px;">NEW PERSONAL BEST!</div>' : '';
+    
+    // Get character leaderboard data
+    const leaderboardData = getChallengeLeaderboard();
+    
+    const modal = document.createElement('div');
+    modal.id = 'challengeResultsModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: #2c3e50; border: 2px solid #f39c12; border-radius: 10px; padding: 30px; max-width: 450px; width: 90%; color: white; text-align: center;">
+                <div style="display: flex; margin-bottom: 20px;">
+                    <button id="resultsTab" onclick="switchChallengeTab('results')" style="flex: 1; background: #f39c12; border: none; color: white; padding: 10px; border-radius: 5px 0 0 5px; cursor: pointer; font-weight: bold;">
+                        Results
+                    </button>
+                    <button id="leaderboardTab" onclick="switchChallengeTab('leaderboard')" style="flex: 1; background: #34495e; border: none; color: white; padding: 10px; border-radius: 0 5px 5px 0; cursor: pointer; font-weight: bold;">
+                        Leaderboard
+                    </button>
+                </div>
+                
+                <div id="resultsContent">
+                    <h2 style="color: #f39c12; margin: 0 0 20px 0;">Results:</h2>
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                        <p style="margin: 0 0 10px 0; font-size: 1.2em;"><strong>Time Survived:</strong> ${window.powerChallenge.timeElapsed} seconds</p>
+                        <p style="margin: 0 0 10px 0; font-size: 1.2em;"><strong>Tokens Earned:</strong> ${window.powerChallenge.tokensEarned}</p>
+                        ${pbText}
+                        <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; margin: 10px 0; border-left: 3px solid #f39c12;">
+                            <div style="margin: 0; font-size: 1em; color: #f39c12; font-weight: bold; line-height: 1.4;">${tokenRewardsText}</div>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('challengeResultsModal').remove(); if (typeof updateMinigameChallengeButton === 'function') updateMinigameChallengeButton();" style="background: #27ae60; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        Yay tokens!
+                    </button>
+                </div>
+                
+                <div id="leaderboardContent" style="display: none;">
+                    <h2 style="color: #f39c12; margin: 0 0 20px 0;">Leaderboard:</h2>
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                        ${leaderboardData}
+                    </div>
+                    <button onclick="document.getElementById('challengeResultsModal').remove(); if (typeof updateMinigameChallengeButton === 'function') updateMinigameChallengeButton();" style="background: #27ae60; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Switch between tabs in challenge results modal
+function switchChallengeTab(tab) {
+    const resultsTab = document.getElementById('resultsTab');
+    const leaderboardTab = document.getElementById('leaderboardTab');
+    const resultsContent = document.getElementById('resultsContent');
+    const leaderboardContent = document.getElementById('leaderboardContent');
+    
+    if (tab === 'results') {
+        resultsTab.style.background = '#f39c12';
+        leaderboardTab.style.background = '#34495e';
+        resultsContent.style.display = 'block';
+        leaderboardContent.style.display = 'none';
+    } else if (tab === 'leaderboard') {
+        resultsTab.style.background = '#34495e';
+        leaderboardTab.style.background = '#f39c12';
+        resultsContent.style.display = 'none';
+        leaderboardContent.style.display = 'block';
+    }
+}
+
+// Get challenge leaderboard data for all characters
+function getChallengeLeaderboard() {
+    // Initialize character PBs if they don't exist
+    if (!window.state.characterChallengePBs) {
+        window.state.characterChallengePBs = {
+            peachy: 0,    // Player (You)
+            soap: 0,
+            tico: 0,
+            mystic: 0,
+            lepre: 0,
+            fluzzer: 0,
+            vivien: 0,
+            bijou: 0
+        };
+    }
+    
+    // Initialize tracking for Fluzzer's glittering petal boost
+    if (!window.state.fluzzerEverReceivedGlitteringPetals) {
+        window.state.fluzzerEverReceivedGlitteringPetals = false;
+    }
+    
+    // Check if Fluzzer has ever received glittering petals (boost > 0 means they got some)
+    if (window.state.fluzzerGlitteringPetalsBoost && 
+        ((DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost.gt(0)) ||
+         (!DecimalUtils.isDecimal(window.state.fluzzerGlitteringPetalsBoost) && window.state.fluzzerGlitteringPetalsBoost > 0))) {
+        window.state.fluzzerEverReceivedGlitteringPetals = true;
+    }
+    
+    // Get current power cap to scale character times
+    const powerCap = calculatePowerGeneratorCap();
+    
+    // Custom scaling: 100=1x, 200=1.5x, 300=2x, 400=2.25x, 500=2.5x
+    let scalingFactor;
+    if (powerCap <= 100) {
+        scalingFactor = powerCap / 100; // Linear up to 1x at 100
+    } else if (powerCap <= 300) {
+        // From 100 to 300: scale from 1x to 2x
+        const progress = (powerCap - 100) / 200; // 0 to 1
+        scalingFactor = 1 + progress; // 1x to 2x
+    } else {
+        // After 300: slower scaling (2x + 0.25x per 100 power)
+        const excessCap = powerCap - 300;
+        scalingFactor = 2 + (excessCap / 100) * 0.25;
+    }
+    
+    // Calculate character PBs based on power cap and their skill levels
+    const characterPBs = {
+        // Peachy (Player) - uses actual PB
+        peachy: window.state.powerChallengePersonalBest || 0,
+        
+        // Soap - very very good (they created the challenge)
+        // Base: 45-55 seconds, scales with power cap
+        soap: Math.floor((36 + Math.random() * 7) * scalingFactor),
+        
+        // Lepre - best of the crew
+        // Base: 55-65 seconds, scales with power cap  
+        lepre: Math.floor((50 + Math.random() * 7) * scalingFactor),
+        
+        // Fluzzer - below average UNLESS they received glittering petals, then second best
+        fluzzer: window.state.fluzzerEverReceivedGlitteringPetals 
+            ? Math.floor((40 + Math.random() * 6) * scalingFactor)  // Second best (50-56s)
+            : Math.floor((10 + Math.random() * 8) * scalingFactor), // Below average (25-33s)
+        
+        // Tico - surprisingly good  
+        // Base: 40-48 seconds, scales with power cap
+        tico: Math.floor((28 + Math.random() * 6) * scalingFactor),
+        
+        // Mystic - average
+        // Base: 32-40 seconds, scales with power cap
+        mystic: Math.floor((18 + Math.random() * 6) * scalingFactor),
+        
+        // Vivien - slightly average
+        // Base: 35-43 seconds, scales with power cap
+        vivien: Math.floor((34 + Math.random() * 6) * scalingFactor),
+        
+        // Bijou - very skilled performer (premium character)
+        // Base: 20-25 seconds, scales with power cap
+        bijou: Math.floor(20 + Math.random() * 5) // No scaling - gets scared at 20s mark when color shifting happens
+    };
+    
+    // Update the stored character PBs (only if better than current)
+    Object.keys(characterPBs).forEach(characterKey => {
+        if (characterKey === 'peachy') return; // Don't override player's actual PB
+        
+        const newTime = characterPBs[characterKey];
+        const currentPB = window.state.characterChallengePBs[characterKey] || 0;
+        
+        // Characters improve over time, so only update if new time is better
+        if (newTime > currentPB) {
+            window.state.characterChallengePBs[characterKey] = newTime;
+        }
+    });
+    
+    // Get highest grade achieved for permanent unlock checks
+    const highestGrade = window.state.permanentElementDiscovery ? 
+        (window.state.permanentElementDiscovery.highestGradeAchieved || 1) : 1;
+    
+    // Check if advanced prism lab is permanently unlocked
+    const isAdvancedPrismUnlocked = window.prismAdvancedLabUnlocked || false;
+    
+    // Build character list based on permanent unlock status
+    const characters = [
+        { name: 'Peachy (You)', key: 'peachy', pb: window.state.powerChallengePersonalBest || 0 }
+    ];
+    
+    // Soap and Tico are always available (unlocked before challenge)
+    characters.push({ name: 'Soap', key: 'soap', pb: window.state.characterChallengePBs.soap });
+    characters.push({ name: 'Tico', key: 'tico', pb: window.state.characterChallengePBs.tico });
+    
+    // Mystic - expansion 3 or above
+    if (highestGrade >= 3) {
+        characters.push({ name: 'Mystic', key: 'mystic', pb: window.state.characterChallengePBs.mystic });
+    }
+    
+    // Lepre - expansion 4 or above  
+    if (highestGrade >= 4) {
+        characters.push({ name: 'Lepre', key: 'lepre', pb: window.state.characterChallengePBs.lepre });
+    }
+    
+    // Fluzzer - expansion 6 or above
+    if (highestGrade >= 6) {
+        characters.push({ name: 'Fluzzer', key: 'fluzzer', pb: window.state.characterChallengePBs.fluzzer });
+    }
+    
+    // Vivien - always shown, but score is 0 until advanced prism lab is unlocked
+    const vivienPB = isAdvancedPrismUnlocked ? window.state.characterChallengePBs.vivien : 0;
+    characters.push({ name: 'Vivien', key: 'vivien', pb: vivienPB });
+    
+    // Bijou - shown only if premium feature is unlocked and enabled
+    if (window.premiumState && window.premiumState.bijouUnlocked) {
+        // Initialize Bijou PB if not exists
+        if (!window.state.characterChallengePBs.bijou) {
+            window.state.characterChallengePBs.bijou = 0;
+        }
+        
+        // Generate Bijou's PB if needed (skilled performer but gets scared at 20s mark)
+        if (window.state.characterChallengePBs.bijou === 0) {
+            const bijouPB = Math.floor(20 + Math.random() * 5); // No scaling - runs away when color shifting starts
+            window.state.characterChallengePBs.bijou = bijouPB;
+        }
+        
+        characters.push({ name: 'Bijou', key: 'bijou', pb: window.state.characterChallengePBs.bijou });
+    }
+    
+    // Add Rikkor workers from front desk if they are currently assigned
+    if (window.frontDesk && window.frontDesk.assignedWorkers) {
+        Object.keys(window.frontDesk.assignedWorkers).forEach(slotId => {
+            const worker = window.frontDesk.assignedWorkers[slotId];
+            if (worker && worker.stars) {
+                // Use custom name if available, otherwise use default name
+                const workerName = worker.customName || worker.name || `Worker ${slotId}`;
+                
+                // Initialize worker PB tracking if not exists
+                const workerKey = `worker_${worker.id}`;
+                if (!window.state.characterChallengePBs[workerKey]) {
+                    window.state.characterChallengePBs[workerKey] = 0;
+                }
+                
+                // Calculate performance based on star rating
+                // 1 star = poor (15-25s), 2 star = below average (25-35s), 3 star = average (35-45s), 
+                // 4 star = good (45-55s), 5 star = insane (55-70s)
+                let baseTimeRange;
+                switch (worker.stars) {
+                    case 1: baseTimeRange = { min: 15, max: 20 }; break;
+                    case 2: baseTimeRange = { min: 20, max: 25 }; break;
+                    case 3: baseTimeRange = { min: 25, max: 30 }; break;
+                    case 4: baseTimeRange = { min: 30, max: 35 }; break;
+                    case 5: baseTimeRange = { min: 35, max: 40 }; break;
+                    default: baseTimeRange = { min: 20, max: 30 }; break;
+                }
+                
+                // Generate performance with scaling factor
+                const baseTime = baseTimeRange.min + Math.random() * (baseTimeRange.max - baseTimeRange.min);
+                const scaledTime = Math.floor(baseTime * scalingFactor);
+                
+                // Update worker PB if this is better
+                if (scaledTime > window.state.characterChallengePBs[workerKey]) {
+                    window.state.characterChallengePBs[workerKey] = scaledTime;
+                }
+                
+                characters.push({ 
+                    name: workerName, 
+                    key: workerKey, 
+                    pb: window.state.characterChallengePBs[workerKey],
+                    isWorker: true,
+                    stars: worker.stars
+                });
+            }
+        });
+    }
+    
+    // Sort by personal best (descending)
+    characters.sort((a, b) => b.pb - a.pb);
+    
+    // Create leaderboard HTML with multiple rows if needed
+    let leaderboardHTML = '';
+    
+    // Function to create a single character entry
+    const createCharacterEntry = (character, index) => {
+        const rank = index + 1;
+        const rankColor = rank === 1 ? '#f1c40f' : rank === 2 ? '#95a5a6' : rank === 3 ? '#d35400' : '#ecf0f1';
+        const timeDisplay = character.pb > 0 ? `${character.pb}s` : 'No attempts';
+        const isPlayer = character.key === 'peachy';
+        
+        // Special indicator for Fluzzer if they received glittering petals
+        const specialIndicator = ''; // Removed emoji indicator
+        
+        return `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; margin: 5px 0; background: rgba(0,0,0,0.2); border-radius: 5px; ${isPlayer ? 'border: 2px solid #f39c12;' : ''}">
+                <div style="display: flex; align-items: center;">
+                    <span style="color: ${rankColor}; font-weight: bold; font-size: 1.2em; margin-right: 10px; min-width: 20px;">#${rank}</span>
+                    <span style="font-weight: ${isPlayer ? 'bold' : 'normal'}; color: ${isPlayer ? '#f39c12' : 'white'};">${character.name}${specialIndicator}</span>
+                </div>
+                <span style="color: #bdc3c7; font-weight: bold;">${timeDisplay}</span>
+            </div>
+        `;
+    };
+    
+    // If more than 11 characters, create two columns
+    if (characters.length > 11) {
+        const topTen = characters.slice(0, 10);
+        const nextTen = characters.slice(10, 20);
+        
+        leaderboardHTML += '<div style="display: flex; gap: 15px;">';
+        
+        // Left column (ranks 1-10)
+        leaderboardHTML += '<div style="flex: 1;">';
+        topTen.forEach((character, index) => {
+            leaderboardHTML += createCharacterEntry(character, index);
+        });
+        leaderboardHTML += '</div>';
+        
+        // Right column (ranks 11-20)
+        leaderboardHTML += '<div style="flex: 1;">';
+        nextTen.forEach((character, index) => {
+            leaderboardHTML += createCharacterEntry(character, index + 10);
+        });
+        leaderboardHTML += '</div>';
+        
+        leaderboardHTML += '</div>';
+    } else {
+        // Single column for 11 or fewer characters
+        characters.forEach((character, index) => {
+            leaderboardHTML += createCharacterEntry(character, index);
+        });
+    }
+    
+    return leaderboardHTML;
+}
+
+// Helper function to ensure character PBs exist for speech system
+function ensureCharacterPBsExist() {
+    // Initialize character PBs if they don't exist
+    if (!window.state.characterChallengePBs) {
+        window.state.characterChallengePBs = {
+            peachy: 0,
+            soap: 0,
+            tico: 0,
+            mystic: 0,
+            lepre: 0,
+            fluzzer: 0,
+            vivien: 0,
+            bijou: 0
+        };
+    }
+    
+    // Generate PBs for characters that need them
+    const needsPBGeneration = (!window.state.characterChallengePBs.soap || window.state.characterChallengePBs.soap === 0) ||
+                             (!window.state.characterChallengePBs.tico || window.state.characterChallengePBs.tico === 0) ||
+                             (!window.state.characterChallengePBs.mystic || window.state.characterChallengePBs.mystic === 0) ||
+                             (!window.state.characterChallengePBs.lepre || window.state.characterChallengePBs.lepre === 0) ||
+                             (!window.state.characterChallengePBs.vivien || window.state.characterChallengePBs.vivien === 0) ||
+                             (!window.state.characterChallengePBs.fluzzer || window.state.characterChallengePBs.fluzzer === 0) ||
+                             (!window.state.characterChallengePBs.bijou || window.state.characterChallengePBs.bijou === 0);
+    
+    if (needsPBGeneration) {
+        // Get current power cap to scale character times
+        const powerCap = calculatePowerGeneratorCap();
+        
+        // Custom scaling: 100=1x, 200=1.5x, 300=2x, 400=2.25x, 500=2.5x
+        let scalingFactor;
+        if (powerCap <= 100) {
+            scalingFactor = powerCap / 100;
+        } else if (powerCap <= 300) {
+            const progress = (powerCap - 100) / 200;
+            scalingFactor = 1 + progress;
+        } else {
+            const excessCap = powerCap - 300;
+            scalingFactor = 2 + (excessCap / 100) * 0.25;
+        }
+        
+        // Generate Soap's PB (they're very good since they created the challenge)
+        if (!window.state.characterChallengePBs.soap || window.state.characterChallengePBs.soap === 0) {
+            const soapPB = Math.floor((36 + Math.random() * 7) * scalingFactor);
+            window.state.characterChallengePBs.soap = soapPB;
+        }
+        
+        // Generate Tico's PB (surprisingly good - Base: 40-48 seconds, scales with power cap)
+        if (!window.state.characterChallengePBs.tico || window.state.characterChallengePBs.tico === 0) {
+            const ticoPB = Math.floor((28 + Math.random() * 6) * scalingFactor);
+            window.state.characterChallengePBs.tico = ticoPB;
+        }
+        
+        // Generate Mystic's PB (mediocre performer - doesn't really care about the challenge)
+        if (!window.state.characterChallengePBs.mystic || window.state.characterChallengePBs.mystic === 0) {
+            const mysticPB = Math.floor((18 + Math.random() * 8) * scalingFactor);
+            window.state.characterChallengePBs.mystic = mysticPB;
+        }
+        
+        // Generate Lepre's PB (suspiciously good - secretly a robot/cheating with "magic")
+        if (!window.state.characterChallengePBs.lepre || window.state.characterChallengePBs.lepre === 0) {
+            const leprePB = Math.floor((45 + Math.random() * 10) * scalingFactor);
+            window.state.characterChallengePBs.lepre = leprePB;
+        }
+        
+        // Generate Vi's PB (skilled but nonchalant - good times without trying hard)
+        if (!window.state.characterChallengePBs.vivien || window.state.characterChallengePBs.vivien === 0) {
+            const viPB = Math.floor((35 + Math.random() * 8) * scalingFactor);
+            window.state.characterChallengePBs.vivien = viPB;
+        }
+        
+        // Generate Fluzzer's PB (variable performance - can be soft or cocky)
+        if (!window.state.characterChallengePBs.fluzzer || window.state.characterChallengePBs.fluzzer === 0) {
+            // Fluzzer has a wide range: 25-75 seconds base to allow personality switch at 60s
+            const fluzzerPB = Math.floor((25 + Math.random() * 50) * scalingFactor);
+            window.state.characterChallengePBs.fluzzer = fluzzerPB;
+        }
+        
+        // Generate Bijou's PB (very skilled performer - premium character)
+        if (!window.state.characterChallengePBs.bijou || window.state.characterChallengePBs.bijou === 0) {
+            // Bijou is highly skilled but gets scared: 20-25 seconds (no scaling - runs away when color shifting starts)
+            const bijouPB = Math.floor(20 + Math.random() * 5);
+            window.state.characterChallengePBs.bijou = bijouPB;
+        }
+    }
+}
+
+// Make functions globally accessible
+window.switchChallengeTab = switchChallengeTab;
+window.getChallengeLeaderboard = getChallengeLeaderboard;
+window.ensureCharacterPBsExist = ensureCharacterPBsExist;
+
+// Macro detection functions
+function showMacroDetectionWarning() {
+    // Flash the modal border red repeatedly
+    flashModalBorder('red');
+    
+    // Show warning message
+    const grid = document.getElementById('powerGrid');
+    if (grid) {
+        // Overlay warning on the grid
+        const warning = document.createElement('div');
+        warning.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: center;
+            z-index: 10003;
+            border: 2px solid #c0392b;
+            animation: warningPulse 1s infinite;
+        `;
+        warning.innerHTML = 'MACRO DETECTED<br> No rewards for you scumbag!';
+        
+        // Add warning animation
+        if (!document.getElementById('warningAnimationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'warningAnimationStyles';
+            style.textContent = `
+                @keyframes warningPulse {
+                    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        grid.parentElement.style.position = 'relative';
+        grid.parentElement.appendChild(warning);
+        
+        // Remove warning after 3 seconds
+        setTimeout(() => {
+            if (warning.parentElement) {
+                warning.remove();
+            }
+        }, 3000);
+    }
+}
+
+function endChallengeWithMacroPenalty() {
+    // Set harsh 60-minute cooldown for macro cheating
+    const cooldownDuration = 60 * 60 * 1000; // 60 minutes in milliseconds
+    window.state.powerChallengeCooldown = Date.now() + cooldownDuration;
+    window.state.powerChallengeCooldownDuration = cooldownDuration;
+    
+    // Clear all intervals
+    if (window.powerChallenge.intervalId) {
+        clearInterval(window.powerChallenge.intervalId);
+    }
+    if (window.powerChallenge.drainIntervalId) {
+        clearInterval(window.powerChallenge.drainIntervalId);
+    }
+    if (window.powerChallenge.countdownIntervalId) {
+        clearInterval(window.powerChallenge.countdownIntervalId);
+    }
+    if (window.powerChallenge.uiUpdateIntervalId) {
+        clearInterval(window.powerChallenge.uiUpdateIntervalId);
+    }
+    
+    // Remove mouse tracking
+    if (window.powerChallenge.mouseTracker) {
+        document.removeEventListener('mousemove', window.powerChallenge.mouseTracker);
+        window.powerChallenge.mouseTracker = null;
+    }
+    
+    // End all effects
+    endChallengeDarkness();
+    endChallengeElectricity();
+    endChallengeExtremeMode();
+    
+    // Remove recharge modal
+    const rechargeModal = document.getElementById('rechargeModal');
+    if (rechargeModal) {
+        rechargeModal.remove();
+    }
+    
+    // Restore power but don't give full power (partial penalty)
+    const maxPower = calculatePowerGeneratorCap();
+    window.state.powerEnergy = new Decimal(maxPower * 0.5); // Only 50% power as penalty
+    
+    // Set rewards to zero
+    window.powerChallenge.tokensEarned = 0;
+    window.powerChallenge.tokensAwarded = {};
+    
+    // Show penalty results modal
+    showMacroPenaltyResults();
+    
+    // Clean up
+    window.powerChallenge.active = false;
+    
+    // Update power UI
+    if (typeof updatePowerGeneratorUI === 'function') {
+        updatePowerGeneratorUI();
+    }
+    
+    // Reset macro detection for next challenge
+    resetMacroDetection();
+}
+
+function showMacroPenaltyResults() {
+    const modal = document.createElement('div');
+    modal.id = 'challengeResultsModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: #2c3e50; border: 3px solid #e74c3c; border-radius: 10px; padding: 30px; max-width: 450px; width: 90%; color: white; text-align: center;">
+                <h2 style="color: #e74c3c; margin: 0 0 20px 0;">MACRO DETECTED</h2>
+                <div style="background: rgba(231, 76, 60, 0.2); padding: 20px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #e74c3c;">
+                    <p style="margin: 0 0 15px 0; font-size: 1.1em;"><strong>Suspicious clicking patterns detected!</strong></p>
+                    <p style="margin: 0 0 10px 0;">Nuh uh, no cheating allowed.</p>
+                    <p style="margin: 0 0 15px 0;">The challenge has been terminated.</p>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; border-left: 3px solid #e74c3c;">
+                        <p style="margin: 0; font-weight: bold; color: #e74c3c;">PENALTIES APPLIED:</p>
+                        <p style="margin: 5px 0 0 0;">• No tokens awarded</p>
+                        <p style="margin: 0;">• Time not counted toward PB</p>
+                    </div>
+                </div>
+                <p style="margin: 0 0 20px 0; font-size: 0.9em; color: #bdc3c7;">Play fair and use only your mouse to click tiles!</p>
+                <button onclick="document.getElementById('challengeResultsModal').remove(); if (typeof updateMinigameChallengeButton === 'function') updateMinigameChallengeButton();" style="background: #e74c3c; border: none; color: white; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    Urgh
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Challenge darkness effect functions
+function startChallengeDarkness() {
+    if (window.powerChallenge.darknessActive) return;
+    
+    window.powerChallenge.darknessActive = true;
+    
+    // Create challenge-specific darkness overlay with high z-index
+    const darknessOverlay = document.createElement('div');
+    darknessOverlay.id = 'challengeDarknessOverlay';
+    darknessOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at var(--cursor-x, 50%) var(--cursor-y, 50%), transparent 80px, rgba(0,0,0,0.85) 180px);
+        z-index: 10001;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        opacity: 1;
+    `;
+    
+    document.body.appendChild(darknessOverlay);
+    
+    // Set up cursor light tracking
+    if (!window._challengeCursorHandler) {
+        function updateCursorLight(e) {
+            const x = e.clientX;
+            const y = e.clientY;
+            document.documentElement.style.setProperty('--cursor-x', x + 'px');
+            document.documentElement.style.setProperty('--cursor-y', y + 'px');
+        }
+        
+        window._challengeCursorHandler = updateCursorLight;
+        window.addEventListener('mousemove', updateCursorLight);
+        document.documentElement.style.setProperty('--cursor-x', window.innerWidth/2 + 'px');
+        document.documentElement.style.setProperty('--cursor-y', window.innerHeight/2 + 'px');
+    }
+}
+
+function endChallengeDarkness() {
+    if (!window.powerChallenge.darknessActive) return;
+    
+    window.powerChallenge.darknessActive = false;
+    
+    // Remove challenge darkness overlay
+    const darknessOverlay = document.getElementById('challengeDarknessOverlay');
+    if (darknessOverlay) {
+        darknessOverlay.remove();
+    }
+    
+    // Clean up cursor tracking
+    if (window._challengeCursorHandler) {
+        window.removeEventListener('mousemove', window._challengeCursorHandler);
+        window._challengeCursorHandler = null;
+    }
+    
+    // Remove cursor properties
+    document.documentElement.style.removeProperty('--cursor-x');
+    document.documentElement.style.removeProperty('--cursor-y');
+}
+
+// Challenge electricity effect functions
+function startChallengeElectricity() {
+    if (window.powerChallenge.electricityActive) return;
+    
+    window.powerChallenge.electricityActive = true;
+    
+    // Create electricity overlay with animated sparks around screen edges
+    const electricityOverlay = document.createElement('div');
+    electricityOverlay.id = 'challengeElectricityOverlay';
+    electricityOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10002;
+        pointer-events: none;
+        border: 2px solid rgba(255,255,0,0.3);
+        animation: electricityPulse 2s infinite alternate;
+    `;
+    
+    document.body.appendChild(electricityOverlay);
+    
+    // Add CSS animation if not already present
+    if (!document.getElementById('electricityAnimationStyles')) {
+        const style = document.createElement('style');
+        style.id = 'electricityAnimationStyles';
+        style.textContent = `
+            @keyframes electricityPulse {
+                0% { 
+                    border-color: rgba(255,255,0,0.2);
+                }
+                100% { 
+                    border-color: rgba(255,255,0,0.6);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function endChallengeElectricity() {
+    if (!window.powerChallenge.electricityActive) return;
+    
+    window.powerChallenge.electricityActive = false;
+    
+    // Remove electricity overlay
+    const electricityOverlay = document.getElementById('challengeElectricityOverlay');
+    if (electricityOverlay) {
+        electricityOverlay.remove();
+    }
+    
+    // Remove animation styles
+    const animationStyles = document.getElementById('electricityAnimationStyles');
+    if (animationStyles) {
+        animationStyles.remove();
+    }
+}
+
+// Challenge extreme mode functions (80+ seconds)
+function startChallengeExtremeMode() {
+    if (window.powerChallenge.extremeModeActive) return;
+    
+    window.powerChallenge.extremeModeActive = true;
+    
+    // Start modal shaking
+    const rechargeModal = document.getElementById('rechargeModal');
+    if (rechargeModal) {
+        const modalContent = rechargeModal.querySelector('div > div');
+        if (modalContent) {
+            modalContent.style.animation = 'modalShake 0.6s infinite';
+        }
+    }
+    
+    // Intensify electricity effect
+    const electricityOverlay = document.getElementById('challengeElectricityOverlay');
+    if (electricityOverlay) {
+        electricityOverlay.style.animation = 'electricityPulseIntense 1s infinite alternate';
+        electricityOverlay.style.borderWidth = '3px';
+    }
+    
+    // Add extreme mode CSS animations if not already present
+    if (!document.getElementById('extremeModeAnimationStyles')) {
+        const style = document.createElement('style');
+        style.id = 'extremeModeAnimationStyles';
+        style.textContent = `
+            @keyframes modalShake {
+                0%, 100% { transform: translate(0, 0); }
+                25% { transform: translate(2px, -2px); }
+                50% { transform: translate(-2px, 2px); }
+                75% { transform: translate(2px, 1px); }
+            }
+            @keyframes electricityPulseIntense {
+                0% { 
+                    border-color: rgba(255,255,0,0.4);
+                }
+                100% { 
+                    border-color: rgba(255,255,0,1);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function endChallengeExtremeMode() {
+    if (!window.powerChallenge.extremeModeActive) return;
+    
+    window.powerChallenge.extremeModeActive = false;
+    
+    // Stop modal shaking
+    const rechargeModal = document.getElementById('rechargeModal');
+    if (rechargeModal) {
+        const modalContent = rechargeModal.querySelector('div > div');
+        if (modalContent) {
+            modalContent.style.animation = '';
+        }
+    }
+    
+    // Remove extreme mode animation styles
+    const extremeAnimationStyles = document.getElementById('extremeModeAnimationStyles');
+    if (extremeAnimationStyles) {
+        extremeAnimationStyles.remove();
+    }
+}
+
+// Challenge modal border flash feedback
+function flashModalBorder(color) {
+    const rechargeModal = document.getElementById('rechargeModal');
+    if (!rechargeModal) return;
+    
+    // Find the div with the gradient background (the card container)
+    const modalCard = rechargeModal.querySelector('div[style*="background: linear-gradient"]');
+    if (!modalCard) return;
+    
+    // Flash the specified color on the modal's blue border
+    if (color === 'green') {
+        modalCard.style.border = '3px solid #27ae60';
+    } else if (color === 'red') {
+        modalCard.style.border = '3px solid #e74c3c';
+    }
+    
+    // Return to original blue border after 1 second
+    setTimeout(() => {
+        modalCard.style.border = '3px solid #3498db';
+    }, 1000);
+}
+
+// Make functions globally accessible
+window.updateMinigameChallengeButton = updateMinigameChallengeButton;
+window.startMinigameChallenge = startMinigameChallenge;

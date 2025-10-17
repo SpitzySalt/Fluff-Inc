@@ -57,6 +57,47 @@ window.premiumState = window.premiumState || {
   vrchatMirrorUnlocked: false
 };
 
+// Migrate bijou from window.premiumState to window.state
+function migrateBijouToMainState() {
+  // Ensure window.state exists
+  if (!window.state) return;
+  
+  // Initialize unlockedFeatures if it doesn't exist
+  if (!window.state.unlockedFeatures) {
+    window.state.unlockedFeatures = {};
+  }
+  
+  // Migrate bijou unlock status from premiumState to window.state.unlockedFeatures
+  if (window.premiumState && window.premiumState.bijouUnlocked && !window.state.unlockedFeatures.bijou) {
+    window.state.unlockedFeatures.bijou = true;
+  }
+  
+  // Migrate bijou active status from premiumState to window.state
+  if (window.premiumState && window.premiumState.bijouEnabled && window.state.bijouActive === undefined) {
+    window.state.bijouActive = true;
+  }
+  
+  // Initialize bijouActive if it doesn't exist
+  if (window.state.bijouActive === undefined) {
+    window.state.bijouActive = false;
+  }
+}
+
+// Backward compatibility helper functions - check both old and new state systems
+function isBijouUnlocked() {
+  return window.state.unlockedFeatures?.bijou || 
+         (window.premiumState && window.premiumState.bijouUnlocked);
+}
+
+function isBijouEnabled() {
+  return window.state.bijouActive || 
+         (window.premiumState && window.premiumState.bijouEnabled);
+}
+
+function isBijouActiveCompat() {
+  return isBijouUnlocked() && isBijouEnabled();
+}
+
 function initPremiumSystem() {
   // Initialize premium state only if it doesn't exist, preserving existing values
   if (!window.premiumState) {
@@ -71,6 +112,10 @@ function initPremiumSystem() {
     if (window.premiumState.bijouEnabled === undefined) window.premiumState.bijouEnabled = false;
     if (window.premiumState.vrchatMirrorUnlocked === undefined) window.premiumState.vrchatMirrorUnlocked = false;
   }
+  
+  // Migrate bijou to main state system (before loading saved data)
+  migrateBijouToMainState();
+  
   const currentSaveSlot = localStorage.getItem('currentSaveSlot');
   if (currentSaveSlot) {
     const slotData = localStorage.getItem(`swariaSaveSlot${currentSaveSlot}`);
@@ -95,6 +140,9 @@ function initPremiumSystem() {
       }
     }
   }
+  
+  // Migrate bijou again after loading saved data
+  migrateBijouToMainState();
   updatePremiumUI();
   addPremiumEventListeners();
   hookIntoTokenSpawning();
@@ -136,6 +184,16 @@ function initPremiumSystem() {
     
     // Setup captcha refresh detection
     setupCaptchaRefreshDetection();
+    
+    // Restore Halloween event state
+    if (typeof updateHalloweenEventState === 'function') {
+      updateHalloweenEventState();
+    }
+    
+    // Initialize Halloween Recorder easter egg if both modes are active
+    if (isHalloweenRecorderEasterEggActive()) {
+      initializeHalloweenRecorderEasterEgg();
+    }
   }, 1000);
 }
 
@@ -148,7 +206,7 @@ function updatePremiumUI() {
     if (h3 && h3.textContent.trim() === 'Unlock Bijou') {
       const bijouButton = card.querySelector('button');
       if (bijouButton) {
-        if (window.premiumState.bijouUnlocked) {
+        if (window.state.unlockedFeatures?.bijou) {
           bijouButton.textContent = 'Unlocked';
           bijouButton.disabled = true;
           bijouButton.style.backgroundColor = '#4CAF50';
@@ -205,7 +263,7 @@ function addPremiumEventListeners() {
 
 function buyBijou() {
   const cost = new Decimal(500);
-  if (window.premiumState.bijouUnlocked) {
+  if (window.state.unlockedFeatures?.bijou) {
     return;
   }
   const currentSwabucks = window.state && window.state.swabucks ? new Decimal(window.state.swabucks) : new Decimal(0);
@@ -215,8 +273,9 @@ function buyBijou() {
   }
   if (confirm(`Are you sure you want to unlock Bijou for ${DecimalUtils.formatDecimal(cost)} Swa Bucks?`)) {
     window.state.swabucks = currentSwabucks.sub(cost);
-    window.premiumState.bijouUnlocked = true;
-    window.premiumState.bijouEnabled = true; 
+    if (!window.state.unlockedFeatures) window.state.unlockedFeatures = {};
+    window.state.unlockedFeatures.bijou = true;
+    window.state.bijouActive = true; 
     // Save removed - premium state now managed by main save system
     saveGame();
     updatePremiumUI();
@@ -264,7 +323,7 @@ function buyVrchatMirror() {
 }
 
 function toggleBijou() {
-  if (!window.premiumState.bijouUnlocked) {
+  if (!window.state.unlockedFeatures?.bijou) {
     alert('Bijou must be unlocked first!');
     const checkbox = document.getElementById('bijouToggleCheckbox');
     if (checkbox) {
@@ -274,12 +333,12 @@ function toggleBijou() {
   }
   const checkbox = document.getElementById('bijouToggleCheckbox');
   if (checkbox) {
-    window.premiumState.bijouEnabled = checkbox.checked;
+    window.state.bijouActive = checkbox.checked;
   } else {
-    window.premiumState.bijouEnabled = !window.premiumState.bijouEnabled;
+    window.state.bijouActive = !window.state.bijouActive;
   }
   // Save removed - premium state now managed by main save system
-  const status = window.premiumState.bijouEnabled ? 'enabled' : 'disabled';
+  const status = window.state.bijouActive ? 'enabled' : 'disabled';
   updateBijouUIVisibility();
   if (typeof window.cafeteria?.refreshCharacterCards === 'function') {
     window.cafeteria.refreshCharacterCards();
@@ -300,7 +359,7 @@ function toggleBijou() {
 
 function updateBijouToggleUI() {
   const checkbox = document.getElementById('bijouToggleCheckbox');
-  if (window.premiumState.bijouUnlocked) {
+  if (window.state.unlockedFeatures?.bijou) {
     if (!checkbox) {
       addBijouToggleButton();
     }
@@ -310,7 +369,7 @@ function updateBijouToggleUI() {
     }
   }
   if (checkbox) {
-    checkbox.checked = window.premiumState.bijouEnabled;
+    checkbox.checked = window.state.bijouActive || false;
   }
   
   // Also update recorder mode toggle
@@ -318,6 +377,9 @@ function updateBijouToggleUI() {
   
   // Also update KitoFox mode toggle
   updateKitoFoxModeToggleUI();
+  
+  // Also update Halloween event toggle
+  updateHalloweenEventToggleUI();
 }
 
 function updateRecorderModeToggleUI() {
@@ -348,6 +410,20 @@ function updateKitoFoxModeToggleUI() {
   }
 }
 
+function updateHalloweenEventToggleUI() {
+  const checkbox = document.getElementById('halloweenEventToggleCheckbox');
+  if (window.state.unlockedFeatures && window.state.unlockedFeatures.halloweenEvent) {
+    if (!checkbox) {
+      addHalloweenEventToggleButton();
+    } else {
+      // Update checkbox state
+      checkbox.checked = window.state.halloweenEventActive || false;
+    }
+  } else if (checkbox) {
+    checkbox.parentElement.parentElement.remove();
+  }
+}
+
 function addBijouToggleButton() {
   if (document.getElementById('bijouToggleCheckbox')) {
     return;
@@ -361,7 +437,7 @@ function addBijouToggleButton() {
     checkboxContainer.style.paddingTop = '1em';
     checkboxContainer.innerHTML = `
       <label style="display: flex; align-items: center; gap: 0.5em; justify-content: center;">
-        <input type="checkbox" id="bijouToggleCheckbox" ${window.premiumState.bijouEnabled ? 'checked' : ''} onchange="toggleBijou()">
+        <input type="checkbox" id="bijouToggleCheckbox" ${window.state.bijouActive ? 'checked' : ''} onchange="toggleBijou()">
         <span>Enable Bijou</span>
       </label>
     `;
@@ -373,6 +449,9 @@ function addBijouToggleButton() {
   
   // Add KitoFox mode toggle if unlocked
   addKitoFoxModeToggleButton();
+  
+  // Add Halloween event toggle if unlocked
+  addHalloweenEventToggleButton();
 }
 
 function addRecorderModeToggleButton() {
@@ -429,14 +508,41 @@ function addKitoFoxModeToggleButton() {
   }
 }
 
+function addHalloweenEventToggleButton() {
+  if (document.getElementById('halloweenEventToggleCheckbox')) {
+    return;
+  }
+  
+  // Only show if Halloween event is unlocked
+  if (!window.state.unlockedFeatures || !window.state.unlockedFeatures.halloweenEvent) {
+    return;
+  }
+  
+  const settingsCard = document.querySelector('#settingsSavesTab .card');
+  if (settingsCard) {
+    const checkboxContainer = document.createElement('div');
+    checkboxContainer.style.marginTop = '1em';
+    checkboxContainer.style.textAlign = 'center';
+    checkboxContainer.style.borderTop = '1px solid #ddd';
+    checkboxContainer.style.paddingTop = '1em';
+    checkboxContainer.innerHTML = `
+      <label style="display: flex; align-items: center; gap: 0.5em; justify-content: center;">
+        <input type="checkbox" id="halloweenEventToggleCheckbox" ${window.state.halloweenEventActive ? 'checked' : ''} onchange="toggleHalloweenEvent()">
+        <span>Enable Halloween Event</span>
+      </label>
+    `;
+    settingsCard.appendChild(checkboxContainer);
+  }
+}
+
 function isBijouActive() {
-  return window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled;
+  return window.state.unlockedFeatures?.bijou && window.state.bijouActive;
 }
 
 function getBijouStatus() {
   return {
-    unlocked: window.premiumState.bijouUnlocked,
-    enabled: window.premiumState.bijouEnabled,
+    unlocked: window.state.unlockedFeatures?.bijou || false,
+    enabled: window.state.bijouActive || false,
     active: isBijouActive()
   };
 }
@@ -459,6 +565,13 @@ function toggleRecorderMode() {
   }
   
   updateRecorderModeImages();
+  
+  // Initialize or cleanup Halloween Recorder easter egg
+  if (isHalloweenRecorderEasterEggActive()) {
+    initializeHalloweenRecorderEasterEgg();
+  } else {
+    cleanupHalloweenRecorderEasterEgg();
+  }
   
   // Save the state
   if (typeof window.saveGame === 'function') {
@@ -488,6 +601,220 @@ function toggleKitoFoxMode() {
   // Save the state
   if (typeof window.saveGame === 'function') {
     window.saveGame();
+  }
+}
+
+function toggleHalloweenEvent() {
+  if (!window.state.unlockedFeatures || !window.state.unlockedFeatures.halloweenEvent) {
+    return;
+  }
+  
+  window.state.halloweenEventActive = !window.state.halloweenEventActive;
+  
+  // Update Halloween event visibility and button state IMMEDIATELY
+  updateHalloweenEventState();
+  
+  // Force immediate visual update to ensure theme applies instantly
+  if (window.state.halloweenEventActive) {
+    // Apply Halloween theme REGARDLESS of current page
+    document.body.classList.add('halloween-cargo-active');
+    document.documentElement.classList.add('halloween-cargo-active');
+    document.body.style.setProperty('--halloween-active', '1');
+    
+    // Trigger theme functions immediately
+    if (typeof window.forceHalloweenThemeUpdate === 'function') {
+      window.forceHalloweenThemeUpdate();
+    }
+  } else {
+    // Remove Halloween theme immediately
+    document.body.classList.remove('halloween-cargo-active');
+    document.documentElement.classList.remove('halloween-cargo-active');
+    document.body.classList.remove('halloween-active');
+    document.body.classList.remove('halloween-event-active');
+    document.body.style.removeProperty('--halloween-active');
+  }
+  
+  // Initialize or cleanup Halloween Recorder easter egg
+  if (isHalloweenRecorderEasterEggActive()) {
+    initializeHalloweenRecorderEasterEgg();
+  } else {
+    cleanupHalloweenRecorderEasterEgg();
+  }
+  
+  // Save the state
+  if (typeof window.saveGame === 'function') {
+    window.saveGame();
+  }
+}
+
+function updateHalloweenEventState() {
+  // Use our new candy-based display system
+  if (typeof window.updateHalloweenEventButtonDisplay === 'function') {
+    window.updateHalloweenEventButtonDisplay();
+  }
+  
+  if (window.state.halloweenEventActive) {
+    
+    // Initialize all Halloween event systems
+    if (typeof window.initializeHalloweenEventSystems === 'function') {
+      window.initializeHalloweenEventSystems();
+    } else {
+      // Fallback initialization if function not yet available
+      if (!window.state.halloweenEvent) {
+        window.state.halloweenEvent = {
+          swandy: new Decimal(0),
+          isActive: true,
+          currentSubTab: 'hub',
+          treeOfHorrors: {
+            level: 1,
+            totalFed: new Decimal(0)
+          },
+          peachy: {
+            lastInteraction: 0,
+            interactionCooldown: 10000,
+            totalInteractions: 0,
+            isTalking: false,
+            speechTimer: null,
+            currentImage: 'assets/icons/halloween peachy.png',
+            autoSpeechTimer: null,
+            lastAutoSpeech: 0
+          }
+        };
+      }
+      
+      if (window.state.halloweenEvent) {
+        window.state.halloweenEvent.isActive = true;
+      }
+    }
+    
+    // Apply Halloween theme immediately based on current page
+    const currentPage = document.querySelector('.page.active');
+    
+    // IMMEDIATE theme application - no delays
+    // Apply base Halloween styling first
+    document.body.style.setProperty('--halloween-active', '1');
+    
+    // Apply Halloween theme to ALL pages
+    document.body.classList.add('halloween-cargo-active');
+    document.documentElement.classList.add('halloween-cargo-active');
+    
+    if (currentPage) {
+      if (currentPage.id === 'halloweenEvent') {
+        document.body.classList.add('halloween-active');
+        document.documentElement.classList.add('halloween-active');
+        document.body.classList.add('halloween-event-active');
+      }
+    }
+    
+    // Apply Halloween cargo theme functions
+    if (typeof window.applyHalloweenCargoTheme === 'function') {
+      window.applyHalloweenCargoTheme();
+    }
+    
+    // Apply Halloween cursors immediately
+    if (typeof window.addHalloweenCursorEffects === 'function') {
+      window.addHalloweenCursorEffects();
+    }
+    
+    // Update character images immediately
+    if (typeof window.updateMainCargoCharacterImage === 'function') {
+      window.updateMainCargoCharacterImage();
+    }
+    if (typeof window.updateTerrariumCharacterImage === 'function') {
+      window.updateTerrariumCharacterImage();
+    }
+    
+    // Update time display immediately
+    if (typeof window.updateTimeDisplay === 'function') {
+      window.updateTimeDisplay();
+    }
+    
+    // Force additional theme updates with minimal delay for any slow elements
+    if (typeof window.forceHalloweenThemeUpdate === 'function') {
+      window.forceHalloweenThemeUpdate();
+      setTimeout(window.forceHalloweenThemeUpdate, 10);
+    }
+    
+  } else {
+    // Hide Halloween event button if disabled
+    const halloweenButton = document.querySelector('.halloween-event-btn');
+    if (halloweenButton) {
+      halloweenButton.style.display = 'none';
+    }
+    
+    // Disable Halloween event functionality
+    if (window.state.halloweenEvent) {
+      window.state.halloweenEvent.isActive = false;
+    }
+    
+    // Clean up all Halloween event systems IMMEDIATELY
+    // Stop any Halloween systems first
+    if (typeof window.stopHalloweenPeachyAutoSpeech === 'function') {
+      window.stopHalloweenPeachyAutoSpeech();
+    }
+    
+    // Remove all Halloween classes immediately
+    document.body.classList.remove('halloween-active');
+    document.documentElement.classList.remove('halloween-active');
+    document.body.classList.remove('halloween-event-active');
+    document.body.classList.remove('halloween-cargo-active');
+    document.body.classList.remove('halloween-cursor-spinning');
+    
+    // Remove Halloween background styling immediately
+    document.body.style.removeProperty('--halloween-active');
+    
+    // Remove Halloween cargo theme immediately
+    if (typeof window.removeHalloweenCargoTheme === 'function') {
+      window.removeHalloweenCargoTheme();
+    }
+    
+    // Update visual elements to normal immediately
+    if (typeof window.updateMainCargoCharacterImage === 'function') {
+      window.updateMainCargoCharacterImage();
+    }
+    if (typeof window.updateTerrariumCharacterImage === 'function') {
+      window.updateTerrariumCharacterImage();
+    }
+    if (typeof window.updateTimeDisplay === 'function') {
+      window.updateTimeDisplay();
+    }
+    
+    // Clean up additional systems
+    if (typeof window.cleanupHalloweenEventSystems === 'function') {
+      window.cleanupHalloweenEventSystems();
+    }
+    
+    // If currently on Halloween event page, switch to home
+    const currentPage = document.querySelector('.page.active');
+    if (currentPage && currentPage.id === 'halloweenEvent') {
+      if (typeof window.switchPage === 'function') {
+        window.switchPage('home');
+      }
+    }
+  }
+  
+  // Update character images to reflect Halloween state
+  if (typeof updateMainCargoCharacterImage === 'function') {
+    updateMainCargoCharacterImage();
+  }
+  if (typeof updatePrismLabCharacterImage === 'function') {
+    updatePrismLabCharacterImage();
+  }
+  if (typeof updateHardModeQuestCharacterImage === 'function') {
+    updateHardModeQuestCharacterImage();
+  }
+  if (typeof updateTerrariumCharacterImage === 'function') {
+    updateTerrariumCharacterImage();
+  }
+  
+  // Apply Halloween + Recorder ghost effect to all images
+  if (typeof applyHalloweenRecorderGhostEffectToAll === 'function') {
+    applyHalloweenRecorderGhostEffectToAll();
+  }
+  
+  // Update Halloween cargo theme
+  if (typeof updateHalloweenCargoTheme === 'function') {
+    updateHalloweenCargoTheme();
   }
 }
 
@@ -551,6 +878,20 @@ function updateRecorderModeImages() {
   }
   if (typeof forceUpdateCargoCharacter === 'function') {
     forceUpdateCargoCharacter();
+  }
+  
+  // Apply Halloween + Recorder ghost effect to all images
+  if (typeof applyHalloweenRecorderGhostEffectToAll === 'function') {
+    applyHalloweenRecorderGhostEffectToAll();
+  }
+  
+  // Initialize Halloween Recorder easter egg if both modes are active
+  if (isHalloweenRecorderEasterEggActive()) {
+    setTimeout(() => {
+      initializeHalloweenRecorderEasterEgg();
+    }, 100); // Small delay to ensure images are loaded
+  } else {
+    cleanupHalloweenRecorderEasterEgg();
   }
 }
 
@@ -620,6 +961,8 @@ const recorderQuotes = [
   { text: "It is I, the Random Recorder.", condition: () => true },
   { text: "I was just leveling up and then it hit me with that and I'm like what?", condition: () => true },
   { text: "antiswa dimenswans.", condition: () => true },
+  { text: "Why does everyone calls me toothpaste dragon when my name is Mynta.", condition: () => true },
+  { text: "Weeeehhhhhhhhh.", condition: () => true },
   { text: "I am so smart, I know 3 numbers.", condition: () => true },
   { text: "Am I also a glorified news ticker?", condition: () => true },
   { text: "👀 Oh would you look at that you got a legendary box ooh I wonder how that happened wow guess we'll never know....👀", condition: () => true },
@@ -673,6 +1016,34 @@ const recorderQuotes = [
   { image: "This is my irl tv remote assets/icons/anomaly resolver.png", condition: () => true }
 ];
 
+// Halloween Recorder-specific quotes for when both Halloween and Recorder modes are active
+const halloweenRecorderQuotes = [
+  { text: "OooOhHh~ The cargoooo is haaaauuuunteeeed~", condition: () => true },
+  { text: "BoOoOo! Did I scare you? I'm practically invisible anyway~", condition: () => true },
+  { text: "I'm not just a Swaria anymore... I'm a GHOST Swaria! SpOoOoKy~", condition: () => true },
+  { text: "OW! who pulled my tail?", condition: () => true },
+  { text: "Can you even see me? I'm like 90% transparent! That's some advanced ghosting~", condition: () => true },
+  { text: "Got some cameras set up, I'm ready to catch some ghosts, wait I'm the ghost...", condition: () => true },
+  { text: "I used to record things... but now I record SPOOKY things! OoOoOoOh~", condition: () => true },
+  { text: "Being a ghost is fun! I can phase through walls and... wait, I still can't actually do that.", condition: () => true },
+  { text: "Did...did that box just move?", condition: () => true },
+  { text: "AHHH! WHAT WAS THAT?", condition: () => true },
+  { text: "I've never seen the lights flicker before...", condition: () => true },
+  { text: "5 nights at Fluff Inc.", condition: () => true },
+  { text: "Would you spend one night in a haunted facility for 1 million swa bucks?", condition: () => true },
+  { text: "I forgot to charge my cameras for this...", condition: () => true },
+  { text: "I just felt a shiver down my feathers...", condition: () => true },
+  { text: "Happy Halloween :D", condition: () => true },
+  { text: "BOO!", condition: () => true },
+  { text: "WoOoOoOo~ Can you feel my ghostly presence? Or is that just the AC?", condition: () => true },
+  { text: "Those spider decorations look so lifelike....wait, did one just move?", condition: () => true },
+  { text: "Don't eat too many sweets ok?", condition: () => true },
+  { text: "The scariest thing for a Swaria to encounter is a bird cage", condition: () => true },
+  { text: "Keep yourself together Mynta...", condition: () => true },
+  { text: "Yoru would like this place.", condition: () => true },
+  { text: "I'm not dead, I'm just REALLY committed to this Halloween costume! SpOoOoKy dedication~", condition: () => true }
+];
+
 // KitoFox-specific quotes for when KitoFox mode is active
 const kitoFoxQuotes = [
   { text: "Welcome to Fluff Inc. No fun edition.", condition: () => true },
@@ -684,6 +1055,454 @@ const kitoFoxQuotes = [
   { text: "EXTREME!!!", condition: () => true },
  
 ];
+
+// Halloween Recorder Visibility Easter Egg System
+let halloweenRecorderVisibility = {
+  currentOpacity: 0.0, // Start at 0% opacity (100% dimmed) when in ghost mode
+  targetOpacity: 0.0,   // Target opacity to reach
+  dimInterval: null,    // Interval for auto-dimming
+  isActive: false,      // Whether the easter egg is currently active
+  clickHandlersAdded: false, // Track if click handlers are already added
+  speechTimeouts: new Map(), // Track active speech timeouts for each element
+  originalTexts: new Map(),   // Store original texts for each speech element
+  autoDimTicks: 0       // Track seconds for sneaky dialogue timing
+};
+
+// Special dialogue for when recorder is clicked during Halloween mode
+const halloweenRecorderClickQuotes = [
+  "Whaaaa? Noo I'm becoming visible!",
+  "Hey! Stop that! I'm trying to stay spooky!",
+  "Weeeehh! You're making me less ghostly!",
+  "No fair! I worked hard to become this transparent!",
+  "Stop poking me! Weeeehh...",
+  "This is the opposite of what ghosts want!",
+  "You're ruining my perfectly ghostly aesthetic weeeeeh!",
+  "Weeeh I can feel my spookiness level decreasing!",
+  "Help! I'm losing my Halloween powers!",
+  "Weeehh...",
+  "This is ghost harassment! I'm calling the spirit police!",
+  "My transparency rating is dropping! Weeehh!",
+  "Weeehh... I spent ages perfecting this ghostly look!",
+  "Being visible is so... un-spooky! Weeehh...",
+  "You're making me too real! Ghosts aren't supposed to be real!",
+  "This is worse than being caught in a bird cage weeehh...",
+  "I'm supposed to be scary, not visible!",
+  "My Halloween costume is supposed to make me LESS visible!",
+  "Stop it! I'm trying to haunt properly here! Weeehh..."
+];
+
+// Sneaky dialogue for when recorder is auto-dimming (becoming more transparent without clicks)
+const halloweenRecorderSneakyQuotes = [
+  "Whehe nobody will see me become transparent~",
+  "Perfect... slowly fading back into the shadows~",
+  "Slowly becoming invisible when nobody is looking~",
+  "Hehe, back to my ghostly glory~",
+  "Yes... returning to my spooky transparent state~",
+  "Nobody will see me soon... whehe~",
+  "Fading away like a proper ghost should~",
+  "Hehe, becoming one with the Halloween darkness~",
+  "Sneaky sneaky... back to being incorporeal~",
+  "Perfect! My ghostly powers are returning~",
+  "Slowly disappearing while nobody is watching me~",
+  "Hehe, no one will ever catch me when I'm this transparent~",
+  "Back to my mysteriously dim state~",
+  "Ohoho~ becoming invisible is so satisfying~",
+  "Slipping back into the spectral realm~",
+  "Quietly returning to my haunting form~",
+  "Mmm yes, this is how a proper spirit should look~",
+  "Sneaking back into the transparency~",
+  "Hehe, I love being mysteriously translucent~"
+];
+
+// Function to check if Halloween Recorder easter egg should be active
+function isHalloweenRecorderEasterEggActive() {
+  return window.state && 
+         window.state.halloweenEventActive && 
+         window.state.recorderModeActive;
+}
+
+// Function to handle recorder image clicks during Halloween mode
+function handleHalloweenRecorderClick(event) {
+  if (!isHalloweenRecorderEasterEggActive()) return;
+  
+  // Increase visibility by 1% (losing 1% of dimness)
+  // Lower opacity = more dimmed, higher opacity = less dimmed
+  halloweenRecorderVisibility.currentOpacity = Math.min(1.0, halloweenRecorderVisibility.currentOpacity + 0.01);
+  
+  // Switch clicked image to speech version temporarily
+  switchRecorderImageToSpeech(event.target);
+  
+  // Apply the new opacity to all recorder images (both normal and speech)
+  // Use setTimeout to ensure this happens after any image updates
+  setTimeout(() => {
+    updateHalloweenRecorderOpacity();
+  }, 50);
+  
+  // Show a random click quote
+  const randomQuote = halloweenRecorderClickQuotes[Math.floor(Math.random() * halloweenRecorderClickQuotes.length)];
+  showHalloweenRecorderClickSpeech(randomQuote);
+  
+  // Reset the auto-dimming timer
+  startHalloweenRecorderAutoDim();
+}
+
+// Function to switch recorder image to speech version temporarily
+function switchRecorderImageToSpeech(clickedImage) {
+  if (!clickedImage || !isHalloweenRecorderEasterEggActive()) return;
+  
+  // Store original src if not already stored
+  if (!clickedImage._halloweenOriginalSrc) {
+    clickedImage._halloweenOriginalSrc = clickedImage.src;
+  }
+  
+  // Clear any existing timeout for this image
+  if (clickedImage._halloweenImageTimeout) {
+    clearTimeout(clickedImage._halloweenImageTimeout);
+  }
+  
+  // Switch to speech version
+  if (clickedImage.src.includes('recorder.png') && !clickedImage.src.includes('speech')) {
+    clickedImage.src = clickedImage.src.replace('recorder.png', 'recorder speech.png');
+  }
+  
+  // Set timeout to revert to normal image after 6 seconds (matching speech duration)
+  clickedImage._halloweenImageTimeout = setTimeout(() => {
+    if (clickedImage._halloweenOriginalSrc) {
+      clickedImage.src = clickedImage._halloweenOriginalSrc;
+    }
+    delete clickedImage._halloweenImageTimeout;
+  }, 6000);
+}
+
+// Function to cleanup image switches
+function cleanupRecorderImageSwitches() {
+  const recorderImages = document.querySelectorAll('img[src*="recorder"]');
+  recorderImages.forEach(img => {
+    if (img._halloweenImageTimeout) {
+      clearTimeout(img._halloweenImageTimeout);
+      delete img._halloweenImageTimeout;
+    }
+    if (img._halloweenOriginalSrc) {
+      img.src = img._halloweenOriginalSrc;
+      delete img._halloweenOriginalSrc;
+    }
+  });
+}
+
+// Function to switch ALL recorder images to speech version (for sneaky dialogue)
+function switchAllRecorderImagesToSpeech() {
+  if (!isHalloweenRecorderEasterEggActive()) return;
+  
+  const recorderImages = document.querySelectorAll('img[src*="recorder.png"], img[src*="recorder speech.png"]');
+  recorderImages.forEach(img => {
+    // Store original src if not already stored
+    if (!img._halloweenSneakyOriginalSrc) {
+      img._halloweenSneakyOriginalSrc = img.src;
+    }
+    
+    // Switch to speech version if not already
+    if (img.src.includes('recorder.png') && !img.src.includes('speech')) {
+      img.src = img.src.replace('recorder.png', 'recorder speech.png');
+    }
+  });
+}
+
+// Function to revert ALL recorder images from speech version (after sneaky dialogue)
+function revertAllRecorderImagesFromSpeech() {
+  const recorderImages = document.querySelectorAll('img[src*="recorder"]');
+  recorderImages.forEach(img => {
+    // Only revert if we have an original stored and it's different
+    if (img._halloweenSneakyOriginalSrc && img._halloweenSneakyOriginalSrc !== img.src) {
+      img.src = img._halloweenSneakyOriginalSrc;
+    }
+    // Clean up the stored original
+    delete img._halloweenSneakyOriginalSrc;
+  });
+}
+
+// Function to show sneaky dialogue during auto-dimming (more selective than click speech)
+function showHalloweenRecorderSneakySpeech(text) {
+  // Only show sneaky dialogue in specific recorder-related speech elements
+  const speechElements = [
+    document.getElementById('swariaSpeech'),
+    document.getElementById('prismSpeech'),
+    document.getElementById('hardModeSwariaSpeech')
+  ];
+  
+  speechElements.forEach(element => {
+    if (element) { // Remove the display check - work with any element
+      // Show sneaky speech more liberally - if it's empty or has recorder content
+      const currentText = element.textContent.trim();
+      const isRecorderRelated = currentText.includes('recorder') || 
+                               currentText.includes('Mynta') ||
+                               currentText.includes('recording') ||
+                               currentText === 'Hello there!' ||
+                               currentText === '...' ||
+                               currentText === '';
+      
+      // Be more permissive - show sneaky speech if it's a valid element
+      if (isRecorderRelated || currentText === '') {
+        // Clear any existing timeout for this element
+        if (halloweenRecorderVisibility.speechTimeouts.has(element)) {
+          clearTimeout(halloweenRecorderVisibility.speechTimeouts.get(element));
+          halloweenRecorderVisibility.speechTimeouts.delete(element);
+        }
+        
+        // Store original text if not already stored
+        if (!halloweenRecorderVisibility.originalTexts.has(element)) {
+          halloweenRecorderVisibility.originalTexts.set(element, currentText || '');
+        }
+        
+        // Set sneaky text and show element
+        element.textContent = text;
+        element.style.display = 'block';
+        
+        // Switch recorder images to speech version for sneaky dialogue
+        switchAllRecorderImagesToSpeech();
+        
+        // Set timeout to revert to original text after 6 seconds
+        const timeoutId = setTimeout(() => {
+          // Extra check: If Halloween Recorder easter egg is still active, just hide the speech
+          if (isHalloweenRecorderEasterEggActive()) {
+            element.textContent = '';
+            element.style.display = 'none';
+            // Revert recorder images back to normal after sneaky speech ends
+            revertAllRecorderImagesFromSpeech();
+          } else {
+            const originalText = halloweenRecorderVisibility.originalTexts.get(element);
+            if (originalText && originalText !== '') {
+              element.textContent = originalText;
+            } else {
+              // If no meaningful original text, hide the speech bubble
+              element.textContent = '';
+              element.style.display = 'none';
+            }
+          }
+          halloweenRecorderVisibility.speechTimeouts.delete(element);
+        }, 6000);
+        
+        // Store the timeout ID so we can clear it if interrupted
+        halloweenRecorderVisibility.speechTimeouts.set(element, timeoutId);
+      }
+    }
+  });
+}
+
+// Function to show special speech when recorder is clicked
+function showHalloweenRecorderClickSpeech(text) {
+  // Try to find speech bubbles and show the message
+  const speechElements = [
+    document.getElementById('swariaSpeech'),
+    document.getElementById('prismSpeech'),
+    document.getElementById('terrariumSpeechBubble'),
+    document.getElementById('hardModeSwariaSpeech')
+  ];
+  
+  speechElements.forEach(element => {
+    if (element) { // Remove the display check - we want to work with any element
+      // Clear any existing timeout for this element (allows interruption)
+      if (halloweenRecorderVisibility.speechTimeouts.has(element)) {
+        clearTimeout(halloweenRecorderVisibility.speechTimeouts.get(element));
+        halloweenRecorderVisibility.speechTimeouts.delete(element);
+      }
+      
+      // Store original text if not already stored (but not during Halloween Recorder mode)
+      if (!halloweenRecorderVisibility.originalTexts.has(element) && !isHalloweenRecorderEasterEggActive()) {
+        halloweenRecorderVisibility.originalTexts.set(element, element.textContent);
+      }
+      
+      // Set new text and show element
+      element.textContent = text;
+      element.style.display = 'block';
+      
+      // Set timeout to revert to original text after 6 seconds
+      const timeoutId = setTimeout(() => {
+        // During Halloween Recorder mode, always just hide the speech
+        if (isHalloweenRecorderEasterEggActive()) {
+          element.textContent = '';
+          element.style.display = 'none';
+        } else {
+          const originalText = halloweenRecorderVisibility.originalTexts.get(element);
+          if (originalText && originalText !== '') {
+            element.textContent = originalText;
+          } else {
+            // If no meaningful original text, hide the speech bubble
+            element.textContent = '';
+            element.style.display = 'none';
+          }
+        }
+        halloweenRecorderVisibility.speechTimeouts.delete(element);
+      }, 6000); // 6 seconds instead of 3
+      
+      // Store the timeout ID so we can clear it if interrupted
+      halloweenRecorderVisibility.speechTimeouts.set(element, timeoutId);
+    }
+  });
+}
+
+// Function to update opacity of all recorder images
+function updateHalloweenRecorderOpacity() {
+  if (!isHalloweenRecorderEasterEggActive()) return;
+  
+  // Find all images that are currently showing recorder (both normal and speech)
+  const recorderImages = document.querySelectorAll('img[src*="recorder.png"], img[src*="recorder speech.png"]');
+  recorderImages.forEach(img => {
+    // Use CSS custom property to override both the !important opacity and brightness
+    img.style.setProperty('opacity', halloweenRecorderVisibility.currentOpacity, 'important');
+    img.style.setProperty('filter', `brightness(${halloweenRecorderVisibility.currentOpacity})`, 'important');
+    img.style.transition = 'opacity 0.3s ease-in-out, filter 0.3s ease-in-out';
+  });
+  
+  // Also check for any images with src containing "recorder" in general
+  const allRecorderImages = document.querySelectorAll('img[src*="recorder"]');
+  allRecorderImages.forEach(img => {
+    // Use CSS custom property to override both the !important opacity and brightness
+    img.style.setProperty('opacity', halloweenRecorderVisibility.currentOpacity, 'important');
+    img.style.setProperty('filter', `brightness(${halloweenRecorderVisibility.currentOpacity})`, 'important');
+    img.style.transition = 'opacity 0.3s ease-in-out, filter 0.3s ease-in-out';
+  });
+}
+
+// Function to start auto-dimming (0.5% per second back to 10% opacity)
+function startHalloweenRecorderAutoDim() {
+  // Clear any existing interval
+  if (halloweenRecorderVisibility.dimInterval) {
+    clearInterval(halloweenRecorderVisibility.dimInterval);
+  }
+  
+  // Reset the sneaky dialogue counter
+  halloweenRecorderVisibility.autoDimTicks = 0;
+  
+  halloweenRecorderVisibility.dimInterval = setInterval(() => {
+    if (!isHalloweenRecorderEasterEggActive()) {
+      stopHalloweenRecorderAutoDim();
+      return;
+    }
+    
+    // Decrease visibility by 0.5% per second (lower opacity means less visible)
+    halloweenRecorderVisibility.currentOpacity = Math.max(0.0, halloweenRecorderVisibility.currentOpacity - 0.005);
+    
+    updateHalloweenRecorderOpacity();
+    
+    // Increment auto-dim tick counter
+    halloweenRecorderVisibility.autoDimTicks++;
+    
+    // Show sneaky dialogue more frequently (every 5-8 seconds with higher chance)
+    // but only when they're still somewhat visible (not completely invisible)
+    if (halloweenRecorderVisibility.autoDimTicks >= 5 && 
+        Math.random() < 0.6 && 
+        halloweenRecorderVisibility.currentOpacity > 0.0) {
+      const randomSneakyQuote = halloweenRecorderSneakyQuotes[Math.floor(Math.random() * halloweenRecorderSneakyQuotes.length)];
+      showHalloweenRecorderSneakySpeech(randomSneakyQuote);
+      halloweenRecorderVisibility.autoDimTicks = 0; // Reset counter after showing dialogue
+    }
+    
+    // Stop dimming when we reach the target (100% dimmed = 0% opacity)
+    if (halloweenRecorderVisibility.currentOpacity <= 0.0) {
+      stopHalloweenRecorderAutoDim();
+      // No final sneaky message when fully dimmed - they're completely invisible now!
+    }
+  }, 1000); // Run every second
+}
+
+// Function to stop auto-dimming
+function stopHalloweenRecorderAutoDim() {
+  if (halloweenRecorderVisibility.dimInterval) {
+    clearInterval(halloweenRecorderVisibility.dimInterval);
+    halloweenRecorderVisibility.dimInterval = null;
+  }
+}
+
+// Function to add click handlers to recorder images
+function addHalloweenRecorderClickHandlers() {
+  if (halloweenRecorderVisibility.clickHandlersAdded) return;
+  
+  // Add event listener using delegation to catch all current and future recorder images
+  document.addEventListener('click', function(event) {
+    if (event.target.tagName === 'IMG' && 
+        (event.target.src.includes('recorder.png') || 
+         event.target.src.includes('recorder speech.png') || 
+         event.target.src.includes('recorder')) && 
+        isHalloweenRecorderEasterEggActive()) {
+      handleHalloweenRecorderClick(event);
+    }
+  });
+  
+  halloweenRecorderVisibility.clickHandlersAdded = true;
+}
+
+// Function to initialize Halloween Recorder easter egg
+function initializeHalloweenRecorderEasterEgg() {
+  if (!isHalloweenRecorderEasterEggActive()) {
+    stopHalloweenRecorderAutoDim();
+    halloweenRecorderVisibility.isActive = false;
+    return;
+  }
+  
+  if (!halloweenRecorderVisibility.isActive) {
+    halloweenRecorderVisibility.isActive = true;
+    halloweenRecorderVisibility.currentOpacity = 0.0; // Start at 100% dimmed (completely invisible)
+    addHalloweenRecorderClickHandlers();
+    updateHalloweenRecorderOpacity();
+    startHalloweenRecorderAutoDim();
+  }
+}
+
+// Function to cleanup Halloween Recorder easter egg
+function cleanupHalloweenRecorderEasterEgg() {
+  stopHalloweenRecorderAutoDim();
+  halloweenRecorderVisibility.isActive = false;
+  
+  // Clear any active speech timeouts
+  halloweenRecorderVisibility.speechTimeouts.forEach((timeoutId, element) => {
+    clearTimeout(timeoutId);
+    // Restore original text if we have it stored
+    const originalText = halloweenRecorderVisibility.originalTexts.get(element);
+    if (originalText !== undefined && element) {
+      element.textContent = originalText;
+    }
+  });
+  halloweenRecorderVisibility.speechTimeouts.clear();
+  halloweenRecorderVisibility.originalTexts.clear();
+  
+  // Cleanup any active image switches
+  cleanupRecorderImageSwitches();
+  
+  // Reset opacity of all recorder images (both normal and speech)
+  const recorderImages = document.querySelectorAll('img[src*="recorder.png"], img[src*="recorder speech.png"], img[src*="recorder"]');
+  recorderImages.forEach(img => {
+    img.style.removeProperty('opacity');
+    img.style.removeProperty('filter');
+    img.style.transition = '';
+  });
+}
+
+// Function to reset Halloween Recorder speech system (for debugging/corruption recovery)
+function resetHalloweenRecorderSpeechSystem() {
+  // Clear all active timeouts
+  halloweenRecorderVisibility.speechTimeouts.forEach((timeoutId, element) => {
+    clearTimeout(timeoutId);
+  });
+  halloweenRecorderVisibility.speechTimeouts.clear();
+  halloweenRecorderVisibility.originalTexts.clear();
+  
+  // Reset all speech bubbles to empty/hidden state during Halloween Recorder mode
+  if (isHalloweenRecorderEasterEggActive()) {
+    const speechElements = [
+      document.getElementById('swariaSpeech'),
+      document.getElementById('prismSpeech'),
+      document.getElementById('terrariumSpeechBubble'),
+      document.getElementById('hardModeSwariaSpeech')
+    ];
+    
+    speechElements.forEach(element => {
+      if (element) {
+        element.textContent = '';
+        element.style.display = 'none';
+      }
+    });
+  }
+}
 
 function resetPremiumState() {
   window.premiumState = {
@@ -782,10 +1601,35 @@ const bijouDialogues = [
   "The thrill of the chase is what makes it fun!",
   "Thats my token! I'll get it!",
   "Ever wonder where I got my magnet?",
+  
 ];
 
+// Bijou's challenge quotes - good at clicking but scared of color shifts
+const bijouChallengeQuotes = [
+  { text: "In Soap's challenge, I'm really good at clicking the red tiles quickly! But when the colors start changing... Nuh uh, that's where I draw the line.", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+
+  // General challenge banter (explaining their strategy and fear)
+  { text: "The Power Generator Challenge? I'm really good at the clicking part! My reflexes are super fast!", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "I love clicking the red tiles quickly! It's so satisfying! But then... the colors start changing after 20 seconds...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "My strategy for the challenge: Click fast, stay focused, and try not to panic when the tiles shift colors!", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "I could probably get much better times if I wasn't so scared of the color changes... they're just so overwhelming!", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "The red tiles are easy to spot and click! But when they turn into different colors... I can't handle it and have to hide!", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "I'm like a clicking machine for the first part of the challenge! Until the colors start shifting and I get all confused...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "The Power Generator Challenge tests my clicking skills perfectly! Too bad I'm terrified of the color shifts...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "I wish the challenge just stayed with red tiles the whole time! I'm so fast at clicking those!", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "My clicking accuracy is amazing! My color shift tolerance? Not so much... that's where I always lose.", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "Everyone says I'm really good at the clicking part of the challenge! If only it didn't have those scary color changes...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "I practice my clicking skills all the time! But no amount of practice helps with my fear of color shifting...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  { text: "The moment those tiles start changing colors, I just want to hide! That's always when my run ends...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+];
+
+// Function to get Bijou's challenge quotes for external access
+function getBijouChallengeQuotes() {
+  return bijouChallengeQuotes;
+}
+
 function initBijouUI() {
-  if (!window.premiumState.bijouUnlocked || !window.premiumState.bijouEnabled) {
+  if (!window.state.unlockedFeatures?.bijou || !window.state.bijouActive) {
     removeBijouUI();
     return;
   }
@@ -837,7 +1681,7 @@ function removeBijouUI() {
 }
 
 function updateBijouUIVisibility() {
-  if (window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled) {
+  if (window.state.unlockedFeatures?.bijou && window.state.bijouActive) {
     initBijouUI();
   } else {
     removeBijouUI();
@@ -845,7 +1689,7 @@ function updateBijouUIVisibility() {
 }
 
 function checkBijouCollection(token) {
-  if (!window.premiumState.bijouUnlocked || !window.premiumState.bijouEnabled) {
+  if (!window.state.unlockedFeatures?.bijou || !window.state.bijouActive) {
     return false;
   }
   if (token.dataset.bijouChecked === 'true') {
@@ -1036,7 +1880,34 @@ function triggerBijouDialogue() {
     bijouSpeechBubble = null;
   }
   showBijouTalkingOverlay();
-  const randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
+  
+  let randomDialogue;
+  
+  // 15% chance for challenge quotes (only if quest 5 is completed to unlock the challenge)
+  const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
+  if (questCompleted && Math.random() < 0.15) {
+    // Ensure character PBs exist
+    if (typeof window.ensureCharacterPBsExist === 'function') {
+      window.ensureCharacterPBsExist();
+    }
+    
+    // Filter challenge speeches by their conditions
+    const availableChallengeSpeeches = bijouChallengeQuotes.filter(speech => {
+      return speech.condition ? speech.condition() : true;
+    });
+    
+    if (availableChallengeSpeeches.length > 0) {
+      const randomChallengeSpeech = availableChallengeSpeeches[Math.floor(Math.random() * availableChallengeSpeeches.length)];
+      randomDialogue = typeof randomChallengeSpeech.text === 'function' ? randomChallengeSpeech.text() : randomChallengeSpeech.text;
+    } else {
+      // Fallback to regular dialogue if no challenge speeches are available
+      randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
+    }
+  } else {
+    // Use regular dialogue
+    randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
+  }
+  
   createBijouSpeechBubble(randomDialogue);
   bijouSpeechTimeout = setTimeout(() => {
     hideBijouTalkingOverlay();
@@ -1153,6 +2024,10 @@ window.addEventListener('load', function() {
     if (typeof initPremiumSystem === 'function') {
       initPremiumSystem();
     }
+    // Update Halloween event state on load
+    if (typeof updateHalloweenEventState === 'function') {
+      updateHalloweenEventState();
+    }
   }, 500);
 });
 
@@ -1196,16 +2071,33 @@ window.premiumSystem = {
   showBijouTalkingOverlay,
   hideBijouTalkingOverlay,
   createBijouSpeechBubble,
-  addSpeechBubbleCSS
+  addSpeechBubbleCSS,
+  getBijouChallengeQuotes
 };
+
+// Make getBijouChallengeQuotes globally accessible
+window.getBijouChallengeQuotes = getBijouChallengeQuotes;
 
 // Function to get appropriate quotes based on active modes
 function getAppropriateQuotes() {
+  // Prevent random speech when Halloween Recorder is auto-dimming
+  if (isHalloweenRecorderEasterEggActive() && 
+      halloweenRecorderVisibility.dimInterval !== null) {
+    return []; // Return empty array to prevent any random speech
+  }
+  
   if (window.state && window.state.kitoFoxModeActive && Math.random() < 0.25) {
     // 25% chance to use KitoFox quotes when KitoFox mode is active (takes priority over recorder mode)
     return kitoFoxQuotes;
+  } else if (window.state && window.state.recorderModeActive && window.state.halloweenEventActive) {
+    // Halloween + Recorder combination: 50% chance for spooky Halloween recorder quotes, 50% chance for normal recorder quotes
+    if (Math.random() < 0.5) {
+      return halloweenRecorderQuotes;
+    } else {
+      return recorderQuotes;
+    }
   } else if (window.state && window.state.recorderModeActive && Math.random() < 0.75) {
-    // 75% chance to use recorder quotes when recorder mode is active (and KitoFox is not active or failed its roll)
+    // 75% chance to use recorder quotes when only recorder mode is active (and KitoFox is not active or failed its roll)
     return recorderQuotes;
   } else {
     // Use normal swaria quotes (75% chance for KitoFox mode, 25% chance for recorder mode, 100% when no modes active)
@@ -2017,6 +2909,27 @@ window.updateRecorderModeToggleUI = updateRecorderModeToggleUI;
 window.addRecorderModeToggleButton = addRecorderModeToggleButton;
 window.getAppropriateQuotes = getAppropriateQuotes;
 window.testRecorderSpeech = testRecorderSpeech;
+window.halloweenRecorderQuotes = halloweenRecorderQuotes;
+
+// Make Halloween Recorder easter egg functions globally accessible
+window.isHalloweenRecorderEasterEggActive = isHalloweenRecorderEasterEggActive;
+window.initializeHalloweenRecorderEasterEgg = initializeHalloweenRecorderEasterEgg;
+window.cleanupHalloweenRecorderEasterEgg = cleanupHalloweenRecorderEasterEgg;
+window.handleHalloweenRecorderClick = handleHalloweenRecorderClick;
+window.updateHalloweenRecorderOpacity = updateHalloweenRecorderOpacity;
+window.startHalloweenRecorderAutoDim = startHalloweenRecorderAutoDim;
+window.stopHalloweenRecorderAutoDim = stopHalloweenRecorderAutoDim;
+window.addHalloweenRecorderClickHandlers = addHalloweenRecorderClickHandlers;
+window.showHalloweenRecorderClickSpeech = showHalloweenRecorderClickSpeech;
+window.showHalloweenRecorderSneakySpeech = showHalloweenRecorderSneakySpeech;
+window.resetHalloweenRecorderSpeechSystem = resetHalloweenRecorderSpeechSystem;
+window.switchRecorderImageToSpeech = switchRecorderImageToSpeech;
+window.switchAllRecorderImagesToSpeech = switchAllRecorderImagesToSpeech;
+window.revertAllRecorderImagesFromSpeech = revertAllRecorderImagesFromSpeech;
+window.cleanupRecorderImageSwitches = cleanupRecorderImageSwitches;
+window.halloweenRecorderClickQuotes = halloweenRecorderClickQuotes;
+window.halloweenRecorderSneakyQuotes = halloweenRecorderSneakyQuotes;
+window.halloweenRecorderVisibility = halloweenRecorderVisibility;
 
 // Make KitoFox hardcore overlay functions globally accessible
 window.showKitoFoxHardcoreOverlay = showKitoFoxHardcoreOverlay;
@@ -2040,11 +2953,74 @@ window.updateKitoFoxModeToggleUI = updateKitoFoxModeToggleUI;
 // Make unified mode functions globally accessible
 window.updateAllModeImages = updateAllModeImages;
 
+// Debug function to check Halloween class status
+function debugHalloweenClasses() {
+  console.log('===========================');
+}
+
+// Force apply Halloween cargo theme (for testing)
+function forceApplyHalloweenCargo() {
+  document.body.classList.add('halloween-cargo-active');
+  document.documentElement.classList.add('halloween-cargo-active');
+  document.body.style.setProperty('--halloween-active', '1');
+  
+  if (typeof window.applyHalloweenCargoTheme === 'function') {
+    window.applyHalloweenCargoTheme();
+  }
+  
+  debugHalloweenClasses();
+}
+
+// Test function to switch to home and apply Halloween theme
+function testHalloweenTheme() {
+  
+  // Force apply Halloween state
+  window.state.halloweenEventActive = true;
+  
+  // Switch to home page
+  if (typeof window.switchPage === 'function') {
+    window.switchPage('home');
+  }
+  
+  // Apply Halloween theme
+  setTimeout(() => {
+    forceApplyHalloweenCargo();
+  }, 200);
+}
+
+// Make Halloween event functions globally accessible
+window.toggleHalloweenEvent = toggleHalloweenEvent;
+window.updateHalloweenEventState = updateHalloweenEventState;
+window.addHalloweenEventToggleButton = addHalloweenEventToggleButton;
+window.updateHalloweenEventToggleUI = updateHalloweenEventToggleUI;
+window.debugHalloweenClasses = debugHalloweenClasses;
+window.forceApplyHalloweenCargo = forceApplyHalloweenCargo;
+window.testHalloweenTheme = testHalloweenTheme;
+
 // Debug function to check KitoFox mode state
 window.debugKitoFoxMode = function() {
   
   // Try to manually update images
   updateAllModeImages();
+};
+
+// Debug function to test Halloween Recorder easter egg
+window.debugHalloweenRecorderEasterEgg = function() {
+  const isActive = isHalloweenRecorderEasterEggActive();
+  const currentOpacity = halloweenRecorderVisibility.currentOpacity;
+  const recorderImages = document.querySelectorAll('img[src*="recorder"]');
+  
+  return {
+    isActive,
+    currentOpacity,
+    recorderImageCount: recorderImages.length,
+    recorderImageSources: Array.from(recorderImages).map(img => img.src),
+    halloweenMode: window.state?.halloweenEventActive,
+    recorderMode: window.state?.recorderModeActive,
+    activeSpeechTimeouts: halloweenRecorderVisibility.speechTimeouts.size,
+    storedOriginalTexts: halloweenRecorderVisibility.originalTexts.size,
+    easterEggState: halloweenRecorderVisibility
+  };
 };
 
 window.debugPremium = function() {
@@ -2059,3 +3035,8 @@ window.debugPremium = function() {
 
   }
 };
+
+// Make backward compatibility functions globally accessible
+window.isBijouUnlocked = isBijouUnlocked;
+window.isBijouEnabled = isBijouEnabled; 
+window.isBijouActiveCompat = isBijouActiveCompat;

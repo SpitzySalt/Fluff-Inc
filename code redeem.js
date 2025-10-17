@@ -65,6 +65,24 @@ class CodeRedeemSystem {
         },
         oneTimeUse: true
       },
+      'Mynta': {
+        id: 'recorder_mode_unlock',
+        description: 'Secret unlock: Recorder Mode!',
+        reward: {
+          type: 'unlock',
+          unlockType: 'recorderMode'
+        },
+        oneTimeUse: true
+      },
+      'mynta': {
+        id: 'recorder_mode_unlock',
+        description: 'Secret unlock: Recorder Mode!',
+        reward: {
+          type: 'unlock',
+          unlockType: 'recorderMode'
+        },
+        oneTimeUse: true
+      },
       'no fun allowed': {
         id: 'kitofox_mode_unlock',
         description: 'Secret unlock: HARDCORE Mode!',
@@ -82,6 +100,15 @@ class CodeRedeemSystem {
           trapType: 'swariaTalk'
         },
         oneTimeUse: false
+      },
+      'this is halloween': {
+        id: 'halloween_event_unlock',
+        description: 'Event unlock: Halloween Event toggle!',
+        reward: {
+          type: 'unlock',
+          unlockType: 'halloweenEvent'
+        },
+        oneTimeUse: true
       }
     };
     
@@ -302,6 +329,18 @@ class CodeRedeemSystem {
               window.addKitoFoxModeToggleButton();
             }
           }, 100);
+        } else if (reward.unlockType === 'halloweenEvent') {
+          window.state.unlockedFeatures.halloweenEvent = true;
+          // Initialize Halloween event state
+          if (!window.state.halloweenEventActive) {
+            window.state.halloweenEventActive = false;
+          }
+          // Refresh settings UI to show the new toggle
+          setTimeout(() => {
+            if (typeof window.addHalloweenEventToggleButton === 'function') {
+              window.addHalloweenEventToggleButton();
+            }
+          }, 100);
         }
         break;
       case 'trap':
@@ -338,6 +377,8 @@ class CodeRedeemSystem {
           return 'Unlocked Recorder Mode!';
         } else if (reward.unlockType === 'kitoFoxMode') {
           return 'Unlocked KitoFox Mode!';
+        } else if (reward.unlockType === 'halloweenEvent') {
+          return 'Unlocked Halloween Event!';
         }
         return `Unlocked ${reward.unlockType}!`;
       default:
@@ -484,7 +525,7 @@ class CodeRedeemSystem {
     // Create Swaria image
     const swariaImage = document.createElement('img');
     swariaImage.id = 'swariaTrapImage';
-    swariaImage.src = 'swa normal.png';
+    swariaImage.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy.png' : 'swa normal.png';
     swariaImage.style.cssText = `
       width: 200px;
       height: 200px;
@@ -631,7 +672,7 @@ class CodeRedeemSystem {
     if (dialogueText && clickInstruction && swariaImage) {
       dialogueText.style.display = 'block';
       clickInstruction.style.display = 'block';
-      swariaImage.src = 'swa talking.png';
+      swariaImage.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy speech.png' : 'swa talking.png';
       this.showCurrentDialogue();
       this.updateClickInstruction();
     }
@@ -774,7 +815,7 @@ class CodeRedeemSystem {
     if (dialogueText && clickInstruction && swariaImage) {
       dialogueText.textContent = this.restartDialogue;
       clickInstruction.textContent = 'Nice try! Wait 8 seconds...';
-      swariaImage.src = 'swa talking.png';
+      swariaImage.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy speech.png' : 'swa talking.png';
     }
     
     // Block clicks for 8 seconds, then restart from beginning
@@ -806,7 +847,7 @@ class CodeRedeemSystem {
     
     const swariaImage = document.getElementById('swariaTrapImage');
     if (swariaImage) {
-      swariaImage.src = 'swa talking.png';
+      swariaImage.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy speech.png' : 'swa talking.png';
     }
   }
 
@@ -850,7 +891,7 @@ class CodeRedeemSystem {
     if (dialogueText && clickInstruction && swariaImage) {
       dialogueText.textContent = this.rhythmCheaterDialogue;
       clickInstruction.textContent = 'bot detected! Wait 10 seconds...';
-      swariaImage.src = 'swa talking.png';
+      swariaImage.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy speech.png' : 'swa talking.png';
     }
     
     // Block clicks for 10 seconds (longer punishment), then restart
@@ -1093,7 +1134,7 @@ class CodeRedeemSystem {
 
     // Create Swaria angry image
     const angrySwaria = document.createElement('img');
-    angrySwaria.src = 'swa talking.png';
+    angrySwaria.src = (window.state && window.state.halloweenEventActive) ? 'assets/icons/halloween peachy speech.png' : 'swa talking.png';
     angrySwaria.style.cssText = `
       width: 120px;
       height: 120px;

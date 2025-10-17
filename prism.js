@@ -612,18 +612,15 @@ function showKitoFoxWarning() {
 // Debug function to force vantablack overload on next light tile click
 window.forceVantablackOverloadOnNextClick = function() {
   if (!isKitoFoxModeActive()) {
-    console.log("KitoFox mode must be active to trigger vantablack overload!");
     return false;
   }
   
   if (window.vantablackOverloadSystem.isActive) {
-    console.log("Vantablack overload is already active!");
     return false;
   }
   
   // Set a flag to force overload on next click
   window.vantablackLightSystem.forceOverloadOnNextClick = true;
-  console.log("Next light tile click will trigger vantablack overload!");
   return true;
 };
 
@@ -769,8 +766,11 @@ function spawnSingleLightTile() {
   
   const eligible = Array.from(document.querySelectorAll(".light-tile.active-prism"));
   
-  // Remove tiles that are already active from the eligible list
-  const availableTiles = eligible.filter(tile => !tile.classList.contains("active-tile"));
+  // Remove tiles that are already active OR have vantablack light from the eligible list
+  const availableTiles = eligible.filter(tile => 
+    !tile.classList.contains("active-tile") && 
+    !tile.classList.contains("vantablack-tile")
+  );
   
   if (availableTiles.length === 0) {
     return;
@@ -904,6 +904,11 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
   let totalCollected = 0;
 
   allActiveTiles.forEach((tile, tileIndex) => {
+    // Skip vantablack tiles to avoid dangerous interactions in KitoFox mode
+    if (tile.classList.contains('vantablack-tile')) {
+      return;
+    }
+    
     // Determine color from tile's CSS classes
     let tileColor = 'light';
     if (tile.classList.contains('grey-tile')) {
@@ -1010,6 +1015,11 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
       }
     }
     
+    // Track prism tile click for quest system
+    if (typeof window.trackPrismClick === 'function') {
+      window.trackPrismClick();
+    }
+    
     // Remove the tile
     tile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
     totalCollected++;
@@ -1053,9 +1063,16 @@ function calculateLightTileGain(color, friendshipMultiplier) {
   }
   
   // Apply charged prisma boost from prism core system
-  if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-    const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-    totalGain = totalGain.mul(prismaBoost);
+  if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+    // Ensure totalChargedPrismaGiven is a Decimal
+    if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+      window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+    }
+    
+    if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+      const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+      totalGain = totalGain.mul(prismaBoost);
+    }
   }
   
   return totalGain.floor();
@@ -1383,6 +1400,15 @@ function clickLightTile(index) {
     let baseGain = new Decimal(1);
     let totalGain = baseGain;
     
+    // Debug: Initialize tracking for this click
+    const debugInfo = {
+      color: color,
+      baseGain: baseGain.toNumber(),
+      boosts: {},
+      finalGain: 0
+    };
+    
+    
     // Check for Vi's friendship buff (25% + 5% per level chance for X5 light gain)
     let friendshipMultiplier = new Decimal(1);
     if (window.friendship && window.friendship.Lab && window.friendship.Lab.level >= 1) {
@@ -1391,8 +1417,12 @@ function clickLightTile(index) {
       const random = Math.random() * 100;
       if (random < buffChance) {
         friendshipMultiplier = new Decimal(5);
+        debugInfo.boosts.viRandomBuff = 5;
+      } else {
       }
+    } else {
     }
+    debugInfo.boosts.friendship = friendshipMultiplier.toNumber();
     
     // Check for Vi's level 7+ friendship buff (multi-collection)
     let shouldCollectAllTiles = false;
@@ -1409,39 +1439,93 @@ function clickLightTile(index) {
     
     if (color === 'light') {
       let particleBoost = getParticleBoost();
+      const prevGain = totalGain.toNumber();
       totalGain = totalGain.add(particleBoost);
-      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
+      debugInfo.boosts.particleBoost = particleBoost.toNumber();
+      
+      if (window.boughtElements && window.boughtElements["13"]) {
+        const beforeElement13 = totalGain.toNumber();
+        totalGain = totalGain.mul(5);
+        debugInfo.boosts.element13 = 5;
+      }
+      
+      const beforeLightGain = totalGain.toNumber();
       totalGain = window.getLightGain(totalGain);
+      const lightGainMultiplier = totalGain.div(beforeLightGain).toNumber();
+      debugInfo.boosts.getLightGain = lightGainMultiplier;
       
       // Ensure charger light boost is applied (in case patching didn't work)
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
+        const beforeCharger = totalGain.toNumber();
         totalGain = totalGain.mul(window._chargerLightBoost);
+        debugInfo.boosts.chargerBoost = window._chargerLightBoost.toNumber();
       }
       
       // Apply charged prisma boost from prism core system
-      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-        totalGain = totalGain.mul(prismaBoost);
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+        // Ensure totalChargedPrismaGiven is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        
+        if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+          const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+          totalGain = totalGain.mul(prismaBoost);
+        }
       }
       
       totalGain = totalGain.floor(); 
     } else if (color === 'redlight') {
       let redParticleBoost = DecimalUtils.multiply(window.prismState.redlightparticle.floor(), 0.1);
+      const prevGain = totalGain.toNumber();
       totalGain = totalGain.add(redParticleBoost);
-      if (window.boughtElements && window.boughtElements["13"]) totalGain = totalGain.mul(5);
+      debugInfo.boosts.particleBoost = redParticleBoost.toNumber();
+      
+      if (window.boughtElements && window.boughtElements["13"]) {
+        const beforeElement13 = totalGain.toNumber();
+        totalGain = totalGain.mul(5);
+        debugInfo.boosts.element13 = 5;
+      }
+      
       if (typeof window.getRedlightGain === 'function') {
+        const beforeRedGain = totalGain.toNumber();
         totalGain = window.getRedlightGain(totalGain);
+        const redGainMultiplier = totalGain.div(beforeRedGain).toNumber();
+        debugInfo.boosts.getRedlightGain = redGainMultiplier;
       }
       
       // Ensure charger light boost is applied (in case patching didn't work)
       if (window._chargerLightBoost && window._chargerLightBoost.gt(1)) {
+        const beforeCharger = totalGain.toNumber();
         totalGain = totalGain.mul(window._chargerLightBoost);
+        debugInfo.boosts.chargerBoost = window._chargerLightBoost.toNumber();
       }
       
       // Apply charged prisma boost from prism core system
-      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-        totalGain = totalGain.mul(prismaBoost);
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+        // Ensure totalChargedPrismaGiven is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        
+        if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+          const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+          const beforePrisma = totalGain.toNumber();
+          totalGain = totalGain.mul(prismaBoost);
+          debugInfo.boosts.chargedPrismaBoost = prismaBoost.toNumber();
+        }
+      }
+      
+      // Apply wavelength boost for red light
+      if (typeof window.getLightColorBoost === 'function') {
+        const wavelengthBoost = window.getLightColorBoost('redlight');
+        if (wavelengthBoost > 1) {
+          const beforeWavelength = totalGain.toNumber();
+          totalGain = totalGain.mul(new Decimal(wavelengthBoost));
+          debugInfo.boosts.wavelengthBoost = wavelengthBoost;
+        } else {
+        }
+      } else {
       }
       
       totalGain = totalGain.floor();
@@ -1459,9 +1543,28 @@ function clickLightTile(index) {
       }
       
       // Apply charged prisma boost from prism core system
-      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-        totalGain = totalGain.mul(prismaBoost);
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+        // Ensure totalChargedPrismaGiven is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        
+        if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+          const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+          totalGain = totalGain.mul(prismaBoost);
+        }
+      }
+      
+      // Apply wavelength boost for orange light
+      if (typeof window.getLightColorBoost === 'function') {
+        const wavelengthBoost = window.getLightColorBoost('orangelight');
+        if (wavelengthBoost > 1) {
+          const beforeWavelength = totalGain.toNumber();
+          totalGain = totalGain.mul(new Decimal(wavelengthBoost));
+          debugInfo.boosts.wavelengthBoost = wavelengthBoost;
+        } else {
+        }
+      } else {
       }
       
       totalGain = totalGain.floor();
@@ -1479,9 +1582,28 @@ function clickLightTile(index) {
       }
       
       // Apply charged prisma boost from prism core system
-      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-        totalGain = totalGain.mul(prismaBoost);
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+        // Ensure totalChargedPrismaGiven is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        
+        if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+          const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+          totalGain = totalGain.mul(prismaBoost);
+        }
+      }
+      
+      // Apply wavelength boost for yellow light
+      if (typeof window.getLightColorBoost === 'function') {
+        const wavelengthBoost = window.getLightColorBoost('yellowlight');
+        if (wavelengthBoost > 1) {
+          const beforeWavelength = totalGain.toNumber();
+          totalGain = totalGain.mul(new Decimal(wavelengthBoost));
+          debugInfo.boosts.wavelengthBoost = wavelengthBoost;
+        } else {
+        }
+      } else {
       }
       
       totalGain = totalGain.floor();
@@ -1499,9 +1621,28 @@ function clickLightTile(index) {
       }
       
       // Apply charged prisma boost from prism core system
-      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven && window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
-        const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
-        totalGain = totalGain.mul(prismaBoost);
+      if (window.state && window.state.prismCoreSystem && window.state.prismCoreSystem.totalChargedPrismaGiven) {
+        // Ensure totalChargedPrismaGiven is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.prismCoreSystem.totalChargedPrismaGiven)) {
+          window.state.prismCoreSystem.totalChargedPrismaGiven = new Decimal(window.state.prismCoreSystem.totalChargedPrismaGiven || 0);
+        }
+        
+        if (window.state.prismCoreSystem.totalChargedPrismaGiven.gt(0)) {
+          const prismaBoost = new Decimal(1).add(window.state.prismCoreSystem.totalChargedPrismaGiven.mul(0.1));
+          totalGain = totalGain.mul(prismaBoost);
+        }
+      }
+      
+      // Apply wavelength boost for green light
+      if (typeof window.getLightColorBoost === 'function') {
+        const wavelengthBoost = window.getLightColorBoost('greenlight');
+        if (wavelengthBoost > 1) {
+          const beforeWavelength = totalGain.toNumber();
+          totalGain = totalGain.mul(new Decimal(wavelengthBoost));
+          debugInfo.boosts.wavelengthBoost = wavelengthBoost;
+        } else {
+        }
+      } else {
       }
       
       totalGain = totalGain.floor();
@@ -1524,6 +1665,18 @@ function clickLightTile(index) {
         totalGain = totalGain.mul(prismaBoost);
       }
       
+      // Apply wavelength boost for blue light
+      if (typeof window.getLightColorBoost === 'function') {
+        const wavelengthBoost = window.getLightColorBoost('bluelight');
+        if (wavelengthBoost > 1) {
+          const beforeWavelength = totalGain.toNumber();
+          totalGain = totalGain.mul(new Decimal(wavelengthBoost));
+          debugInfo.boosts.wavelengthBoost = wavelengthBoost;
+        } else {
+        }
+      } else {
+      }
+      
       totalGain = totalGain.floor();
     } else if (color === 'greylight') {
       // Grey light does nothing - anomaly effect
@@ -1532,6 +1685,7 @@ function clickLightTile(index) {
     }
     if (color === 'light' || color === 'redlight' || color === 'orangelight' || color === 'yellowlight' || color === 'greenlight' || color === 'bluelight') {
       // Apply Vi's friendship buff multiplier
+      const beforeFriendship = totalGain.toNumber();
       totalGain = totalGain.mul(friendshipMultiplier);
       totalGain = totalGain.floor(); 
       
@@ -1562,6 +1716,10 @@ function clickLightTile(index) {
         window.prismState[color] = window.prismState[color].add(processedGain);
         actualGain = processedGain;
       }
+      
+      // Debug: Final summary
+      debugInfo.finalGain = DecimalUtils.isDecimal(actualGain) ? actualGain.toNumber() : actualGain;
+      const totalMultiplier = debugInfo.finalGain / debugInfo.baseGain;
       
       // Track actual click gains for statistics
       if (!window.prismClickTracker) {
@@ -1599,7 +1757,6 @@ function clickLightTile(index) {
           // Clear the force flag if it was set
           if (window.vantablackLightSystem.forceOverloadOnNextClick) {
             window.vantablackLightSystem.forceOverloadOnNextClick = false;
-            console.log("Forced vantablack overload triggered!");
           }
           
           triggerVantablackOverload();
@@ -1653,6 +1810,11 @@ function clickLightTile(index) {
     // Track prism tile click for front desk automator unlocks
     if (window.frontDesk && typeof window.frontDesk.onPrismTileClicked === 'function') {
       window.frontDesk.onPrismTileClicked();
+    }
+    
+    // Track prism tile click for quest system
+    if (typeof window.trackPrismClick === 'function') {
+      window.trackPrismClick();
     }
     
     // Track prism tile click during night hours for KitoFox Challenge 2
@@ -2341,7 +2503,14 @@ function updateNerfDisplay() {
     if (!nerfEl) return;
     
     const lightNerf = window.getCalibrationNerf(type);
-    const nerfValue = lightNerf.toNumber();
+    
+    // Ensure lightNerf is a proper Decimal and convert to number safely
+    let nerfValue;
+    if (DecimalUtils.isDecimal(lightNerf)) {
+      nerfValue = lightNerf.toNumber();
+    } else {
+      nerfValue = Number(lightNerf) || 1;
+    }
     
     // Only show if there's a meaningful nerf (more than 1% penalty)
     const shouldShow = nerfValue > 1.01;
@@ -3667,19 +3836,16 @@ window.forceSpawnColoredTile = function(color = 'random') {
 
 // Debug function for light generator upgrades
 window.debugLightGeneratorUpgrades = function() {
-  console.log("Light Generator Upgrade Debug:");
   const lightTypes = ['red', 'green', 'blue', 'yellow', 'purple', 'white'];
   
   lightTypes.forEach(type => {
     const oldUpgrades = window.prismState?.generatorUpgrades?.[type] || 0;
     const newUpgrades = window.state?.prismState?.generatorUpgrades?.[type] || 0;
-    console.log(`${type}: old=${oldUpgrades}, new=${newUpgrades}`);
   });
 };
 
 // Function to force sync light generator upgrades from old to new system
 window.forceSyncLightGeneratorUpgrades = function() {
-  console.log("Force syncing light generator upgrades...");
   const lightTypes = ['red', 'green', 'blue', 'yellow', 'purple', 'white'];
   
   if (!window.state.prismState) {
@@ -3693,9 +3859,7 @@ window.forceSyncLightGeneratorUpgrades = function() {
     if (window.prismState?.generatorUpgrades?.[type] !== undefined) {
       window.state.prismState.generatorUpgrades[type] = DecimalUtils.isDecimal(window.prismState.generatorUpgrades[type]) ? 
         window.prismState.generatorUpgrades[type] : new Decimal(window.prismState.generatorUpgrades[type] || 0);
-      console.log(`Synced ${type}: ${window.state.prismState.generatorUpgrades[type]}`);
     }
   });
   
-  console.log("Light generator upgrade sync complete!");
 };

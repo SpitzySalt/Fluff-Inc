@@ -8679,10 +8679,10 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
                     soapEl.textContent = windDialogue;
                     soapEl.style.display = 'block';
                     const soapImg = document.getElementById('swariaGeneratorCharacter');
-                    if (soapImg) soapImg.src = 'assets/icons/soap speech.png';
+                    if (soapImg) soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : 'assets/icons/soap speech.png';
                     setTimeout(() => {
                         soapEl.style.display = 'none';
-                        if (soapImg) soapImg.src = 'assets/icons/soap.png';
+                        if (soapImg) soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : 'assets/icons/soap.png';
                     }, 5000);
                 }
             } else {
@@ -8732,10 +8732,10 @@ window.anomalySystem.hookAllCharacterDialogue = function() {
                     if (mysticEl) {
                         mysticEl.textContent = windDialogue;
                         mysticEl.style.display = 'block';
-                        if (mysticImg) mysticImg.src = 'assets/icons/chef mystic speech.png';
+                        if (mysticImg) mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('speech') : 'assets/icons/chef mystic speech.png';
                         setTimeout(() => {
                             mysticEl.style.display = 'none';
-                            if (mysticImg) mysticImg.src = 'assets/icons/chef mystic.png';
+                            if (mysticImg) mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('normal') : 'assets/icons/chef mystic.png';
                         }, 3500);
                     }
                 } else if (characterName === 'Lepre') {

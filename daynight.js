@@ -72,6 +72,12 @@
   window.daynight = {
     getTime: () => gameMinutes,
     getTimeString: () => {
+      // Check if in Halloween event and show spooky time
+      if (window.state && window.state.halloweenEventActive && 
+          document.querySelector('.page.active') && 
+          document.querySelector('.page.active').id === 'halloweenEvent') {
+        return '06:66';
+      }
       const h = Math.floor(gameMinutes / 60) % 24;
       const m = gameMinutes % 60;
       return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
@@ -86,9 +92,19 @@
       }
       timeChangeCallbacks.forEach(cb => cb(gameMinutes));
       if (gameMinutes >= 17 * 60 && gameMinutes < 18 * 60) {
-        setTheme('dusk');
+        // During Halloween mode, skip dusk and go straight to dark
+        if (window.state && window.state.halloweenEventActive) {
+          setTheme('dark');
+        } else {
+          setTheme('dusk');
+        }
       } else if (gameMinutes >= 18 * 60 && gameMinutes < 21 * 60) {
-        setTheme('dusk');
+        // During Halloween mode, skip dusk and go straight to dark
+        if (window.state && window.state.halloweenEventActive) {
+          setTheme('dark');
+        } else {
+          setTheme('dusk');
+        }
       } else if (gameMinutes >= 21 * 60 && gameMinutes < 22 * 60) {
         setTheme('dark');
       } else if ((gameMinutes >= 22 * 60 && gameMinutes < 24 * 60) || (gameMinutes >= 0 && gameMinutes < 5 * 60)) {
@@ -128,6 +144,12 @@
   const timeChangeCallbacks = [];
 
   function setTheme(newTheme, progress = 0) {
+    // Skip dusk theme during Halloween mode - use day or dark instead
+    if (window.state && window.state.halloweenEventActive && newTheme === 'dusk') {
+      // During dusk hours (18:00-22:00), use dark theme instead during Halloween
+      newTheme = 'dark';
+    }
+    
     if (theme !== newTheme || transitionProgress !== progress) {
       theme = newTheme;
       transitionProgress = progress;
@@ -147,6 +169,13 @@
       return;
     }
     
+    // Don't advance time if in Halloween event
+    if (window.state && window.state.halloweenEventActive && 
+        document.querySelector('.page.active') && 
+        document.querySelector('.page.active').id === 'halloweenEvent') {
+      return;
+    }
+    
     gameMinutes = (gameMinutes + 1) % (24 * 60);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('swariaGameMinutes', gameMinutes);
@@ -155,7 +184,12 @@
     if (gameMinutes >= 6 * 60 && gameMinutes < 18 * 60) {
       setTheme('day');
     } else if (gameMinutes >= 18 * 60 && gameMinutes < 22 * 60) {
-      setTheme('dusk');
+      // During Halloween mode, skip dusk and go straight to dark
+      if (window.state && window.state.halloweenEventActive) {
+        setTheme('dark');
+      } else {
+        setTheme('dusk');
+      }
     } else {
       setTheme('dark');
     }
@@ -163,7 +197,12 @@
   if (gameMinutes >= 6 * 60 && gameMinutes < 18 * 60) {
     setTheme('day');
   } else if (gameMinutes >= 18 * 60 && gameMinutes < 22 * 60) {
-    setTheme('dusk');
+    // During Halloween mode, skip dusk and go straight to dark
+    if (window.state && window.state.halloweenEventActive) {
+      setTheme('dark');
+    } else {
+      setTheme('dusk');
+    }
   } else {
     setTheme('dark');
   }

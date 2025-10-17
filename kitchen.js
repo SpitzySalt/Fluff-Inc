@@ -129,7 +129,8 @@ const INGREDIENT_TYPES = [
   { name: 'water', display: 'Water' }, 
   { name: 'prisma', display: 'Prisma Shard' },
   { name: 'stardust', display: 'Stardust' }, 
-  { name: 'swabucks', display: 'Swa bucks' } 
+  { name: 'swabucks', display: 'Swa bucks' },
+  { name: 'candy', display: 'Candy' }
 ];
 const INGREDIENT_TYPE_IMAGES = {
   mushroom: 'assets/icons/mushroom token.png',
@@ -139,7 +140,8 @@ const INGREDIENT_TYPE_IMAGES = {
   water: 'assets/icons/water token.png', 
   prisma: 'assets/icons/prisma token.png',
   stardust: 'assets/icons/stardust token.png',
-  swabucks: 'assets/icons/Swa Buck.png'
+  swabucks: 'assets/icons/Swa Buck.png',
+  candy: 'assets/icons/candy token.png'
 };
 
 // Make kitchen.js variables globally accessible
@@ -251,7 +253,18 @@ function spawnIngredientToken(context, sourceElement) {
 }
 
 function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false) {
-  const type = getRandomIngredientType(context);
+  let type = getRandomIngredientType(context);
+  
+  // Halloween candy replacement logic - 25% chance to replace with candy
+  const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                           (window.premiumState && window.premiumState.halloweenEventActive) ||
+                           document.body.classList.contains('halloween-cargo-active') ||
+                           document.body.classList.contains('halloween-event-active');
+  
+  if (isHalloweenActive && Math.random() < 0.25) {
+    type = 'candy';
+  }
+  
   const token = document.createElement('img');
   token.src = INGREDIENT_TYPE_IMAGES[type] || 'assets/icons/flower.png';
   token.className = 'ingredient-token';
@@ -384,7 +397,8 @@ function collectIngredientToken(type, token) {
       mushroom: new Decimal(0),
       water: new Decimal(0),
       prisma: new Decimal(0),
-      stardust: new Decimal(0)
+      stardust: new Decimal(0),
+      candy: new Decimal(0)
     };
   }
 
@@ -418,6 +432,11 @@ function collectIngredientToken(type, token) {
     // Track petal token collection for KitoFox Challenge 2
     if (type === 'petals' && typeof window.trackKitoFox2PetalTokens === 'function') {
       window.trackKitoFox2PetalTokens(tokenGainAmount);
+    }
+    
+    // Update Halloween event button display when candy is collected
+    if (type === 'candy' && typeof window.updateHalloweenEventButtonDisplay === 'function') {
+      window.updateHalloweenEventButtonDisplay();
     }
     
     showIngredientGainPopup(token, tokenGainAmount);
@@ -570,11 +589,12 @@ function updateKitchenUI(forceUpdate = false) {
       mushroom: new Decimal(0),
       water: new Decimal(0),
       prisma: new Decimal(0),
-      stardust: new Decimal(0)
+      stardust: new Decimal(0),
+      candy: new Decimal(0)
     };
   }
   
-  const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust'];
+  const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'candy'];
   basicTokenTypes.forEach(type => {
     if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
       window.state.tokens[type] = new Decimal(0);
@@ -608,11 +628,27 @@ function updateCookingSpeedBoostDisplay() {
   
   if (!boostDisplay || !boostText) return;
   
+  // Check if Halloween mode is active for text selection
+  const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                           (window.premiumState && window.premiumState.halloweenEventActive) ||
+                           document.body.classList.contains('halloween-cargo-active') ||
+                           document.body.classList.contains('halloween-event-active');
+  
   // Check if mixing system exists and has mushroom soup
-  if (window.state && window.state.mixingSystem && window.state.mixingSystem.totalMushroomSoupGiven && window.state.mixingSystem.totalMushroomSoupGiven.gt(0)) {
-    const boostValue = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
-    boostText.textContent = `x${boostValue.toFixed(2)} cooking speed`;
-    boostDisplay.style.display = 'block';
+  if (window.state && window.state.mixingSystem && window.state.mixingSystem.totalMushroomSoupGiven) {
+    // Ensure totalMushroomSoupGiven is a Decimal
+    if (!DecimalUtils.isDecimal(window.state.mixingSystem.totalMushroomSoupGiven)) {
+      window.state.mixingSystem.totalMushroomSoupGiven = new Decimal(window.state.mixingSystem.totalMushroomSoupGiven || 0);
+    }
+    
+    if (window.state.mixingSystem.totalMushroomSoupGiven.gt(0)) {
+      const boostValue = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
+      const speedText = isHalloweenActive ? 'brewing speed' : 'cooking speed';
+      boostText.innerHTML = `x${boostValue.toFixed(2)} <span id="cookingSpeedLabel">${speedText}</span>`;
+      boostDisplay.style.display = 'block';
+    } else {
+      boostDisplay.style.display = 'none';
+    }
   } else {
     boostDisplay.style.display = 'none';
   }
@@ -620,6 +656,103 @@ function updateCookingSpeedBoostDisplay() {
 
 // Make the function globally accessible
 window.updateCookingSpeedBoostDisplay = updateCookingSpeedBoostDisplay;
+
+// Helper function to get cooking/brewing terminology based on Halloween mode
+function getCookingTerminology(baseWord = 'cook') {
+  const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                           (window.premiumState && window.premiumState.halloweenEventActive) ||
+                           document.body.classList.contains('halloween-cargo-active') ||
+                           document.body.classList.contains('halloween-event-active');
+  
+  const terminologyMap = {
+    'cook': isHalloweenActive ? 'brew' : 'cook',
+    'cooking': isHalloweenActive ? 'brewing' : 'cooking',
+    'Cook': isHalloweenActive ? 'Brew' : 'Cook',
+    'Cooking': isHalloweenActive ? 'Brewing' : 'Cooking'
+  };
+  
+  return terminologyMap[baseWord] || baseWord;
+}
+
+// Make the helper function globally accessible
+window.getCookingTerminology = getCookingTerminology;
+
+// Challenge speech quotes - Mystic comparing their PB with player's PB (non-caring about poor performance)
+const mysticChallengeQuotes = [
+  // When player doesn't have a PB but Mystic does
+  { text: () => `I got ${(window.state.characterChallengePBs?.mystic || 0)} seconds in the Power Generator Challenge. Whatever, it's not cooking.`, condition: () => window.state.characterChallengePBs?.mystic && !window.state.powerChallengePersonalBest },
+  { text: () => `Power Generator Challenge? ${(window.state.characterChallengePBs?.mystic || 0)} seconds. Don't care much about it, honestly.`, condition: () => window.state.characterChallengePBs?.mystic && !window.state.powerChallengePersonalBest },
+  { text: () => `${(window.state.characterChallengePBs?.mystic || 0)} seconds on that generator thing. Meh, I'd rather focus on cooking.`, condition: () => window.state.characterChallengePBs?.mystic && !window.state.powerChallengePersonalBest },
+  { text: () => `I managed ${(window.state.characterChallengePBs?.mystic || 0)} seconds in the Power Generator Challenge, but who cares? Food is more important.`, condition: () => window.state.characterChallengePBs?.mystic && !window.state.powerChallengePersonalBest },
+  
+  // When Mystic's PB is better than player's (Mystic survived longer)
+  { text: () => `My Power Generator Challenge time: ${(window.state.characterChallengePBs?.mystic || 0)} seconds. Yours: ${window.state.powerChallengePersonalBest || 0} seconds. Whatever, it's just a silly game.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.mystic) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `I beat you by ${(parseFloat(window.state.characterChallengePBs?.mystic || 0) - parseFloat(window.state.powerChallengePersonalBest || 0)).toFixed(2)} seconds in the Power Generator Challenge. Not that I care or anything.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.mystic) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `${(window.state.characterChallengePBs?.mystic || 0)} seconds versus your ${window.state.powerChallengePersonalBest || 0} seconds. I won, but it's not like it matters. Can we talk about food instead?`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.mystic) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `Power Generator Challenge results: Me ${(window.state.characterChallengePBs?.mystic || 0)} seconds, you ${window.state.powerChallengePersonalBest || 0} seconds. Cool, I guess. Now back to cooking.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.mystic) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds isn't bad, but my ${(window.state.characterChallengePBs?.mystic || 0)} seconds is better. Anyway, want some berry plate?`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.mystic) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  
+  // When player's PB is better than Mystic's (player survived longer) - Mystic doesn't care
+  { text: () => `Your Power Generator Challenge time of ${window.state.powerChallengePersonalBest || 0} seconds beats my ${(window.state.characterChallengePBs?.mystic || 0)} seconds. Good for you, I suppose.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.mystic);
+  }},
+  { text: () => `You got ${window.state.powerChallengePersonalBest || 0} seconds, I got ${(window.state.characterChallengePBs?.mystic || 0)} seconds. You win. Congratulations or whatever.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.mystic);
+  }},
+  { text: () => `${(parseFloat(window.state.powerChallengePersonalBest || 0) - parseFloat(window.state.characterChallengePBs?.mystic || 0)).toFixed(2)} seconds better than me in the Power Generator Challenge. Big whoop. My mushroom soup is still better.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.mystic);
+  }},
+  { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds is way better than my ${(window.state.characterChallengePBs?.mystic || 0)} seconds. Neat. Now can we get back to what actually matters?`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.mystic);
+  }},
+  { text: () => `Power Generator Challenge: You ${window.state.powerChallengePersonalBest || 0} seconds, me ${(window.state.characterChallengePBs?.mystic || 0)} seconds. You're better. There, happy? Now leave me alone to cook.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.mystic);
+  }},
+  
+  // When PBs are very close (within 3 seconds) - Mystic still doesn't care
+  { text: () => `Power Generator Challenge: Your ${window.state.powerChallengePersonalBest || 0} seconds versus my ${(window.state.characterChallengePBs?.mystic || 0)} seconds. So close it's basically a tie. Whatever.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.mystic)) <= 3.0;
+  }},
+  { text: () => `Less than 3 seconds difference between our Power Generator Challenge times. Thrilling. Really. I'm on the edge of my seat here.`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.mystic)) <= 3.0;
+  }},
+  { text: () => `Our Power Generator Challenge times are practically identical. Cool story. Want to hear about my new recipe instead?`, condition: () => {
+    return window.state.characterChallengePBs?.mystic && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.mystic)) <= 3.0;
+  }},
+  
+  // General non-caring banter about the challenge
+  { text: "The Power Generator Challenge? Yeah, I tried it once. Not as exciting as perfecting a new recipe.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "People keep talking about this Power Generator Challenge thing. I mean, sure, it exists. Moving on.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "The Power Generator Challenge is fine, I guess. But have you tried my glittering petals? Now THAT'S worth your time.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "Everyone's obsessed with Power Generator Challenge scores. I'm obsessed with making the perfect berry plate. Priorities, people.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "Power Generator Challenge survival times? Meh. Cooking survival times? Now we're talking about something important.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "I could probably get a better Power Generator Challenge time if I cared. But I don't. So there's that.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "The Power Generator Challenge is like burnt toast - it exists, it's not great, but people still talk about it for some reason.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  { text: "Power Generator Challenge times are temporary. Good cooking is eternal. Choose wisely.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+];
 
 const mysticIdleSpeeches = [
   { text: "Where's the seasoning? This dish is so bland, even Fluzzer wouldn't eat it!", condition: () => DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
@@ -682,6 +815,40 @@ const mysticIdleSpeeches = [
   { text: "While others struggle with reality tears, I've created a pocket of normalcy through sheer culinary willpower!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "The anomalies take one look at my organized spice rack and decide they don't belong here. Smart choice!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 }
 ].map(s => typeof s === 'string' ? { text: s, condition: () => true } : s);
+
+// Halloween-specific dialogue for Mystic (only appears when Halloween mode is active)
+const mysticHalloweenIdleSpeeches = [
+  "This witch costume feels surprisingly natural on me. Maybe I was meant for this!",
+  "I replaced the mixer with my cauldron for Halloween - the recipes taste more magical now!",
+  "The pointed hat keeps getting in the way, but it's worth it for the authentic witch look!",
+  "My cauldron bubbles so perfectly, even real witches would be jealous of my technique!",
+  "Don't tell Jadeca I've borrowed their hat, and their cauldron.",
+  "The witch costume makes me feel more mystical than usual... and that's saying something!",
+  "I've been practicing my cackle while cooking. Listen: 'Hehehe!' Too scary or not scary enough?",
+  "This cauldron is actually more efficient than the mixer. I might keep it after Halloween!",
+  "The witch robes flow dramatically when I cook. Very professional, very spooky!",
+  "I brewed a perfect potion earlier... I mean, mushroom soup. Definitely just soup.",
+  "My broomstick keeps trying to help with the cooking, but it's better at sweeping!",
+  "Everyone says I make a convincing witch, but I think they're just impressed by my cauldron skills!",
+  "The spell book I got with this costume has some interesting 'recipes' in it...",
+  "This witch hat gives me extra confidence while stirring my cauldron. Fashion is power!",
+  "I love how the cauldron smoke adds atmosphere to my cooking - very Halloween kitchen vibes!"
+];
+
+const mysticHalloweenPokeSpeeches = [
+  "Oi! Don't poke the Halloween chef! I might accidentally cast a cooking spell on you!",
+  "Careful! You almost made me drop my special Halloween brew!",
+  "Halloween rule #1: Don't disturb a chef working on spooky recipes!",
+  "Stop poking or I'll serve you my 'trick' instead of 'treat' special!",
+  "These Halloween cooking experiments require concentration! No poking!",
+  "If you want Halloween treats, wait for me to finish cooking them properly!",
+  "You're interrupting my Halloween culinary magic! Show some respect!",
+  "One more poke and you'll be getting the burned Halloween leftovers!",
+  "I'm channeling Halloween cooking spirits here! Don't break my concentration!",
+  "The Halloween ingredients are watching - don't make me look unprofessional!",
+  "Save the poking for the pumpkins, not the chef!"
+];
+
 const mysticPokeSpeeches = [
   "Oi! Hands off the chef!",
   "If you poke me again, I'll send you into the event horizon! If I had my staff with me...",
@@ -701,26 +868,62 @@ function showMysticSpeech(type = 'idle', forceSpeech) {
   const mysticImg = document.getElementById('kitchenCharacterImg');
   if (!speechBubble || !mysticImg) return;
   if (speechBubble.style.display === 'block' && !forceSpeech) return;
-  let pool = type === 'poke' ? mysticPokeSpeeches : mysticIdleSpeeches;
   
-  // Filter speeches by their conditions
-  const availableSpeeches = pool.filter(speech => {
-    if (typeof speech === 'string') return true;
-    return speech.condition ? speech.condition() : true;
-  });
+  // Check if Halloween mode is active
+  const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                           (window.premiumState && window.premiumState.halloweenEventActive) ||
+                           document.body.classList.contains('halloween-cargo-active') ||
+                           document.body.classList.contains('halloween-event-active');
   
-  if (availableSpeeches.length === 0) return;
+  let pool;
+  let speechText;
   
-  const randomSpeech = availableSpeeches[Math.floor(Math.random() * availableSpeeches.length)];
-  const speechText = typeof randomSpeech === 'string' ? randomSpeech : randomSpeech.text;
+  // 15% chance for challenge speech (only for idle type)
+  if (type === 'idle' && Math.random() < 0.15) {
+    // Ensure character PBs exist
+    if (typeof window.ensureCharacterPBsExist === 'function') {
+      window.ensureCharacterPBsExist();
+    }
+    
+    // Filter challenge speeches by their conditions
+    const availableChallengeSpeeches = mysticChallengeQuotes.filter(speech => {
+      return speech.condition ? speech.condition() : true;
+    });
+    
+    if (availableChallengeSpeeches.length > 0) {
+      const randomChallengeSpeech = availableChallengeSpeeches[Math.floor(Math.random() * availableChallengeSpeeches.length)];
+      speechText = typeof randomChallengeSpeech.text === 'function' ? randomChallengeSpeech.text() : randomChallengeSpeech.text;
+    }
+  }
+  
+  // If no challenge speech was selected, use regular speech
+  if (!speechText) {
+    // If Halloween is active, 50% chance to use Halloween dialogue
+    if (isHalloweenActive && Math.random() < 0.5) {
+      pool = type === 'poke' ? mysticHalloweenPokeSpeeches : mysticHalloweenIdleSpeeches;
+    } else {
+      pool = type === 'poke' ? mysticPokeSpeeches : mysticIdleSpeeches;
+    }
+    
+    // Filter speeches by their conditions (only for regular speeches that have conditions)
+    const availableSpeeches = pool.filter(speech => {
+      if (typeof speech === 'string') return true;
+      return speech.condition ? speech.condition() : true;
+    });
+    
+    if (availableSpeeches.length === 0) return;
+    
+    const randomSpeech = availableSpeeches[Math.floor(Math.random() * availableSpeeches.length)];
+    speechText = typeof randomSpeech === 'string' ? randomSpeech : randomSpeech.text;
+  }
   
   speechBubble.textContent = speechText;
   speechBubble.style.display = 'block';
-  mysticImg.src = 'assets/icons/chef mystic speech.png';
+  mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('speech') : 'assets/icons/chef mystic speech.png';
   if (window.mysticSpeechTimeout) clearTimeout(window.mysticSpeechTimeout);
   window.mysticSpeechTimeout = setTimeout(() => {
     speechBubble.style.display = 'none';
-    mysticImg.src = 'assets/icons/chef mystic.png';
+    mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('normal') : 'assets/icons/chef mystic.png';
   }, 7000);
 }
 
@@ -774,6 +977,7 @@ function stopMysticRandomSpeechTimer() {
       showMysticSpeech('idle', true);
       startMysticRandomSpeechTimer();
       updateMysticNightState(); // Merged functionality from second interval
+      updateMixingTitles(); // Update mixing titles when kitchen becomes visible
     } else if (!visible && lastKitchenVisible) {
       stopMysticRandomSpeechTimer();
     }
@@ -785,7 +989,10 @@ function stopMysticRandomSpeechTimer() {
   // Use single DOMContentLoaded listener (already handled above)
   if (!window.kitchenVisibilityDOMListenerAttached) {
     window.kitchenVisibilityDOMListenerAttached = true;
-    document.addEventListener('DOMContentLoaded', checkKitchenVisibility);
+    document.addEventListener('DOMContentLoaded', function() {
+      checkKitchenVisibility();
+      updateMixingTitles(); // Update titles on page load
+    });
   }
 })();
 (function patchCafeteriaSubTabSwitcher() {
@@ -803,6 +1010,7 @@ function stopMysticRandomSpeechTimer() {
         setTimeout(() => {
           showMysticSpeech('idle');
           startMysticRandomSpeechTimer();
+          updateMixingTitles(); // Update titles when switching to kitchen
         }, 400);
       } else {
         stopMysticRandomSpeechTimer();
@@ -852,10 +1060,149 @@ function updateMysticNightState() {
   }
 }
 
+// Function to update mixing/cauldron titles based on Halloween mode
+function updateMixingTitles() {
+  // Check if Halloween mode is active
+  const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                           (window.premiumState && window.premiumState.halloweenEventActive) ||
+                           document.body.classList.contains('halloween-cargo-active') ||
+                           document.body.classList.contains('halloween-event-active');
+  
+  const mixingCardTitle = document.getElementById('mixingCardTitle');
+  const mixModalTitle = document.querySelector('#mixModal .mix-modal-main h1, #mixModal .mix-modal-main h2:first-child');
+  
+  // Update mixing card title
+  if (mixingCardTitle) {
+    mixingCardTitle.textContent = isHalloweenActive ? 'The Cauldron' : 'Mixing';
+  }
+  
+  // Update the description text in mixing card
+  const mixingCardDescription = document.querySelector('#mixingCard p');
+  if (mixingCardDescription) {
+    mixingCardDescription.textContent = isHalloweenActive ? 'Brew your ingredients here!' : 'Combine your ingredients here!';
+  }
+  
+  // Update button text
+  const mixButton = document.getElementById('mixButton');
+  if (mixButton) {
+    mixButton.textContent = isHalloweenActive ? 'Brew Ingredients' : 'Mix Ingredients';
+  }
+  
+  // Update cooking time label
+  const cookingTimeLabel = document.getElementById('mixCookingTimeLabel');
+  if (cookingTimeLabel) {
+    cookingTimeLabel.textContent = isHalloweenActive ? 'Brewing time:' : 'Cooking time:';
+  }
+  
+  // Update currently cooking/brewing label
+  const currentlyCookingLabel = document.getElementById('currentlyCookingLabel');
+  if (currentlyCookingLabel) {
+    currentlyCookingLabel.textContent = isHalloweenActive ? 'Currently brewing' : 'Currently cooking';
+  }
+  
+  // Update cooking speed label
+  const cookingSpeedLabel = document.getElementById('cookingSpeedLabel');
+  if (cookingSpeedLabel) {
+    cookingSpeedLabel.textContent = isHalloweenActive ? 'brewing speed' : 'cooking speed';
+  }
+  
+  // Apply Halloween styling to mix modal
+  const mixModal = document.getElementById('mixModal');
+  const mixModalMain = mixModal ? mixModal.querySelector('.mix-modal-main') : null;
+  
+  if (mixModalMain) {
+    if (isHalloweenActive) {
+      // Apply Halloween cauldron styling
+      mixModalMain.style.background = 'linear-gradient(135deg, #2a1810, #4a2c20, #1a0f08)';
+      mixModalMain.style.border = '3px solid #8b4513';
+      mixModalMain.style.boxShadow = '0 8px 32px rgba(139, 69, 19, 0.4), inset 0 2px 8px rgba(255, 140, 0, 0.3)';
+      mixModalMain.style.color = '#ffcc80';
+      
+      // Add cauldron-like glow effect
+      const glowOverlay = mixModalMain.querySelector('.halloween-glow') || document.createElement('div');
+      if (!mixModalMain.querySelector('.halloween-glow')) {
+        glowOverlay.className = 'halloween-glow';
+        glowOverlay.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          border-radius: 32px;
+          background: radial-gradient(circle at center, rgba(255, 140, 0, 0.1) 0%, transparent 70%);
+          pointer-events: none;
+          z-index: -1;
+        `;
+        mixModalMain.appendChild(glowOverlay);
+      }
+      
+      // Style the recipe title for Halloween
+      const mixRecipeTitle = document.getElementById('mixRecipeTitle');
+      if (mixRecipeTitle) {
+        mixRecipeTitle.style.color = '#ffcc80';
+        mixRecipeTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)';
+      }
+      
+      // Style cooking time label
+      if (cookingTimeLabel) {
+        cookingTimeLabel.style.color = '#ff8f00';
+        cookingTimeLabel.style.fontWeight = 'bold';
+      }
+      
+    } else {
+      // Remove Halloween styling
+      mixModalMain.style.background = '#fff';
+      mixModalMain.style.border = '';
+      mixModalMain.style.boxShadow = '0 8px 32px #000a';
+      mixModalMain.style.color = '';
+      
+      // Remove glow overlay
+      const glowOverlay = mixModalMain.querySelector('.halloween-glow');
+      if (glowOverlay) {
+        glowOverlay.remove();
+      }
+      
+      // Reset recipe title styling
+      const mixRecipeTitle = document.getElementById('mixRecipeTitle');
+      if (mixRecipeTitle) {
+        mixRecipeTitle.style.color = '';
+        mixRecipeTitle.style.textShadow = '';
+      }
+      
+      // Reset cooking time label
+      if (cookingTimeLabel) {
+        cookingTimeLabel.style.color = '';
+        cookingTimeLabel.style.fontWeight = '';
+      }
+    }
+  }
+}
+
+// Make the function globally accessible
+window.updateMixingTitles = updateMixingTitles;
+
 if (window.daynight && typeof window.daynight.onTimeChange === 'function') {
   window.daynight.onTimeChange(function(mins) {
     updateMysticNightState();
   });
+}
+
+// Update mixing titles when page becomes visible
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    updateMixingTitles();
+  }
+});
+
+// Update mixing titles when switching tabs
+if (typeof window.switchPage === 'function' && !window._mixingTitlesSwitchPageOverridden) {
+  const originalSwitchPage = window.switchPage;
+  window.switchPage = function(pageId) {
+    const result = originalSwitchPage.apply(this, arguments);
+    updateMixingTitles();
+    return result;
+  };
+  window._mixingTitlesSwitchPageOverridden = true;
 }
 // Remove duplicate kitchen visibility interval - functionality merged with first interval
 // (The first interval now handles both speech management AND night state updates)
@@ -968,7 +1315,7 @@ window.addEventListener('load', function() {
           if (now < cookingEndTime) {
             const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
             const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-            mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
+            mixModalTimer.textContent = `${getCookingTerminology('Cooking')} ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
           } else {
             mixModalTimer.textContent = 'Done!';
           }
@@ -1035,7 +1382,7 @@ window.addEventListener('load', function() {
                     if (now < cookingEndTime) {
                       const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
                       const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-                      mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
+                      mixModalTimer.textContent = `${getCookingTerminology('Cooking')} ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
                     } else {
                       mixModalTimer.textContent = 'Done!';
                     }
@@ -1112,7 +1459,7 @@ window.addEventListener('load', function() {
           if (now < cookingEndTime) {
             const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
             const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-            mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
+            mixModalTimer.textContent = `${getCookingTerminology('Cooking')} ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
           } else {
             mixModalTimer.textContent = 'Done!';
           }
@@ -1188,7 +1535,7 @@ window.addEventListener('load', function() {
             if (now < cookingEndTime) {
               const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
               const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-              mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
+              mixModalTimer.textContent = `${getCookingTerminology('Cooking')} ${recipeName}... ${formatTimeRemaining(cookingEndTime - now)}`;
             } else {
               mixModalTimer.textContent = 'Done!';
             }
@@ -1320,8 +1667,15 @@ window.addEventListener('load', function() {
       }
       
       // Apply mushroom soup cooking speed boost from mixing system
-      if (window.state && window.state.mixingSystem && window.state.mixingSystem.cookingSpeedBoost && window.state.mixingSystem.cookingSpeedBoost.gt(1)) {
-        time = time.div(window.state.mixingSystem.cookingSpeedBoost);
+      if (window.state && window.state.mixingSystem && window.state.mixingSystem.cookingSpeedBoost) {
+        // Ensure cookingSpeedBoost is a Decimal
+        if (!DecimalUtils.isDecimal(window.state.mixingSystem.cookingSpeedBoost)) {
+          window.state.mixingSystem.cookingSpeedBoost = new Decimal(window.state.mixingSystem.cookingSpeedBoost || 1);
+        }
+        
+        if (window.state.mixingSystem.cookingSpeedBoost.gt(1)) {
+          time = time.div(window.state.mixingSystem.cookingSpeedBoost);
+        }
       }
       if (mixCookTime) mixCookTime.textContent = DecimalUtils.formatDecimal(time, 2);
       if (mixRecipeIngredients) {
@@ -1353,13 +1707,13 @@ window.addEventListener('load', function() {
           }
         }
         if (night) {
-          cookBtn.textContent = 'Cooking unavailable at night';
+          cookBtn.textContent = `${getCookingTerminology('Cooking')} unavailable at night`;
           cookBtn.classList.add('not-enough');
           cookBtn.disabled = true;
         } else if (cooking) {
           const now = Date.now();
           if (cookingEndTime && now >= cookingEndTime) {
-            cookBtn.textContent = 'Finish Cooking';
+            cookBtn.textContent = `Finish ${getCookingTerminology('Cooking')}`;
             cookBtn.classList.remove('not-enough');
             cookBtn.disabled = false;
             cookBtn.onclick = function() {
@@ -1381,12 +1735,12 @@ window.addEventListener('load', function() {
           } else {
             const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
             const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-            cookBtn.textContent = `Cooking ${recipeName}...`;
+            cookBtn.textContent = `${getCookingTerminology('Cooking')} ${recipeName}...`;
             cookBtn.classList.add('not-enough');
             cookBtn.disabled = true;
           }
         } else {
-          cookBtn.textContent = `Cook ${bulkAmount} ${recipe.unit}`;
+          cookBtn.textContent = `${getCookingTerminology('Cook')} ${bulkAmount} ${recipe.unit}`;
           if (!hasAllIngredients) {
             cookBtn.classList.add('not-enough');
             cookBtn.disabled = true;
@@ -1412,6 +1766,9 @@ window.addEventListener('load', function() {
       
       // Update cooking status section
       updateCookingStatusDisplay();
+      
+      // Update mixing titles for Halloween mode
+      updateMixingTitles();
     }
     
     function updateCookingStatusDisplay() {
@@ -1485,7 +1842,7 @@ window.addEventListener('load', function() {
         if (night) {
           const btn = mixModalActions.querySelector('button');
           if (btn) {
-            btn.textContent = 'Cooking unavailable at night';
+            btn.textContent = `${getCookingTerminology('Cooking')} unavailable at night`;
             btn.classList.add('not-enough');
             btn.disabled = true;
           }
@@ -1496,13 +1853,13 @@ window.addEventListener('load', function() {
         const btn = mixModalActions.querySelector('button');
         if (!btn) return;
         if (cookingEndTime && now >= cookingEndTime) {
-          btn.textContent = 'Finish Cooking';
+          btn.textContent = `Finish ${getCookingTerminology('Cooking')}`;
           btn.classList.remove('not-enough');
           btn.disabled = false;
         } else {
           const cookingRecipe = recipes.find(r => r.id === cookingRecipeId);
           const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-          btn.textContent = `Cooking ${recipeName}...`;
+          btn.textContent = `${getCookingTerminology('Cooking')} ${recipeName}...`;
           btn.classList.add('not-enough');
           btn.disabled = true;
         }
@@ -1687,7 +2044,7 @@ window.addEventListener('load', function() {
                 if (now2 < saved.endTime) {
                   const cookingRecipe = recipes.find(r => r.id === saved.recipeId);
                   const recipeName = cookingRecipe ? cookingRecipe.name : 'item';
-                  mixModalTimer.textContent = `Cooking ${recipeName}... ${formatTimeRemaining(saved.endTime - now2)}`;
+                  mixModalTimer.textContent = `${getCookingTerminology('Cooking')} ${recipeName}... ${formatTimeRemaining(saved.endTime - now2)}`;
                 } else {
                   mixModalTimer.textContent = 'Done!';
                 }
@@ -1737,6 +2094,8 @@ window.addEventListener('load', function() {
     if (typeof updateCookingSpeedBoostDisplay === 'function') {
       updateCookingSpeedBoostDisplay();
     }
+    // Update mixing titles for Halloween mode on page load
+    updateMixingTitles();
     // Ensure cooking state is restored (fallback)
     if (typeof window.initializeCookingState === 'function') {
       window.initializeCookingState();
@@ -2089,3 +2448,226 @@ function awardMysticFriendshipForIngredientCollection() {
 }
 
 window.awardMysticFriendshipForIngredientCollection = awardMysticFriendshipForIngredientCollection;
+
+// Halloween Event Candy Token Unlock System
+function checkCandyTokenUnlock() {
+  // Initialize state if needed
+  if (!window.state) window.state = {};
+  if (!window.state.unlockedFeatures) window.state.unlockedFeatures = {};
+  
+  // Auto-initialize Halloween event state if it doesn't exist
+  if (!window.state.halloweenEvent) {
+    window.state.halloweenEvent = {
+      candyTokensGiven: new Decimal(0)
+    };
+  }
+  if (!window.state.halloweenEvent.candyTokensGiven) {
+    window.state.halloweenEvent.candyTokensGiven = new Decimal(0);
+  }
+  
+  // Check if Halloween event is already permanently unlocked
+  if (window.state.unlockedFeatures.halloweenEvent) {
+    return true;
+  }
+  
+  // Get current candy tokens given (not total candy tokens owned)
+  const candyTokensGiven = DecimalUtils.toDecimal(window.state.halloweenEvent.candyTokensGiven);
+  
+  // Check if player has given 10 or more candy tokens to the Halloween event button
+  if (candyTokensGiven.gte(10)) {
+    // Permanently unlock Halloween event
+    window.state.unlockedFeatures.halloweenEvent = true;
+    
+    // Show unlock notification
+    if (typeof window.showNotification === 'function') {
+      window.showNotification('🍬 Halloween Event Unlocked! You can now access the Halloween Event tab!', 'success');
+    }
+    
+    // Initialize Halloween event state if not already present
+    if (!window.state.halloweenEventActive) {
+      window.state.halloweenEventActive = false;
+    }
+    
+    // Update Halloween event button visibility
+    updateHalloweenEventButtonDisplay();
+    
+    // Refresh settings UI to show the new toggle if available
+    if (typeof window.addHalloweenEventToggleButton === 'function') {
+      setTimeout(() => {
+        window.addHalloweenEventToggleButton();
+      }, 100);
+    }
+    
+    return true;
+  }
+  
+  return false;
+}
+
+function updateHalloweenEventButtonDisplay() {
+  const halloweenButton = document.querySelector('.halloween-event-btn');
+  if (!halloweenButton) return;
+  
+  // Check if Halloween mode is active - hide button if not
+  if (!window.state.halloweenEventActive) {
+    halloweenButton.style.display = 'none';
+    return;
+  }
+  
+  const isUnlocked = window.state.unlockedFeatures && window.state.unlockedFeatures.halloweenEvent;
+  
+  // Initialize Halloween event state if it doesn't exist
+  if (!window.state.halloweenEvent) {
+    window.state.halloweenEvent = { candyTokensGiven: new Decimal(0) };
+  }
+  if (!window.state.halloweenEvent.candyTokensGiven) {
+    window.state.halloweenEvent.candyTokensGiven = new Decimal(0);
+  }
+  
+  const candyTokensGiven = DecimalUtils.toDecimal(window.state.halloweenEvent.candyTokensGiven);
+  
+  // Show the drag & drop interface if candy tokens given is less than 10, regardless of unlock status
+  // This allows testing the unlock mechanism even after the event is unlocked
+  const shouldShowUnlockInterface = candyTokensGiven.lt(10);
+  
+  if (isUnlocked && !shouldShowUnlockInterface) {
+    // Show normal Halloween event button if unlocked and activated
+    if (window.state.halloweenEventActive) {
+      halloweenButton.style.display = 'block';
+      halloweenButton.innerHTML = `
+        <span style="font-size:1.5em;margin-right:0.5em;">🍬</span>
+        <span>Halloween Event</span>
+      `;
+      halloweenButton.onclick = function() { 
+        if (typeof switchToHalloweenEvent === 'function') {
+          switchToHalloweenEvent();
+        }
+      };
+      halloweenButton.style.cursor = 'pointer';
+      halloweenButton.style.opacity = '1';
+      // Remove drag and drop functionality when unlocked
+      halloweenButton._tokenDropActive = false;
+      halloweenButton.removeAttribute('data-character-name');
+      halloweenButton.style.border = '';
+      halloweenButton.style.borderRadius = '';
+      halloweenButton.style.padding = '';
+      halloweenButton.style.transition = '';
+    } else {
+      halloweenButton.style.display = 'none';
+    }
+  } else {
+    // Show candy collection requirement with drag & drop support
+    halloweenButton.style.display = 'block';
+    halloweenButton.innerHTML = `
+      <span style="font-size:1.5em;margin-right:0.5em;">🍬</span>
+      <span>${candyTokensGiven.toFixed(0)}/10 candy tokens given</span>
+      <div style="font-size:0.8em;margin-top:0.2em;color:#888;text-align:center;">
+        Drag candy tokens here to unlock
+      </div>
+    `;
+    halloweenButton.onclick = function() {
+      if (typeof window.showNotification === 'function') {
+        const needed = new Decimal(10).sub(candyTokensGiven);
+        window.showNotification(`🍬 Give ${needed.toFixed(0)} more candy tokens to unlock the Halloween Event! Drag candy tokens onto this button.`, 'info');
+      }
+    };
+    halloweenButton.style.cursor = 'pointer';
+    halloweenButton.style.opacity = '0.8';
+    
+    // Enable drag and drop for candy tokens
+    halloweenButton._tokenDropActive = true;
+    halloweenButton.setAttribute('data-character-name', 'HalloweenEventButton');
+    
+    // Add visual feedback for drag and drop
+    halloweenButton.style.border = '2px dashed #ff6600';
+    halloweenButton.style.borderRadius = '8px';
+    halloweenButton.style.padding = '8px';
+    halloweenButton.style.transition = 'all 0.3s ease';
+    
+    // Set up drag and drop event listeners
+    setupHalloweenButtonDragAndDrop(halloweenButton);
+  }
+}
+
+// Function to set up drag and drop for the Halloween event button
+function setupHalloweenButtonDragAndDrop(button) {
+  // Clean up any existing listeners
+  button.onmouseenter = null;
+  button.onmouseleave = null;
+  button.onmouseup = null;
+  
+  // Add mouseenter handler for visual feedback
+  button.addEventListener('mouseenter', function() {
+    if (window._draggingToken) {
+      const tokenType = window._draggingTokenType;
+      if (tokenType === 'candy') {
+        button.style.outline = '3px solid #00ff00';
+        button.style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
+        button.title = 'Drop candy tokens here to unlock Halloween Event!';
+      } else {
+        button.style.outline = '3px solid #ff4444';
+        button.style.backgroundColor = 'rgba(255, 68, 68, 0.1)';
+        button.title = 'Halloween Event Button only accepts candy tokens!';
+      }
+    }
+  });
+  
+  // Add mouseleave handler
+  button.addEventListener('mouseleave', function() {
+    button.style.outline = '';
+    button.style.backgroundColor = '';
+    button.title = '';
+  });
+  
+  // Add mouseup handler for drop detection
+  button.addEventListener('mouseup', function(e) {
+    if (window._draggingToken && button._tokenDropActive) {
+      const tokenType = window._draggingTokenType;
+      
+      if (tokenType !== 'candy') {
+        button.style.outline = '3px solid #ff4444';
+        button.title = 'The Halloween Event Button only accepts candy tokens!';
+        setTimeout(() => {
+          button.style.outline = '';
+          button.title = '';
+        }, 1200);
+        return;
+      }
+      
+      // Show give token modal for candy tokens
+      if (typeof window.showGiveTokenModal === 'function') {
+        window.showGiveTokenModal(tokenType, 'HalloweenEventButton');
+      }
+      button.style.outline = '';
+      button.style.backgroundColor = '';
+      button._tokenDropActive = false;
+      setTimeout(() => {
+        button._tokenDropActive = true;
+      }, 100);
+    }
+  });
+}
+
+// Make functions globally accessible
+window.checkCandyTokenUnlock = checkCandyTokenUnlock;
+window.updateHalloweenEventButtonDisplay = updateHalloweenEventButtonDisplay;
+window.setupHalloweenButtonDragAndDrop = setupHalloweenButtonDragAndDrop;
+
+// Initialize Halloween event button display on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Small delay to ensure all other systems are loaded
+  setTimeout(function() {
+    if (typeof window.updateHalloweenEventButtonDisplay === 'function') {
+      window.updateHalloweenEventButtonDisplay();
+    }
+  }, 500);
+});
+
+// Also update button display when the page becomes visible
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && typeof window.updateHalloweenEventButtonDisplay === 'function') {
+    setTimeout(function() {
+      window.updateHalloweenEventButtonDisplay();
+    }, 100);
+  }
+});

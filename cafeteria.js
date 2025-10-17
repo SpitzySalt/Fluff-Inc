@@ -1378,13 +1378,13 @@ function getCharacterImage(character) {
     return 'assets/icons/peachy and bijou.png';
   }
   const images = {
-    peachy: 'swa normal.png',
-    soap: 'assets/icons/soap.png',
-    mystic: 'assets/icons/chef mystic.png',
+    peachy: window.getHalloweenPeachyImage ? window.getHalloweenPeachyImage('normal') : 'swa normal.png',
+    soap: window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : 'assets/icons/soap.png',
+    mystic: window.getHalloweenMysticImage ? window.getHalloweenMysticImage('normal') : 'assets/icons/chef mystic.png',
     fluzzer: 'assets/icons/fluzzer.png',
     vi: 'assets/icons/vivien.png',
-    lepre: 'assets/icons/lepre.png',
-    tico: 'assets/icons/tico.png'
+    lepre: window.getHalloweenLepreImage ? window.getHalloweenLepreImage('normal') : 'assets/icons/lepre.png',
+    tico: window.getHalloweenTicoImage ? window.getHalloweenTicoImage('normal') : 'assets/icons/tico.png'
   };
   const imagePath = images[character] || 'assets/icons/wip.png';
   return imagePath;
@@ -1395,13 +1395,13 @@ function getCharacterSpeakingImage(character) {
     return 'assets/icons/peachy and bijou talking.png';
   }
   const speakingImages = {
-    peachy: 'swa talking.png',
-    soap: 'assets/icons/soap speech.png',
-    mystic: 'assets/icons/chef mystic speech.png',
+    peachy: window.getHalloweenPeachyImage ? window.getHalloweenPeachyImage('speech') : 'swa talking.png',
+    soap: window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : 'assets/icons/soap speech.png',
+    mystic: window.getHalloweenMysticImage ? window.getHalloweenMysticImage('speech') : 'assets/icons/chef mystic speech.png',
     fluzzer: 'assets/icons/fluzzer talking.png',
     vi: 'assets/icons/vivien talking.png',
-    lepre: 'assets/icons/lepre speech.png',
-    tico: 'assets/icons/tico speech.png'
+    lepre: window.getHalloweenLepreImage ? window.getHalloweenLepreImage('speech') : 'assets/icons/lepre speech.png',
+    tico: window.getHalloweenTicoImage ? window.getHalloweenTicoImage('speech') : 'assets/icons/tico speech.png'
   };
   const imagePath = speakingImages[character] || getCharacterImage(character);
   return imagePath;

@@ -711,6 +711,11 @@ window.infinitySystem = {
             return false;
         }
         
+        // Save infinity reset backup before reset
+        if (typeof window.saveInfinityResetBackup === 'function') {
+            window.saveInfinityResetBackup();
+        }
+        
         const infinityGain = this.calculateInfinityGain();
         
         // Set total infinity to the maximum between current total and gain from this reset

@@ -94,6 +94,33 @@ function calculatePowerGeneratorCap() {
     baseCap = baseCap.add(batteryUpgrades.mul(5));
   }
   
+  // Add quest bonuses from completed Soap quests
+  if (window.state.power && window.state.power.questBonuses) {
+    let questBonus = 0;
+    Object.values(window.state.power.questBonuses).forEach(bonus => {
+      questBonus += bonus;
+    });
+    baseCap = baseCap.add(questBonus);
+  }
+  
+  // Apply trophy power cap multipliers
+  if (window.state.trophies && window.state.trophies.powerGeneratorChallenge && window.state.trophies.powerGeneratorChallenge.unlockedTier) {
+    const tier = window.state.trophies.powerGeneratorChallenge.unlockedTier;
+    let multiplier = 1;
+    
+    if (tier === 'bronze') {
+      multiplier = 1.1;
+    } else if (tier === 'silver') {
+      multiplier = 1.25;
+    } else if (tier === 'gold') {
+      multiplier = 1.5;
+    }
+    
+    if (multiplier > 1) {
+      baseCap = baseCap.mul(multiplier);
+    }
+  }
+  
   return baseCap;
 }
 
@@ -385,6 +412,12 @@ function gradeUp() {
   const nextCost = getGradeKPCost(nextGrade);
   const kpDecimal = DecimalUtils.isDecimal(state.kp) ? state.kp : new Decimal(state.kp || 0);
   if (kpDecimal.lt(nextCost)) return;
+  
+  // Save expansion reset backup before reset
+  if (typeof window.saveExpansionResetBackup === 'function') {
+    window.saveExpansionResetBackup();
+  }
+  
   const oldGrade = currentGrade;
   showGradeUpAnimation(oldGrade, nextGrade);
   state.kp = new Decimal(1);

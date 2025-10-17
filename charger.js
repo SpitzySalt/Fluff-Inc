@@ -638,61 +638,61 @@ function chargerTick(diff) {
       if (state.soapChargeQuest.stage === 0 && !charger.milestones[3].unlocked) {
         soapSpeech.textContent = "Right now we have 3 effects working, but I will need 10 sparks to get the fourth effect working!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       } else if (state.soapChargeQuest.stage === 1 && !charger.milestones[4].unlocked) {
         soapSpeech.textContent = "Great! The fourth effect is working now. Give me 15 more sparks to unlock the fifth effect!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       } else if (state.soapChargeQuest.stage === 2 && !charger.milestones[5].unlocked) {
         soapSpeech.textContent = "Excellent! The fifth effect is working! Give me 25 sparks to unlock the final effect!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       } else if (state.soapChargeQuest.stage === 3 && !charger.milestones[6].unlocked) {
         soapSpeech.textContent = "Excellent! The Sixth effect is working! Give me 50 sparks to unlock the Next effect!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       } else if (state.soapChargeQuest.stage === 4 && !charger.milestones[7].unlocked) {
         soapSpeech.textContent = "Amazing! The Seventh effect is working! Give me 1 battery and 30 sparks to unlock the final effect!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       } else if (state.soapChargeQuest.stage === 5 && !charger.milestones[8].unlocked) {
         soapSpeech.textContent = "Fantastic! The eighth effect is working! Give me 2 batteries and 75 sparks to unlock the ultimate effect!";
         soapSpeech.style.display = "block";
-        soapChargerCharacter.src = "assets/icons/soap speech.png";
+        soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
         charger.soapIsTalking = true;
         setTimeout(() => {
           soapSpeech.style.display = "none";
-          soapChargerCharacter.src = "assets/icons/soap.png";
+          soapChargerCharacter.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           charger.soapIsTalking = false;
         }, 8000);
       }
@@ -1353,10 +1353,10 @@ function showSoapQuestMessage(message, duration = 8000) {
   charger.soapIsTalking = true;
   soapSpeech.textContent = message;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   charger.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     charger.soapIsTalking = false;
     charger.soapCurrentSpeechTimeout = null;
   }, duration);
@@ -1503,11 +1503,11 @@ function showSoapChargerClickMessage() {
   if (window.isSoapSleeping) {
     soapSpeech.textContent = "Zzz...";
     soapSpeech.style.display = "block";
-    soapImg.src = "assets/icons/soap sleep talking.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep_talk') : "assets/icons/soap sleep talking.png";
     if (charger.soapCurrentSpeechTimeout) clearTimeout(charger.soapCurrentSpeechTimeout);
     charger.soapCurrentSpeechTimeout = setTimeout(() => {
       soapSpeech.style.display = "none";
-      soapImg.src = "assets/icons/soap sleeping.png";
+      soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
       charger.soapIsTalking = false;
       charger.soapCurrentSpeechTimeout = null;
     }, 3000);
@@ -1548,10 +1548,10 @@ function showSoapChargerClickMessage() {
   const randomQuote = soapChargerQuotes[Math.floor(Math.random() * soapChargerQuotes.length)];
   soapSpeech.textContent = randomQuote;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   charger.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     charger.soapIsTalking = false;
     charger.soapCurrentSpeechTimeout = null;
   }, 8000);
@@ -1568,13 +1568,13 @@ function soapChargerGetsMad() {
   charger.soapIsTalking = true;
   soapSpeech.textContent = "IF YOU POKE ME ONE MORE TIME!!! I WILL EAT 1% OF OUR CHARGE EVERYTIME YOU POKE ME!!!";
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap mad.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('mad') : "assets/icons/soap mad.png";
   charger.soapClickCount = 0;
   charger.soapIsMad = true;
   charger.soapWillEatCharge = true;
   charger.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     charger.soapIsTalking = false;
     charger.soapCurrentSpeechTimeout = null;
     charger.soapIsMad = false;
@@ -1633,11 +1633,11 @@ function soapEatCharge() {
   charger.soapIsTalking = true;
   soapSpeech.textContent = message;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png"; 
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png"; 
   updateChargerUI(true); // Force immediate update for user interaction
   charger.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     charger.soapIsTalking = false;
     charger.soapCurrentSpeechTimeout = null;
     if (isBigNom) {
@@ -1655,11 +1655,11 @@ function showSoapChargerSpeech() {
   const randomQuote = soapChargerQuotes[Math.floor(Math.random() * soapChargerQuotes.length)];
   soapSpeech.textContent = randomQuote;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   if (soapChargerSpeechTimeout) clearTimeout(soapChargerSpeechTimeout);
   soapChargerSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
   }, 10000); 
 }
 
@@ -1674,9 +1674,9 @@ function updateChargerSoapSleepState() {
   const soapImg = document.getElementById("soapChargerCharacter");
   if (!soapImg) return;
   if (window.isSoapSleeping) {
-    soapImg.src = "assets/icons/soap sleeping.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
   } else {
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
   }
 }
 

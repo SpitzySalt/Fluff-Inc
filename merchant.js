@@ -283,6 +283,12 @@ class Boutique {
       return this.getLepreCrabAnomalySpeeches();
     }
     
+    // Check if Halloween mode is active
+    const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                             (window.premiumState && window.premiumState.halloweenEventActive) ||
+                             document.body.classList.contains('halloween-cargo-active') ||
+                             document.body.classList.contains('halloween-event-active');
+    
     // Return different speeches based on Lepre's anger level and time of day
     if (this.isLepreGone) {
       return []; // No speeches when Lepre is gone
@@ -293,8 +299,64 @@ class Boutique {
     } else if (this.lepreIsMad) {
       return this.getLepreMadRandomSpeeches();
     } else {
-      return this.getLepreNormalRandomSpeeches();
+      // For normal speeches, 50% chance to use Halloween speeches when Halloween mode is active
+      if (isHalloweenActive && Math.random() < 0.5) {
+        return this.getLepreHalloweenRandomSpeeches();
+      } else {
+        return this.getLepreNormalRandomSpeeches();
+      }
     }
+  }
+
+  // Challenge speech quotes - Lepre comparing their PB with player's PB (magical nonsensical explanations)
+  getLepreChallengeQuotes() {
+    return [
+      // When Lepre's PB is better than player's (Lepre survived longer) - showing off with ridiculous explanations
+      { text: () => `My Power Generator Challenge time of ${(window.state.characterChallengePBs?.lepre || 0)} seconds beats your ${window.state.powerChallengePersonalBest || 0} seconds! I used my secret jester magic to get this time!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.lepre) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `${(window.state.characterChallengePBs?.lepre || 0)} seconds versus your ${window.state.powerChallengePersonalBest || 0} seconds! You'll get to my level one day.`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.lepre) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `I survived ${(parseFloat(window.state.characterChallengePBs?.lepre || 0) - parseFloat(window.state.powerChallengePersonalBest || 0)).toFixed(2)} seconds longer than you! The power generator is actually ticklish, so I kept it laughing and thats how I get my time!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.lepre) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `Power Generator Challenge results: Me ${(window.state.characterChallengePBs?.lepre || 0)} seconds, you ${window.state.powerChallengePersonalBest || 0} seconds! I performed interpretive dance to confuse the power drainage to get this time!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.lepre) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds is good, but my ${(window.state.characterChallengePBs?.lepre || 0)} seconds is better! I told the generator knock-knock jokes to keep it distracted while I quickly click the red tiles!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.lepre) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      
+      
+      { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds is suspiciously good! I bet you used illegal ways of getting such time!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.lepre);
+      }},
+      
+      // When PBs are very close (within 3 seconds) - Lepre gets technical with nonsense
+      { text: () => `Less than 3 seconds difference! How the hell did you manage that?`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.lepre)) <= 3.0;
+      }},
+      { text: () => `Our Power Generator Challenge times are practically identical! That should not be possible, I thought I was the best at that challenge!`, condition: () => {
+        return window.state.characterChallengePBs?.lepre && window.state.powerChallengePersonalBest && 
+               Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.lepre)) <= 3.0;
+      }},
+      
+      // General magical nonsense banter about the challenge
+      { text: "The Power Generator Challenge is easy when you know the ancient jester secret of... I'm not telling.", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      { text: "I've trained for the Power Generator Challenge with my magic! Look at how effective my strategy is!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      { text: "The secret to Power Generator Challenge mastery? Sing lullabies to the power generator until it power drainage falls asleep!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      { text: "My Power Generator Challenge technique involves bribing the electrons with tiny Swa Bucks. They love capitalism!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      { text: "The power generator and I have a mutual understanding: It pretends to be dangerous, and I pretend to be scared!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      { text: "The trick to surviving the Power Generator Challenge? Tell it you're made of the finest insulating materials! Like premium fabric and then the inner workings of the challenge will stop draining the power!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+    ];
   }
 
   getLepreNormalRandomSpeeches() {
@@ -445,13 +507,24 @@ class Boutique {
       return this.getLepreCrabPokeSpeeches();
     }
     
+    // Check if Halloween mode is active
+    const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                             (window.premiumState && window.premiumState.halloweenEventActive) ||
+                             document.body.classList.contains('halloween-cargo-active') ||
+                             document.body.classList.contains('halloween-event-active');
+    
     // Return different speeches based on Lepre's anger level
     if (this.lepreIsVeryMad) {
       return this.getLepreVeryMadPokeSpeeches();
     } else if (this.lepreIsMad) {
       return this.getLepreMadPokeSpeeches();
     } else {
-      return this.getLepreNormalPokeSpeeches();
+      // For normal poke speeches, 50% chance to use Halloween speeches when Halloween mode is active
+      if (isHalloweenActive && Math.random() < 0.5) {
+        return this.getLepreHalloweenPokeSpeeches();
+      } else {
+        return this.getLepreNormalPokeSpeeches();
+      }
     }
   }
 
@@ -586,6 +659,68 @@ class Boutique {
     ];
   }
 
+  // Halloween-specific dialogue for Lepre (only appears when Halloween mode is active)
+  getLepreHalloweenRandomSpeeches() {
+    return [
+      "*BEEP BEEP* Oops! My costume's sound effects are malfunctioning! Totally normal for a Frankenstein outfit!",
+      "*MECHANICAL HUMMING* Don't mind that noise, it's the battery pack for my costume's sound effects!",
+      "It's ALIVE! And it's selling tokens at discounted prices! Mwahahaha!",
+      "Call me Leprestein! I've been assembled from the finest merchant parts!",
+      "RAAAHHH! Fear me, for I am... actually quite friendly and have excellent customer service!",
+      "Behold! I have been brought to life by the power of magic and electronics!",
+      "The villagers flee from my monstrous charm and irresistible token deals!",
+      "I was created in the most dark of laboratories! Fear me as I am ALIVE!",
+      "My creator stitched me together from fabric scraps and magic!",
+      "FIRE BAD! WATER BAD! But token sales GOOD! Leprestein approve of capitalism!",
+      "The lightning that brought me to life was 100% magical! And maybe some electricity involved!",
+      "I may look scary, but I only terrorize bad prices and poor customer service!",
+      "Graaahhh! I hunger... for successful business transactions and friendship!",
+      "They said I couldn't be both dead AND a successful entrepreneur! I proved them wrong!",
+      "Welcome to my castle... I mean, boutique! Same dark atmosphere, better merchandise!",
+      "The other monsters are jealous of my token collection! Even the werewolves want my deals!",
+      "With this Leprestein persona aside, I wish you to have a good Halloween, Peachy!",
+    ];
+  }
+
+  getLepreHalloweenPokeSpeeches() {
+    return [
+      // Early pokes (1-5) - Halloween themed
+      { min: 1, max: 5, speeches: [
+        "Grahhh! You dare disturb Leprestein!? ...Oh wait, that actually felt nice!",
+        "*MECHANICAL WHIRR* Agh! My costume's motion sensors are going off!",
+        "RAAAHHH! ...Hehe, sorry, had to stay in character there!",
+        "Leprestein does not appreciate the poking! But Lepre kinda does!",
+        "You've awakened the beast! The very friendly, token-selling beast!"
+      ]},
+      // Getting annoyed (6-15) - Halloween themed
+      { min: 6, max: 15, speeches: [
+        "Even monsters need personal space, you know!",
+        "*BEEP BEEP* Costume malfunction! I mean... GRAAAHHH, stop that!",
+        "Leprestein is trying to conduct business here!",
+        "The villagers usually run away by now! Why are you still poking?",
+        "My creator didn't program me for this much social interaction!"
+      ]},
+      // More annoyed (16-30) - Halloween themed
+      { min: 16, max: 30, speeches: [
+        "Even Frankenstein's monster had better boundaries than this!",
+        "*ELECTRONIC WHINING* My costume's getting overheated from annoyance!",
+        "I'm about to go into scary merchant mode!",
+        "The lightning that animated me is starting to get angry too!",
+        "STOP! You're making my stitches come undone!",
+        "I was reanimated to sell tokens, not to be a pincushion!"
+      ]},
+      // Very annoyed (36-49) - Halloween themed
+      { min: 36, max: 49, speeches: [
+        "LEPRESTEIN SMASH... your expectations with these great deals! But seriously, STOP POKING!",
+        "*LOUD MECHANICAL GRINDING* My costume is about to explode from frustration!",
+        "Even the mad scientist who created me wasn't this annoying!",
+        "You're about to see what a REALLY angry reanimated merchant looks like!",
+        "RAAAHHHHH! That's not character acting anymore, that's genuine rage!",
+        "ONE MORE POKE AND I'LL TERRORIZE YOUR WALLET WITH INFLATED PRICES!"
+      ]}
+    ];
+  }
+
   // Handle random Lepre speeches
   handleRandomSpeeches() {
     // Don't speak if Lepre is gone or during 727 anomaly sequence
@@ -601,10 +736,38 @@ class Boutique {
       // Allow speeches when mad (with different content) or when not mad, or during night time
       if (isInBoutique && !this.isSpeaking) {
         if (Math.random() < 0.3) { // 30% chance every 20 seconds
-          const speeches = this.getLepreRandomSpeeches(); // This will return appropriate speeches based on mad state and time
-          if (speeches.length > 0) {
-            const randomSpeech = speeches[Math.floor(Math.random() * speeches.length)];
-            this.queueSpeech(randomSpeech, 5000); // Show for 5 seconds
+          let speechText;
+          
+          // 15% chance for challenge speech (only when not mad or very mad)
+          if (!this.lepreIsMad && !this.lepreIsVeryMad && Math.random() < 0.15) {
+            // Ensure character PBs exist
+            if (typeof window.ensureCharacterPBsExist === 'function') {
+              window.ensureCharacterPBsExist();
+            }
+            
+            // Filter challenge speeches by their conditions
+            const challengeQuotes = this.getLepreChallengeQuotes();
+            const availableChallengeSpeeches = challengeQuotes.filter(speech => {
+              return speech.condition ? speech.condition() : true;
+            });
+            
+            if (availableChallengeSpeeches.length > 0) {
+              const randomChallengeSpeech = availableChallengeSpeeches[Math.floor(Math.random() * availableChallengeSpeeches.length)];
+              speechText = typeof randomChallengeSpeech.text === 'function' ? randomChallengeSpeech.text() : randomChallengeSpeech.text;
+            }
+          }
+          
+          // If no challenge speech was selected, use regular speeches
+          if (!speechText) {
+            const speeches = this.getLepreRandomSpeeches(); // This will return appropriate speeches based on mad state and time
+            if (speeches.length > 0) {
+              const randomSpeech = speeches[Math.floor(Math.random() * speeches.length)];
+              speechText = randomSpeech;
+            }
+          }
+          
+          if (speechText) {
+            this.queueSpeech(speechText, 5000); // Show for 5 seconds
             this.lastRandomSpeechTime = now;
           }
         }
@@ -682,6 +845,11 @@ class Boutique {
     // Force Lepre to get very angry and say the warning message
     this.clearSpeechQueue();
     this.forceSpeech("DO NOT TOUCH MY CHEST ZIPPER! THAT IS OFF LIMIT! GET OUT OF MY SHOP RIGHT NOW!", 3000);
+    
+    // Update Halloween images immediately after triggering angry state
+    if (typeof window.updateHalloweenLepreImages === 'function') {
+      window.updateHalloweenLepreImages();
+    }
     
     // Kick the player out after a short delay to let them see the message
     setTimeout(() => {
@@ -1194,6 +1362,17 @@ class Boutique {
     return images.speaking;
   }
 
+  // Get the appropriate speaking image based on token type and message content
+  getLepreSpeakingImageForToken(message, tokenType) {
+    // Special case: water tokens make Lepre angry
+    if (tokenType === 'water') {
+      return document.getElementById('lepreCharacterAngrySpeaking');
+    }
+    
+    // For other tokens, use the regular message-based logic
+    return this.getLepreSpeakingImageForMessage(message);
+  }
+
   // Hide all Lepre character images
   hideAllLepreImages() {
     const imageIds = [
@@ -1295,6 +1474,66 @@ class Boutique {
     if (images.normal && speakingImage) {
       // Hide all images first, then show the appropriate speaking image
       this.hideAllLepreImages();
+      speakingImage.style.display = 'block';
+      
+      // Create or update speech bubble using the same style as other characters
+      let speechBubble = document.getElementById('lepreSpeechBubble');
+      if (!speechBubble) {
+        speechBubble = document.createElement('div');
+        speechBubble.id = 'lepreSpeechBubble';
+        speechBubble.className = 'swaria-speech'; // Use the same class as other characters
+        document.getElementById('lepreCharacterCard').appendChild(speechBubble);
+      }
+      
+      speechBubble.textContent = message;
+      speechBubble.style.display = 'block';
+      
+      // Set timeout to hide speech after duration
+      this.currentSpeechTimeout = setTimeout(() => {
+        this.clearCurrentSpeech();
+        
+        // Execute callback if provided
+        if (callback && typeof callback === 'function') {
+          callback();
+        }
+        
+        // Process next speech in queue if any
+        setTimeout(() => this.processNextSpeech(), 500); // Small delay between speeches
+      }, duration);
+    }
+  }
+
+  // Special function to show Lepre speech with token context for special reactions
+  showLepreSpeechWithToken(message, duration = 5000, tokenType = null, force = false, callback = null) {
+    // If not forcing and already speaking, don't interrupt
+    if (!force && this.isSpeaking) {
+      return;
+    }
+
+    // If forcing or not currently speaking, clear any existing speech first
+    if (force || this.isSpeaking) {
+      this.clearCurrentSpeech();
+    }
+
+    duration = Math.max(5000, duration); // Ensure minimum 5 seconds
+    this.isSpeaking = true;
+
+    const images = this.getLepreImages();
+    const speakingImage = this.getLepreSpeakingImageForToken(message, tokenType);
+    
+    if (images.normal && speakingImage) {
+      // Hide all images first, then show the appropriate speaking image
+      this.hideAllLepreImages();
+      
+      // For water tokens, set the angry image source based on Halloween mode
+      if (tokenType === 'water') {
+        const isHalloweenActive = window.state && window.state.halloweenEventActive;
+        const angryImageSrc = isHalloweenActive ? 
+          'assets/icons/halloween lepre angry speech.png' : 
+          'assets/icons/lepre angry speech.png';
+        speakingImage.src = angryImageSrc;
+      }
+      
       speakingImage.style.display = 'block';
       
       // Create or update speech bubble using the same style as other characters
@@ -1772,11 +2011,11 @@ class Boutique {
     const speakingImg = document.getElementById('lepreCharacterSpeaking');
     
     if (normalImg) {
-      normalImg.src = 'assets/icons/lepre mad.png';
+      normalImg.src = window.getHalloweenLepreImage ? window.getHalloweenLepreImage('mad') : 'assets/icons/lepre mad.png';
     }
     
     if (speakingImg) {
-      speakingImg.src = 'assets/icons/lepre mad speech.png';
+      speakingImg.src = window.getHalloweenLepreImage ? window.getHalloweenLepreImage('mad_speech') : 'assets/icons/lepre mad speech.png';
     }
   }
 
@@ -1786,11 +2025,11 @@ class Boutique {
     const speakingImg = document.getElementById('lepreCharacterSpeaking');
     
     if (normalImg) {
-      normalImg.src = 'assets/icons/lepre.png';
+      normalImg.src = window.getHalloweenLepreImage ? window.getHalloweenLepreImage('normal') : 'assets/icons/lepre.png';
     }
     
     if (speakingImg) {
-      speakingImg.src = 'assets/icons/lepre speech.png';
+      speakingImg.src = window.getHalloweenLepreImage ? window.getHalloweenLepreImage('speech') : 'assets/icons/lepre speech.png';
     }
   }
 
@@ -2158,6 +2397,11 @@ class Boutique {
     
     // Update the Lepre angry warning card
     this.updateLepreAngryWarning();
+    
+    // Update Halloween character images if function is available
+    if (typeof window.updateHalloweenLepreImages === 'function') {
+      window.updateHalloweenLepreImages();
+    }
     
     // Show Lepre greeting on first visit
     this.showLepreGreeting();

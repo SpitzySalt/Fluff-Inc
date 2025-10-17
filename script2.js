@@ -1162,6 +1162,30 @@ const swariaQuotes = [
   { text: "Reaching swinfinity apparently broke reality too. Whoops!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "I found an swanomaly that looked exactly like a box, but when I touched it, my wing went right through. Spooky!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 said swanomalies affect production. I must be on the lookout for any swanomalies in the factory.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  
+  // Halloween-exclusive quotes (50% chance to appear instead of normal dialogue when Halloween is active)
+  { text: "BOO! Did I scare you? Hehe, I love Halloween!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "This spooky peach outfit is so swawesome!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I've been practicing my spooky laugh: Mwahahaha! How was that?", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The facility looks so much spookier with all these Halloween decorations!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I tried to scare Soap earlier, but they just blew bubbles at me. Not very spooky!", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(2) },
+  { text: "Trick or treat! I'm hoping for some candy, but I'll settle for more boxes to open.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The boxes look extra mysterious tonight. I wonder if they're hiding candies.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I keep hearing spooky sounds, but it might just be the facility's old pipes. Or ghosts!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I wonder if 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 celebrate Halloween? If they would I know their costume would be a sorceror.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The prism lab looks even more magical with this spooky lighting!", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(2) },
+  { text: "I tried to teach the boxes how to say 'BOO!' but they just sit there. Rude!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "This Halloween costume makes me feel extra mischievious, I wonder why >:3", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Swooky! That's spooky but with extra swa-ness. I'm making it a thing!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Halloween night shifts are the best! Everything feels more swadventurous.", condition: () => { if (!window.state || !window.state.halloweenEventActive) return false; if (!window.daynight || typeof window.daynight.getTime !== 'function') return false; const mins = window.daynight.getTime(); return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360); } },
+  { text: "I wonder if Fluzzer created their own Halloween costume using their flowers...", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
+  { text: "This spooky music in the background would really set the Halloween mood! If the speakers were working.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I tried to make a jack-o'-lantern out of a box, but it just fell apart. Boxes aren't very pumpkin-like!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Halloween makes me want to explore all the dark corners of the facility. Swooky adventures await!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Even the swanomalies seem more festive during Halloween!", condition: () => window.state && window.state.halloweenEventActive && window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  { text: "I keep expecting to see ghosts floating around, but it's probably just that other mint swaria wearing their halloween costume.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "This Halloween outfit makes me feel like I could haunt the facility! In a friendly way, of course.", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The whole facility has such a mysterious Halloween atmosphere now. I love it!", condition: () => window.state && window.state.halloweenEventActive },
 ];
 
 // Make swaria-related variables globally accessible
@@ -1179,7 +1203,24 @@ function showSwariaSpeech() {
   const quotesToUse = (typeof window.getAppropriateQuotes === 'function') ? 
     window.getAppropriateQuotes() : swariaQuotes;
   
-  const availableQuotes = quotesToUse.filter(q => q.condition());
+  let availableQuotes;
+  
+  // Halloween dialogue system: 50% chance for Halloween quotes when Halloween is active
+  if (window.state && window.state.halloweenEventActive) {
+    const halloweenQuotes = quotesToUse.filter(q => q.condition() && q.condition.toString().includes('halloweenEventActive'));
+    const normalQuotes = quotesToUse.filter(q => q.condition() && !q.condition.toString().includes('halloweenEventActive'));
+    
+    // 50% chance to use Halloween quotes, 50% for normal quotes
+    if (Math.random() < 0.5 && halloweenQuotes.length > 0) {
+      availableQuotes = halloweenQuotes;
+    } else {
+      availableQuotes = normalQuotes.length > 0 ? normalQuotes : quotesToUse.filter(q => q.condition());
+    }
+  } else {
+    // When Halloween is not active, filter out Halloween-only quotes
+    availableQuotes = quotesToUse.filter(q => q.condition() && !q.condition.toString().includes('halloweenEventActive'));
+  }
+  
   const randomQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
   
   
@@ -1443,11 +1484,86 @@ function buyGeneratorUpgrade(type) {
 
 function calculatePowerGeneratorCap() {
   let baseCap = new Decimal(100);
+  console.log('calculatePowerGeneratorCap - Starting with base cap:', baseCap.toString());
+  
   if (state.grade.gte(2)) {
-    baseCap = baseCap.add(state.grade.sub(1).mul(20));
+    const gradeBonus = state.grade.sub(1).mul(20);
+    baseCap = baseCap.add(gradeBonus);
+    console.log('calculatePowerGeneratorCap - After grade bonus (+' + gradeBonus.toString() + '):', baseCap.toString());
   }
+  
+  // Add battery upgrade bonuses
+  if (window.state.powerGeneratorBatteryUpgrades) {
+    const batteryBonus = DecimalUtils.toDecimal(window.state.powerGeneratorBatteryUpgrades).mul(5);
+    baseCap = baseCap.add(batteryBonus);
+    console.log('calculatePowerGeneratorCap - After battery bonus (+' + batteryBonus.toString() + '):', baseCap.toString());
+  }
+  
+  // Add quest bonuses from completed Soap quests
+  if (window.state.power && window.state.power.questBonuses) {
+    let questBonus = 0;
+    Object.values(window.state.power.questBonuses).forEach(bonus => {
+      questBonus += bonus;
+    });
+    baseCap = baseCap.add(questBonus);
+    console.log('calculatePowerGeneratorCap - After quest bonus (+' + questBonus + '):', baseCap.toString());
+  }
+  
+  // Apply trophy power cap multipliers
+  if (window.state.trophies && window.state.trophies.powerGeneratorChallenge && window.state.trophies.powerGeneratorChallenge.unlockedTier) {
+    const tier = window.state.trophies.powerGeneratorChallenge.unlockedTier;
+    let multiplier = 1;
+    
+    console.log('calculatePowerGeneratorCap - Found power generator challenge trophy, tier:', tier);
+    
+    if (tier === 'bronze') {
+      multiplier = 1.1;
+    } else if (tier === 'silver') {
+      multiplier = 1.25;
+    } else if (tier === 'gold') {
+      multiplier = 1.5;
+    }
+    
+    console.log('calculatePowerGeneratorCap - Trophy multiplier:', multiplier);
+    
+    if (multiplier > 1) {
+      const beforeMultiplier = baseCap.toString();
+      baseCap = baseCap.mul(multiplier);
+      console.log('calculatePowerGeneratorCap - Before trophy multiplier:', beforeMultiplier);
+      console.log('calculatePowerGeneratorCap - After trophy multiplier (x' + multiplier + '):', baseCap.toString());
+    }
+  } else {
+    console.log('calculatePowerGeneratorCap - No trophy found or trophy not unlocked');
+    console.log('calculatePowerGeneratorCap - Trophy state:', window.state.trophies?.powerGeneratorChallenge);
+  }
+  
+  console.log('calculatePowerGeneratorCap - Final result:', baseCap.toString());
   return baseCap;
 }
+
+// Debug function to check trophy state and force power cap update
+function debugTrophyPowerCap() {
+  console.log('=== TROPHY POWER CAP DEBUG ===');
+  console.log('Trophy state:', window.state.trophies);
+  console.log('Power generator challenge trophy:', window.state.trophies?.powerGeneratorChallenge);
+  console.log('Current power max energy:', window.state.powerMaxEnergy?.toString());
+  
+  // Force recalculate power cap
+  const newCap = calculatePowerGeneratorCap();
+  console.log('Calculated power cap:', newCap.toString());
+  
+  // Apply the new cap
+  window.state.powerMaxEnergy = newCap;
+  console.log('Updated power max energy to:', window.state.powerMaxEnergy.toString());
+  
+  // Update UI
+  if (typeof updatePowerGeneratorUI === 'function') {
+    updatePowerGeneratorUI();
+  }
+  
+  console.log('=== DEBUG COMPLETE ===');
+}
+window.debugTrophyPowerCap = debugTrophyPowerCap;
 
 function tickPowerGenerator(diff) {
   // Tick Soap's auto recharge system
@@ -1565,6 +1681,11 @@ function updatePowerGeneratorUI() {
   
   // Update battery upgrade display if it exists
   updateBatteryUpgradeDisplay();
+  
+  // Update minigame challenge button visibility
+  if (typeof updateMinigameChallengeButton === 'function') {
+    updateMinigameChallengeButton();
+  }
 }
 
 // Soap's auto recharge system functions
@@ -1627,6 +1748,8 @@ function tickAutoRechargeSystem(deltaTime) {
     state.powerEnergy = state.powerMaxEnergy;
     state.powerStatus = 'online';
     
+    // Increment power refill counter for quest tracking
+    window.state.powerRefillCount = (window.state.powerRefillCount || 0) + 1;
     
     // Show notification
     showAutoRechargeNotification();
@@ -1869,6 +1992,10 @@ function completePowerRecharge() {
     window.resetPowerMinigameFailures();
   }
   
+  // Increment power refill counter for quest tracking
+  if (!window.state) window.state = {};
+  window.state.powerRefillCount = (window.state.powerRefillCount || 0) + 1;
+  
   // Ensure power values are Decimals
   if (!DecimalUtils.isDecimal(state.powerEnergy)) {
     state.powerEnergy = new Decimal(state.powerEnergy || 0);
@@ -1912,27 +2039,12 @@ function completePowerRecharge() {
 }
 
 function awardSoapFriendshipForPowerRecharge() {
-  // Award Soap 3% friendship points based on their current amount when power recharge minigame is completed with <80 power
+  // Award Soap friendship points when power recharge minigame is completed with <80 power
   if (window.friendship && typeof window.friendship.addPoints === 'function') {
-    // Initialize Generator friendship if it doesn't exist (Soap's department)
-    if (!window.friendship.Generator) {
-      window.friendship.Generator = { level: 0, points: new Decimal(0) };
-    }
+    // Award a fixed amount of friendship points (3 points) for completing the power recharge minigame
+    const friendshipGain = new Decimal(3);
     
-    // Ensure points is a Decimal object
-    if (!DecimalUtils.isDecimal(window.friendship.Generator.points)) {
-      window.friendship.Generator.points = new Decimal(window.friendship.Generator.points || 0);
-    }
-    
-    const currentPoints = window.friendship.Generator.points;
-    
-    // Calculate 3% of current points (minimum 1 point)
-    let friendshipGain = currentPoints.mul(0.03);
-    if (friendshipGain.lt(1)) {
-      friendshipGain = new Decimal(1);
-    }
-    
-    // Add the friendship points using Soap's character name
+    // Add the friendship points using Soap's character name - let the friendship system handle initialization
     window.friendship.addPoints('soap', friendshipGain);
   }
 }
@@ -2349,6 +2461,8 @@ window.forceAutoRechargeUI = function() {
 
 window.addEventListener("load", () => {
   renderPowerGenerator();
+  // Update recovery card visibility on page load
+  updateRecoveryCardVisibility();
 });
 
 function initializeGeneratorTab() {
@@ -4300,6 +4414,37 @@ const soapQuotes = [
   { text: "The other day, an anomaly turned my wrench into a bottle of ranch!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "These dimensional disturbances are like soap bubbles - beautiful, unpredictable, and they pop at random!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
   { text: "The facility's reality fabric is getting as slippery as my generator room floor.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+  
+  // Halloween-exclusive quotes (Soap Bubble Overlord theme)
+  { text: "BEHOLD! I am the Soap Bubble Overlord! Bow before my sudsy magnificence!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My Halloween costume is perfect! I'm the supreme ruler of all soap bubbles!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Trick or treat? How about BUBBLES OR BUBBLES! Mwahahaha!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "As the Soap Bubble Overlord, I command you to appreciate the beauty of bubbles!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My soap bubble army is ready for Halloween! They're floating everywhere!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "This spooky outfit makes my soap collection look even more intimidating!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The generators are producing extra spooky bubbles tonight! Perfect for Halloween!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My Soap Bubble Overlord powers are at maximum strength during Halloween!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The facility looks so much more dramatic with all these Halloween bubbles floating around!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My overlord costume came with a bubble wand scepter! It's my new favorite tool!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Even Mystic is impressed by my Soap Bubble Overlord cooking skills! Bubble cuisine!", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(3) },
+  { text: "Lepre tried to dodge my Halloween bubble attack, but my overlord powers are too strong!", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(4) },
+  { text: "I wonder if Fluzzer would make a good bubble overlord minion? They're energetic enough at night!", condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(6) },
+  { text: "The spooky atmosphere makes my soap experiments feel more mystical and overlord-y!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I commanded my bubble army to decorate the generator room for Halloween!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Being a Soap Bubble Overlord is exhausting work, but someone has to rule the suds!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My overlord bubble shield can protect against any Halloween scares!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I'm thinking of expanding my overlord domain to include the entire facility!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Even 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒 should fear the power of the Soap Bubble Overlord!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My Halloween bubble magic is making the generators extra bubbly tonight!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The other workers don't understand my overlord greatness yet, but they will!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I've been working on my overlord throne made entirely of soap bubbles!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "Halloween gives me the perfect excuse to embrace my true soap overlord nature!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My bubble overlord costume makes me feel invincible! Nothing can stop the suds!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "I tried to turn the power outages into dramatic overlord entrances, but nobody appreciated it!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "The spooky lighting makes my soap collection look like a proper overlord's treasure hoard!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "As the Soap Bubble Overlord, I declare this the most bubble-tastic Halloween ever!", condition: () => window.state && window.state.halloweenEventActive },
+  { text: "My overlord auto-recharge system uses the power of Halloween magic and bubbles!", condition: () => window.state && window.state.halloweenEventActive && (() => { const level = (window.friendship && window.friendship.Generator && window.friendship.Generator.level) || (typeof friendship !== 'undefined' && friendship.Generator && friendship.Generator.level) || 0; return level >= 4; })() },
+  { text: "Even the anomalies bow before the mighty Soap Bubble Overlord! Well, maybe not, but they should!", condition: () => window.state && window.state.halloweenEventActive && window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
 ];
 
 // Special disappointed quotes for when soap generator anomaly gets fixed
@@ -4358,6 +4503,109 @@ const soapAnomalyClickQuotes = [
   "I wonder if I can teach the other workers about the beauty of soap generators?"
 ];
 
+// Challenge speech quotes - Soap comparing their PB with player's PB
+const soapChallengeQuotes = [
+  // When player doesn't have a PB but Soap does
+  { text: () => `My challenge time is ${(window.state.characterChallengePBs?.soap || 0)} seconds. Think you can beat that?`, condition: () => window.state.characterChallengePBs?.soap && !window.state.powerChallengePersonalBest },
+  { text: () => `I got ${(window.state.characterChallengePBs?.soap || 0)} seconds on my first try! The soap made my fingers extra slippery!`, condition: () => window.state.characterChallengePBs?.soap && !window.state.powerChallengePersonalBest },
+  { text: () => `${(window.state.characterChallengePBs?.soap || 0)} seconds, not bad for someone who spends all day with soap bars, right?`, condition: () => window.state.characterChallengePBs?.soap && !window.state.powerChallengePersonalBest },
+  
+  // When Soap's PB is better than player's (higher time = better in survival challenge)
+  { text: () => `Hehe, my ${(window.state.characterChallengePBs?.soap || 0)} seconds beats your ${window.state.powerChallengePersonalBest || 0} seconds! Soap power!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.soap) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `My record is ${(window.state.characterChallengePBs?.soap || 0)} seconds, yours is ${window.state.powerChallengePersonalBest || 0}. I'm winning! Expected since I created this challenge!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.soap) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `I survived ${(parseFloat(window.state.characterChallengePBs?.soap || 0) - parseFloat(window.state.powerChallengePersonalBest || 0)).toFixed(2)} seconds longer than you! The soap makes me slippery AND speedy!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.soap) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds is pretty good, but my ${(window.state.characterChallengePBs?.soap || 0)} seconds is soap-erb!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.soap) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  { text: () => `I used my bubble-popping reflexes to survive ${(window.state.characterChallengePBs?.soap || 0)} seconds. Can you do better than ${window.state.powerChallengePersonalBest || 0}?`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.characterChallengePBs.soap) > parseFloat(window.state.powerChallengePersonalBest);
+  }},
+  
+  // When player's PB is better than Soap's (player survived longer)
+  { text: () => `Wow! Your ${window.state.powerChallengePersonalBest || 0} seconds destroys my ${(window.state.characterChallengePBs?.soap || 0)} seconds! How did you survive so long?`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.soap);
+  }},
+  { text: () => `Your ${window.state.powerChallengePersonalBest || 0} seconds beats my ${(window.state.characterChallengePBs?.soap || 0)}. I need to practice more bubble reflexes!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.soap);
+  }},
+  { text: () => `You survived ${(parseFloat(window.state.powerChallengePersonalBest || 0) - parseFloat(window.state.characterChallengePBs?.soap || 0)).toFixed(2)} seconds longer than me! Maybe I need soap-free fingers...`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.soap);
+  }},
+  { text: () => `I'm impressed! ${window.state.powerChallengePersonalBest || 0} seconds is way better than my ${(window.state.characterChallengePBs?.soap || 0)}. You've got skills!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.soap);
+  }},
+  { text: () => `My ${(window.state.characterChallengePBs?.soap || 0)} seconds can't compete with your ${window.state.powerChallengePersonalBest || 0}! I should've used less soap on my fingers!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.soap);
+  }},
+  
+  // When PBs are very close (within 1 second)
+  { text: () => `Our times are so close! Your ${window.state.powerChallengePersonalBest || 0} vs my ${(window.state.characterChallengePBs?.soap || 0)}. This is getting competitive!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.soap)) <= 1.0;
+  }},
+  { text: () => `We're practically tied! ${window.state.powerChallengePersonalBest || 0} seconds vs ${(window.state.characterChallengePBs?.soap || 0)} seconds. Want a rematch?`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.soap)) <= 1.0;
+  }},
+  { text: `Less than a second difference between us! This challenge is bringing out our competitive sides!`, condition: () => {
+    return window.state.characterChallengePBs?.soap && window.state.powerChallengePersonalBest && 
+           Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.soap)) <= 1.0;
+  }},
+  
+  // General competitive banter
+  { text: "I've been practicing the challenge during my breaks! My soap reflexes are getting faster!", condition: () => window.state.characterChallengePBs?.soap },
+  { text: "The challenge is actually helping me react faster to power outages! Win-win!", condition: () => window.state.characterChallengePBs?.soap },
+  { text: "I wonder if the other workers have challenge times too? We should compare everyone's records!", condition: () => window.state.characterChallengePBs?.soap || window.state.powerChallengePersonalBest },
+  { text: "This challenge competition is almost as fun as my soap collection hobby!", condition: () => window.state.characterChallengePBs?.soap || window.state.powerChallengePersonalBest },
+  { text: "Every time I see those red tiles, I think about our challenge rivalry! It's motivating!", condition: () => window.state.characterChallengePBs?.soap || window.state.powerChallengePersonalBest },
+];
+
+// Helper function for future character challenge speech systems
+function getCharacterChallengeQuotes(characterKey) {
+  switch(characterKey) {
+    case 'soap':
+      return soapChallengeQuotes;
+    case 'tico':
+      // Access Tico's challenge quotes from the front desk instance
+      return window.frontDesk ? window.frontDesk.ticochallengeQuotes : [];
+    case 'mystic':
+      // Access Mystic's challenge quotes from the kitchen system
+      return typeof mysticChallengeQuotes !== 'undefined' ? mysticChallengeQuotes : [];
+    case 'lepre':
+      // Access Lepre's challenge quotes from the boutique system
+      return window.boutique ? window.boutique.getLepreChallengeQuotes() : [];
+    case 'vi':
+      // Access Vi's challenge quotes from the advanced prism system
+      return (window.viSpeechPatterns && window.viSpeechPatterns.challengeQuotes) ? window.viSpeechPatterns.challengeQuotes : [];
+    case 'fluzzer':
+      // Access Fluzzer's challenge quotes from the terrarium system
+      return (typeof getFluzzerChallengeQuotes !== 'undefined') ? getFluzzerChallengeQuotes() : [];
+    case 'bijou':
+      // Access Bijou's challenge quotes from the premium system
+      return (typeof getBijouChallengeQuotes !== 'undefined') ? getBijouChallengeQuotes() : [];
+    // Future characters can be added here
+    // etc.
+    default:
+      return [];
+  }
+}
+
 window.soapIsTalking = false;
 window.soapClickCount = 0;
 window.soapLastClickTime = 0;
@@ -4384,9 +4632,21 @@ function showSoapSpeech() {
   }
   window.soapIsTalking = true;
   
+  // 15% chance for challenge speech (only if quest 5 is completed to unlock the challenge)
+  const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
+  const shouldUseChallengeQuotes = questCompleted && Math.random() < 0.15;
+  
+  // Ensure character PBs exist if we're going to use challenge quotes
+  if (shouldUseChallengeQuotes && typeof window.ensureCharacterPBsExist === 'function') {
+    window.ensureCharacterPBsExist();
+  }
+  
   // Check if soap generator anomaly is active - if so, only show anomaly dialogue
   let availableQuotes;
-  if (window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.soapGeneratorAnomaly) {
+  if (shouldUseChallengeQuotes) {
+    // Use challenge quotes - filter for conditions that are currently true
+    availableQuotes = soapChallengeQuotes.filter(q => q.condition());
+  } else if (window.anomalySystem && window.anomalySystem.activeAnomalies && window.anomalySystem.activeAnomalies.soapGeneratorAnomaly) {
     // Filter for only anomaly-specific dialogue
     availableQuotes = soapQuotes.filter(q => {
       return q.condition() && q.text.includes('generator') || q.text.includes('soap') || q.text.includes('bubble') || q.text.includes('anomaly');
@@ -4396,19 +4656,33 @@ function showSoapSpeech() {
       availableQuotes = soapQuotes.filter(q => q.condition() && q.condition.toString().includes('soapGeneratorAnomaly'));
     }
   } else {
-    // Normal behavior - exclude anomaly dialogue when anomaly is not active
-    availableQuotes = soapQuotes.filter(q => {
-      return q.condition() && !q.condition.toString().includes('soapGeneratorAnomaly');
-    });
+    // Halloween dialogue system: 50% chance for Halloween quotes when Halloween is active
+    if (window.state && window.state.halloweenEventActive) {
+      const halloweenQuotes = soapQuotes.filter(q => q.condition() && q.condition.toString().includes('halloweenEventActive'));
+      const normalQuotes = soapQuotes.filter(q => q.condition() && !q.condition.toString().includes('halloweenEventActive') && !q.condition.toString().includes('soapGeneratorAnomaly'));
+      
+      // 50% chance to use Halloween quotes, 50% for normal quotes
+      if (Math.random() < 0.5 && halloweenQuotes.length > 0) {
+        availableQuotes = halloweenQuotes;
+      } else {
+        availableQuotes = normalQuotes.length > 0 ? normalQuotes : soapQuotes.filter(q => q.condition() && !q.condition.toString().includes('soapGeneratorAnomaly'));
+      }
+    } else {
+      // When Halloween is not active, filter out Halloween-only quotes and anomaly quotes
+      availableQuotes = soapQuotes.filter(q => {
+        return q.condition() && !q.condition.toString().includes('soapGeneratorAnomaly') && !q.condition.toString().includes('halloweenEventActive');
+      });
+    }
   }
   
   const randomQuote = availableQuotes[Math.floor(Math.random() * availableQuotes.length)];
-  soapSpeech.textContent = randomQuote ? randomQuote.text : "...";
+  const quoteText = randomQuote ? (typeof randomQuote.text === 'function' ? randomQuote.text() : randomQuote.text) : "...";
+  soapSpeech.textContent = quoteText;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   window.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     window.soapIsTalking = false;
     window.soapCurrentSpeechTimeout = null;
     startSoapRandomSpeechTimer();
@@ -4430,10 +4704,10 @@ function showSoapFirstTimeMessage() {
   window.soapIsTalking = true;
   soapSpeech.textContent = "Huh? Who are you? How did you open the door??? You're not supposed to be here... Actually, I'll let you stay";
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   window.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     window.soapIsTalking = false;
     window.soapCurrentSpeechTimeout = null;
     startSoapRandomSpeechTimer();
@@ -4488,10 +4762,10 @@ function showSoapClickMessage() {
   const randomQuote = quoteArray[Math.floor(Math.random() * quoteArray.length)];
   soapSpeech.textContent = randomQuote;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   window.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     window.soapIsTalking = false;
     window.soapCurrentSpeechTimeout = null;
     startSoapRandomSpeechTimer();
@@ -4518,12 +4792,12 @@ function showSoapDisappointedSpeech() {
   const randomDisappointedQuote = soapDisappointedQuotes[Math.floor(Math.random() * soapDisappointedQuotes.length)];
   soapSpeech.textContent = randomDisappointedQuote;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   
   // Show disappointed speech for longer (12 seconds)
   window.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     window.soapIsTalking = false;
     window.soapCurrentSpeechTimeout = null;
     startSoapRandomSpeechTimer();
@@ -4748,6 +5022,9 @@ function getKpGainPreview() {
   
   return preview;
 }
+
+// Make getKpGainPreview globally accessible
+window.getKpGainPreview = getKpGainPreview;
 
 document.addEventListener('DOMContentLoaded', function() {
   const openBtn = document.getElementById('openSaveSlotModalBtn');
@@ -6724,7 +7001,7 @@ function soapGetsMad() {
   window.soapIsTalking = true;
   soapSpeech.textContent = "THAT'S IT! I'VE HAD ENOUGH OF YOU POKING ME! *shuts down power generator*";
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap mad.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('mad') : "assets/icons/soap mad.png";
   state.powerEnergy = new Decimal(0);
   state.powerStatus = 'offline';
   updatePowerGeneratorUI();
@@ -6738,7 +7015,7 @@ function soapGetsMad() {
   }
   window.soapCurrentSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
     window.soapIsTalking = false;
     window.soapCurrentSpeechTimeout = null;
     startSoapRandomSpeechTimer();
@@ -7214,11 +7491,11 @@ function showSoapChargerSpeech() {
   const randomQuote = soapChargerQuotes[Math.floor(Math.random() * soapChargerQuotes.length)];
   soapSpeech.textContent = randomQuote;
   soapSpeech.style.display = "block";
-  soapImg.src = "assets/icons/soap speech.png";
+  soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
   if (soapChargerSpeechTimeout) clearTimeout(soapChargerSpeechTimeout);
   soapChargerSpeechTimeout = setTimeout(() => {
     soapSpeech.style.display = "none";
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
   }, 10000); 
 }
 
@@ -7286,6 +7563,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (stairsCard) {
     stairsCard.onclick = function() {
       window.currentFloor = 2;
+      
+      // Add floor-2 class to body for navigation adjustments
+      document.body.classList.add('floor-2');
       
       // Set the active tab to terrarium (gamblingMain) when going to Floor 2
       window.currentHomeSubTab = 'gamblingMain';
@@ -7418,11 +7698,19 @@ function updateFloor2Visibility() {
     if (typeof window.checkAndUpdateFluzzerSleepState === 'function') {
       window.checkAndUpdateFluzzerSleepState();
     }
+    // Update Halloween vines when entering terrarium (floor 2)
+    if (typeof window.updatePageHalloweenVines === 'function') {
+      window.updatePageHalloweenVines();
+    }
   } else {
     if (terrariumTab) terrariumTab.style.display = 'none';
     if (gamblingMainTab) gamblingMainTab.style.display = 'block'; // Show cargo on Floor 1
     if (homeSubTabs) homeSubTabs.style.display = 'block';
     document.body.classList.remove('terrarium-bg');
+    // Remove Halloween vines when leaving terrarium (floor 2)
+    if (typeof window.removePageHalloweenVines === 'function') {
+      window.removePageHalloweenVines();
+    }
   }
   updateFloor2NavLabels();
   updateBoutiqueButtonVisibility();
@@ -7698,6 +7986,9 @@ tickPowerGenerator = function(diff) {
     }
   }
 
+  // Make function globally accessible
+  window.updateDigitalClock = updateDigitalClock;
+
   window.digitalClockInterval = setInterval(updateDigitalClock, 1000);
 
   function tryRegisterDaynightCallback() {
@@ -7759,9 +8050,9 @@ function updateSoapSleepState() {
   const soapImg = document.getElementById("swariaGeneratorCharacter");
   if (!soapImg) return;
   if (window.isSoapSleeping) {
-    soapImg.src = "assets/icons/soap sleeping.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
   } else {
-    soapImg.src = "assets/icons/soap.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
   }
 }
 
@@ -7791,11 +8082,11 @@ showSoapClickMessage = function() {
     if (!soapImg || !soapSpeech) return;
     soapSpeech.textContent = "Zzz...";
     soapSpeech.style.display = "block";
-    soapImg.src = "assets/icons/soap sleep talking.png";
+    soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep_talk') : "assets/icons/soap sleep talking.png";
     if (window.soapCurrentSpeechTimeout) clearTimeout(window.soapCurrentSpeechTimeout);
     window.soapCurrentSpeechTimeout = setTimeout(() => {
       soapSpeech.style.display = "none";
-      soapImg.src = "assets/icons/soap sleeping.png";
+      soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('sleep') : "assets/icons/soap sleeping.png";
       window.soapIsTalking = false;
       window.soapCurrentSpeechTimeout = null;
     }, 3000);
@@ -8095,7 +8386,13 @@ window.restoreSwariaImage = restoreSwariaImage;
       case 'pyramid': return 'PrismCore';
       case 'prismCoreCard': return 'PrismCore';
       case 'mixingCard': return 'MixingSystem';
-      default: return 'Unknown';
+      default: 
+        // Check for data-character-name attribute for dynamically added elements
+        const element = document.getElementById(id);
+        if (element && element.getAttribute('data-character-name')) {
+          return element.getAttribute('data-character-name');
+        }
+        return 'Unknown';
     }
   }  function setupCharacterDropTargets() {
     characterDropTargets.forEach(id => {
@@ -8242,6 +8539,19 @@ window.restoreSwariaImage = restoreSwariaImage;
             return;
           }
           
+          // Special case for Halloween Event Button - only accepts candy tokens
+          if (characterName === 'HalloweenEventButton') {
+            if (tokenType !== 'candy') {
+              el.style.outline = '3px solid #ff4444';
+              el.title = 'The Halloween Event Button only accepts candy tokens!';
+              setTimeout(() => {
+                el.style.outline = '';
+                el.title = '';
+              }, 1200);
+              return;
+            }
+          }
+          
           // Special case for Swaria rejecting certain tokens
           if (characterName === 'Swaria' && ['sparks', 'petals', 'prisma', 'stardust'].includes(tokenType)) {
             const swariaSpeech = document.getElementById('swariaSpeech');
@@ -8337,46 +8647,70 @@ window.restoreSwariaImage = restoreSwariaImage;
 
   const characterTokenPreferences = {
     Soap: {
-      likes: ['sparks'],
+      likes: ['sparks', 'candy'],
       dislikes: ['mushroom', 'water'],
       neutral: ['berries', 'prisma', 'petals', 'stardust']
     },
     Mystic: {
-      likes: ['mushroom', 'berries', 'stardust'],
+      likes: ['mushroom', 'berries', 'stardust', 'candy'],
       dislikes: ['sparks', 'prisma'],
       neutral: ['petals', 'water']
     },
     Fluzzer: {
-      likes: ['berries', 'petals'],
+      likes: ['berries', 'petals', 'candy'],
       dislikes: ['prisma'],
       neutral: ['mushroom', 'sparks', 'water', 'stardust']
     },
     Vi: { 
-      likes: ['prisma', 'water'],
+      likes: ['prisma', 'water', 'candy'],
       dislikes: ['sparks'],
       neutral: ['berries', 'petals', 'mushroom', 'stardust']
     },
     Vivien: { 
-      likes: ['prisma', 'water'],
+      likes: ['prisma', 'water', 'candy'],
       dislikes: ['sparks'],
       neutral: ['berries', 'petals', 'mushroom', 'stardust']
     },
     Swaria: { 
-      likes: ['berries', 'berryPlate'],
+      likes: ['berries', 'berryPlate', 'candy'],
       dislikes: ['sparks', 'petals', 'prisma', 'stardust'],
       neutral: ['mushroom', 'water']
     },
     Tico: {
-      likes: ['berries', 'mushroom', 'water'],
+      likes: ['berries', 'mushroom', 'water', 'candy'],
       dislikes: [],
       neutral: ['sparks', 'prisma', 'petals', 'stardust', 'berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma']
+    },
+    Lepre: {
+      likes: ['berries', 'stardust', 'candy'],
+      dislikes: ['water'],
+      neutral: ['sparks', 'prisma', 'mushroom', 'petals', 'berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma']
     }
   };
+
+  // Make characterTokenPreferences globally accessible
+  window.characterTokenPreferences = characterTokenPreferences;
+
+  // Create global character to department mapping
+  const charToDept = {
+    'Swaria': 'Cargo',
+    'Soap': 'Generator',
+    'Mystic': 'Kitchen',
+    'Fluzzer': 'Terrarium',
+    'Vi': 'Lab',
+    'Vivien': 'Lab',
+    'Lepre': 'Boutique',
+    'Tico': 'FrontDesk'
+  };
+
+  // Make charToDept globally accessible
+  window.charToDept = charToDept;
 
   function updateMainCargoCharacterImage() {
   const swariaImg = document.getElementById('swariaCharacter');
   if (swariaImg) {
     swariaImg.src = getMainCargoCharacterImage(false); 
+    applyHalloweenRecorderGhostEffect(swariaImg);
   } else {
   }
 }
@@ -8385,6 +8719,7 @@ function updatePrismLabCharacterImage() {
   const prismImg = document.getElementById('prismCharacter');
   if (prismImg) {
     prismImg.src = getPrismLabCharacterImage(false); 
+    applyHalloweenRecorderGhostEffect(prismImg);
   } else {
   }
 }
@@ -8393,6 +8728,7 @@ function updateHardModeQuestCharacterImage() {
   const hardModeImg = document.querySelector('#hardModeSwariaImg img');
   if (hardModeImg) {
     hardModeImg.src = getHardModeQuestCharacterImage(false); 
+    applyHalloweenRecorderGhostEffect(hardModeImg);
   } else {
   }
 }
@@ -8401,24 +8737,57 @@ function updateTerrariumCharacterImage() {
   const terrariumImg = document.getElementById('terrariumCharacterImg');
   if (terrariumImg) {
     terrariumImg.src = getTerrariumCharacterImage(false); 
+    applyHalloweenRecorderGhostEffect(terrariumImg);
   } else {
   }
 }
 
+function applyHalloweenRecorderGhostEffect(imgElement) {
+  if (!imgElement) return;
+  
+  // Check if both Halloween and Recorder modes are active AND the image is a recorder image
+  const isHalloweenRecorderGhost = window.state && 
+    window.state.halloweenEventActive && 
+    window.state.recorderModeActive &&
+    (imgElement.src.includes('recorder.png') || imgElement.src.includes('recorder speech.png'));
+  
+  if (isHalloweenRecorderGhost) {
+    imgElement.classList.add('halloween-recorder-ghost');
+  } else {
+    imgElement.classList.remove('halloween-recorder-ghost');
+  }
+}
+
+function applyHalloweenRecorderGhostEffectToAll() {
+  // Apply ghost effect to all Swaria character images
+  const allSwariaImages = document.querySelectorAll('img[src*="recorder"], img[src*="swa"], img[id*="swaria"], img[id*="prism"]');
+  allSwariaImages.forEach(img => {
+    applyHalloweenRecorderGhostEffect(img);
+  });
+}
+
 function getMainCargoCharacterImage(isTalking = false) {
-  if (window.premiumState && window.premiumState.bijouEnabled) {
+  // Check for recorder mode first (takes priority over Halloween for ghost effect)
+  if (window.state && window.state.recorderModeActive) {
+    return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
+  }
+  // Check for Halloween event
+  else if (window.state && window.state.halloweenEventActive) {
+    return isTalking ? "assets/icons/halloween peachy speech.png" : "assets/icons/halloween peachy.png";
+  } else if (window.premiumState && window.premiumState.bijouEnabled) {
     return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
   } else if (window.state && window.state.kitoFoxModeActive) {
     return isTalking ? "assets/icons/kitomode speech.png" : "assets/icons/kitomode.png";
-  } else if (window.state && window.state.recorderModeActive) {
-    return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
   } else {
     return isTalking ? "swa talking.png" : "swa normal.png";
   }
 }
 
 function getPrismLabCharacterImage(isTalking = false) {
-  if (window.premiumState && window.premiumState.bijouEnabled) {
+  // Note: Recorder mode doesn't apply to prism lab, check Halloween first
+  if (window.state && window.state.halloweenEventActive) {
+    return isTalking ? "assets/icons/halloween peachy speech.png" : "assets/icons/halloween peachy.png";
+  } else if (window.premiumState && window.premiumState.bijouEnabled) {
     return "assets/icons/peachy and bijou prism.png"; 
   } else {
     return isTalking ? "assets/icons/swaria speach prism.png" : "assets/icons/swaria prism.png";
@@ -8426,20 +8795,30 @@ function getPrismLabCharacterImage(isTalking = false) {
 }
 
 function getHardModeQuestCharacterImage(isTalking = false) {
-  if (window.premiumState && window.premiumState.bijouEnabled) {
-    return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
-  } else if (window.state && window.state.recorderModeActive) {
+  // Check for recorder mode first (takes priority over Halloween for ghost effect)
+  if (window.state && window.state.recorderModeActive) {
     return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
+  }
+  // Check for Halloween event
+  else if (window.state && window.state.halloweenEventActive) {
+    return isTalking ? "assets/icons/halloween peachy speech.png" : "assets/icons/halloween peachy.png";
+  } else if (window.premiumState && window.premiumState.bijouEnabled) {
+    return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
   } else {
     return isTalking ? "assets/icons/kitomode speech.png" : "assets/icons/kitomode.png";
   }
 }
 
 function getTerrariumCharacterImage(isTalking = false) {
-  if (window.premiumState && window.premiumState.bijouEnabled) {
-    return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
-  } else if (window.state && window.state.recorderModeActive) {
+  // Check for recorder mode first (takes priority over Halloween for ghost effect)
+  if (window.state && window.state.recorderModeActive) {
     return isTalking ? "assets/icons/recorder speech.png" : "assets/icons/recorder.png";
+  }
+  // Check for Halloween event
+  else if (window.state && window.state.halloweenEventActive) {
+    return isTalking ? "assets/icons/halloween peachy speech.png" : "assets/icons/halloween peachy.png";
+  } else if (window.premiumState && window.premiumState.bijouEnabled) {
+    return isTalking ? "assets/icons/peachy and bijou talking.png" : "assets/icons/peachy and bijou.png";
   } else {
     return isTalking ? "assets/icons/swaria talking.png" : "assets/icons/swaria normal.png";
   }
@@ -8470,6 +8849,8 @@ window.forceUpdatePrismLabCharacter = forceUpdatePrismLabCharacter;
 window.forceUpdateHardModeQuestCharacter = forceUpdateHardModeQuestCharacter;
 window.forceUpdateTerrariumCharacter = forceUpdateTerrariumCharacter;
 window.getMainCargoCharacterImage = getMainCargoCharacterImage;
+window.applyHalloweenRecorderGhostEffect = applyHalloweenRecorderGhostEffect;
+window.applyHalloweenRecorderGhostEffectToAll = applyHalloweenRecorderGhostEffectToAll;
 window.getPrismLabCharacterImage = getPrismLabCharacterImage;
 window.getHardModeQuestCharacterImage = getHardModeQuestCharacterImage;
 window.getTerrariumCharacterImage = getTerrariumCharacterImage;
@@ -8531,7 +8912,7 @@ const characterTokenSpeech = {
     prisma: ["Prisma shards? Sure, they have their market.", "Prisma can be useful for the right customer.", "Not my favorite, but I'll take them.", "These prisma shards will do nicely."],
     mushroom: ["Mushrooms? Well, everyone needs food tokens.", "These mushrooms look fresh enough.", "I suppose mushrooms have their place.", "Mushrooms - basic but necessary."],
     petals: ["Petals? They're pretty, I'll give you that.", "These petals might interest some customers.", "Flower petals - charming in their own way.", "I can find someone who appreciates petals."],
-    water: ["Water? Ugh, really? That's the best you've got?", "Water... how disappointingly common.", "You're giving me WATER? Come on now!", "I was hoping for something more... valuable.", "Water? I suppose even merchants need to stay hydrated..."]
+    water: ["WATER?! No no no! Keep that away from me!", "GAH! My plush fur will get all soggy! *bzzt*", "Are you trying to ruin my plush?!", "Water and me don't mix! I'd hate to get my plush all soggy!"]
   },
   Tico: {
     berries: ["Berries! My favorite! Thank you so much!", "These berries look delicious! I really appreciate this!", "You know exactly what I like! Berries are the best!"],
@@ -8557,6 +8938,9 @@ const characterTokenSpeech = {
     stardust: ["Stardust! So magical! This reminds me why I love helping workers reach their potential.", "Incredible! This stardust makes me feel inspired about worker development!", "Stardust! As rare and special as finding the perfect worker for a job!"]
   }
 };
+
+// Make characterTokenSpeech globally accessible
+window.characterTokenSpeech = characterTokenSpeech;
 
 function showCharacterSpeech(characterName, tokenType) {
   let el = null;
@@ -8616,28 +9000,10 @@ function showCharacterSpeech(characterName, tokenType) {
     }
     
     // Use boutique's speech system if available
-    if (window.boutique && typeof window.boutique.showLepreSpeechBubble === 'function') {
-      // Show Lepre speaking image
-      const normalImg = document.getElementById('lepreCharacterImage');
-      const speakingImg = document.getElementById('lepreCharacterSpeaking');
-      
-      if (normalImg && speakingImg) {
-        normalImg.style.display = 'none';
-        speakingImg.style.display = 'block';
-      }
-      
-      window.boutique.showLepreSpeechBubble(speech);
-      
-      // Reset after 3.5 seconds to match other characters
-      setTimeout(() => {
-        if (normalImg && speakingImg) {
-          speakingImg.style.display = 'none';
-          normalImg.style.display = 'block';
-        }
-        if (window.boutique && typeof window.boutique.hideLepreSpeechBubble === 'function') {
-          window.boutique.hideLepreSpeechBubble();
-        }
-      }, 3500);
+    if (window.boutique && typeof window.boutique.showLepreSpeechWithToken === 'function') {
+      window.boutique.showLepreSpeechWithToken(speech, 3500, tokenType);
+    } else if (window.boutique && typeof window.boutique.showLepreSpeech === 'function') {
+      window.boutique.showLepreSpeech(speech, 3500);
     }
     return; // Exit early for Lepre since we handled it specially
   } else if (characterName === 'Tico') {
@@ -8680,9 +9046,9 @@ function showCharacterSpeech(characterName, tokenType) {
       el.style.display = 'block';
       if (img) {
         if (characterName === 'Soap') {
-          img.src = 'assets/icons/soap speech.png';
+          img.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : 'assets/icons/soap speech.png';
         } else if (characterName === 'Mystic') {
-          img.src = 'assets/icons/chef mystic speech.png';
+          img.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('speech') : 'assets/icons/chef mystic speech.png';
         } else if (characterName === 'Fluzzer') {
           img.src = getFluzzerImagePath('talking');
         }
@@ -8692,9 +9058,9 @@ function showCharacterSpeech(characterName, tokenType) {
         el.style.display = 'none';
         if (img) {
           if (characterName === 'Soap') {
-            img.src = 'assets/icons/soap.png';
+            img.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : 'assets/icons/soap.png';
           } else if (characterName === 'Mystic') {
-            img.src = 'assets/icons/chef mystic.png';
+            img.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('normal') : 'assets/icons/chef mystic.png';
           } else if (characterName === 'Fluzzer') {
             img.src = getFluzzerImagePath('normal');
           }
@@ -8762,6 +9128,7 @@ function showCharacterSpeech(characterName, tokenType) {
       petal: 'assets/icons/petal token.png',
       water: 'assets/icons/water token.png',
       stardust: 'assets/icons/stardust token.png',
+      candy: 'assets/icons/candy token.png',
       berryPlate: 'assets/icons/berry plate token.png',
       mushroomSoup: 'assets/icons/mushroom soup token.png',
       batteries: 'assets/icons/battery token.png',
@@ -8780,6 +9147,7 @@ function showCharacterSpeech(characterName, tokenType) {
       petals: 'Petals',
       water: 'Water',
       stardust: 'Stardust',
+      candy: 'Candy',
       berryPlate: 'Berry Plate',
       mushroomSoup: 'Mushroom Soup',
       batteries: 'Batteries',
@@ -8810,6 +9178,9 @@ function showCharacterSpeech(characterName, tokenType) {
       img.src = tokenImages[tokenType] || '';
     } else if (characterName === 'MixingSystem') {
       title.textContent = `How many ${displayNames[tokenType] || tokenType} do you wanna add to the mixer?`;
+      img.src = tokenImages[tokenType] || '';
+    } else if (characterName === 'HalloweenEventButton') {
+      title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to give to unlock the Halloween Event?`;
       img.src = tokenImages[tokenType] || '';
     } else {
       title.textContent = `How many ${displayNames[tokenType] || tokenType} do you want to give to ${characterName}?`;
@@ -8948,6 +9319,78 @@ function showCharacterSpeech(characterName, tokenType) {
       if (amount < 0) return;
       let questSpeech = null;
       let friendshipAmount = amount;
+      
+      // Handle Halloween Event Button candy token giving
+      if (characterName === 'HalloweenEventButton' && tokenType === 'candy') {
+        // Initialize Halloween event state if it doesn't exist
+        if (!window.state.halloweenEvent) {
+          window.state.halloweenEvent = { candyTokensGiven: new Decimal(0) };
+        }
+        if (!window.state.halloweenEvent.candyTokensGiven) {
+          window.state.halloweenEvent.candyTokensGiven = new Decimal(0);
+        }
+        
+        // Deduct candy tokens from inventory
+        if (window.state && window.state.tokens && window.state.tokens.candy) {
+          window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(amount);
+          if (window.state.tokens.candy.lt(0)) window.state.tokens.candy = new Decimal(0);
+        }
+        
+        // Add to Halloween event candy tokens given
+        window.state.halloweenEvent.candyTokensGiven = DecimalUtils.toDecimal(window.state.halloweenEvent.candyTokensGiven).add(amount);
+        
+        // Check if Halloween event should be unlocked
+        if (window.state.halloweenEvent.candyTokensGiven.gte(10)) {
+          if (!window.state.unlockedFeatures) window.state.unlockedFeatures = {};
+          window.state.unlockedFeatures.halloweenEvent = true;
+          
+          // Show unlock notification
+          if (typeof window.showNotification === 'function') {
+            window.showNotification('🍬 Halloween Event Unlocked! You can now access the Halloween Event tab!', 'success');
+          }
+        } else {
+          // Show progress notification
+          const remaining = new Decimal(10).sub(window.state.halloweenEvent.candyTokensGiven);
+          if (typeof window.showNotification === 'function') {
+            window.showNotification(`🍬 ${amount} candy tokens given! ${remaining.toFixed(0)} more needed to unlock the Halloween Event.`, 'info');
+          }
+        }
+        
+        // Update Halloween event button display
+        if (typeof window.updateHalloweenEventButtonDisplay === 'function') {
+          window.updateHalloweenEventButtonDisplay();
+        }
+        
+        // Update inventory display immediately with multiple methods
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        if (typeof renderInventoryTokens === 'function') {
+          renderInventoryTokens(); // Specifically re-render token display
+        }
+        if (typeof window.updateKitchenUI === 'function') {
+          window.updateKitchenUI(); // Update kitchen UI where tokens are often displayed
+        }
+        
+        // Force additional update after a tiny delay to ensure DOM is updated
+        setTimeout(() => {
+          if (typeof window.updateInventoryModal === 'function') {
+            window.updateInventoryModal(true);
+          }
+          if (typeof renderInventoryTokens === 'function') {
+            renderInventoryTokens();
+          }
+        }, 10);
+        
+        // Close the modal
+        const modal = document.getElementById('giveTokenModal');
+        if (modal) modal.style.display = 'none';
+        return;
+      }
+      
       // Use dedicated quest functions for Soap's sparks and batteries (accept both singular and plural)
       if (characterName === 'Soap' && (tokenType === 'spark' || tokenType === 'sparks') && typeof window.giveSparksToSoap === 'function') {
 
@@ -8979,6 +9422,15 @@ function showCharacterSpeech(characterName, tokenType) {
         }
         window.giveSparksToSoap(amount);
         if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
+        
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
         // Close the modal if present
         const modal = document.getElementById('giveTokenModal');
         if (modal) modal.style.display = 'none';
@@ -9002,6 +9454,8 @@ function showCharacterSpeech(characterName, tokenType) {
         window.state.soapBatteryBoost = tenMinutesMs;
         if (window.state.powerEnergy !== undefined) {
           window.state.powerEnergy = new Decimal(100);
+          // Increment power refill counter for quest tracking
+          window.state.powerRefillCount = (window.state.powerRefillCount || 0) + 1;
         }
         if (typeof window.updateBoostDisplay === 'function') {
           window.updateBoostDisplay();
@@ -9012,18 +9466,27 @@ function showCharacterSpeech(characterName, tokenType) {
           soapSpeech.textContent = "These batteries are perfect! I'll use them to keep the power generator running smoothly!";
           soapSpeech.style.display = "block";
           if (soapImg) {
-            soapImg.src = "assets/icons/soap speech.png";
+            soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
           }
           setTimeout(() => {
             soapSpeech.style.display = "none";
             if (soapImg) {
-              soapImg.src = "assets/icons/soap.png";
+              soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
             }
           }, 5000);
         }
         
         window.giveBatteriesToSoap(amount);
         if (typeof window.updateChargerUI === 'function') window.updateChargerUI();
+        
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
         // Close the modal if present
         const modal = document.getElementById('giveTokenModal');
         if (modal) modal.style.display = 'none';
@@ -9116,6 +9579,14 @@ function showCharacterSpeech(characterName, tokenType) {
           updateDeliverySystemUI();
         }
         
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
         // Success message removed - berry plate info shown in delivery card instead
         // showBerryPlateLoadSuccessMessage(amount);
         
@@ -9182,6 +9653,14 @@ function showCharacterSpeech(characterName, tokenType) {
           updateNectarizePreview();
         }
         
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
         // Close the modal
         const modal = document.getElementById('giveTokenModal');
         if (modal) modal.style.display = 'none';
@@ -9239,6 +9718,14 @@ function showCharacterSpeech(characterName, tokenType) {
           updateCoreBoostCard();
         }
         
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
+        if (typeof updateInventoryDisplay === 'function') {
+          updateInventoryDisplay();
+        }
+        
         // Close the modal
         const modal = document.getElementById('giveTokenModal');
         if (modal) modal.style.display = 'none';
@@ -9281,7 +9768,10 @@ function showCharacterSpeech(characterName, tokenType) {
         window.state.mixingSystem.totalMushroomSoupGiven = window.state.mixingSystem.totalMushroomSoupGiven.add(amount);
         window.state.mixingSystem.cookingSpeedBoost = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
         
-        // Update inventory display
+        // Update inventory display immediately
+        if (typeof window.updateInventoryModal === 'function') {
+          window.updateInventoryModal(true); // Force immediate update
+        }
         if (typeof updateInventoryDisplay === 'function') {
           updateInventoryDisplay();
         }
@@ -9419,12 +9909,12 @@ function showCharacterSpeech(characterName, tokenType) {
             mysticSpeech.textContent = "This soup is amazing! I feel so energized and ready to cook faster!";
             mysticSpeech.style.display = "block";
             if (mysticImg) {
-              mysticImg.src = "assets/icons/chef mystic speech.png";
+              mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('speech') : "assets/icons/chef mystic speech.png";
             }
             setTimeout(() => {
               mysticSpeech.style.display = "none";
               if (mysticImg) {
-                mysticImg.src = "assets/icons/chef mystic.png";
+                mysticImg.src = window.getHalloweenMysticImage ? window.getHalloweenMysticImage('normal') : "assets/icons/chef mystic.png";
               }
             }, 5000);
           }
@@ -9437,6 +9927,8 @@ function showCharacterSpeech(characterName, tokenType) {
           window.state.soapBatteryBoost = tenMinutesMs;
           if (window.state.powerEnergy !== undefined) {
             window.state.powerEnergy = new Decimal(100);
+            // Increment power refill counter for quest tracking
+            window.state.powerRefillCount = (window.state.powerRefillCount || 0) + 1;
           }
           if (typeof window.updateBoostDisplay === 'function') {
             window.updateBoostDisplay();
@@ -9447,12 +9939,12 @@ function showCharacterSpeech(characterName, tokenType) {
             soapSpeech.textContent = "These batteries are perfect! I'll use them to keep the power generator running smoothly!";
             soapSpeech.style.display = "block";
             if (soapImg) {
-              soapImg.src = "assets/icons/soap speech.png";
+              soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
             }
             setTimeout(() => {
               soapSpeech.style.display = "none";
               if (soapImg) {
-                soapImg.src = "assets/icons/soap.png";
+                soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
               }
             }, 5000);
           }
@@ -9507,11 +9999,8 @@ function showCharacterSpeech(characterName, tokenType) {
       }
 
 
-      // Process friendship points for all characters (except Swaria who has hunger instead)
-      // DISABLED: Friendship points from tokens removed to prevent level calculation bugs
-      /*
-      if (friendshipAmount > 0 && characterName !== 'Swaria') {
-
+      // Process friendship points for candy tokens only (to avoid level calculation bugs with other tokens)
+      if (friendshipAmount > 0 && characterName !== 'Swaria' && storageKey === 'candy') {
         const charToDept = {
           'Swaria': 'Cargo',
           'Soap': 'Generator',
@@ -9524,32 +10013,11 @@ function showCharacterSpeech(characterName, tokenType) {
         };
         const dept = charToDept[characterName];
 
-        let pointsPerToken = 5;
-        if (storageKey === 'stardust') {
-          pointsPerToken = characterName === 'Mystic' ? 200 : 50;
-        } else if (characterTokenPreferences && characterTokenPreferences[characterName]) {
-
-
-
-          if (characterTokenPreferences[characterName].likes.includes(storageKey)) {
-            pointsPerToken = 20;
-
-          } else if (characterTokenPreferences[characterName].dislikes.includes(storageKey)) {
-            pointsPerToken = 1;
-
-          } else {
-
-          }
-        }
+        // Candy is universally loved - gives 30 friendship points per candy
+        let pointsPerToken = 30;
 
         if (dept && window.friendship && typeof window.friendship.addPoints === 'function') {
           const totalPoints = new Decimal(pointsPerToken).mul(friendshipAmount);
-
-          // Debug logging to understand what's happening
-          if (tokenType === 'stardust') {
-            console.log(`DEBUG Stardust: Character=${characterName}, pointsPerToken=${pointsPerToken}, friendshipAmount=${friendshipAmount}, totalPoints=${totalPoints.toString()}`);
-          }
-
           window.friendship.addPoints(characterName, totalPoints);
           
           const statsModal = document.getElementById('departmentStatsModal');
@@ -9559,11 +10027,8 @@ function showCharacterSpeech(characterName, tokenType) {
               if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
             }
           }
-        } else {
-
         }
       }
-      */
 
       if (questSpeech && characterName === 'Vivien' && typeof window.showAdvancedPrismViResponse === 'function') {
         setTimeout(() => window.showAdvancedPrismViResponse(questSpeech), 200);
@@ -9573,10 +10038,10 @@ function showCharacterSpeech(characterName, tokenType) {
         if (soapSpeech && soapImg) {
           soapSpeech.textContent = questSpeech;
           soapSpeech.style.display = "block";
-          soapImg.src = "assets/icons/soap speech.png";
+          soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('speech') : "assets/icons/soap speech.png";
           setTimeout(() => {
             soapSpeech.style.display = "none";
-            soapImg.src = "assets/icons/soap.png";
+            soapImg.src = window.getHalloweenSoapImage ? window.getHalloweenSoapImage('normal') : "assets/icons/soap.png";
           }, 8000);
         }
       } else if (typeof showCharacterSpeech === 'function') {
@@ -9875,7 +10340,8 @@ function showCharacterSpeech(characterName, tokenType) {
       { key: 'prisma', name: 'prisma', display: 'Prisma Shard', icon: 'prisma token.png' },
       { key: 'sparks', name: 'spark', display: 'Sparks', icon: 'spark token.png' },
       { key: 'water', name: 'water', display: 'Water', icon: 'water token.png' },
-      { key: 'mushroom', name: 'mushroom', display: 'Mushroom', icon: 'mushroom token.png' }
+      { key: 'mushroom', name: 'mushroom', display: 'Mushroom', icon: 'mushroom token.png' },
+      { key: 'candy', name: 'candy', display: 'Candy', icon: 'candy token.png' }
     ];
     
     ingredientTokens.forEach(token => {
@@ -9969,8 +10435,10 @@ function showCharacterSpeech(characterName, tokenType) {
         align-items: center;
         justify-content: center;
         min-width: 70px;
+        max-width: 70px;
         margin: 1px;
         padding: 1px;
+        flex-shrink: 0;
       `;
       
       const img = document.createElement('img');
@@ -11125,6 +11593,158 @@ function saveDeliveryResetBackup() {
   }
 }
 
+// Save expansion reset backup before gradeUp
+function saveExpansionResetBackup() {
+  if (!window.SaveSystem || typeof window.SaveSystem.serializeState !== 'function') return;
+  
+  try {
+    const saveData = window.SaveSystem.serializeState();
+    
+    const backupData = {
+      version: window.SaveSystem.version,
+      timestamp: Date.now(),
+      resetType: 'expansion',
+      preResetData: saveData,
+      expansionInfo: {
+        currentGrade: DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1),
+        nextGrade: (DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1)) + 1,
+        kp: DecimalUtils.formatDecimal(window.state.kp || 0)
+      }
+    };
+    
+    const saveSlotNumber = window.SaveSystem ? window.SaveSystem.currentSlot : 
+      (localStorage.getItem('currentSaveSlot') ? parseInt(localStorage.getItem('currentSaveSlot')) : null);
+    
+    const backupKey = saveSlotNumber ? 
+      `expansionResetBackup_slot${saveSlotNumber}` : 
+      'expansionResetBackup';
+    
+    localStorage.setItem(backupKey, JSON.stringify(backupData));
+    
+    // Track that expansion reset has occurred
+    if (!window.state.recoveryTracking) {
+      window.state.recoveryTracking = {};
+    }
+    window.state.recoveryTracking.hasExpansionReset = true;
+    
+    // Update recovery card visibility
+    updateRecoveryCardVisibility();
+
+    updateLastExpansionInfo(backupData);
+    
+  } catch (error) {
+    console.error('saveExpansionResetBackup error:', error);
+  }
+}
+
+// Save infinity reset backup before infinity reset
+function saveInfinityResetBackup() {
+  if (!window.SaveSystem || typeof window.SaveSystem.serializeState !== 'function') return;
+  
+  try {
+    const saveData = window.SaveSystem.serializeState();
+    
+    const backupData = {
+      version: window.SaveSystem.version,
+      timestamp: Date.now(),
+      resetType: 'infinity',
+      preResetData: saveData,
+      infinityInfo: {
+        infinityPoints: DecimalUtils.formatDecimal(window.state.infinitySystem?.infinityPoints || 0),
+        totalInfinities: window.infinitySystem?.getTotalInfinities() || 0,
+        currenciesWithInfinity: window.infinitySystem?.getCurrenciesWithInfinity() || []
+      }
+    };
+    
+    const saveSlotNumber = window.SaveSystem ? window.SaveSystem.currentSlot : 
+      (localStorage.getItem('currentSaveSlot') ? parseInt(localStorage.getItem('currentSaveSlot')) : null);
+    
+    const backupKey = saveSlotNumber ? 
+      `infinityResetBackup_slot${saveSlotNumber}` : 
+      'infinityResetBackup';
+    
+    localStorage.setItem(backupKey, JSON.stringify(backupData));
+    
+    // Track that infinity reset has occurred
+    if (!window.state.recoveryTracking) {
+      window.state.recoveryTracking = {};
+    }
+    window.state.recoveryTracking.hasInfinityReset = true;
+    
+    // Update recovery card visibility
+    updateRecoveryCardVisibility();
+
+    updateLastInfinityInfo(backupData);
+    
+  } catch (error) {
+    console.error('saveInfinityResetBackup error:', error);
+  }
+}
+
+// Function to update recovery card visibility and info
+function updateRecoveryCardVisibility() {
+  // Show expansion reset recovery card if player has done at least one expansion reset
+  const expansionCard = document.getElementById('expansionResetRecoveryCard');
+  if (expansionCard) {
+    const hasExpansionReset = window.state && window.state.recoveryTracking && window.state.recoveryTracking.hasExpansionReset;
+    expansionCard.style.display = hasExpansionReset ? 'block' : 'none';
+    
+    // Update expansion reset info if card is visible
+    if (hasExpansionReset && typeof window.getExpansionResetBackupInfo === 'function') {
+      const info = window.getExpansionResetBackupInfo();
+      const infoElement = expansionCard.querySelector('.recovery-info');
+      if (infoElement) {
+        if (info) {
+          const timeString = new Date(info.timestamp).toLocaleString();
+          infoElement.innerHTML = `
+            <strong>Last Expansion Reset Backup:</strong><br>
+            Expansion ${info.grade}<br>
+            KP: ${info.kp}<br>
+            Saved: ${timeString}
+          `;
+        } else {
+          infoElement.innerHTML = `
+            <strong>No backup found</strong><br>
+            <em>Perform an expansion reset to create a backup</em>
+          `;
+        }
+      }
+    }
+  }
+  
+  // Show infinity reset recovery card if player has done at least one infinity reset
+  const infinityCard = document.getElementById('infinityResetRecoveryCard');
+  if (infinityCard) {
+    const hasInfinityReset = window.state && window.state.recoveryTracking && window.state.recoveryTracking.hasInfinityReset;
+    infinityCard.style.display = hasInfinityReset ? 'block' : 'none';
+    
+    // Update infinity reset info if card is visible
+    if (hasInfinityReset && typeof window.getInfinityResetBackupInfo === 'function') {
+      const info = window.getInfinityResetBackupInfo();
+      const infoElement = infinityCard.querySelector('.recovery-info');
+      if (infoElement) {
+        if (info) {
+          const timeString = new Date(info.timestamp).toLocaleString();
+          infoElement.innerHTML = `
+            <strong>Last Infinity Reset Backup:</strong><br>
+            Infinity Points: ${info.infinityPoints}<br>
+            Total Infinity Earned: ${info.totalInfinityEarned}<br>
+            Saved: ${timeString}
+          `;
+        } else {
+          infoElement.innerHTML = `
+            <strong>No backup found</strong><br>
+            <em>Perform an infinity reset to create a backup</em>
+          `;
+        }
+      }
+    }
+  }
+}
+
+// Make function globally accessible
+window.updateRecoveryCardVisibility = updateRecoveryCardVisibility;
+
 // Function to create complete game state (similar to saveGame but returns the data)
 function createCompleteGameState() {
   // Ensure kitchen ingredients are Decimals
@@ -11495,6 +12115,38 @@ function updateLastDeliveryInfo(backupData) {
   infoDiv.style.display = 'block';
 }
 
+function updateLastExpansionInfo(backupData) {
+  const infoDiv = document.getElementById('lastExpansionInfo');
+  const timestampDiv = document.getElementById('lastExpansionTimestamp');
+  const gradeDiv = document.getElementById('lastExpansionGrade');
+  
+  if (!infoDiv || !timestampDiv || !gradeDiv) return;
+  
+  const date = new Date(backupData.timestamp);
+  const formattedDate = date.toLocaleString();
+  
+  timestampDiv.textContent = `Last expansion reset: ${formattedDate}`;
+  gradeDiv.textContent = `Expansion: ${backupData.expansionInfo.currentGrade} | KP: ${backupData.expansionInfo.kp}`;
+  
+  infoDiv.style.display = 'block';
+}
+
+function updateLastInfinityInfo(backupData) {
+  const infoDiv = document.getElementById('lastInfinityInfo');
+  const timestampDiv = document.getElementById('lastInfinityTimestamp');
+  const gradeDiv = document.getElementById('lastInfinityGrade');
+  
+  if (!infoDiv || !timestampDiv || !gradeDiv) return;
+  
+  const date = new Date(backupData.timestamp);
+  const formattedDate = date.toLocaleString();
+  
+  timestampDiv.textContent = `Last infinity reset: ${formattedDate}`;
+  gradeDiv.textContent = `∞ Points: ${backupData.infinityInfo.infinityPoints} | Total ∞: ${backupData.infinityInfo.totalInfinities}`;
+  
+  infoDiv.style.display = 'block';
+}
+
 // Function to check and display last delivery info on page load
 function checkLastDeliveryInfo() {
   const saveSlotNumber = (window.SaveSystem && window.SaveSystem.currentSlot) || localStorage.getItem('currentSaveSlot');
@@ -11516,6 +12168,10 @@ function checkLastDeliveryInfo() {
 
 // Make functions available globally
 window.saveDeliveryResetBackup = saveDeliveryResetBackup;
+window.saveExpansionResetBackup = saveExpansionResetBackup;
+window.saveInfinityResetBackup = saveInfinityResetBackup;
+window.updateLastExpansionInfo = updateLastExpansionInfo;
+window.updateLastInfinityInfo = updateLastInfinityInfo;
 window.exportLastDeliveryReset = exportLastDeliveryReset;
 window.checkLastDeliveryInfo = checkLastDeliveryInfo;
 window.showSoapDisappointedSpeech = showSoapDisappointedSpeech;
@@ -11832,3 +12488,5 @@ function updateBatteryUpgradeDisplay() {
 // Make functions globally accessible
 window.updateBatteryCounter = updateBatteryCounter;
 window.updateBatteryUpgradeDisplay = updateBatteryUpgradeDisplay;
+window.getCharacterChallengeQuotes = getCharacterChallengeQuotes;
+window.showSoapSpeech = showSoapSpeech;

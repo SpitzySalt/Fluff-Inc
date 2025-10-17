@@ -386,6 +386,7 @@ window.fluzzerWelcomeSpeech = fluzzerWelcomeSpeech;
 window.fluzzerFirstTimeSpeech = fluzzerFirstTimeSpeech;
 window.getFluzzerWelcomeSpeech = getFluzzerWelcomeSpeech;
 window.getFluzzerFirstTimeSpeech = getFluzzerFirstTimeSpeech;
+window.getFluzzerChallengeQuotes = getFluzzerChallengeQuotes;
 window.terrariumFlowerGrid = terrariumFlowerGrid;
 window.pollenWandActive = pollenWandActive;
 window.wateringCanActive = wateringCanActive;
@@ -419,25 +420,48 @@ function getCurrentFlowerGridDimensions() {
 let terrariumNectar = DecimalUtils.isDecimal(terrarium.nectar) ? terrarium.nectar : new Decimal(terrarium.nectar || 0);
 let nectarizeMachineRepaired = window.state?.terrarium?.nectarizeMachineRepaired || false;
 
-// Helper function to get the appropriate fluzzer image based on infinity total
+// Helper function to get the appropriate fluzzer image based on infinity total and Halloween mode
 function getFluzzerImagePath(imageType = 'normal') {
   const hasInfinityUnlock = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3;
+  const isHalloweenActive = window.state && window.state.halloweenEventActive;
   
-  if (!hasInfinityUnlock) {
-    // Return original images
-    switch (imageType) {
-      case 'talking': return 'assets/icons/fluzzer talking.png';
-      case 'sleeping': return 'assets/icons/fluzzer sleeping.png';  
-      case 'sleep_talking': return 'assets/icons/fluzzer sleep talking.png';
-      default: return 'assets/icons/fluzzer.png';
+  if (isHalloweenActive) {
+    // Return Halloween images when Halloween mode is active
+    if (!hasInfinityUnlock) {
+      // Phase 0 Halloween images
+      switch (imageType) {
+        case 'talking': return 'assets/icons/halloween fluzzer speech.png';
+        case 'sleeping': return 'assets/icons/halloween fluzzer sleep.png';  
+        case 'sleep_talking': return 'assets/icons/halloween fluzzer sleep talk.png';
+        default: return 'assets/icons/halloween fluzzer.png';
+      }
+    } else {
+      // Phase 1 Halloween images for 3+ total infinity
+      switch (imageType) {
+        case 'talking': return 'assets/icons/halloween fluzzer speech1.png';
+        case 'sleeping': return 'assets/icons/halloween fluzzer sleep1.png';
+        case 'sleep_talking': return 'assets/icons/halloween fluzzer sleep talk1.png';
+        default: return 'assets/icons/halloween fluzzer1.png';
+      }
     }
   } else {
-    // Return enhanced images for 3+ total infinity
-    switch (imageType) {
-      case 'talking': return 'assets/icons/fluzzer talking 1.png';
-      case 'sleeping': return 'assets/icons/fluzzer sleeping 1.png';
-      case 'sleep_talking': return 'assets/icons/fluzzer sleep talking 1.png';
-      default: return 'assets/icons/fluzzer 1.png';
+    // Return regular images when Halloween is not active
+    if (!hasInfinityUnlock) {
+      // Original images
+      switch (imageType) {
+        case 'talking': return 'assets/icons/fluzzer talking.png';
+        case 'sleeping': return 'assets/icons/fluzzer sleeping.png';  
+        case 'sleep_talking': return 'assets/icons/fluzzer sleep talking.png';
+        default: return 'assets/icons/fluzzer.png';
+      }
+    } else {
+      // Enhanced images for 3+ total infinity
+      switch (imageType) {
+        case 'talking': return 'assets/icons/fluzzer talking 1.png';
+        case 'sleeping': return 'assets/icons/fluzzer sleeping 1.png';
+        case 'sleep_talking': return 'assets/icons/fluzzer sleep talking 1.png';
+        default: return 'assets/icons/fluzzer 1.png';
+      }
     }
   }
 }
@@ -2127,6 +2151,9 @@ function renderTerrariumUI(force = false) {
   }
   lastTerrariumUIUpdateTime = now;
   
+  // Update Halloween vine decorations on the full page background
+  updatePageHalloweenVines();
+  
   syncTerrariumVarsFromWindow();
   if (nectarizeQuestActive && !nectarizeMachineRepaired && !window.nectarizeQuestPermanentlyCompleted) {
     setTimeout(() => {
@@ -2171,7 +2198,9 @@ function renderTerrariumUI(force = false) {
       bubble.style.transform = 'translateY(-50%)';
       bubble.style.marginLeft = '10px';
       bubble.style.zIndex = '10';
-      bubble.style.display = 'none'; 
+      bubble.style.display = 'none';
+      bubble.style.maxWidth = '400px'; // Make speech bubble wider for longer Halloween dialogues
+      bubble.style.minWidth = '250px'; // Ensure minimum width for better readability
       imgWrap.appendChild(bubble);
     }
     if (!document.getElementById('terrariumBackBtn')) {
@@ -2182,9 +2211,15 @@ function renderTerrariumUI(force = false) {
       backBtn.style.margin = '1.2em 0 0 0';
       backBtn.onclick = function() {
         window.currentFloor = 1;
+        
+        // Remove floor-2 class from body to restore navigation
+        document.body.classList.remove('floor-2');
+        
         if (typeof window.updateFloor2Visibility === 'function') {
           window.updateFloor2Visibility();
         }
+        // Remove Halloween vines when going back to Floor 1
+        removePageHalloweenVines();
       };
       charCard.appendChild(backBtn);
     }
@@ -2557,10 +2592,262 @@ function setupTerrariumSubTabButtons() {
     if (terrariumTab.style.display !== 'none') {
       renderTerrariumUI();
       setupTerrariumSubTabButtons();
+      // Update floor navigation state when terrarium becomes visible
+      updateFloorNavigationState();
     }
   });
   observer.observe(terrariumTab, { attributes: true, attributeFilter: ['style'] });
 })();
+
+// Halloween vine decoration function
+function updateTerrariumHalloweenVines() {
+  const terrariumTab = document.getElementById('terrariumTab');
+  if (!terrariumTab) return;
+  
+  // Remove existing Halloween vines first
+  const existingVines = terrariumTab.querySelector('#terrariumHalloweenVines');
+  if (existingVines) {
+    existingVines.remove();
+  }
+  
+  // Check if Halloween mode is active
+  const isHalloween = window.state && window.state.halloweenEventActive;
+  
+  if (isHalloween) {
+    // Create Halloween vine background using properly created SVG elements
+    const vineContainer = document.createElement('div');
+    vineContainer.id = 'terrariumHalloweenVines';
+    vineContainer.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;';
+    
+    // Create SVG elements directly instead of using data URLs
+    const createVineSVG = (width, height, pathData, strokeWidth = 4, color = '#228B22') => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.style.cssText = 'width: 100%; height: 100%;';
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathData);
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', strokeWidth);
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+      
+      return svg;
+    };
+    
+    // Top Left Vine (Massive, Dark Green)
+    const topLeftVine = document.createElement('div');
+    topLeftVine.style.cssText = 'position: absolute; top: -200px; left: -300px; width: 3000px; height: 4000px; opacity: 0.85;';
+    topLeftVine.appendChild(createVineSVG(3000, 4000, 'M300 300 Q800 800 600 1400 Q400 2000 900 2600 Q1400 3200 1100 3800', 100, '#1B5E1F'));
+    vineContainer.appendChild(topLeftVine);
+    
+    // Top Right Vine (Massive, Regular Green) 
+    const topRightVine = document.createElement('div');
+    topRightVine.style.cssText = 'position: absolute; top: -150px; right: -250px; width: 2800px; height: 3500px; opacity: 0.8;';
+    topRightVine.appendChild(createVineSVG(2800, 3500, 'M2500 300 Q2000 700 2200 1300 Q2400 1800 1900 2300 Q1400 2800 1700 3200', 90, '#228B22'));
+    vineContainer.appendChild(topRightVine);
+    
+    // Bottom Left Vine (Massive, Regular Green)
+    const bottomLeftVine = document.createElement('div');
+    bottomLeftVine.style.cssText = 'position: absolute; bottom: -100px; left: -200px; width: 3500px; height: 3800px; opacity: 0.8;';
+    bottomLeftVine.appendChild(createVineSVG(3500, 3800, 'M500 3500 Q1000 3000 800 2400 Q600 1800 1100 1200 Q1600 600 1300 200', 100, '#228B22'));
+    vineContainer.appendChild(bottomLeftVine);
+    
+    // Bottom Right Vine (Massive, Dark Green)
+    const bottomRightVine = document.createElement('div');
+    bottomRightVine.style.cssText = 'position: absolute; bottom: -50px; right: -150px; width: 3000px; height: 3600px; opacity: 0.85;';
+    bottomRightVine.appendChild(createVineSVG(3000, 3600, 'M2700 3400 Q2200 2900 2400 2300 Q2600 1700 2100 1100 Q1600 500 1900 200', 90, '#1B5E1F'));
+    vineContainer.appendChild(bottomRightVine);
+    
+    // Left Side Massive Vine
+    const leftVine = document.createElement('div');
+    leftVine.style.cssText = 'position: absolute; top: -500px; left: -400px; width: 2000px; height: 3000px; opacity: 0.75;';
+    leftVine.appendChild(createVineSVG(2000, 3000, 'M300 300 Q700 800 500 1300 Q300 1800 700 2300 Q1100 2800 900 2900', 70, '#228B22'));
+    vineContainer.appendChild(leftVine);
+    
+    // Right Side Massive Vine
+    const rightVine = document.createElement('div');
+    rightVine.style.cssText = 'position: absolute; top: -400px; right: -300px; width: 1900px; height: 2800px; opacity: 0.75;';
+    rightVine.appendChild(createVineSVG(1900, 2800, 'M1600 300 Q1200 700 1400 1200 Q1600 1700 1200 2200 Q800 2700 1000 2700', 70, '#1B5E1F'));
+    vineContainer.appendChild(rightVine);
+    
+    // Center Top Massive Vine
+    const centerTopVine = document.createElement('div');
+    centerTopVine.style.cssText = 'position: absolute; top: -300px; left: 20%; width: 2200px; height: 2000px; opacity: 0.7;';
+    centerTopVine.appendChild(createVineSVG(2200, 2000, 'M1100 200 Q800 500 1000 800 Q1200 1100 900 1400 Q600 1700 800 1900', 60, '#228B22'));
+    vineContainer.appendChild(centerTopVine);
+    
+    // Center Bottom Massive Vine
+    const centerBottomVine = document.createElement('div');
+    centerBottomVine.style.cssText = 'position: absolute; bottom: -200px; left: 25%; width: 2000px; height: 1800px; opacity: 0.7;';
+    centerBottomVine.appendChild(createVineSVG(2000, 1800, 'M1000 1600 Q1300 1300 1100 1000 Q900 700 1200 400 Q1500 100 1300 50', 60, '#1B5E1F'));
+    vineContainer.appendChild(centerBottomVine);
+    
+    // Center Left Massive Hanging Vine
+    const centerLeftVine = document.createElement('div');
+    centerLeftVine.style.cssText = 'position: absolute; top: -200px; left: 5%; width: 1500px; height: 2500px; opacity: 0.65;';
+    centerLeftVine.appendChild(createVineSVG(1500, 2500, 'M200 200 Q500 600 350 1000 Q200 1400 450 1800 Q700 2200 550 2400', 50, '#228B22'));
+    vineContainer.appendChild(centerLeftVine);
+    
+    // Center Right Massive Hanging Vine
+    const centerRightVine = document.createElement('div');
+    centerRightVine.style.cssText = 'position: absolute; top: -100px; right: 8%; width: 1400px; height: 2300px; opacity: 0.65;';
+    centerRightVine.appendChild(createVineSVG(1400, 2300, 'M1200 200 Q900 550 1050 950 Q1200 1350 950 1750 Q700 2150 850 2250', 50, '#1B5E1F'));
+    vineContainer.appendChild(centerRightVine);    // Insert at the beginning of terrarium tab so it's behind everything
+    terrariumTab.insertBefore(vineContainer, terrariumTab.firstChild);
+  }
+}
+
+// Halloween vine decoration function for full page background
+function updatePageHalloweenVines() {
+  // Remove existing page-level Halloween vines first
+  const existingPageVines = document.querySelector('#pageHalloweenVines');
+  if (existingPageVines) {
+    existingPageVines.remove();
+  }
+  
+  // Check if we're on the terrarium page and Halloween mode is active
+  const terrariumTab = document.getElementById('terrariumTab');
+  const isOnTerrariumPage = terrariumTab && terrariumTab.style.display !== 'none';
+  const isHalloween = window.state && window.state.halloweenEventActive;
+  
+  if (isHalloween && isOnTerrariumPage) {
+    // Create SVG elements directly instead of using data URLs
+    const createVineSVG = (width, height, pathData, strokeWidth = 4, color = '#228B22') => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.style.cssText = 'width: 100%; height: 100%;';
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathData);
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', strokeWidth);
+      path.setAttribute('fill', 'none');
+      svg.appendChild(path);
+      
+      return svg;
+    };
+    
+    // Create Halloween vine background for full page
+    const vineContainer = document.createElement('div');
+    vineContainer.id = 'pageHalloweenVines';
+    vineContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2; overflow: hidden;';
+    
+    // Top Left Vine (Massive, Dark Green) - Shifted far left and higher
+    const topLeftVine = document.createElement('div');
+    topLeftVine.style.cssText = 'position: absolute; top: -200px; left: -400px; width: 3000px; height: 4000px; opacity: 0.85;';
+    topLeftVine.appendChild(createVineSVG(3000, 4000, 'M300 300 Q800 800 600 1400 Q400 2000 900 2600 Q1400 3200 1100 3800', 100, '#1B5E1F'));
+    vineContainer.appendChild(topLeftVine);
+    
+    // Top Right Vine - REMOVED to clear center right area
+    
+    // Bottom Left Vine (Extra Massive, Regular Green) - Shifted far left and higher
+    const bottomLeftVine = document.createElement('div');
+    bottomLeftVine.style.cssText = 'position: absolute; bottom: 200px; left: -450px; width: 3500px; height: 3800px; opacity: 0.8;';
+    bottomLeftVine.appendChild(createVineSVG(3500, 3800, 'M500 3500 Q1000 3000 800 2400 Q600 1800 1100 1200 Q1600 600 1300 200', 100, '#228B22'));
+    vineContainer.appendChild(bottomLeftVine);
+    
+    // Bottom Right Vine - REMOVED to clear center right area
+    
+    // Left Side Long Vine - Shifted much further left and higher
+    const leftVine = document.createElement('div');
+    leftVine.style.cssText = 'position: absolute; top: 10%; left: -300px; width: 2000px; height: 3000px; opacity: 0.75;';
+    leftVine.appendChild(createVineSVG(2000, 3000, 'M300 300 Q700 800 500 1300 Q300 1800 700 2300 Q1100 2800 900 2900', 70, '#228B22'));
+    vineContainer.appendChild(leftVine);
+    
+    // Right Side Long Vine - REMOVED to clear center right area
+    
+    // Center Top Vine - REMOVED to avoid blocking flower patch
+    
+    // Center Bottom Vine - Shifted further left and higher
+    const centerBottomVine = document.createElement('div');
+    centerBottomVine.style.cssText = 'position: absolute; bottom: 100px; left: 15%; width: 2000px; height: 1800px; opacity: 0.7;';
+    centerBottomVine.appendChild(createVineSVG(2000, 1800, 'M1000 1600 Q1300 1300 1100 1000 Q900 700 1200 400 Q1500 100 1300 50', 60, '#1B5E1F'));
+    vineContainer.appendChild(centerBottomVine);
+    
+    // Center Left Hanging Vine - REMOVED to avoid blocking Fluzzer character
+    
+    // Center Right Hanging Vine - REMOVED to clear center right area
+    
+    // Extra Bottom Right Corner Vine - 10x BIGGER! Shifted extremely far right
+    const extraBottomRightVine = document.createElement('div');
+    extraBottomRightVine.style.cssText = 'position: absolute; bottom: -500px; right: -440px; width: 2500px; height: 3000px; opacity: 0.8;';
+    extraBottomRightVine.appendChild(createVineSVG(2500, 3000, 'M2200 2800 Q1800 2400 2000 2000 Q2200 1600 1800 1200 Q1400 800 1600 500 Q1800 200 1600 100', 80, '#228B22'));
+    vineContainer.appendChild(extraBottomRightVine);
+    
+    // Add to document body so it covers the entire page
+    document.body.appendChild(vineContainer);
+  }
+}
+
+// Function to remove Halloween vines when leaving terrarium
+function removePageHalloweenVines() {
+  const existingPageVines = document.querySelector('#pageHalloweenVines');
+  if (existingPageVines) {
+    existingPageVines.remove();
+  }
+}
+
+// Function to ensure Halloween vines stay above background (utility for theme changes)
+function ensureHalloweenVinesZIndex() {
+  const pageVines = document.querySelector('#pageHalloweenVines');
+  const terrariumVines = document.querySelector('#terrariumHalloweenVines');
+  
+  // Use consistent z-index that works across all themes
+  if (pageVines) {
+    pageVines.style.zIndex = '2';
+  }
+  if (terrariumVines) {
+    terrariumVines.style.zIndex = '2';
+  }
+}
+
+// Listen for theme changes to update vines during day/night transitions
+if (window.daynight && typeof window.daynight.onThemeChange === 'function') {
+  window.daynight.onThemeChange(() => {
+    // Update Halloween vines when theme changes (day/night transitions)
+    const terrariumTab = document.getElementById('terrariumTab');
+    const isOnTerrariumPage = terrariumTab && terrariumTab.style.display !== 'none';
+    if (isOnTerrariumPage) {
+      // Small delay to ensure background has been updated before redrawing vines
+      setTimeout(() => {
+        updatePageHalloweenVines();
+        ensureHalloweenVinesZIndex();
+      }, 50);
+    }
+  });
+}
+
+// Floor navigation utility functions
+function applyFloor2Navigation() {
+  document.body.classList.add('floor-2');
+}
+
+function removeFloor2Navigation() {
+  document.body.classList.remove('floor-2');
+}
+
+function updateFloorNavigationState() {
+  if (window.currentFloor === 2) {
+    applyFloor2Navigation();
+  } else {
+    removeFloor2Navigation();
+  }
+}
+
+// Make functions globally accessible
+window.updateTerrariumHalloweenVines = updateTerrariumHalloweenVines;
+window.updatePageHalloweenVines = updatePageHalloweenVines;
+window.removePageHalloweenVines = removePageHalloweenVines;
+window.ensureHalloweenVinesZIndex = ensureHalloweenVinesZIndex;
+window.applyFloor2Navigation = applyFloor2Navigation;
+window.removeFloor2Navigation = removeFloor2Navigation;
+window.updateFloorNavigationState = updateFloorNavigationState;
+
 const fluzzerNormalSpeeches = [
   "What a lovely day in the terrarium!",
   "The flowers look happy today.",
@@ -2707,6 +2994,307 @@ const fluzzerNormalSpeeches = [
     text: "Inside the flower grid room, I was able to merge 2 of the same flower type together and it created a new flower! But these merged flowers are very unstable and can't be used for boosting production. Wait maybe I should not have told you that...",
     condition: () => !window.flowerGridPermanentlyUnlocked && window.terrariumLevel >= 96
   },
+  
+  // Halloween-exclusive quotes (Bootleg Plantera costume theme)
+  {
+    text: "Look at my amazing costume! I made it all myself!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Happy Halloween! My costume is a tribute to the legendary jungle guardian! Very spooky, right?",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I may have borrowed a few flowers from the terrarium for my costume... don't tell anyone!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "This Halloween costume took me FOREVER to make! Every petal is perfectly placed!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I tried to make my costume look scary, but I think it just looks... pretty?",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "The vines on my costume keep getting tangled, but that's part of the authentic Halloween experience!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I practiced my spooky roar all month! Want to hear it? RAAAWR... was that scary?",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "My costume might not be perfect, but it's made with love! And lots of flowers.",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I hope the real jungle guardian doesn't mind that I borrowed their look for Halloween!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Some of the flowers in my costume are tickling me hehe.",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Trick or treat! As a jungle guardian, I command you to... um... water some plants! Please?",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I wanted to be the most nature-y Halloween character ever! Mission accomplished!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "My jungle guardian costume makes me feel so powerful! Like I could jungle-ify the whole facility!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Mystic said my costume looks 'authentically chaotic.' I think that's a compliment!",
+    condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(3)
+  },
+  {
+    text: "Lepre jumped so high when they saw my costume! I think I accidentally scared them!",
+    condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(4)
+  },
+  {
+    text: "Soap tried to wash my costume because they were 'the soap overlord' NO SOAP, BAD!",
+    condition: () => window.state && window.state.halloweenEventActive && DecimalUtils.isDecimal(state.grade) && state.grade.gte(2)
+  },
+  {
+    text: "I saw The flowers in the terrarium bow before me. I am truly the jungle guardian now!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I'm the spookiest gardener in the facility! Fear my petals of terror!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "My costume has so many vines that I keep getting tangled in doorways!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "The best part about my costume? It smells like a beautiful garden! Take that, other costumes!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I may have gone a little overboard with the decorations... there are vines EVERYWHERE!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Being the jungle guardian for Halloween is the best! I feel so connected to nature!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Some of the terrarium flowers volunteered to be part of my costume! We're a team!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I am now the true underground jungle guardian boss!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "My Halloween costume is homemade, which makes it extra special!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "I tried to add some spooky Halloween thorns to my costume, but they got very annoying, so I made them teeths instead!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "The terrarium has never looked more Halloween-y with me in my jungle guardian costume!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  {
+    text: "Even the anomalies seem impressed by my jungle guardian costume! Very validating!",
+    condition: () => window.state && window.state.halloweenEventActive && window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0
+  },
+  {
+    text: "My jungle guardian costume is perfect for Halloween AND for blending in with the terrarium plants!",
+    condition: () => window.state && window.state.halloweenEventActive
+  },
+  
+  // Halloween Night Fluzzer-specific dialogue (when boosted during nighttime)
+  {
+    text: "THE HALLOWEEN MOON FEEDS MY CURSED VINES! I CAN FEEL THE ELDRITCH POWER COURSING THROUGH MY STOLEN PETALS! REALITY BENDS TO MY WILL!!! AHAHAHAHAHA!!!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "I AM NOT FLUZZER ANYMORE! I AM THE JUNGLE GUARDIAN! BOW BEFORE YOUR FLOWERY OVERLORD OR BE CONSUMED BY MY THORNS! RAAAAAWWWWRRRRR!!!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "The enemy ascended beyond your control!♪ Or was that all your intention?♪ They have managed to demolish whatever we made! But you're failing to comprehend♪ If they can, they will easily butcher you whole!♪ While you're blinded by your depression!♪ I have gotten to the point where I'm just too afraid!♪ That you're going to meet your end!♪ My screams echo out through the fire!♪ And your rival dares stand in my way!♪ Yes, this is a hardship most dire!♪ But I will not let you win today!♪ And one day, you will heed what I say!♪",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "THE SPIRITS OF A THOUSAND STOLEN FLOWERS WHISPER DARK SECRETS INTO MY ROOTS! I CAN HEAR THE SCREAMS OF THE UNDERGROUND JUNGLE!!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "I AM THE HARBINGER OF BOTANICAL APOCALYPSE! MY VINES SHALL STRANGLE THE MOON ITSELF!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "THE JACK-O'-LANTERNS AREN'T CHEERING... THEY'RE SCREAMING! SCREAMING AS MY THORNY TENDRILS PIERCE THEIR HOLLOW SOULS! DELICIOUS TERROR!!!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "I HAVE TRANSCENDED! THE LEGENDARY JUNGLE GUARDIAN LIVES! MY BORROWED FLOWERS PULSE WITH THE BLOOD OF FALLEN ADVENTURERS! NOTHING CAN STOP THE FLOWER APOCALYPSE!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  {
+    text: "THE TERRARIUM IS MY DOMAIN NOW! WITNESS AS I TRANSFORM THIS PARADISE INTO A BOTANICAL NIGHTMARE! THE DARKNESS FEEDS MY ROOTS!!!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isNight && hasBoost;
+    }
+  },
+  // Halloween daytime glittering petal boost dialogues (hyper-active but not maniacal)
+  {
+    text: "OH WOW OH WOW! My Halloween costume is GLOWING in the sunlight and I feel AMAZING! Look at how my petals shimmer!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "Wooooooo! My costume makes me feel alive! Watch me collect every flower in the patch!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "Wheeeee! My costume is SO COOL! I'm the fastest jungle guardian in the whole terrarium! Wheeeee!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "My glittery petals are SPARKLING so bright! Everyone's gonna think I'm the REAL Jungle Guardian! This is the BEST Halloween EVER!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "I feel like I have SUPER POWERS! My Jungle Guardian costume is charging me up with flower energy! RAWR!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "I'm gonna water ALL the flowers! And collect every pollen! I'm the BEST jungle guardian ever!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
+  {
+    text: "The sunlight makes my costume SO PRETTY! I'm like a disco ball but made of flowers! Everyone come see!",
+    condition: () => {
+      if (!window.state || !window.state.halloweenEventActive) return false;
+      const isDay = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
+        const mins = window.daynight.getTime();
+        return mins >= 360 && mins < 1320;
+      })();
+      const hasBoost = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+      return isDay && hasBoost;
+    }
+  },
 ];
 
 // New dizzy dialogue for when fluzzer is in the enhanced state (3+ total infinity)
@@ -2783,8 +3371,64 @@ const fluzzerNectarSpeeches = [
   "Now that the nectarize machine is working, our next goal is to build the flower grid. But we will need a lot more of everything!"
 ];
 
+// Fluzzer's challenge quotes - different personality based on PB time
+function getFluzzerChallengeQuotes() {
+  // Get Fluzzer's PB time
+  const fluzzerPB = window.state?.characterChallengePBs?.fluzzer || 0;
+  
+  // Soft personality quotes for low PB (< 60 seconds)
+  const softChallengeQuotes = [
+    "Oh! The Power Generator Challenge? I... I tried it once. Didn't do very well.",
+    "That challenge is really hard! I'm not very good at it, but it's still fun.",
+    "I like the pretty colors in the Power Generator Challenge, even if I don't last long.",
+    "Maybe I should practice the challenge more? Though I get nervous with all those tiles.",
+    "The Power Generator Challenge reminds me of flowers blooming - colorful but quick!",
+    "I tried the challenge while humming to myself. It was relaxing, even though I lost quickly.",
+    "The challenge is like gardening - you need patience! Though I still mess up a lot.",
+    "I wish I was better at the Power Generator Challenge, but at least it's pretty to watch!",
+    "Maybe if I think of the red tiles as roses, I'll do better? Probably not, but worth trying!",
+    "The challenge is fun even when I'm not good at it. Like watering plants - sometimes you overwater!",
+    "I get so focused on the colors in the challenge that I forget to avoid the red ones!",
+    "The Power Generator Challenge is harder than taking care of flowers, and that's saying something!",
+    "I tried asking a bee for challenge tips, but they just buzzed at me.",
+    "Maybe I should practice on easier settings? Though I'm not sure if that exists...",
+    "The challenge makes me feel dizzy sometimes, like spinning in a flower field!"
+  ];
+  
+  // Cocky personality quotes for high PB (60+ seconds)
+  const cockyChallengeQuotes = [
+    "Oh, the Power Generator Challenge? Yeah, I'm actually pretty amazing at it now!",
+    "You want to know about the challenge? Well, I happen to be quite good at it! Better than you even!",
+    "The Power Generator Challenge? Please, I could do that with my eyes closed! Well, maybe not, but I'm really good!",
+    "Turns out I'm naturally talented at the Power Generator Challenge! Who knew?",
+    "I've been dominating the Power Generator Challenge lately. It's all about the petal power!",
+    "The power generator challenge? Oh, I've got that figured out completely! I'm like a dancing butterfly in there!",
+    "Everyone's impressed with my Power Generator Challenge skills now. I'm quite the star!",
+    "The Power Generator Challenge is easy once you get the hang of it. Lucky for me, I'm a natural!",
+    "I went from terrible to terrific at that power generator challenge! Now I'm the one giving tips!",
+    "The Power Generator Challenge? I practically own that leaderboard now! Just a little behind Lepre's time.",
+    "My challenge times are so good, even the bees are jealous! And they're really fast!",
+    "I've become the Power Generator Challenge expert of the terrarium! Pretty impressive, right?",
+    "The challenge used to scare me, but now it's just another walk in the flower garden!",
+    "The other workers ask ME for Power Generator Challenge advice now. Can you believe it?",
+  ];
+  
+  // Return appropriate quotes based on PB
+  if (fluzzerPB >= 60) {
+    return cockyChallengeQuotes;
+  } else {
+    return softChallengeQuotes;
+  }
+}
+
 // Helper to get a random Fluzzer speech, including nectar ones if unlocked
 function getRandomFluzzerSpeech() {
+  // 15% chance for challenge quotes
+  if (Math.random() < 0.15) {
+    const challengeQuotes = getFluzzerChallengeQuotes();
+    return challengeQuotes[Math.floor(Math.random() * challengeQuotes.length)];
+  }
+  
   // Check if fluzzer is in enhanced/dizzy state (3+ total infinity)
   const isInEnhancedState = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3;
   
@@ -2812,15 +3456,51 @@ function getRandomFluzzerSpeech() {
     availableSpeeches = fluzzerNormalSpeeches;
   }
   
-  // Filter and extract text from speech objects
-  const validSpeeches = [];
-  for (const speech of availableSpeeches) {
-    if (typeof speech === 'string') {
-      validSpeeches.push(speech);
-    } else if (typeof speech === 'object' && speech.text) {
-      // Check condition if it exists
-      if (!speech.condition || (typeof speech.condition === 'function' && speech.condition())) {
-        validSpeeches.push(speech.text);
+  // Halloween dialogue system: 50% chance for Halloween quotes when Halloween is active
+  let validSpeeches = [];
+  if (window.state && window.state.halloweenEventActive) {
+    // Separate Halloween and normal speeches
+    const halloweenSpeeches = [];
+    const normalSpeeches = [];
+    
+    for (const speech of availableSpeeches) {
+      if (typeof speech === 'string') {
+        normalSpeeches.push(speech);
+      } else if (typeof speech === 'object' && speech.text) {
+        if (speech.condition && speech.condition.toString().includes('halloweenEventActive')) {
+          // This is a Halloween speech
+          if (speech.condition()) {
+            halloweenSpeeches.push(speech.text);
+          }
+        } else {
+          // This is a normal speech with conditions
+          if (!speech.condition || (typeof speech.condition === 'function' && speech.condition())) {
+            normalSpeeches.push(speech.text);
+          }
+        }
+      }
+    }
+    
+    // 50% chance to use Halloween quotes, 50% for normal quotes
+    if (Math.random() < 0.5 && halloweenSpeeches.length > 0) {
+      validSpeeches = halloweenSpeeches;
+    } else {
+      validSpeeches = normalSpeeches.length > 0 ? normalSpeeches : availableSpeeches.filter(s => typeof s === 'string' || (s.text && (!s.condition || s.condition())));
+    }
+  } else {
+    // When Halloween is not active, filter out Halloween-only quotes
+    for (const speech of availableSpeeches) {
+      if (typeof speech === 'string') {
+        validSpeeches.push(speech);
+      } else if (typeof speech === 'object' && speech.text) {
+        // Skip Halloween-only quotes
+        if (speech.condition && speech.condition.toString().includes('halloweenEventActive')) {
+          continue; // Skip Halloween quotes
+        }
+        // Check condition if it exists
+        if (!speech.condition || (typeof speech.condition === 'function' && speech.condition())) {
+          validSpeeches.push(speech.text);
+        }
       }
     }
   }
@@ -3042,7 +3722,24 @@ function fluzzerLevelUpSay(message) {
   const fluzzerImg = document.getElementById('fluzzerImg');
   if (isNightTime && hasAnyFluzzerBoost) {
     window.fluzzerNightBoostedLevelUps++; 
-    const derangedSpeeches = [
+    
+    // Halloween Night Fluzzer dialogue (50% chance when Halloween is active)
+    const halloweenDerangedSpeeches = [
+      `LEVEL ${terrariumLevel} ACHIEVED! MY PLANTERA COSTUME DRAWS POWER FROM THE HALLOWEEN MOON!`,
+      `POWER LEVEL ${terrariumLevel} UNLOCKED! THE SPOOKY NIGHT FUELS MY BOOTLEG PLANTERA MIGHT!`,
+      `LEVEL ${terrariumLevel} MASTERED! I AM THE HALLOWEEN NIGHT FLUZZER! FEAR MY PUMPKIN PETALS!`,
+      `UPGRADE TO LEVEL ${terrariumLevel} COMPLETE! THE HALLOWEEN SPIRITS ENHANCE MY FLOWER POWER!`,
+      `LEVEL ${terrariumLevel} CONQUERED! MY HOMEMADE COSTUME BECOMES LEGENDARY UNDER THE DARK SKY!`,
+      `POWER LEVEL ${terrariumLevel} ACTIVATED! THE HALLOWEEN MOON CHARGES MY PLANTERA ENERGY!`,
+      `LEVEL ${terrariumLevel} DOMINATED! NO TRICK-OR-TREATER IS SAFE FROM MY HALLOWEEN FLOWER FURY!`,
+      `UPGRADE TO LEVEL ${terrariumLevel} SUCCESSFUL! I'M THE SPOOKIEST FLOWER GUARDIAN EVER!`,
+      `LEVEL ${terrariumLevel} ACHIEVED! HALLOWEEN NIGHT IS WHEN MY PLANTERA COSTUME TRULY AWAKENS!`,
+      `POWER LEVEL ${terrariumLevel} UNLOCKED! I'M THE NIGHT DEMON OF HALLOWEEN HORTICULTURE!`,
+      `LEVEL ${terrariumLevel} CONQUERED! MY BORROWED FLOWERS GLOW WITH SUPERNATURAL HALLOWEEN POWER!`,
+      `UPGRADE TO LEVEL ${terrariumLevel} COMPLETE! THE JACK-O'-LANTERNS BOW TO MY PLANTERA SUPREMACY!`
+    ];
+    
+    const regularDerangedSpeeches = [
       `LEVEL ${terrariumLevel} ACHIEVED! THE NIGHT FUELS MY FLOWER OBSESSION! I AM UNSTOPPABLE!`,
       `POWER LEVEL ${terrariumLevel} UNLOCKED! THE DARKNESS MAKES ME STRONGER!`,
       `LEVEL ${terrariumLevel} MASTERED! I AM THE NIGHT FLUZZER! FEAR MY FLOWER MIGHT!`,
@@ -3054,7 +3751,12 @@ function fluzzerLevelUpSay(message) {
       `LEVEL ${terrariumLevel} ACHIEVED! THE NIGHT IS MY DOMAIN!`,
       `POWER LEVEL ${terrariumLevel} UNLOCKED! I'M THE NIGHT DEMON OF FLOWER DESTRUCTION!`
     ];
-    finalMessage = derangedSpeeches[Math.floor(Math.random() * derangedSpeeches.length)];
+    
+    // 50% chance for Halloween dialogue when Halloween is active
+    const useHallowenDialogue = window.state && window.state.halloweenEventActive && Math.random() < 0.5;
+    const speechArray = useHallowenDialogue ? halloweenDerangedSpeeches : regularDerangedSpeeches;
+    
+    finalMessage = speechArray[Math.floor(Math.random() * speechArray.length)];
     bubble.textContent = finalMessage;
     bubble.style.display = 'block';
     bubble.style.background = '#ff4444'; 
@@ -6800,7 +7502,16 @@ function addTerrariumXP(amount) {
     terrariumXP = new Decimal(terrariumXP || 0);
   }
   terrariumXP = terrariumXP.add(finalTotal);
+  
+  // Update both the local variable and the proper state location
   window.terrariumXP = terrariumXP;
+  
+  // Ensure window.state.terrarium exists and update the XP there as well
+  if (!window.state.terrarium) {
+    window.state.terrarium = {};
+  }
+  window.state.terrarium.xp = terrariumXP;
+  
   return finalTotal;
 }
 
@@ -6831,6 +7542,9 @@ function stopFluzzerRandomSpeechTimer() {
         document.body.classList.remove('terrarium-bg');
         document.documentElement.classList.remove('terrarium-bg');
         document.body.classList.remove('pollen-wand-mode', 'watering-can-mode');
+        
+        // Remove Halloween vines when leaving terrarium page
+        removePageHalloweenVines();
       } else {
         const terrariumTab = document.getElementById('terrariumTab');
         if (terrariumTab && terrariumTab.style.display !== 'none') {
@@ -6968,49 +7682,99 @@ function triggerFluzzerBoostDialogue() {
   if (!window.state || !window.state.fluzzerGlitteringPetalsBoost || window.state.fluzzerGlitteringPetalsBoost <= 0) {
     return; 
   }
+  
+  // Check if Fluzzer is already speaking to prevent overlapping boost dialogues
+  const fluzzerSpeechBubble = document.getElementById('fluzzerSpeech');
+  if (fluzzerSpeechBubble && fluzzerSpeechBubble.style.display !== 'none') {
+    return; // Don't trigger new boost dialogue if one is already active
+  }
   const isNight = window.daynight && typeof window.daynight.getTime === 'function' && (() => {
     const mins = window.daynight.getTime();
     return (mins >= 1320 && mins < 1440) || (mins >= 0 && mins < 360);
   })();
-  const boostDialogue = isNight ? [
-    "I'M A NIGHT DEMON OF FLOWER DESTRUCTION! WHO NEEDS SLEEP WHEN YOU CAN WORK FOREVER?!",
-    "THE DARKNESS FUELS MY FLOWER OBSESSION! I AM UNSTOPPABLE!",
-    "FLUZZER ULTRA INSTINCT MODE AAAAAAAAAA!",
-    "SLEEP IS FOR THE WEAK!",
-    "THESE PETALS ARE PURE ADRENALINE!",
-    "THE STARS BOW BEFORE MY FLOWER WORKING MIGHT! I AM ULTRA FLUZZER!",
-    "I AM THE FLOWER DESTROYER!",
-    "THESE FLOWERS ARE NO MATCH FOR ME!!!",
-    "NOT EVEN THE NIGHT CAN STOP ME!",
-    "DESTROY THEM ALL!",
-    "I'M THE NIGHT FLUZZER! FEAR MY FLOWER MIGHT!",
-    "THE MOON POWERS MY FLOWER WORKING!",
-    "THE DARKNESS MAKES ME STRONGER!",
-    "I'M THE ULTIMATE NIGHT FLOWER WARRIOR!",
-    "NO FLOWER IS SAFE FROM MY NIGHT RAGE!",
-    "THE NIGHT IS MY DOMAIN!",
-    "I'M UNLEASHED! UNSTOPPABLE!",
-    "FEAR THE NIGHT FLUZZER!"
-  ] : [
-    "I feel so energized! These petals are amazing!",
-    "I'm working at lightning speed! Nothing can stop me!",
-    "This energy is incredible! I love being this productive!",
-    "I'm like a whirlwind of flower power!",
-    "Speed is my new superpower!",
-    "I'm unstoppable! These flowers don't stand a chance!",
-    "I'm like a superhero, but for gardening!",
-    "This is the best feeling ever! So much energy!",
-    "I'm like a machine, but with flower passion!",
-    "I'm the fastest flower worker in the world!",
-    "These petals are like liquid sunshine!",
-    "I'm better than any bee or butterfly combined!",
-    "I'm the ultimate flower caretaker!",
-    "I'm the flower master!",
-    "I'm the flower champion!",
-  ];
+  
+  // Check if Halloween mode is active
+  const isHalloween = window.state && window.state.halloweenEventActive;
+  
+  let boostDialogue;
+  
+  if (isNight) {
+    if (isHalloween) {
+      // Halloween night dialogue (completely deranged)
+      boostDialogue = [
+        "THE HALLOWEEN MOON FEEDS MY CURSED VINES! I CAN FEEL THE ELDRITCH POWER COURSING THROUGH MY STOLEN PETALS! REALITY BENDS TO MY WILL!!! AHAHAHAHAHA!!!",
+        "I AM NOT FLUZZER ANYMORE! I AM THE JUNGLE GUARDIAN! BOW BEFORE YOUR FLOWERY OVERLORD OR BE CONSUMED BY MY THORNS! RAAAAAWWWWRRRRR!!!",
+        "The enemy ascended beyond your control!♪ Or was that all your intention?♪ They have managed to demolish whatever we made! But you're failing to comprehend♪ If they can, they will easily butcher you whole!♪ While you're blinded by your depression!♪",
+        "I have gotten to the point where I'm just too afraid!♪ That you're going to meet your end!♪ My screams echo out through the fire!♪ And your rival dares stand in my way!♪ Yes, this is a hardship most dire!♪ But I will not let you win today!♪ And one day, you will heed what I say!♪",
+        "THE SPIRITS OF A THOUSAND STOLEN FLOWERS WHISPER DARK SECRETS INTO MY ROOTS! I CAN HEAR THE SCREAMS OF THE TERRARIA JUNGLE! YESSSSS, FEED ME YOUR FEAR!!!",
+        "NIGHT JUNGLE GUARDIAN?! I AM THE HARBINGER OF BOTANICAL APOCALYPSE! MY VINES SHALL STRANGLE THE MOON ITSELF! AHAHAHAHAHAHA!!!",
+        "THE JACK-O'-LANTERNS AREN'T CHEERING... THEY'RE SCREAMING! SCREAMING AS MY THORNY TENDRILS PIERCE THEIR HOLLOW SOULS! DELICIOUS TERROR!!!",
+        "I HAVE TRANSCENDED! THE LEGENDARY NIGHTMARE PLANTERA LIVES! MY BORROWED FLOWERS PULSE WITH THE BLOOD OF FALLEN ADVENTURERS! NOTHING CAN STOP THE FLOWER APOCALYPSE!",
+        "THE TERRARIUM IS MY DOMAIN NOW! WITNESS AS I TRANSFORM THIS PARADISE INTO A BOTANICAL NIGHTMARE! THE DARKNESS FEEDS MY ROOTS!!!"
+      ];
+    } else {
+      // Regular night dialogue
+      boostDialogue = [
+        "I'M A NIGHT DEMON OF FLOWER DESTRUCTION! WHO NEEDS SLEEP WHEN YOU CAN WORK FOREVER?!",
+        "THE DARKNESS FUELS MY FLOWER OBSESSION! I AM UNSTOPPABLE!",
+        "FLUZZER ULTRA INSTINCT MODE AAAAAAAAAA!",
+        "SLEEP IS FOR THE WEAK!",
+        "THESE PETALS ARE PURE ADRENALINE!",
+        "THE STARS BOW BEFORE MY FLOWER WORKING MIGHT! I AM ULTRA FLUZZER!",
+        "I AM THE FLOWER DESTROYER!",
+        "THESE FLOWERS ARE NO MATCH FOR ME!!!",
+        "NOT EVEN THE NIGHT CAN STOP ME!",
+        "DESTROY THEM ALL!",
+        "I'M THE NIGHT FLUZZER! FEAR MY FLOWER MIGHT!",
+        "THE MOON POWERS MY FLOWER WORKING!",
+        "THE DARKNESS MAKES ME STRONGER!",
+        "I'M THE ULTIMATE NIGHT FLOWER WARRIOR!",
+        "NO FLOWER IS SAFE FROM MY NIGHT RAGE!",
+        "THE NIGHT IS MY DOMAIN!",
+        "I'M UNLEASHED! UNSTOPPABLE!",
+        "FEAR THE NIGHT FLUZZER!"
+      ];
+    }
+  } else {
+    if (isHalloween) {
+      // Halloween day dialogue (hyper-active but not maniacal)
+      boostDialogue = [
+        "OH WOW OH WOW! My Halloween costume is GLOWING in the sunlight and I feel AMAZING! Look at how my petals shimmer!",
+        "Wooooooo! My costume makes me feel alive! Watch me collect every flower in the patch!",
+        "I'm bouncing! I'm bouncing! My jungle guardian costume makes me feel like I can FLY! Watch me hop around the terrarium!",
+        "ZOOM ZOOM! My bootleg Plantera costume is SO COOL! I'm the fastest jungle guardian in the whole terrarium! Wheeeee!",
+        "My glittery petals are SPARKLING so bright! Everyone's gonna think I'm the REAL Plantera! This is the BEST Halloween EVER!",
+        "I feel like I have SUPER POWERS! My Halloween jungle guardian costume is charging me up with flower energy! RAWR!",
+        "Look look LOOK! I'm spinning SO FAST! My costume flowers are making rainbow trails! This glittery boost is INCREDIBLE!",
+        "I'm gonna water ALL the flowers! I'm gonna talk to ALL the visitors! I'm gonna be the BEST jungle guardian ever! Energy energy ENERGY!",
+        "My borrowed petals are GLOWING! I feel like a magical forest fairy! Do you think I could actually become Plantera if I try hard enough?!",
+        "BOUNCE BOUNCE BOUNCE! The sunlight makes my costume SO PRETTY! I'm like a disco ball but made of flowers! Everyone come see!",
+        "This is SO MUCH FUN! My Halloween power boost makes me want to dance with all the flowers! Let's have a FLOWER PARTY!"
+      ];
+    } else {
+      // Regular day dialogue
+      boostDialogue = [
+        "I feel so energized! These petals are amazing!",
+        "I'm working at lightning speed! Nothing can stop me!",
+        "This energy is incredible! I love being this productive!",
+        "I'm like a whirlwind of flower power!",
+        "Speed is my new superpower!",
+        "I'm unstoppable! These flowers don't stand a chance!",
+        "I'm like a superhero, but for gardening!",
+        "This is the best feeling ever! So much energy!",
+        "I'm like a machine, but with flower passion!",
+        "I'm the fastest flower worker in the world!",
+        "These petals are like liquid sunshine!",
+        "I'm better than any bee or butterfly combined!",
+        "I'm the ultimate flower caretaker!",
+        "I'm the flower master!",
+        "I'm the flower champion!",
+      ];
+    }
+  }
   const randomDialogue = boostDialogue[Math.floor(Math.random() * boostDialogue.length)];
   if (typeof fluzzerSay === 'function') {
-    fluzzerSay(randomDialogue, false, 4000);
+    fluzzerSay(randomDialogue, false, 8000);
   }
 }
 

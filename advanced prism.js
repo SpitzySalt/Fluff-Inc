@@ -73,6 +73,14 @@ let advancedPrismState = {
     current: 620, // Current wavelength in nm, starts at 620nm
     target: 620,  // Target wavelength based on frequency
     lastUpdateTime: 0
+  },
+  wavelengthBoosts: {
+    red: 1,
+    orange: 1,
+    yellow: 1,
+    green: 1,
+    blue: 1,
+    lastCalculatedWavelength: 620
   }
 };
 window.advancedPrismState = advancedPrismState;
@@ -231,6 +239,28 @@ function initializeAdvancedPrismState() {
       }
     }
     
+    // Restore wavelength boost state
+    if (savedState.wavelengthBoosts) {
+      if (savedState.wavelengthBoosts.red !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.red = savedState.wavelengthBoosts.red;
+      }
+      if (savedState.wavelengthBoosts.orange !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.orange = savedState.wavelengthBoosts.orange;
+      }
+      if (savedState.wavelengthBoosts.yellow !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.yellow = savedState.wavelengthBoosts.yellow;
+      }
+      if (savedState.wavelengthBoosts.green !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.green = savedState.wavelengthBoosts.green;
+      }
+      if (savedState.wavelengthBoosts.blue !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.blue = savedState.wavelengthBoosts.blue;
+      }
+      if (savedState.wavelengthBoosts.lastCalculatedWavelength !== undefined) {
+        window.advancedPrismState.wavelengthBoosts.lastCalculatedWavelength = savedState.wavelengthBoosts.lastCalculatedWavelength;
+      }
+    }
+    
     // Restore reset layer state
     if (savedState.resetLayer) {
       if (savedState.resetLayer.points !== undefined) {
@@ -251,10 +281,68 @@ function initializeAdvancedPrismState() {
   
   // Always sync after initialization
   syncAdvancedPrismState();
+  
+  // Validate and fix any non-Decimal stable light values
+  validateStableLightDecimals();
+}
+
+// Function to ensure all stable light values are proper Decimals
+function validateStableLightDecimals() {
+  if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.stable) {
+    return;
+  }
+  
+  const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+  lightTypes.forEach(lightType => {
+    const currentValue = window.advancedPrismState.calibration.stable[lightType];
+    if (!DecimalUtils.isDecimal(currentValue)) {
+      window.advancedPrismState.calibration.stable[lightType] = new Decimal(currentValue || 0);
+    }
+  });
+}
+
+// Emergency function to fix all potential Decimal issues
+function fixAdvancedPrismState() {
+  console.log('Fixing advanced prism state...');
+  
+  // Ensure advanced prism state exists
+  if (!window.advancedPrismState) {
+    console.log('Advanced prism state not found, initializing...');
+    window.initializeAdvancedPrismState();
+  }
+  
+  // Fix stable light values
+  validateStableLightDecimals();
+  
+  // Fix nerf values
+  if (window.advancedPrismState.calibration && window.advancedPrismState.calibration.nerfs) {
+    const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+    lightTypes.forEach(lightType => {
+      const currentValue = window.advancedPrismState.calibration.nerfs[lightType];
+      if (!DecimalUtils.isDecimal(currentValue)) {
+        window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(currentValue || 1);
+      }
+    });
+  }
+  
+  // Fix session penalty values
+  if (window.advancedPrismState.calibration && window.advancedPrismState.calibration.sessionPenalty) {
+    const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
+    lightTypes.forEach(lightType => {
+      const currentValue = window.advancedPrismState.calibration.sessionPenalty[lightType];
+      if (!DecimalUtils.isDecimal(currentValue)) {
+        window.advancedPrismState.calibration.sessionPenalty[lightType] = new Decimal(currentValue || 1);
+      }
+    });
+  }
+  
+  console.log('Advanced prism state fixed!');
 }
 
 // Make initialization function globally accessible
 window.initializeAdvancedPrismState = initializeAdvancedPrismState;
+window.validateStableLightDecimals = validateStableLightDecimals;
+window.fixAdvancedPrismState = fixAdvancedPrismState;
 
 // Debug function to verify nested state structure
 window.debugAdvancedPrismIntegration = function() {
@@ -343,6 +431,81 @@ function updateWavelength(frequency) {
   window.advancedPrismState.wavelength.lastUpdateTime = now;
 }
 
+// Light color center wavelengths and boost calculation functions
+const LIGHT_COLOR_CENTERS = {
+  red: 650,    // nm
+  orange: 590, // nm
+  yellow: 570, // nm
+  green: 495,  // nm
+  blue: 450    // nm
+};
+
+// Function to calculate proximity percentage to a color center
+function calculateWavelengthProximity(currentWavelength, centerWavelength, maxDistance = 100) {
+  const distance = Math.abs(currentWavelength - centerWavelength);
+  const proximity = Math.max(0, (maxDistance - distance) / maxDistance);
+  return Math.min(1, proximity); // Cap at 100%
+}
+
+// Function to calculate boost multiplier based on proximity (1x to 50x)
+function calculateBoostMultiplier(proximity) {
+  return 1 + (proximity * 49); // 1 + (0 to 1) * 49 = 1 to 50
+}
+
+// Function to get all wavelength boosts for the current wavelength
+function getWavelengthBoosts() {
+  // Always try to calculate boosts, even if advanced prism state isn't fully initialized
+  let currentWavelength = 620; // Default wavelength
+  
+  if (window.advancedPrismState && window.advancedPrismState.wavelength && window.advancedPrismState.wavelength.current) {
+    currentWavelength = window.advancedPrismState.wavelength.current;
+  }
+  
+  // Force recalculation every time to ensure we get fresh values
+  // Skip caching for now to ensure boosts are always calculated
+  
+  // Calculate new boosts
+  const boosts = {};
+  
+  for (const [color, centerWavelength] of Object.entries(LIGHT_COLOR_CENTERS)) {
+    const proximity = calculateWavelengthProximity(currentWavelength, centerWavelength, 100);
+    const boost = calculateBoostMultiplier(proximity);
+    boosts[color] = boost;
+  }
+  
+  // Cache the results if advanced prism state exists
+  if (window.advancedPrismState && window.advancedPrismState.wavelengthBoosts) {
+    window.advancedPrismState.wavelengthBoosts.red = boosts.red;
+    window.advancedPrismState.wavelengthBoosts.orange = boosts.orange;
+    window.advancedPrismState.wavelengthBoosts.yellow = boosts.yellow;
+    window.advancedPrismState.wavelengthBoosts.green = boosts.green;
+    window.advancedPrismState.wavelengthBoosts.blue = boosts.blue;
+    window.advancedPrismState.wavelengthBoosts.lastCalculatedWavelength = currentWavelength;
+  }
+  
+  return boosts;
+}
+
+// Function to get boost for a specific light color
+function getLightColorBoost(lightType) {
+  const boosts = getWavelengthBoosts();
+  
+  switch(lightType) {
+    case 'redlight':
+      return boosts.red;
+    case 'orangelight':
+      return boosts.orange;
+    case 'yellowlight':
+      return boosts.yellow;
+    case 'greenlight':
+      return boosts.green;
+    case 'bluelight':
+      return boosts.blue;
+    default:
+      return 1; // No boost for white light or other types
+  }
+}
+
 // Ensure synchronization whenever stable light values are accessed
 window.syncStableLightState = syncAdvancedPrismState;
 window.getOptimalFrequencyForLightType = getOptimalFrequencyForLightType;
@@ -351,6 +514,44 @@ window.calculateWavelengthMovement = calculateWavelengthMovement;
 window.updateWavelength = updateWavelength;
 window.updateWavelengthArrow = updateWavelengthArrow;
 window.updateWavelengthCapDimming = updateWavelengthCapDimming;
+window.updateWavelengthBoostDisplay = updateWavelengthBoostDisplay;
+window.getWavelengthBoosts = getWavelengthBoosts;
+window.getLightColorBoost = getLightColorBoost;
+
+// Debug function to test wavelength boost calculations
+window.testWavelengthBoosts = function(testWavelength = 620) {
+  console.log(`Testing wavelength boosts at ${testWavelength}nm:`);
+  
+  for (const [color, centerWavelength] of Object.entries(LIGHT_COLOR_CENTERS)) {
+    const distance = Math.abs(testWavelength - centerWavelength);
+    const proximity = Math.max(0, (100 - distance) / 100);
+    const boost = 1 + (proximity * 49);
+    
+    console.log(`${color}: center=${centerWavelength}nm, distance=${distance}nm, proximity=${proximity.toFixed(3)}, boost=${boost.toFixed(1)}x`);
+  }
+  
+  const actualBoosts = getWavelengthBoosts();
+  console.log('Actual boost values:', actualBoosts);
+  
+  // Force update the display
+  updateWavelengthBoostDisplay();
+  
+  return { centers: LIGHT_COLOR_CENTERS, actualBoosts };
+};
+
+// Force refresh function for troubleshooting
+window.forceUpdateWavelengthBoosts = function() {
+  console.log('Forcing wavelength boost update...');
+  const currentWavelength = (window.advancedPrismState && window.advancedPrismState.wavelength && window.advancedPrismState.wavelength.current) || 620;
+  console.log('Current wavelength:', currentWavelength);
+  
+  const boosts = getWavelengthBoosts();
+  console.log('Calculated boosts:', boosts);
+  
+  updateWavelengthBoostDisplay();
+  
+  return boosts;
+};
 const viTokenPreferences = {
   likes: ['prisma', 'water'],
   dislikes: ['sparks'],
@@ -500,7 +701,64 @@ const viSpeechPatterns = {
       "My light stick seems to destabilize nearby anomalies. I guess I could help getting rid of anomalies.",
       "I tried to measure an anomaly with my equipment. It just... disappeared. Rude.",
       "These cosmic disruptions are making me reconsider everything I know about optical physics."
+    ] : []),
+    ...(window.state && window.state.halloweenEventActive ? [
+      "The Halloween atmosphere is making the light wavelengths behave strangely... interesting.",
+      "October's natural light cycles are fascinating from a scientific perspective.",
+      "The autumn air has a different refractive index. My measurements need adjustment.",
+      "Halloween decorations around the facility are creating interesting light scatter patterns.",
+      "The seasonal atmospheric changes are affecting my prismatic calculations.",
+      "All these jack-o'-lanterns are actually providing useful ambient lighting data.",
+      "The orange and black color scheme has surprisingly pleasant wavelength properties.",
+      "Halloween lights have a unique frequency signature compared to regular illumination.",
+      "The spooky ambiance is surprisingly conducive to focused research work.",
+      "October nights are darker earlier. At least there are more decorative lights around.",
+      "The Halloween spirit seems to be energizing my prism array somehow.",
+      "These seasonal light variations are providing valuable research data.",
+      "The facility's Halloween decorations are creating fascinating optical phenomena.",
+      "Autumn weather affects crystal clarity. My prism tail feels different this time of year.",
+      "Halloween candles emit a surprisingly steady light frequency for analysis.",
+      "The mystical atmosphere is oddly fitting for advanced prismatic research.",
+      "October's longer nights give me more time to work without daylight interference.",
+      "The Halloween celebration lights are interfering with my spectral readings... but it's manageable.",
+      "All this seasonal decoration is creating interesting light refraction experiments.",
+      "The spooky mood around here is actually helping me focus on my dark prism research.",
+      "Halloween's focus on orange light is giving me new wavelength data to analyze.",
+      "The autumn light spectrum has unique properties I hadn't considered before.",
+      "These seasonal atmospheric changes are affecting light transmission rates.",
+      "Halloween's emphasis on dramatic lighting is surprisingly scientifically sound.",
+      "The facility's Halloween transformation is creating new optical research opportunities.",
+      "October's natural light cycles are perfect for studying wavelength variations.",
+      "All these Halloween lights are providing constant illumination data points.",
+      "The spooky season's longer nights are ideal for light-sensitive experiments.",
+      "Halloween decorations are creating unexpected prismatic rainbow effects.",
+      "The seasonal celebration is generating interesting electromagnetic readings.",
+      "These October atmospheric conditions are perfect for advanced light research.",
+      "Halloween's dramatic lighting setup is actually quite scientifically impressive.",
+      "The autumn environment is providing excellent conditions for spectral analysis.",
+      "The facility's Halloween lights are creating a controlled lighting laboratory.",
+      "October's unique atmospheric properties are affecting my prismatic calculations.",
+      "The Halloween ambiance is generating fascinating wavelength interaction data."
     ] : [])
+  ],
+  challengeQuotes: [
+    "Oh, the Power Generator Challenge? Yeah I like it. Got a great time.",
+    "That power generator challenge is actually pretty fun. Not that I care about competing or anything.",
+    "I like the Power Generator Challenge. It's intense. Me versus the machine.",
+    "Yeah, I do the challenge sometimes. It's nice background activity while I work on calculations.",
+    "The Power Generator Challenge? Sure, I play it. Don't really care about beating anyone though.",
+    "I enjoy the Power Generator Challenge, but I'm not trying to impress anyone with my times.",
+    "That minigame is actually pretty good. Not that I'm competitive about it or anything.",
+    "I like how chaotic the Power Generator Challenge is.",
+    "The challenge is neat. I just focus on surviving, not on beating anyone's records.",
+    "Power Generator Challenge? Yeah, it's really fun. I play it when I'm bored.",
+    "That minigame helps me clear my head between experiments. Pretty useful actually.",
+    "The Power Generator Challenge is surprisingly engaging. Still don't care about leaderboards though.",
+    "Power Generator Challenge is decent entertainment. Better than small talk, anyway.",
+    "I like that minigame. It's simple but requires focus. Perfect for an antisocial researcher.",
+    "The challenge is fine background activity. I don't obsess over getting a good time like some people.",
+    "I enjoy the Power Generator Challenge. It's like calibrating equipment, but more chaotic.",
+    "That minigame is actually pretty well-designed. Not that I analyze game mechanics much."
   ],
   swappedToMainPrism: [
     "So this is your usual standing spot huh. Don't mind me borrowing it. You can go munch on MY PRISM SHARD all you want in the other room.",
@@ -856,6 +1114,7 @@ window.pokeAdvancedPrismCharacter = pokeAdvancedPrismCharacter;
 window.pokeViWithMainSpeechBubble = pokeViWithMainSpeechBubble;
 window.pokeSwariaWithAdvancedSpeechBubble = pokeSwariaWithAdvancedSpeechBubble;
 window.respondCharacter = pokeSwariaCharacter;
+window.viSpeechPatterns = viSpeechPatterns;
 // Performance optimization for lab tab - prevent memory leaks
 const ADVANCED_PRISM_UI_UPDATE_THROTTLE = 100; // Update UI at most every 100ms (10 FPS)
 const CALIBRATION_MINIGAME_UPDATE_THROTTLE = 100; // Update minigame at most every 100ms (10 FPS)
@@ -899,12 +1158,19 @@ function showViRandomSpeech() {
   if (window.advancedPrismState.viSpeechActive) {
     return;
   }
+  
   let speechArray;
   if (isViSleepTime()) {
     speechArray = viSpeechPatterns.sleeping;
   } else {
-    speechArray = viSpeechPatterns.randomSpeech;
+    // 15% chance for challenge quotes when awake
+    if (Math.random() < 0.15) {
+      speechArray = viSpeechPatterns.challengeQuotes;
+    } else {
+      speechArray = viSpeechPatterns.randomSpeech;
+    }
   }
+  
   const randomMessage = speechArray[Math.floor(Math.random() * speechArray.length)];
   if (window.advancedPrismState.imagesSwapped) {
     showSwariaCharacterSpeech(randomMessage, 5000);
@@ -1729,7 +1995,17 @@ function getCalibrationNerf(lightType) {
   if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.nerfs[lightType]) {
     return new Decimal(1);
   }
-  return window.advancedPrismState.calibration.nerfs[lightType];
+  
+  const nerfValue = window.advancedPrismState.calibration.nerfs[lightType];
+  
+  // Ensure the value is a proper Decimal object
+  if (!DecimalUtils.isDecimal(nerfValue)) {
+    const fixedValue = new Decimal(nerfValue || 1);
+    window.advancedPrismState.calibration.nerfs[lightType] = fixedValue;
+    return fixedValue;
+  }
+  
+  return nerfValue;
 }
 function decayCalibrationNerfs(deltaTime) {
   if (!window.advancedPrismState || !window.advancedPrismState.calibration || !window.advancedPrismState.calibration.nerfs) return;
@@ -1770,7 +2046,14 @@ function enhancedDecayCalibrationNerfs(deltaTime) {
   
   // Apply decay to all nerf values
   Object.keys(window.advancedPrismState.calibration.nerfs).forEach(lightType => {
-    const currentNerf = window.advancedPrismState.calibration.nerfs[lightType];
+    let currentNerf = window.advancedPrismState.calibration.nerfs[lightType];
+    
+    // Ensure currentNerf is a proper Decimal object
+    if (!DecimalUtils.isDecimal(currentNerf)) {
+      currentNerf = new Decimal(currentNerf || 1);
+      window.advancedPrismState.calibration.nerfs[lightType] = currentNerf;
+    }
+    
     if (currentNerf.gt(1)) {
       const keepPercentage = (100 - decayPercentage) / 100;
       const decayRate = new Decimal(keepPercentage).pow(deltaTime);
@@ -1938,6 +2221,7 @@ const stableLightCaps = {
 
 // Calculate logarithmic percentage for stable light
 function calculateStableLightPercentage(lightType, currentAmount) {
+  // Ensure currentAmount is a proper Decimal object
   if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
     currentAmount = new Decimal(currentAmount || 0);
   }
@@ -1974,6 +2258,7 @@ function formatStableLightPercentage(percentage) {
 
 // Check if stable light is at hardcap
 function isStableLightAtCap(lightType, currentAmount) {
+  // Ensure currentAmount is a proper Decimal object
   if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
     currentAmount = new Decimal(currentAmount || 0);
   }
@@ -1984,6 +2269,7 @@ function isStableLightAtCap(lightType, currentAmount) {
 
 // Apply hardcap to stable light amount
 function applyStableLightCap(lightType, currentAmount) {
+  // Ensure currentAmount is a proper Decimal object
   if (!currentAmount || !DecimalUtils.isDecimal(currentAmount)) {
     currentAmount = new Decimal(currentAmount || 0);
   }
@@ -2161,14 +2447,26 @@ function getStableLightBuff(lightType) {
   if (typeof window.stableLightBuffs === 'undefined') return new Decimal(1);
   const buff = window.stableLightBuffs[lightType];
   if (!buff) return new Decimal(1);
-  const stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
+  let stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
+  
+  // Ensure stableAmount is a proper Decimal object
+  if (!DecimalUtils.isDecimal(stableAmount)) {
+    stableAmount = new Decimal(stableAmount || 0);
+  }
+  
   return buff.calculate(stableAmount);
 }
 function getStableLightBuffDisplay(lightType) {
   if (typeof window.stableLightBuffs === 'undefined') return '';
   const buff = window.stableLightBuffs[lightType];
   if (!buff) return '';
-  const stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
+  let stableAmount = window.advancedPrismState ? window.advancedPrismState.calibration.stable[lightType] : new Decimal(0);
+  
+  // Ensure stableAmount is a proper Decimal object
+  if (!DecimalUtils.isDecimal(stableAmount)) {
+    stableAmount = new Decimal(stableAmount || 0);
+  }
+  
   if (!stableAmount || stableAmount.lte(0)) return '';
   const buffValue = buff.calculate(stableAmount);
   const formattedValue = buff.format(buffValue);
@@ -2411,7 +2709,13 @@ window.checkNerfDecaySystemStatus = function() {
   const viLevel = window.friendship?.Lab?.level || 0;
   const hasEnhancedDecay = viLevel >= 10;
   const nerfs = window.advancedPrismState?.calibration?.nerfs || {};
-  const activeNerfs = Object.keys(nerfs).filter(lightType => nerfs[lightType].gt(1));
+  const activeNerfs = Object.keys(nerfs).filter(lightType => {
+    const nerfValue = nerfs[lightType];
+    if (!DecimalUtils.isDecimal(nerfValue)) {
+      return new Decimal(nerfValue || 1).gt(1);
+    }
+    return nerfValue.gt(1);
+  });
   return {
     level: viLevel,
     hasEnhancedDecay: hasEnhancedDecay,
@@ -2635,7 +2939,7 @@ function renderAdvancedPrismUI(forceUpdate = false) {
       
       <!-- Light Spectrum Chart -->
       <div style="display: flex; justify-content: center; margin: 1.5rem auto; max-width: 1200px; width: 100%;">
-        <div class="card" style="width: 95%; min-width: 800px; height: 80px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; padding: 1rem 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: visible; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8);">
+        <div class="card" style="width: 95%; min-width: 800px; height: 120px; background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #f0f8ff 75%, #ffffff 100%), radial-gradient(circle at 20% 30%, rgba(255,0,100,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,255,150,0.1) 0%, transparent 50%), radial-gradient(circle at 60% 20%, rgba(100,0,255,0.1) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(255,150,0,0.1) 0%, transparent 50%); border: 3px solid #00ffff; border-radius: 15px; padding: 1rem 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: visible; box-shadow: 0 0 20px rgba(0,255,255,0.3), inset 0 0 30px rgba(255,255,255,0.8);">
           <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); color: #00cccc; font-size: 0.9rem; font-weight: bold; z-index: 3; text-shadow: 0 0 8px rgba(0,255,255,0.6), 0 1px 2px rgba(0,0,0,0.3);">Light Spectrum</div>
           <div id="lightSpectrumBar" style="width: 95%; height: 35px; border-radius: 18px; position: relative; margin-top: 8px; background: linear-gradient(to right, 
             #660000 0%,     /* Near Infrared */
@@ -2698,6 +3002,32 @@ function renderAdvancedPrismUI(forceUpdate = false) {
             <div style="position: absolute; top: 45px; left: 12%; color: #cc8888; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">INFRARED</div>
             <div style="position: absolute; top: 45px; left: 52%; color: #ffffff; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">VISIBLE LIGHT</div>
             <div style="position: absolute; top: 45px; left: 90%; color: #9988cc; font-size: 0.65rem; font-weight: bold; transform: translateX(-50%); white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.7);">ULTRAVIOLET</div>
+            
+            <!-- Wavelength Boost Display -->
+            <div style="position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 100%; display: flex; justify-content: center;">
+              <div id="wavelengthBoostDisplay" style="display: flex; justify-content: center; align-items: center; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8rem; font-weight: bold;">
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="color: #ff4444; text-shadow: 0 0 4px rgba(255,68,68,0.6);">x1.0</span>
+                  <span style="color: #cccccc;">Red Light</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="color: #ff8844; text-shadow: 0 0 4px rgba(255,136,68,0.6);">x1.0</span>
+                  <span style="color: #cccccc;">Orange Light</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="color: #ffdd44; text-shadow: 0 0 4px rgba(255,221,68,0.6);">x1.0</span>
+                  <span style="color: #cccccc;">Yellow Light</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="color: #44ff44; text-shadow: 0 0 4px rgba(68,255,68,0.6);">x1.0</span>
+                  <span style="color: #cccccc;">Green Light</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.3rem;">
+                  <span style="color: #4444ff; text-shadow: 0 0 4px rgba(68,68,255,0.6);">x1.0</span>
+                  <span style="color: #cccccc;">Blue Light</span>
+                </div>
+              </div>
+            </div>
             
             <!-- Black X scribble marker over purple and ultraviolet sections -->
             <div id="purpleLightDenialScribble" style="position: absolute; top: -10px; left: 76%; width: 28%; height: 160%; display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer; pointer-events: auto;" onclick="triggerPurpleLightDenial()">
@@ -3318,6 +3648,42 @@ function updateWavelengthCapDimming() {
   }
 }
 
+// Function to update wavelength boost display
+function updateWavelengthBoostDisplay() {
+  const boostDisplay = document.getElementById('wavelengthBoostDisplay');
+  if (!boostDisplay) {
+    console.log('wavelengthBoostDisplay element not found');
+    return;
+  }
+  
+  const boosts = getWavelengthBoosts();
+  console.log('Updating boost display with values:', boosts);
+  
+  // Update each boost display
+  const boostElements = [
+    { color: 'red', boostValue: boosts.red, colorHex: '#ff4444' },
+    { color: 'orange', boostValue: boosts.orange, colorHex: '#ff8844' },
+    { color: 'yellow', boostValue: boosts.yellow, colorHex: '#ffdd44' },
+    { color: 'green', boostValue: boosts.green, colorHex: '#44ff44' },
+    { color: 'blue', boostValue: boosts.blue, colorHex: '#4444ff' }
+  ];
+  
+  let html = '';
+  
+  boostElements.forEach(element => {
+    const formattedBoost = element.boostValue.toFixed(1);
+    html += `
+      <div style="display: flex; align-items: center; gap: 0.3rem;">
+        <span style="color: ${element.colorHex}; text-shadow: 0 0 4px ${element.colorHex}99;">x${formattedBoost}</span>
+        <span style="color: #cccccc;">${element.color.charAt(0).toUpperCase() + element.color.slice(1)} Light</span>
+      </div>
+    `;
+  });
+  
+  boostDisplay.innerHTML = html;
+  console.log('Boost display updated');
+}
+
 function updateAdvancedPrismUI(forceUpdate = false) {
   // Throttle UI updates to prevent performance issues
   const now = Date.now();
@@ -3362,12 +3728,20 @@ function updateAdvancedPrismUI(forceUpdate = false) {
   updateCoreBoostCard();
   updateWavelengthArrow();
   updateWavelengthCapDimming();
+  updateWavelengthBoostDisplay();
   lightTypes.forEach(light => {
     const amountEl = document.getElementById(`${light.id}Amount`);
     const percentageEl = document.getElementById(`${light.id}Percentage`);
     const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
     if (amountEl && cardEl) {
-      const stableAmount = window.advancedPrismState.calibration.stable[light.id];
+      let stableAmount = window.advancedPrismState.calibration.stable[light.id];
+      
+      // Ensure stableAmount is a proper Decimal object
+      if (!DecimalUtils.isDecimal(stableAmount)) {
+        stableAmount = new Decimal(stableAmount || 0);
+        window.advancedPrismState.calibration.stable[light.id] = stableAmount;
+      }
+      
       let displayText = '0';
       const regularLightAmount = window.prismState && window.prismState[light.id] ? window.prismState[light.id] : new Decimal(0);
       if (regularLightAmount.lte(0)) {
@@ -3438,7 +3812,14 @@ function updateStableLightCards(forceUpdate = false) {
     const percentageEl = document.getElementById(`${light.id}Percentage`);
     const cardEl = document.querySelector(`[data-light-type="${light.id}"]`);
     if (amountEl && cardEl) {
-      const stableAmount = window.advancedPrismState.calibration.stable[light.id];
+      let stableAmount = window.advancedPrismState.calibration.stable[light.id];
+      
+      // Ensure stableAmount is a proper Decimal object
+      if (!DecimalUtils.isDecimal(stableAmount)) {
+        stableAmount = new Decimal(stableAmount || 0);
+        window.advancedPrismState.calibration.stable[light.id] = stableAmount;
+      }
+      
       let displayText = '0';
       
       if (stableAmount && stableAmount.gt(0)) {
@@ -3613,6 +3994,9 @@ function formatNumber(num) {
   return DecimalUtils.formatDecimal(num);
 }
 function initAdvancedPrism() {
+  // Ensure all stable light values are proper Decimals on initialization
+  validateStableLightDecimals();
+  
   if (window.prismState && window.prismState.prismcore) {
     try {
       const savedCore = window.prismState.prismcore;
@@ -3781,7 +4165,14 @@ function updateStableLightDisplays() {
     const percentageElement = document.getElementById(lightType.id + 'Percentage');
     
     if (amountElement && percentageElement) {
-      const stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      let stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      
+      // Ensure stableAmount is a proper Decimal object
+      if (!DecimalUtils.isDecimal(stableAmount)) {
+        stableAmount = new Decimal(stableAmount || 0);
+        window.advancedPrismState.calibration.stable[lightType.id] = stableAmount;
+      }
+      
       totalStableLight = totalStableLight.add(stableAmount);
       
       // Format the amount
@@ -3801,7 +4192,14 @@ function updateStableLightDisplays() {
     const percentageElement = document.getElementById(lightType.id + 'Percentage');
     
     if (percentageElement) {
-      const stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      let stableAmount = window.advancedPrismState.calibration.stable[lightType.id] || new Decimal(0);
+      
+      // Ensure stableAmount is a proper Decimal object
+      if (!DecimalUtils.isDecimal(stableAmount)) {
+        stableAmount = new Decimal(stableAmount || 0);
+        window.advancedPrismState.calibration.stable[lightType.id] = stableAmount;
+      }
+      
       const percentage = calculateStableLightPercentage(lightType.id, stableAmount);
       const formattedPercentage = formatStableLightPercentage(percentage);
       
@@ -4147,7 +4545,12 @@ window.testVivienEnhancedDecayTicks = function() {
   }
   
   const hasNerfs = Object.keys(window.advancedPrismState.calibration.nerfs).some(lightType => {
-    return window.advancedPrismState.calibration.nerfs[lightType].gt(1);
+    const nerfValue = window.advancedPrismState.calibration.nerfs[lightType];
+    if (!DecimalUtils.isDecimal(nerfValue)) {
+      window.advancedPrismState.calibration.nerfs[lightType] = new Decimal(nerfValue || 1);
+      return new Decimal(nerfValue || 1).gt(1);
+    }
+    return nerfValue.gt(1);
   });
   
   return `Enhanced decay system active. Has nerfs: ${hasNerfs}. Using main game tick (100ms).`;

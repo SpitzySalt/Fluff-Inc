@@ -100,6 +100,239 @@
       "I always enjoy our little friendly moments like this!",
       "Such a nice break from all the paperwork and scheduling!"
     ];
+
+    // Challenge speech quotes - Tico comparing their PB with player's PB (professional management style)
+    this.ticochallengeQuotes = [
+      // When player doesn't have a PB but Tico does
+      { text: () => `I completed the Power Generator Challenge with a ${(window.state.characterChallengePBs?.tico || 0)} second survival time. Excellent management training!`, condition: () => window.state.characterChallengePBs?.tico && !window.state.powerChallengePersonalBest },
+      { text: () => `My Power Generator Challenge performance: ${(window.state.characterChallengePBs?.tico || 0)} seconds survived. I recommend you try it for professional development!`, condition: () => window.state.characterChallengePBs?.tico && !window.state.powerChallengePersonalBest },
+      { text: () => `Power Generator Challenge results: ${(window.state.characterChallengePBs?.tico || 0)} seconds - quite satisfactory results from proper planning and organization!`, condition: () => window.state.characterChallengePBs?.tico && !window.state.powerChallengePersonalBest },
+      { text: () => `I documented a ${(window.state.characterChallengePBs?.tico || 0)} second Power Generator Challenge survival rate. The key is systematic approach and staying calm under pressure.`, condition: () => window.state.characterChallengePBs?.tico && !window.state.powerChallengePersonalBest },
+      
+      // When Tico's PB is better than player's (Tico survived longer)
+      { text: () => `My Power Generator Challenge time of ${(window.state.characterChallengePBs?.tico || 0)} seconds exceeds your ${window.state.powerChallengePersonalBest || 0} seconds. Proper preparation pays off!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.tico) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `Power Generator Challenge efficiency analysis: ${(window.state.characterChallengePBs?.tico || 0)} seconds versus your ${window.state.powerChallengePersonalBest || 0} seconds. You did not think I was this good huh!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.tico) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `In the Power Generator Challenge, I achieved ${(parseFloat(window.state.characterChallengePBs?.tico || 0) - parseFloat(window.state.powerChallengePersonalBest || 0)).toFixed(2)} seconds longer than you. Good speed planning and management accuracy are essential!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.tico) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `Your Power Generator Challenge time of ${window.state.powerChallengePersonalBest || 0} seconds shows potential, but my ${(window.state.characterChallengePBs?.tico || 0)} seconds demonstrates superior strategic and quick thinking!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.tico) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      { text: () => `I utilized proper resource management to achieve ${(window.state.characterChallengePBs?.tico || 0)} seconds in the Power Generator Challenge. Perhaps you need better preparation for your ${window.state.powerChallengePersonalBest || 0} second performance?`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.characterChallengePBs.tico) > parseFloat(window.state.powerChallengePersonalBest);
+      }},
+      
+      // When player's PB is better than Tico's (player survived longer)
+      { text: () => `Impressive! Your Power Generator Challenge time of ${window.state.powerChallengePersonalBest || 0} seconds significantly outperforms my ${(window.state.characterChallengePBs?.tico || 0)} seconds. I must study your methodology!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.tico);
+      }},
+      { text: () => `Power Generator Challenge performance gap analysis: Your ${window.state.powerChallengePersonalBest || 0} seconds versus my ${(window.state.characterChallengePBs?.tico || 0)} seconds. I need to revise my strategy!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.tico);
+      }},
+      { text: () => `In the Power Generator Challenge, you survived ${(parseFloat(window.state.powerChallengePersonalBest || 0) - parseFloat(window.state.characterChallengePBs?.tico || 0)).toFixed(2)} seconds longer than me! I should schedule additional training sessions.`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.tico);
+      }},
+      { text: () => `Outstanding Power Generator Challenge work! ${window.state.powerChallengePersonalBest || 0} seconds clearly demonstrates superior performance compared to my ${(window.state.characterChallengePBs?.tico || 0)} seconds!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.tico);
+      }},
+      { text: () => `My Power Generator Challenge time of ${(window.state.characterChallengePBs?.tico || 0)} seconds pales in comparison to your ${window.state.powerChallengePersonalBest || 0} seconds. I must update my efficiency protocols!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               parseFloat(window.state.powerChallengePersonalBest) > parseFloat(window.state.characterChallengePBs.tico);
+      }},
+      
+      // When PBs are very close (within 3 seconds - Tico likes detailed analysis)
+      { text: () => `Power Generator Challenge competitive analysis: Your ${window.state.powerChallengePersonalBest || 0} seconds versus my ${(window.state.characterChallengePBs?.tico || 0)} seconds. The margin is remarkably narrow!`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.tico)) <= 3.0;
+      }},
+      { text: () => `Power Generator Challenge statistical variance: Less than 3 seconds difference between our performances! This calls for a detailed comparative study.`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.tico)) <= 3.0;
+      }},
+      { text: () => `Excellent Power Generator Challenge competitive benchmarking! Our times are practically identical - perfect for performance optimization research.`, condition: () => {
+        return window.state.characterChallengePBs?.tico && window.state.powerChallengePersonalBest && 
+               Math.abs(parseFloat(window.state.powerChallengePersonalBest) - parseFloat(window.state.characterChallengePBs.tico)) <= 3.0;
+      }},
+      
+      // General competitive banter (professional development focused)
+      { text: "I've been incorporating the Power Generator Challenge into our worker evaluation metrics. Excellent skill assessment tool!", condition: () => window.state.characterChallengePBs?.tico },
+      { text: "The challenge results provide valuable data on reaction times and decision-making under pressure. Very useful for management!", condition: () => window.state.characterChallengePBs?.tico },
+      { text: "I'm considering adding challenge performance to our quarterly review process. It's quite revealing of organizational skills!", condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      { text: "This challenge competition is an excellent example of healthy workplace rivalry. I should document this for HR best practices!", condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      { text: "The Power Generator Challenge provides excellent insights into stress management and strategic thinking. Perfect for professional development!", condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      // Rikkor worker performance commentary (personal analysis of specific workers)
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "I'm analyzing Power Generator Challenge performance data for our future Rikkor workers. The preparation is essential!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker} showed impressive Power Generator Challenge performance in today's evaluation. I'm documenting their techniques for our training manual!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "Once we have Rikkor workers, I'll track their Power Generator Challenge stress response patterns for optimal performance!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `I've been observing ${randomWorker}'s Power Generator Challenge approach - their stress management technique is quite remarkable!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length < 2) return "Performance metrics will be fascinating once we have more Rikkor workers for Power Generator Challenge comparison studies!";
+        const worker1 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        let worker2 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        while (worker2 === worker1 && workerNames.length > 1) {
+          worker2 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        }
+        return `Fascinating! ${worker1} and ${worker2} have completely different Power Generator Challenge strategies, yet both show excellent results!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerList = Object.values(workers).filter(w => w.displayName || w.name);
+        if (workerList.length === 0) return "I'm preparing comprehensive Power Generator Challenge survival strategy reports for when our Rikkor team arrives!";
+        const randomWorker = workerList[Math.floor(Math.random() * workerList.length)];
+        const workerName = randomWorker.displayName || randomWorker.name;
+        const workerPB = window.state.characterChallengePBs?.[workerName.toLowerCase()] || (Math.random() * 50 + 10).toFixed(1);
+        return `${workerName} achieved ${workerPB} seconds in their last Power Generator Challenge attempt. I'm adding their survival strategy to our best practices!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "The correlation between star ratings and Power Generator Challenge performance will be excellent data once we have workers!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker}'s star rating perfectly correlates with their Power Generator Challenge performance - my prediction algorithms are working!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "I'm ready to incorporate innovative Power Generator Challenge techniques into our protocols once we have Rikkor workers!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker} developed an innovative Power Generator Challenge technique that I'm now including in our standard training protocols!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length < 2) return "Team coordination will be excellent once we have multiple Rikkor workers for Power Generator Challenge practice sessions!";
+        const worker1 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        let worker2 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        while (worker2 === worker1 && workerNames.length > 1) {
+          worker2 = workerNames[Math.floor(Math.random() * workerNames.length)];
+        }
+        return `${worker1} and ${worker2} showed excellent teamwork during Power Generator Challenge practice - their coordination is improving efficiency!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "Different Rikkor personalities will approach the Power Generator Challenge uniquely - excellent diversity for our future team!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker}'s personality type leads to a unique Power Generator Challenge methodology - such excellent diversity in our approaches!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "The Power Generator Challenge will be an excellent team-building exercise once we have our Rikkor workforce!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `Since we started Power Generator Challenge team-building, ${randomWorker}'s productivity has increased by 15%! Excellent results!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerList = Object.values(workers).filter(w => w.displayName || w.name);
+        if (workerList.length === 0) return "I'm planning Power Generator Challenge leaderboards for when we have Rikkor workers - healthy competition drives improvement!";
+        
+        // Find worker with highest PB time
+        let bestWorker = null;
+        let bestTime = 0;
+        for (const worker of workerList) {
+          const workerName = worker.displayName || worker.name;
+          const workerPB = parseFloat(window.state.characterChallengePBs?.[workerName.toLowerCase()] || 0);
+          if (workerPB > bestTime) {
+            bestTime = workerPB;
+            bestWorker = workerName;
+          }
+        }
+        
+        if (bestWorker && bestTime > 0) {
+          return `${bestWorker} is currently leading our Power Generator Challenge leaderboard with ${bestTime} seconds! Healthy competition is working perfectly!`;
+        } else {
+          const randomWorker = workerList[Math.floor(Math.random() * workerList.length)];
+          const workerName = randomWorker.displayName || randomWorker.name;
+          const fallbackTime = (Math.random() * 40 + 15).toFixed(1);
+          return `${workerName} is currently leading our Power Generator Challenge leaderboard with ${fallbackTime} seconds! Healthy competition is working perfectly!`;
+        }
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "Power Generator Challenge training regimens will show measurable workplace efficiency improvements with our future team!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker}'s Power Generator Challenge training regimen is showing measurable improvements in their workplace efficiency metrics!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "I'm planning Power Generator Challenge performance bonuses for our top-performing future Rikkor workers!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `I'm considering offering ${randomWorker} a Power Generator Challenge performance bonus - their dedication to improvement is exceptional!`;
+      }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+    ];
+
+    // Halloween-specific dialogue for Tico (only appears when Halloween mode is active)
+    this.halloweenRandomSpeeches = [
+      "Mission briefing complete: Halloween operations are now active!",
+      "Tactical assessment: This commando gear makes me feel more professional than ever!",
+      "All units report: The front desk is secure and ready for Halloween festivities!",
+      "Intel suggests that Halloween boosts worker morale by 200%. I approve!",
+      "Command reports: These combat boots are perfect for patrolling the facility!",
+      "Operational note: The tactical vest has many pockets for organizing paperwork!",
+      "Mission status: Halloween deployment successful, maintaining front desk operations!",
+      "Reconnaissance complete: All Halloween decorations meet military precision standards!",
+      "Strategic advantage: This helmet protects me while reviewing worker assignments!",
+      "Field report: Combining military efficiency with front desk management is optimal!",
+      "Tactical update: Even commandos need proper administrative procedures!",
+      "Mission parameters: Ensure all workers receive adequate Halloween spirit rations!",
+      "Status report: Front desk operations continuing at peak Halloween efficiency!",
+      "Command decision: This costume makes filing paperwork feel like a military operation!",
+      "Operational protocol: Maintain order and organization, even during Halloween chaos!"
+    ];
+
+    this.halloweenPokeSpeeches = [
+      "Attention! Front desk commando reporting for friendly interaction, sir!",
+      "Tactical poke detected! Responding with professional Halloween enthusiasm!",
+      "Mission update: Friendly contact established with base personnel!",
+      "Status: That poke is noted in my operational log as a positive morale boost!",
+      "Alert! Unauthorized but welcomed friendly gesture detected at my position!",
+      "Command directive: Responding to friendly contact with appropriate Halloween cheer!",
+      "Operational note: That tickles even through my tactical gear!",
+      "Mission briefing: Your friendly pokes help maintain my combat readiness!",
+      "Tactical assessment: That was a precision poke, well executed!",
+      "Field report: Friendly interactions like this keep the team's spirits high!",
+      "Status update: Even commandos appreciate a good friendly poke now and then!"
+    ];
     this.rikkorCreatures = {
       Ashen: {
         id: 'ashen',
@@ -2003,9 +2236,34 @@
   triggerRandomSpeech() {
     if (this.isAsleep) return;
     
+    // Check if Halloween mode is active
+    const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                             (window.premiumState && window.premiumState.halloweenEventActive) ||
+                             document.body.classList.contains('halloween-cargo-active') ||
+                             document.body.classList.contains('halloween-event-active');
+    
+    // 15% chance for challenge speech (only if quest 5 is completed to unlock the challenge)
+    const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
+    const shouldUseChallengeQuotes = questCompleted && Math.random() < 0.15;
+    
+    // Ensure character PBs exist if we're going to use challenge quotes
+    if (shouldUseChallengeQuotes && typeof window.ensureCharacterPBsExist === 'function') {
+      window.ensureCharacterPBsExist();
+    }
+    
+    let speechArray = this.randomSpeeches;
+    
+    if (shouldUseChallengeQuotes) {
+      // Use challenge quotes
+      speechArray = this.ticochallengeQuotes;
+    } else if (isHalloweenActive && Math.random() < 0.5) {
+      // 50% chance to use Halloween speeches when Halloween mode is active (if not using challenge quotes)
+      speechArray = this.halloweenRandomSpeeches;
+    }
+    
     // Filter and extract valid speeches (similar to Fluzzer's speech system)
     const validSpeeches = [];
-    for (const speech of this.randomSpeeches) {
+    for (const speech of speechArray) {
       if (typeof speech === 'string') {
         validSpeeches.push(speech);
       } else if (typeof speech === 'object' && speech.text) {
@@ -2023,8 +2281,9 @@
       return;
     }
     
-    const randomSpeech = validSpeeches[Math.floor(Math.random() * validSpeeches.length)];
-    this.showSpeech(randomSpeech, 4000);
+    const selectedSpeech = validSpeeches[Math.floor(Math.random() * validSpeeches.length)];
+    const speechText = typeof selectedSpeech === 'function' ? selectedSpeech() : selectedSpeech;
+    this.showSpeech(speechText, 4000);
     this.lastInteractionTime = Date.now();
   }
   triggerRandomWorkerSpeech() {
@@ -2096,11 +2355,11 @@
     const speakingImage = document.getElementById('ticoCharacterSpeaking');
     if (!normalImage || !speakingImage) return;
     if (this.isAsleep) {
-      normalImage.src = 'assets/icons/tico sleep.png';
-      speakingImage.src = 'assets/icons/tico sleep talk.png';
+      normalImage.src = window.getHalloweenTicoImage ? window.getHalloweenTicoImage('sleep') : 'assets/icons/tico sleep.png';
+      speakingImage.src = window.getHalloweenTicoImage ? window.getHalloweenTicoImage('sleep_talk') : 'assets/icons/tico sleep talk.png';
     } else {
-      normalImage.src = 'assets/icons/tico.png';
-      speakingImage.src = 'assets/icons/tico speech.png';
+      normalImage.src = window.getHalloweenTicoImage ? window.getHalloweenTicoImage('normal') : 'assets/icons/tico.png';
+      speakingImage.src = window.getHalloweenTicoImage ? window.getHalloweenTicoImage('speech') : 'assets/icons/tico speech.png';
     }
   }
   checkWorkerSleepStatus() {
@@ -2350,7 +2609,20 @@
         }, 2000);
       }
     } else {
-      const pokeSpeech = this.pokeSpeeches[Math.floor(Math.random() * this.pokeSpeeches.length)];
+      // Check if Halloween mode is active
+      const isHalloweenActive = (window.state && window.state.halloweenEventActive) || 
+                               (window.premiumState && window.premiumState.halloweenEventActive) ||
+                               document.body.classList.contains('halloween-cargo-active') ||
+                               document.body.classList.contains('halloween-event-active');
+      
+      let pokeArray = this.pokeSpeeches;
+      
+      // 50% chance to use Halloween poke speeches when Halloween mode is active
+      if (isHalloweenActive && Math.random() < 0.5) {
+        pokeArray = this.halloweenPokeSpeeches;
+      }
+      
+      const pokeSpeech = pokeArray[Math.floor(Math.random() * pokeArray.length)];
       this.showSpeech(pokeSpeech, 3000);
     }
     this.lastInteractionTime = Date.now();

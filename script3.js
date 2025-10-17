@@ -409,7 +409,7 @@ function showIntercomSpeechBubble(text, duration = 10000) {
 function triggerElement10IntercomEvent() {
     if (intercomEventTriggered) return;
     intercomEventTriggered = true;
-    saveIntercomState();
+    // saveIntercomState(); // Save system disabled
     const message = "BZZT... These elements you're discovering... CRRRK... I've never heard or seen any of these elements, but their effects are... interesting. Keep it up Peachy. *static*";
     showIntercomSpeechBubble(message, 10000);
 }
@@ -417,7 +417,7 @@ function triggerElement10IntercomEvent() {
 function triggerElement20IntercomEvent() {
     if (intercomEvent20Triggered) return;
     intercomEvent20Triggered = true;
-    saveIntercomState();
+    // saveIntercomState(); // Save system disabled
     const message = "CRRRK... These 'elements' you're discovering are not normal... BZZT... I'm seeing increasing effects to the core with every new 'elements' discovered, but for now, continue on with your research. *static*";
     showIntercomSpeechBubble(message, 10000);
 }
