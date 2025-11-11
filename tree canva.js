@@ -192,7 +192,7 @@ const treeUpgradeLayout = {
     position: { x: -900, y: 1300 },
     connections: [],
     prerequisite: 'crush_swandies',
-    visibilityPrerequisite: 'crush_swandies',
+    hexedVisibilityPrerequisite: 'crush_swandies',
     unlockPrerequisite: 'crush_swandies'
   },
   'swandy_resety': {
@@ -578,6 +578,16 @@ function renderConnectionLines() {
       return; // Skip rendering this connection line
     }
     
+    // Special check for connections to upgrades that require hexed prerequisites
+    const toLayout = treeUpgradeLayout[connection.to];
+    if (toLayout?.hexedVisibilityPrerequisite === connection.from) {
+      const fromHexData = window.state.halloweenEvent.treeUpgrades.hexData?.[connection.from];
+      const fromFullyHexed = fromHexData?.isFullyHexed || false;
+      if (!fromFullyHexed) {
+        return;
+      }
+    }
+    
     // Calculate dynamic line style based on upgrade positions
     const calculatedStyles = calculateConnectionLine(connection.from, connection.to);
     
@@ -700,6 +710,12 @@ function renderUpgradeNodes() {
     if (isPurchased) {
       // If already purchased, always show it
       isVisible = true;
+    } else if (layout.hexedVisibilityPrerequisite) {
+      const prereqUpgradeId = layout.hexedVisibilityPrerequisite;
+      const prereqPurchased = window.state.halloweenEvent.treeUpgrades.purchased[prereqUpgradeId];
+      const prereqHexData = window.state.halloweenEvent.treeUpgrades.hexData?.[prereqUpgradeId];
+      const prereqFullyHexed = prereqHexData?.isFullyHexed || false;
+      isVisible = prereqPurchased && prereqFullyHexed;
     } else if (layout.visibilityPrerequisite) {
       isVisible = window.state.halloweenEvent.treeUpgrades.purchased[layout.visibilityPrerequisite];
     } else if (layout.prerequisite) {
@@ -712,6 +728,12 @@ function renderUpgradeNodes() {
     if (isPurchased) {
       // If already purchased, it's unlocked
       isUnlocked = true;
+    } else if (layout.hexedVisibilityPrerequisite) {
+      const prereqUpgradeId = layout.hexedVisibilityPrerequisite;
+      const prereqPurchased = window.state.halloweenEvent.treeUpgrades.purchased[prereqUpgradeId];
+      const prereqHexData = window.state.halloweenEvent.treeUpgrades.hexData?.[prereqUpgradeId];
+      const prereqFullyHexed = prereqHexData?.isFullyHexed || false;
+      isUnlocked = prereqPurchased && prereqFullyHexed;
     } else if (layout.unlockPrerequisite) {
       isUnlocked = window.state.halloweenEvent.treeUpgrades.purchased[layout.unlockPrerequisite];
     } else if (layout.prerequisite) {
