@@ -640,6 +640,9 @@ function swapCells(row1, col1, row2, col2) {
     crusherState.combo = 0;
     crusherState.isComboActive = false;
     
+    // Set processing flag immediately to prevent additional moves during cascade
+    crusherState.isProcessing = true;
+    
     // Remove transform and swapping class
     icon1.style.transform = '';
     icon2.style.transform = '';
