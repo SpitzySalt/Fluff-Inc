@@ -845,6 +845,9 @@ function renderUpgradeNodes() {
       
       nodeElement.classList.add('locked');
       buttonElement.classList.add('locked');
+      
+      // Hide the node completely if not visible
+      nodeElement.style.display = 'none';
     }
     
     // Apply purchased class if upgrade is purchased
