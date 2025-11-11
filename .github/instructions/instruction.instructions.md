@@ -19,3 +19,4 @@ Coding Guidelines:
 11. Never revert every files to the last git commit.
 12. When adding new currencies, ensure they are stored in window.state
 13. Do not create new debug files.
+14. When adding new objectives for the quest system, lets make sure the objectives increment correctly with decimal refactoring in mind, lets make sure they don't increment like (0,01,011,0111,ect)

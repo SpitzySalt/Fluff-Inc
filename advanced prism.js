@@ -303,11 +303,9 @@ function validateStableLightDecimals() {
 
 // Emergency function to fix all potential Decimal issues
 function fixAdvancedPrismState() {
-  console.log('Fixing advanced prism state...');
   
   // Ensure advanced prism state exists
   if (!window.advancedPrismState) {
-    console.log('Advanced prism state not found, initializing...');
     window.initializeAdvancedPrismState();
   }
   
@@ -336,7 +334,6 @@ function fixAdvancedPrismState() {
     });
   }
   
-  console.log('Advanced prism state fixed!');
 }
 
 // Make initialization function globally accessible
@@ -520,18 +517,15 @@ window.getLightColorBoost = getLightColorBoost;
 
 // Debug function to test wavelength boost calculations
 window.testWavelengthBoosts = function(testWavelength = 620) {
-  console.log(`Testing wavelength boosts at ${testWavelength}nm:`);
   
   for (const [color, centerWavelength] of Object.entries(LIGHT_COLOR_CENTERS)) {
     const distance = Math.abs(testWavelength - centerWavelength);
     const proximity = Math.max(0, (100 - distance) / 100);
     const boost = 1 + (proximity * 49);
     
-    console.log(`${color}: center=${centerWavelength}nm, distance=${distance}nm, proximity=${proximity.toFixed(3)}, boost=${boost.toFixed(1)}x`);
   }
   
   const actualBoosts = getWavelengthBoosts();
-  console.log('Actual boost values:', actualBoosts);
   
   // Force update the display
   updateWavelengthBoostDisplay();
@@ -541,12 +535,9 @@ window.testWavelengthBoosts = function(testWavelength = 620) {
 
 // Force refresh function for troubleshooting
 window.forceUpdateWavelengthBoosts = function() {
-  console.log('Forcing wavelength boost update...');
   const currentWavelength = (window.advancedPrismState && window.advancedPrismState.wavelength && window.advancedPrismState.wavelength.current) || 620;
-  console.log('Current wavelength:', currentWavelength);
   
   const boosts = getWavelengthBoosts();
-  console.log('Calculated boosts:', boosts);
   
   updateWavelengthBoostDisplay();
   
@@ -739,6 +730,30 @@ const viSpeechPatterns = {
       "The facility's Halloween lights are creating a controlled lighting laboratory.",
       "October's unique atmospheric properties are affecting my prismatic calculations.",
       "The Halloween ambiance is generating fascinating wavelength interaction data."
+    ] : []),
+    
+    // Hexed Peachy concern dialogues - only appear when Peachy is hexed
+    ...(window.state?.halloweenEvent?.jadeca?.peachyIsHexed ? [
+      "Peachy... there's an unusual energy signature emanating from you. Did something happen?",
+      "That mark on you is emitting wavelengths I've never seen before. What is that?",
+      "I'm detecting strange magical frequencies around you. This is beyond my optical expertise.",
+      "Your appearance has changed... and my prism tail is reacting to whatever marked you.",
+      "That 'blue' glow isn't any normal light wavelength. What happened to you?",
+      "I tried analyzing that mark with my equipment, but the readings are all... wrong. Nonsensical.",
+      "Whatever messed you is interfering with my light calibrations. The energy is too chaotic.",
+      "That curse mark is creating prismatic distortions around you. I can see it refracting oddly.",
+      "I don't know how to help with magical afflictions. My expertise is light, not... whatever this is.",
+      "The aura on you is making my prism tail ache. It's resonating with some dark frequency.",
+      "I've documented every wavelength, but that mark emits something... unnatural. Concerning.",
+      "My light stick is flickering near you now. That aura has a powerful magical signature.",
+      "I'm uncomfortable with whatever cursed you. It's affecting the light around you in strange ways.",
+      "That mark looks permanent... I wish I knew more about curse removal, but I only know optics.",
+      "The hex energy is causing my prismatic calculations to fail. Too much magical interference.",
+      "I tried to measure the curse's frequency, but my instruments can't process it. It's not light.",
+      "Whatever marked you has properties that defy optical physics. This is... unsettling.",
+      "Your aura is creating shadows that shouldn't exist based on the light sources. That's wrong.",
+      "I'm worried about you, Peachy. That mark radiates an energy I don't understand at all.",
+      "The curse on you is bending light unnaturally. I can observe it, but I can't explain it scientifically."
     ] : [])
   ],
   challengeQuotes: [
@@ -758,7 +773,18 @@ const viSpeechPatterns = {
     "I like that minigame. It's simple but requires focus. Perfect for an antisocial researcher.",
     "The challenge is fine background activity. I don't obsess over getting a good time like some people.",
     "I enjoy the Power Generator Challenge. It's like calibrating equipment, but more chaotic.",
-    "That minigame is actually pretty well-designed. Not that I analyze game mechanics much."
+    "That minigame is actually pretty well-designed. Not that I analyze game mechanics much.",
+    ...(window.state && window.state.tokenChallengePB && window.state.tokenChallengePB > 0 ? [
+      "The Token Challenge? I'm actually proud of Lepre for creating that. Finally, a challenge that requires real memory and speed.",
+      "Lepre's Token Challenge is surprisingly well-designed. Good job helping them develop it, Peachy.",
+      "I have to admit, the Token Challenge mechanics are more sophisticated than I expected from Lepre. You both did good work.",
+      "The Token Challenge has some interesting memory patterns. Lepre really thought this through... with your help, obviously.",
+      "I'm impressed by the Token Challenge's complexity. Lepre's creativity combined with your input made something worthwhile.",
+      "That Token Challenge is actually challenging. I respect Lepre more now for creating something genuinely difficult.",
+      "The Token Challenge requires the kind of focus I appreciate. Nice work helping Lepre design something substantial.",
+      "Reaching the 80 points mark is where everything goes downhill. The challenge really ramps up there.",
+      "I didn't expect Lepre to create such a demanding challenge. You must have contributed some good ideas, Peachy."
+    ] : [])
   ],
   swappedToMainPrism: [
     "So this is your usual standing spot huh. Don't mind me borrowing it. You can go munch on MY PRISM SHARD all you want in the other room.",
@@ -2572,7 +2598,6 @@ window.testStableLightPercentages = function() {
     const isAtCap = isStableLightAtCap(testCase.light, testCase.amount);
     const cappedAmount = applyStableLightCap(testCase.light, testCase.amount);
     
-    console.log(`${testCase.light}: ${testCase.amount.toString()} -> ${formatted} (${testCase.expected}) - At cap: ${isAtCap} - Capped amount: ${cappedAmount.toString()}`);
   });
   
 };
@@ -2589,12 +2614,10 @@ window.setStableLightForTesting = function(lightType, amount) {
   updateAdvancedPrismUI(true);
   
   const percentage = calculateStableLightPercentage(lightType, window.advancedPrismState.calibration.stable[lightType]);
-  console.log(`Set ${lightType} to ${window.advancedPrismState.calibration.stable[lightType].toString()} (${formatStableLightPercentage(percentage)})`);
 };
 
 // Test function to demonstrate the hardcap system
 window.testStableLightHardcaps = function() {
-  console.log("Testing stable light hardcaps:");
   
   // Try to set each light type above its cap
   const testAmounts = {
@@ -2611,7 +2634,6 @@ window.testStableLightHardcaps = function() {
     const cappedAmount = applyStableLightCap(lightType, originalAmount);
     const cap = stableLightCaps[lightType];
     
-    console.log(`${lightType}: Tried ${originalAmount.toString()}, got ${cappedAmount.toString()}, cap is ${cap.toString()}`);
     
     // Set the capped amount in the game state
     window.advancedPrismState.calibration.stable[lightType] = cappedAmount;
@@ -2619,7 +2641,6 @@ window.testStableLightHardcaps = function() {
   
   // Update UI to show the results
   updateAdvancedPrismUI(true);
-  console.log("All lights should now show 100% and have golden glow!");
 };
 window.testVivienNerfDecayBuff = function(level = 10) {
   if (!window.friendship) {
@@ -3652,12 +3673,10 @@ function updateWavelengthCapDimming() {
 function updateWavelengthBoostDisplay() {
   const boostDisplay = document.getElementById('wavelengthBoostDisplay');
   if (!boostDisplay) {
-    console.log('wavelengthBoostDisplay element not found');
     return;
   }
   
   const boosts = getWavelengthBoosts();
-  console.log('Updating boost display with values:', boosts);
   
   // Update each boost display
   const boostElements = [
@@ -3681,7 +3700,6 @@ function updateWavelengthBoostDisplay() {
   });
   
   boostDisplay.innerHTML = html;
-  console.log('Boost display updated');
 }
 
 function updateAdvancedPrismUI(forceUpdate = false) {

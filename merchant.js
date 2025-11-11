@@ -32,6 +32,10 @@ class Boutique {
     this.apologizeCount = 0;
     this.apologizeRequired = 1000; // Need 1000 apologies
     
+    // Token challenge cooldown tracking
+    this.tokenChallengeLastUsed = 0;
+    this.tokenChallengeUsedSinceRestock = false;
+    
     // Timer management for memory leak prevention
     this.mainUpdateInterval = null;
     this.isDestroyed = false;
@@ -262,14 +266,28 @@ class Boutique {
         basePrice: 500,
         category: 'premium',
         unlockable: true,
-        isUnlocked: () => window.premiumState && window.premiumState.bijouUnlocked
+        isUnlocked: () => {
+          // Use the compatibility function which handles both old and new state systems
+          if (typeof window.isBijouUnlocked === 'function') {
+            return window.isBijouUnlocked();
+          }
+          // Fallback: Check new state system first
+          if (window.state && window.state.unlockedFeatures && window.state.unlockedFeatures.bijou) {
+            return true;
+          }
+          // Fallback: Check old premium state system
+          if (window.premiumState && window.premiumState.bijouUnlocked) {
+            return true;
+          }
+          return false;
+        }
       },
       {
         id: 'vrchatMirror',
         name: 'Unlock VRChat Mirror',
   // description removed
         icon: 'assets/icons/door.png', // Using door icon as placeholder
-        basePrice: 5000,
+        basePrice: 1000000,
         category: 'premium',
         unlockable: true,
         isUnlocked: () => window.premiumState && window.premiumState.vrchatMirrorUnlocked
@@ -356,6 +374,13 @@ class Boutique {
       { text: "My Power Generator Challenge technique involves bribing the electrons with tiny Swa Bucks. They love capitalism!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
       { text: "The power generator and I have a mutual understanding: It pretends to be dangerous, and I pretend to be scared!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
       { text: "The trick to surviving the Power Generator Challenge? Tell it you're made of the finest insulating materials! Like premium fabric and then the inner workings of the challenge will stop draining the power!", condition: () => window.state.characterChallengePBs?.lepre || window.state.powerChallengePersonalBest },
+      
+      // Token Challenge specific quotes (only appear if player has done token challenge at least once)
+      { text: () => `You scored ${window.state.tokenChallengePersonalBest || 0} points in my Token Challenge? Not bad! I taught those tokens how to dance to confuse you, but you still did well!`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: () => `Your Token Challenge personal best of ${window.state.tokenChallengePersonalBest || 0} points is impressive! I whispered secrets to each token about where they belong, but you figured it out anyway!`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: "The Token Challenge gets trickier as you progress! I programmed the tokens to have personalities, some are shy, some are rebellious, and some just want to go home!", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: "My Token Challenge is a masterpiece of controlled chaos! The slots rearrange themselves because I taught them interpretive dance!", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: () => `I've seen you attempt my Token Challenge! ${window.state.tokenChallengePersonalBest || 0} points is your record? The tokens told me they enjoyed meeting you!`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
     ];
   }
 
@@ -427,6 +452,28 @@ class Boutique {
       "Between dimensional tears and angry customers, I don't know which is more unpredictable!",
       "I tried selling 'anomaly repellent' but turns out it was just glitter. Still sold well though!",
       "These cosmic disturbances are like the ultimate magic show - reality disappearing and reappearing at will!"
+    ] : []),
+    
+    // Hexed Peachy concern dialogues - only appear when Peachy is hexed
+    ...(window.state?.halloweenEvent?.jadeca?.peachyIsHexed ? [
+      "Peachy... that mark on you! That's no ordinary stage makeup! What happened?",
+      "I've seen cursed props in my jester days, but that mark on you is the real deal. This is concerning.",
+      "That purple glow around you... it's not part of any trick I know. Are you cursed?",
+      "In all my years performing magic tricks, I've never seen a mark like that. What did you get yourself into?",
+      "I tried to juggle a token near you and it started glowing purple! That mark has real power!",
+      "That's not stage magic, that's a genuine curse! Who did this to you, Peachy?",
+      "I've worked with illusionists and magicians, but whatever marked you is beyond parlor tricks!",
+      "I'd offer to sell you a curse removal token, but I don't think any of my wares can help with that mark.",
+      "That mark is making my fabric stuffing feel uncomfortable. Whatever cursed you has serious magical weight.",
+      "I've performed for cursed nobles before, but your mark is on another level entirely!",
+      "The tokens in my shop are reacting to your presence now. That mark is radiating dark magic.",
+      "I wish I could juggle that curse away for you, but this is beyond my jester abilities.",
+      "That mark looks like it was put there by someone with real magical knowledge. Not good.",
+      "My trained eye can spot illusions easily, and that mark on you is definitely not an illusion!",
+      "I've seen plenty of fake curses in theater shows, but yours is terrifyingly genuine.",
+      "The cosmic energy from that mark is stronger than any anomaly I've felt. You need help, Peachy!",
+      "I tried doing a magic trick to cheer you up, but the cards turned purple near you. That mark is powerful.",
+      "That mark has a darkness I can feel even through my plushy fabric. Please be careful, Peachy."
     ] : [])
   ];
   }
@@ -1420,6 +1467,11 @@ class Boutique {
     if (images.normal) {
       images.normal.style.display = 'block';
     }
+    
+    // Notify quest system about character display update
+    if (typeof window.onLepreCharacterDisplayUpdate === 'function') {
+      window.onLepreCharacterDisplayUpdate();
+    }
   }
 
   // Clear current speech and reset state
@@ -1451,6 +1503,11 @@ class Boutique {
     }
     
     this.isSpeaking = false;
+    
+    // Notify quest system about character display update
+    if (typeof window.onLepreCharacterDisplayUpdate === 'function') {
+      window.onLepreCharacterDisplayUpdate();
+    }
   }
 
   // Generic function to show Lepre speech (now properly handles interruption)
@@ -1475,6 +1532,11 @@ class Boutique {
       // Hide all images first, then show the appropriate speaking image
       this.hideAllLepreImages();
       speakingImage.style.display = 'block';
+      
+      // Notify quest system about character display update
+      if (typeof window.onLepreCharacterDisplayUpdate === 'function') {
+        window.onLepreCharacterDisplayUpdate();
+      }
       
       // Create or update speech bubble using the same style as other characters
       let speechBubble = document.getElementById('lepreSpeechBubble');
@@ -1714,6 +1776,9 @@ class Boutique {
       }
     }
 
+    // Reset token challenge cooldown on restock
+    this.tokenChallengeUsedSinceRestock = false;
+    this.updateTokenChallengeButtonVisibility();
   }
 
   getRandomItems(array, count) {
@@ -1878,6 +1943,11 @@ class Boutique {
     // Track for KitoFox Challenge 2 quest
     if (typeof window.trackKitoFox2LepreShopPurchase === 'function') {
       window.trackKitoFox2LepreShopPurchase();
+    }
+    
+    // Track for Lepre quests
+    if (typeof window.trackLepreShopPurchase === 'function') {
+      window.trackLepreShopPurchase(itemId, 1);
     }
 
     // Check for secret achievement - buying while Lepre is very mad
@@ -2266,28 +2336,35 @@ class Boutique {
         window.state.batteries = new Decimal(window.state.batteries);
       }
       window.state.batteries = window.state.batteries.add(quantity);
-    } else if (tokenType === 'berryPlate') {
+    } else if (tokenType === 'swabucks') {
+      if (!window.state.swabucks) {
+        window.state.swabucks = new Decimal(0);
+      } else if (!DecimalUtils.isDecimal(window.state.swabucks)) {
+        window.state.swabucks = new Decimal(window.state.swabucks);
+      }
+      window.state.swabucks = window.state.swabucks.add(quantity);
+    } else if (tokenType === 'berryPlate' || tokenType === 'berryplate') {
       if (!window.state.berryPlate) {
         window.state.berryPlate = new Decimal(0);
       } else if (!DecimalUtils.isDecimal(window.state.berryPlate)) {
         window.state.berryPlate = new Decimal(window.state.berryPlate);
       }
       window.state.berryPlate = window.state.berryPlate.add(quantity);
-    } else if (tokenType === 'mushroomSoup') {
+    } else if (tokenType === 'mushroomSoup' || tokenType === 'mushroomsoup') {
       if (!window.state.mushroomSoup) {
         window.state.mushroomSoup = new Decimal(0);
       } else if (!DecimalUtils.isDecimal(window.state.mushroomSoup)) {
         window.state.mushroomSoup = new Decimal(window.state.mushroomSoup);
       }
       window.state.mushroomSoup = window.state.mushroomSoup.add(quantity);
-    } else if (tokenType === 'glitteringPetals') {
+    } else if (tokenType === 'glitteringPetals' || tokenType === 'glitteringpetals') {
       if (!window.state.glitteringPetals) {
         window.state.glitteringPetals = new Decimal(0);
       } else if (!DecimalUtils.isDecimal(window.state.glitteringPetals)) {
         window.state.glitteringPetals = new Decimal(window.state.glitteringPetals);
       }
       window.state.glitteringPetals = window.state.glitteringPetals.add(quantity);
-    } else if (tokenType === 'chargedPrisma') {
+    } else if (tokenType === 'chargedPrisma' || tokenType === 'chargedprisma') {
       if (!window.state.chargedPrisma) {
         window.state.chargedPrisma = new Decimal(0);
       } else if (!DecimalUtils.isDecimal(window.state.chargedPrisma)) {
@@ -2403,6 +2480,9 @@ class Boutique {
       window.updateHalloweenLepreImages();
     }
     
+    // Update token challenge button visibility
+    this.updateTokenChallengeButtonVisibility();
+    
     // Show Lepre greeting on first visit
     this.showLepreGreeting();
 
@@ -2419,6 +2499,7 @@ class Boutique {
       const canAfford = this.canAfford(item.id);
       const stockRemaining = this.getStockRemaining(item.id);
       const isOutOfStock = stockRemaining <= 0;
+      const isAlreadyUnlocked = item.unlockable && item.isUnlocked && item.isUnlocked();
 
       const itemElement = document.createElement('div');
       itemElement.className = `boutique-item ${item.category}`;
@@ -2449,11 +2530,12 @@ class Boutique {
             <img src="assets/icons/swa buck.png" alt="Swa Bucks" class="currency-icon"> ${price}
           </span>
           <button 
-            class="boutique-buy-btn ${(!canAfford || isOutOfStock) ? 'disabled' : ''}" 
+            class="boutique-buy-btn ${(!canAfford || isOutOfStock || isAlreadyUnlocked) ? 'disabled' : ''}" 
             onclick="window.boutique.purchaseItem('${item.id}')"
-            ${(!canAfford || isOutOfStock) ? 'disabled' : ''}
+            ${(!canAfford || isOutOfStock || isAlreadyUnlocked) ? 'disabled' : ''}
+            ${isAlreadyUnlocked ? 'style="background-color: #4CAF50; color: white;"' : ''}
           >
-            ${isOutOfStock ? 'Sold Out' : 'Buy'}
+            ${isOutOfStock ? 'Sold Out' : isAlreadyUnlocked ? 'Bought' : 'Buy'}
           </button>
         </div>
       `;
@@ -2585,6 +2667,51 @@ class Boutique {
     this.updateFreeBucksButton();
     // Update the Lepre angry warning
     this.updateLepreAngryWarning();
+    // Update token challenge button visibility
+    this.updateTokenChallengeButtonVisibility();
+    // Update token challenge PB display
+    this.updateTokenChallengePBDisplay();
+  }
+
+  // Check if lepre quest 5 is completed to show token challenge button
+  isLepreQuest5Completed() {
+    if (!window.state || !window.state.questSystem || !window.state.questSystem.completedQuests) {
+      return false;
+    }
+    return window.state.questSystem.completedQuests.includes('lepre_quest_5');
+  }
+
+  // Update token challenge button visibility based on lepre quest 5 completion
+  updateTokenChallengeButtonVisibility() {
+    const tokenChallengeBtn = document.getElementById('boutiqueMinigameBtn');
+    if (!tokenChallengeBtn) return;
+
+    if (this.isLepreQuest5Completed()) {
+      tokenChallengeBtn.style.display = 'block';
+      
+      // Check if challenge is on cooldown
+      if (this.tokenChallengeUsedSinceRestock) {
+        tokenChallengeBtn.disabled = true;
+        tokenChallengeBtn.textContent = 'On cooldown (Resets on Restock)';
+        tokenChallengeBtn.style.backgroundColor = '#666';
+        tokenChallengeBtn.style.cursor = 'not-allowed';
+      } else {
+        tokenChallengeBtn.disabled = false;
+        tokenChallengeBtn.textContent = 'Token Sorting Challenge';
+        tokenChallengeBtn.style.backgroundColor = '';
+        tokenChallengeBtn.style.cursor = 'pointer';
+      }
+      
+      // Update PB display when button becomes visible
+      this.updateTokenChallengePBDisplay();
+    } else {
+      tokenChallengeBtn.style.display = 'none';
+      // Hide PB display when button is hidden
+      const pbDisplay = document.getElementById('tokenChallengePBDisplay');
+      if (pbDisplay) {
+        pbDisplay.style.display = 'none';
+      }
+    }
   }
 
   // Initialize boutique button visibility based on all requirements
@@ -2667,6 +2794,16 @@ class Boutique {
     this.updateFreeBucksButton();
     this.updateCurrencyDisplay();
     
+    // Track for Lepre quests
+    if (typeof window.trackLepreFreeBucksClaim === 'function') {
+      window.trackLepreFreeBucksClaim();
+    }
+    
+    // Also track for Lepre Quest 5 (uses different objective name)
+    if (typeof window.trackFreeSwaCollection === 'function') {
+      window.trackFreeSwaCollection(1);
+    }
+    
     // Save game
     if (typeof saveGame === 'function') {
       saveGame();
@@ -2717,7 +2854,10 @@ class Boutique {
       isBoutiqueClosed: this.isBoutiqueClosed,
       isLepreGone: this.isLepreGone,
       // Save anomaly sequence state
-      isIn727AnomalySequence: this.isIn727AnomalySequence
+      isIn727AnomalySequence: this.isIn727AnomalySequence,
+      // Save token challenge cooldown state
+      tokenChallengeLastUsed: this.tokenChallengeLastUsed,
+      tokenChallengeUsedSinceRestock: this.tokenChallengeUsedSinceRestock
     };
   }
 
@@ -2755,6 +2895,10 @@ class Boutique {
       
       // Load anomaly sequence state (should usually be false when loading)
       if (data.isIn727AnomalySequence !== undefined) this.isIn727AnomalySequence = data.isIn727AnomalySequence;
+      
+      // Load token challenge cooldown state
+      if (data.tokenChallengeLastUsed !== undefined) this.tokenChallengeLastUsed = data.tokenChallengeLastUsed;
+      if (data.tokenChallengeUsedSinceRestock !== undefined) this.tokenChallengeUsedSinceRestock = data.tokenChallengeUsedSinceRestock;
       
       // Check schedule after loading to update state based on current time
       this.checkBoutiqueSchedule();
@@ -2806,6 +2950,1351 @@ class Boutique {
     }
   }
 
+  // Token Challenge Modal System - drag and drop token sorting minigame
+  openTokenMinigame() {
+    // Check if challenge is on cooldown
+    if (this.tokenChallengeUsedSinceRestock) {
+      this.showMessage('Token Challenge is on cooldown until the next shop restock!', 'info');
+      return;
+    }
+    
+    // Remove any existing modal first
+    const existingModal = document.getElementById('tokenMinigameModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Create modal dynamically like power generator challenge
+    const modal = document.createElement('div');
+    modal.id = 'tokenMinigameModal';
+    modal.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #BBDEFB; border: 3px solid #00bcd4; border-radius: 15px; padding: 25px; max-width: 450px; width: 90%; color: #333; text-align: center;">
+          <h2 style="color: #FF6B35; margin: 0 0 15px 0;">Token Challenge</h2>
+          <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left;">
+            <p style="margin: 0 0 10px 0;"><strong>Goal:</strong> Drag the token into the respective slot to earn a point, each 10 points gives an extra 10 seconds.</p>
+            <p style="margin: 0;"><strong>Rewards:</strong> Earn tokens based on your performance. Higher scores give better rewards!</p>
+          </div>
+          <button onclick="window.boutique.startTokenChallenge();" style="background: #27ae60; border: none; color: white; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">Start</button>
+          <button onclick="document.getElementById('tokenMinigameModal').remove();" style="background: #e74c3c; border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  }
+
+  // Start the token challenge minigame
+  startTokenChallenge() {
+    // Set cooldown flag - once started, cannot be used again until restock
+    this.tokenChallengeUsedSinceRestock = true;
+    this.tokenChallengeLastUsed = Date.now();
+    
+    // Remove the intro modal
+    const introModal = document.getElementById('tokenMinigameModal');
+    if (introModal) {
+      introModal.remove();
+    }
+
+    // Roll new scores for all characters when player starts a challenge
+    this.rollCharacterTokenChallengeScores();
+
+    // Initialize game state
+    this.tokenChallenge = {
+      isActive: true,
+      score: 0,
+      timeLeft: 60,
+      countdownPhase: 3,
+      gameTimer: null,
+      countdownTimer: null,
+      currentToken: null,
+      tokenTypes: ['berries', 'sparks', 'petals', 'mushroom', 'water', 'prisma', 'stardust', 'swabucks'],
+      availableSlots: ['sparks', 'petals', 'prisma', 'stardust'], // Available slots in positions 2,3,6,7
+      allSlots: ['berries', 'sparks', 'petals', 'mushroom', 'water', 'prisma', 'stardust', 'swabucks'], // Positions 1,2,3,4,5,6,7,8
+      slotsUnlocked: false,
+      intermissionShown: false,
+      tokenQueue: []
+    };
+
+    // Create the game modal
+    const gameModal = document.createElement('div');
+    gameModal.id = 'tokenChallengeGameModal';
+    gameModal.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center;">
+        <div style="background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border: 4px solid #1e90ff; border-radius: 20px; padding: 30px; width: 90%; max-width: 1000px; height: 80%; max-height: 700px; color: #333; display: flex; flex-direction: column;">
+          
+          <!-- Header with score and timer -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px 20px; background: rgba(255,255,255,0.8); border-radius: 10px;">
+            <div style="font-size: 20px; font-weight: bold; color: #1e90ff;">Score: <span id="challengeScore">0</span></div>
+            <div id="challengeCountdown" style="font-size: 48px; font-weight: bold; color: #ff4444;">3</div>
+            <div style="font-size: 20px; font-weight: bold; color: #ff6600;">Time: <span id="challengeTimer">60</span>s</div>
+          </div>
+
+          <!-- Token slots area -->
+          <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 20px;">
+            <div id="tokenSlots" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px; background: rgba(255,255,255,0.6); border-radius: 15px; flex: 1; justify-items: center; align-items: center;">
+              <!-- Token slots will be generated here -->
+            </div>
+          </div>
+
+          <!-- Draggable token area -->
+          <div style="background: rgba(255,255,255,0.6); border-radius: 15px; padding: 20px;">
+            <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #1e90ff; text-align: center;">Drag This Token</div>
+            <div style="display: flex; align-items: center; min-height: 80px; position: relative;">
+              <!-- Token lineup positioned to the left of center -->
+              <div style="position: absolute; left: 15%; display: flex; flex-direction: column; align-items: center;">
+                <div id="nextTokensLabel" style="font-size: 14px; margin-bottom: 10px; color: #666; display: none;">Next Tokens</div>
+                <div id="tokenLineup" style="display: flex; gap: 15px;">
+                  <!-- Upcoming tokens will appear here -->
+                </div>
+              </div>
+              <!-- Current token perfectly centered in the container -->
+              <div id="draggableTokenArea" style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                <!-- Current token to drag will appear here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- End challenge early button -->
+          <div style="text-align: center; margin-top: 15px;">
+            <button onclick="window.boutique.endTokenChallengeEarly();" style="background: #e74c3c; border: none; color: white; padding: 10px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.2s; width: 100%;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">End Challenge Early</button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(gameModal);
+
+    // Create token slots
+    this.createTokenSlots();
+    
+    // Start countdown
+    this.startCountdown();
+    
+    // Update button to show disabled state immediately
+    this.updateTokenChallengeButtonVisibility();
+  }
+
+  // Create the token slots (4 center slots initially, all 8 after 20 points)
+  createTokenSlots() {
+    const slotsContainer = document.getElementById('tokenSlots');
+    const allSlots = this.tokenChallenge.allSlots;
+    const availableSlots = this.tokenChallenge.availableSlots;
+    
+    slotsContainer.innerHTML = '';
+    
+    // Always maintain 4x2 grid layout
+    slotsContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    slotsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
+    
+    allSlots.forEach(tokenType => {
+      const isAvailable = availableSlots.includes(tokenType);
+      const slot = document.createElement('div');
+      slot.className = 'token-slot';
+      slot.dataset.tokenType = tokenType;
+      
+      const getTokenImageName = (type) => {
+        switch(type) {
+          case 'prisma': return 'prisma token';
+          case 'mushroom': return 'mushroom token';
+          case 'sparks': return 'spark token';
+          case 'petals': return 'petal token';
+          case 'water': return 'water token';
+          case 'stardust': return 'stardust token';
+          case 'swabucks': return 'Swa buck';
+          default: return 'berry token';
+        }
+      };
+      
+      const slotInner = document.createElement('div');
+      
+      if (isAvailable) {
+        // Available slot styling
+        slotInner.style.cssText = 'width: 100px; height: 100px; border: 3px dashed #1e90ff; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); transition: all 0.3s ease;';
+        slotInner.innerHTML = `
+          <img src="assets/icons/${getTokenImageName(tokenType)}.png" style="width: 40px; height: 40px; margin-bottom: 5px; opacity: 0.6;">
+          <div style="font-size: 11px; font-weight: bold; text-transform: capitalize; color: #666;">${tokenType === 'swabucks' ? 'Swa Bucks' : tokenType}</div>
+        `;
+        
+        // Add drag over and drop event listeners to available slots
+        slot.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          slotInner.style.background = 'rgba(30, 144, 255, 0.2)';
+          slotInner.style.transform = 'scale(1.05)';
+        });
+        
+        slot.addEventListener('dragleave', (e) => {
+          slotInner.style.background = 'rgba(255,255,255,0.8)';
+          slotInner.style.transform = 'scale(1)';
+        });
+        
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slotInner.style.background = 'rgba(255,255,255,0.8)';
+          slotInner.style.transform = 'scale(1)';
+          
+          const draggedTokenType = e.dataTransfer.getData('text/plain');
+          // Use the original slot position (before scrambling) until after intermission
+          this.handleTokenDrop(draggedTokenType, tokenType);
+        });
+      } else {
+        // Locked slot styling
+        slotInner.style.cssText = 'width: 100px; height: 100px; border: 3px dashed #ccc; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(200,200,200,0.4); transition: all 0.3s ease; opacity: 0.5;';
+        slotInner.innerHTML = ``;
+      }
+      
+      slot.appendChild(slotInner);
+      slot.style.cssText = 'width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;';
+      
+      slotsContainer.appendChild(slot);
+    });
+  }
+
+  // Start the 3-second countdown
+  startCountdown() {
+    const countdownElement = document.getElementById('challengeCountdown');
+    
+    this.tokenChallenge.countdownTimer = setInterval(() => {
+      countdownElement.textContent = this.tokenChallenge.countdownPhase;
+      countdownElement.style.color = '#ff4444';
+      countdownElement.style.fontSize = '48px';
+      
+      this.tokenChallenge.countdownPhase--;
+      
+      if (this.tokenChallenge.countdownPhase < 0) {
+        clearInterval(this.tokenChallenge.countdownTimer);
+        countdownElement.style.display = 'none';
+        this.startGame();
+      }
+    }, 1000);
+  }
+
+  // Start the actual game after countdown
+  startGame() {
+    // Show the "Next Tokens" text now that the game is starting
+    const nextTokensLabel = document.getElementById('nextTokensLabel');
+    if (nextTokensLabel) {
+      nextTokensLabel.style.display = 'block';
+    }
+    
+    // Start the main game timer
+    this.tokenChallenge.gameTimer = setInterval(() => {
+      this.tokenChallenge.timeLeft--;
+      document.getElementById('challengeTimer').textContent = this.tokenChallenge.timeLeft;
+      
+      if (this.tokenChallenge.timeLeft <= 0) {
+        this.endTokenChallenge();
+      }
+    }, 1000);
+    
+    // Spawn first token
+    this.spawnNewToken();
+  }
+
+  // Spawn a new random token to drag
+  spawnNewToken() {
+    // Initialize token queue if empty
+    if (this.tokenChallenge.tokenQueue.length === 0) {
+      this.generateTokenQueue();
+    }
+    
+    // Get next token from queue
+    const nextToken = this.tokenChallenge.tokenQueue.shift();
+    this.tokenChallenge.currentToken = nextToken;
+    
+    // Refill queue if getting low
+    if (this.tokenChallenge.tokenQueue.length < 3) {
+      this.generateTokenQueue();
+    }
+    
+    // Update current token display
+    this.updateCurrentTokenDisplay();
+    
+    // Update lineup display
+    this.updateTokenLineup();
+  }
+
+  // Generate a batch of random tokens for the queue
+  generateTokenQueue() {
+    for (let i = 0; i < 5; i++) {
+      // Use available slots before 20 points, all token types after
+      const tokenPool = this.tokenChallenge.score < 20 ? this.tokenChallenge.availableSlots : this.tokenChallenge.tokenTypes;
+      const randomTokenType = tokenPool[Math.floor(Math.random() * tokenPool.length)];
+      this.tokenChallenge.tokenQueue.push(randomTokenType);
+    }
+  }
+
+  // Update the current draggable token display
+  updateCurrentTokenDisplay() {
+    const tokenArea = document.getElementById('draggableTokenArea');
+    const currentToken = this.tokenChallenge.currentToken;
+    
+    // Check if score is 50 or higher for mystery mode
+    if (this.tokenChallenge.score >= 50) {
+      // Show black circle with white question mark
+      tokenArea.innerHTML = `
+        <div draggable="true" style="width: 80px; height: 80px; background: #000000; border: 3px solid #1e90ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" 
+             onmousedown="this.style.cursor='grabbing'; this.style.transform='scale(0.95)'" 
+             onmouseup="this.style.cursor='grab'; this.style.transform='scale(1)'"
+             ondragstart="
+               event.dataTransfer.setData('text/plain', '${currentToken}');
+               // Center the drag image with the cursor
+               const rect = this.getBoundingClientRect();
+               const offsetX = rect.width / 2;
+               const offsetY = rect.height / 2;
+               event.dataTransfer.setDragImage(this, offsetX, offsetY);
+             ">
+          <span style="color: white; font-size: 40px; font-weight: bold; font-family: Arial, sans-serif;">?</span>
+        </div>
+      `;
+    } else {
+      // Normal token display for scores below 50
+      const getTokenImageName = (type) => {
+        switch(type) {
+          case 'prisma': return 'prisma token';
+          case 'mushroom': return 'mushroom token';
+          case 'sparks': return 'spark token';
+          case 'petals': return 'petal token';
+          case 'water': return 'water token';
+          case 'stardust': return 'stardust token';
+          case 'swabucks': return 'Swa buck';
+          default: return 'berry token';
+        }
+      };
+      
+      const tokenImageName = getTokenImageName(currentToken);
+      
+      tokenArea.innerHTML = `
+        <div draggable="true" style="width: 80px; height: 80px; background: rgba(255,255,255,0.9); border: 3px solid #1e90ff; border-radius: 15px; display: flex; align-items: center; justify-content: center; cursor: grab; transition: transform 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" 
+             onmousedown="this.style.cursor='grabbing'; this.style.transform='scale(0.95)'" 
+             onmouseup="this.style.cursor='grab'; this.style.transform='scale(1)'"
+             ondragstart="
+               event.dataTransfer.setData('text/plain', '${currentToken}');
+               // Center the drag image with the cursor
+               const rect = this.getBoundingClientRect();
+               const offsetX = rect.width / 2;
+               const offsetY = rect.height / 2;
+               event.dataTransfer.setDragImage(this, offsetX, offsetY);
+             ">
+          <img src="assets/icons/${tokenImageName}.png" style="width: 55px; height: 55px;">
+        </div>
+      `;
+    }
+  }
+
+  // Update the token lineup display
+  updateTokenLineup() {
+    const lineupArea = document.getElementById('tokenLineup');
+    const upcomingTokens = this.tokenChallenge.tokenQueue.slice(0, 3).reverse(); // Show next 3 tokens in reverse order
+    
+    const getTokenImageName = (type) => {
+      switch(type) {
+        case 'prisma': return 'prisma token';
+        case 'mushroom': return 'mushroom token';
+        case 'sparks': return 'spark token';
+        case 'petals': return 'petal token';
+        case 'water': return 'water token';
+        case 'stardust': return 'stardust token';
+        case 'swabucks': return 'Swa buck';
+        default: return 'berry token';
+      }
+    };
+    
+    lineupArea.innerHTML = '';
+    
+    upcomingTokens.forEach((tokenType, index) => {
+      const tokenElement = document.createElement('div');
+      
+      // Check for mystery mode based on score and token position (array is now reversed)
+      // index 0 = 3rd future token, index 1 = 2nd future token, index 2 = next token
+      const shouldShowMystery = (index === 2 && this.tokenChallenge.score >= 100) || 
+                               (index === 1 && this.tokenChallenge.score >= 150);
+      
+      if (shouldShowMystery) {
+        // Show black mystery circle for tokens that should be hidden
+        tokenElement.innerHTML = `
+          <div style="width: 60px; height: 60px; background: #000000; border: 3px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: ${0.5 + index * 0.25};">
+            <span style="color: white; font-size: 24px; font-weight: bold; font-family: Arial, sans-serif;">?</span>
+          </div>
+        `;
+      } else {
+        // Normal token display
+        const tokenImageName = getTokenImageName(tokenType);
+        tokenElement.innerHTML = `
+          <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.7); border: 3px solid #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; opacity: ${0.5 + index * 0.25};">
+            <img src="assets/icons/${tokenImageName}.png" style="width: 45px; height: 45px;">
+          </div>
+        `;
+      }
+      
+      lineupArea.appendChild(tokenElement);
+    });
+  }
+
+  // Handle when a token is dropped on a slot
+  handleTokenDrop(draggedTokenType, slotTokenType) {
+    if (!this.tokenChallenge.isActive) return;
+    
+    if (draggedTokenType === slotTokenType) {
+      // Correct match!
+      this.tokenChallenge.score++;
+      document.getElementById('challengeScore').textContent = this.tokenChallenge.score;
+      
+      // Check for style changes based on score milestones
+      this.updateChallengeStyle();
+      
+      // Check if we need to unlock all slots at 20 points
+      if (this.tokenChallenge.score === 20 && !this.tokenChallenge.slotsUnlocked) {
+        this.unlockAllSlots();
+      }
+      
+      // Check for intermission at 80 points
+      if (this.tokenChallenge.score === 80 && !this.tokenChallenge.intermissionShown) {
+        // Add slight delay to ensure any previous scramble animations are complete
+        setTimeout(() => {
+          this.startIntermission();
+        }, 100);
+        return; // Don't continue with other score checks during intermission
+      }
+      
+      // Check for bonus time (every 10 points = 10 extra seconds)
+      if (this.tokenChallenge.score % 10 === 0) {
+        this.tokenChallenge.timeLeft += 10;
+        document.getElementById('challengeTimer').textContent = this.tokenChallenge.timeLeft;
+        
+        // Show bonus time visual feedback
+        this.showBonusTimeEffect();
+        
+        // Scramble 3 random slots after 30 points (every 10 points)
+        if (this.tokenChallenge.score >= 30) {
+          this.scrambleRandomSlots();
+        }
+      }
+      
+      // Show success visual feedback
+      this.showSuccessEffect(slotTokenType);
+      
+    } else {
+      // Wrong match - lose 3 seconds
+      this.tokenChallenge.timeLeft = Math.max(0, this.tokenChallenge.timeLeft - 3);
+      document.getElementById('challengeTimer').textContent = this.tokenChallenge.timeLeft;
+      
+      // Show penalty visual feedback
+      this.showPenaltyEffect(slotTokenType);
+      
+      // Show time penalty popup
+      this.showTimePenaltyEffect();
+    }
+    
+    // Spawn new token regardless of correct/incorrect
+    this.spawnNewToken();
+    
+    // Check if time ran out due to penalty
+    if (this.tokenChallenge.timeLeft <= 0) {
+      this.endTokenChallenge();
+    }
+  }
+
+  // Unlock all 8 slots when reaching 20 points
+  unlockAllSlots() {
+    this.tokenChallenge.slotsUnlocked = true;
+    this.tokenChallenge.availableSlots = this.tokenChallenge.allSlots;
+    
+    // Recreate slots with all 8 available
+    this.createTokenSlots();
+  }
+
+  // Scramble 3 random token slots (after 30 points, every 10 points)
+  scrambleRandomSlots() {
+    // Read current slot positions from DOM
+    const allSlotElements = document.querySelectorAll('#tokenSlots .token-slot');
+    const currentSlots = [];
+    
+    allSlotElements.forEach(slotElement => {
+      const tokenType = slotElement.dataset.tokenType;
+      if (tokenType) {
+        currentSlots.push(tokenType);
+      }
+    });
+    
+    if (currentSlots.length !== 8) return; // Safety check
+    
+    // Select 3 random positions to scramble
+    const positionsToScramble = [];
+    const availablePositions = [...Array(8).keys()]; // [0,1,2,3,4,5,6,7]
+    
+    for (let i = 0; i < 3; i++) {
+      const randomIndex = Math.floor(Math.random() * availablePositions.length);
+      const selectedPosition = availablePositions.splice(randomIndex, 1)[0];
+      positionsToScramble.push(selectedPosition);
+    }
+    
+    // Get the token types at these positions
+    const tokensToScramble = positionsToScramble.map(pos => currentSlots[pos]);
+    
+    // Ensure tokens actually change positions (no token stays in same place)
+    const shuffledTokens = this.guaranteedScramble(tokensToScramble);
+    
+    // Apply visual scramble effect
+    this.showScrambleEffect(tokensToScramble);
+    
+    // Wait for animation then apply the actual scramble
+    setTimeout(() => {
+      this.applyPositionScramble(positionsToScramble, shuffledTokens);
+    }, 1000);
+  }
+
+  // Show visual feedback for slot scrambling
+  showScrambleEffect(scrambledSlots) {
+    // Show text notification in score section
+    this.showScrambleNotification();
+    
+    // Apply scramble visual effect to slots
+    scrambledSlots.forEach(slotType => {
+      const slot = document.querySelector(`[data-token-type="${slotType}"]`);
+      if (slot) {
+        const slotInner = slot.firstChild;
+        // Add spinning animation
+        slotInner.style.transition = 'transform 1s ease-in-out';
+        slotInner.style.transform = 'rotate(720deg) scale(1.1)';
+        
+        // Reset after animation
+        setTimeout(() => {
+          slotInner.style.transform = 'rotate(0deg) scale(1)';
+          slotInner.style.transition = 'all 0.3s ease';
+        }, 1000);
+      }
+    });
+  }
+
+  // Show scramble notification text in the score section
+  showScrambleNotification() {
+    // Target the header section that contains score and timer
+    const headerSection = document.querySelector('#tokenChallengeGameModal div[style*="justify-content: space-between"]');
+    
+    if (headerSection) {
+      // Create notification text element
+      const notification = document.createElement('div');
+      notification.innerHTML = 'Lepre scrambled the token slots';
+      notification.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; font-weight: bold; color: #e74c3c; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 8px; z-index: 10; opacity: 0; transition: opacity 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
+      
+      headerSection.style.position = 'relative';
+      headerSection.appendChild(notification);
+      
+      // Fade in
+      setTimeout(() => {
+        notification.style.opacity = '1';
+      }, 10);
+      
+      // Fade out and remove
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 2000);
+    }
+  }
+
+  // Apply the actual slot scrambling by updating specific positions
+  applyPositionScramble(positions, newTokenTypes) {
+    const allSlotElements = document.querySelectorAll('#tokenSlots .token-slot');
+    
+    const getTokenImageName = (type) => {
+      switch(type) {
+        case 'prisma': return 'prisma token';
+        case 'mushroom': return 'mushroom token';
+        case 'sparks': return 'spark token';
+        case 'petals': return 'petal token';
+        case 'water': return 'water token';
+        case 'stardust': return 'stardust token';
+        case 'swabucks': return 'Swa buck';
+        default: return 'berry token';
+      }
+    };
+    
+    positions.forEach((position, index) => {
+      const slot = allSlotElements[position];
+      const newTokenType = newTokenTypes[index];
+      
+      if (slot && newTokenType) {
+        // Update the slot's token type
+        slot.dataset.tokenType = newTokenType;
+        
+        // Update the visual content
+        const slotInner = slot.firstChild;
+        if (slotInner) {
+          slotInner.innerHTML = `
+            <img src="assets/icons/${getTokenImageName(newTokenType)}.png" style="width: 40px; height: 40px; margin-bottom: 5px; opacity: 0.6;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: capitalize; color: #666;">${newTokenType === 'swabucks' ? 'Swa Bucks' : newTokenType}</div>
+          `;
+        }
+      }
+    });
+    
+    // Update the stored allSlots array to match the new DOM state
+    this.syncAllSlotsFromDOM();
+  }
+
+  // Synchronize the allSlots array with the current DOM state
+  syncAllSlotsFromDOM() {
+    const allSlotElements = document.querySelectorAll('#tokenSlots .token-slot');
+    const newSlotOrder = [];
+    
+    for (let i = 0; i < allSlotElements.length && i < 8; i++) {
+      const tokenType = allSlotElements[i].dataset.tokenType;
+      if (tokenType) {
+        newSlotOrder.push(tokenType);
+      }
+    }
+    
+    if (newSlotOrder.length === 8) {
+      this.tokenChallenge.allSlots = newSlotOrder;
+    }
+  }
+
+  // Update challenge styling based on score milestones
+  updateChallengeStyle() {
+    const modal = document.getElementById('tokenChallengeGameModal');
+    const mainContainer = modal?.querySelector('div[style*="background: linear-gradient"]');
+    
+    if (!mainContainer) return;
+    
+    if (this.tokenChallenge.score >= 80) {
+      // Special unlock shop token style (80+ points) - solid purple theme
+      mainContainer.style.background = 'linear-gradient(135deg, #2a1a3e, #1a0f2a)';
+      mainContainer.style.border = '4px solid #9C27B0';
+      mainContainer.style.boxShadow = '0 2px 8px rgba(156, 39, 176, 0.15)';
+    } else if (this.tokenChallenge.score >= 30) {
+      // Premium shop token style (30+ points) - solid orange theme
+      mainContainer.style.background = 'linear-gradient(135deg, #3d2a1a, #2a1a10)';
+      mainContainer.style.border = '4px solid #FF9800';
+      mainContainer.style.boxShadow = '';
+    } else {
+      // Default style (0-29 points)
+      mainContainer.style.background = 'linear-gradient(135deg, #f0f8ff, #e6f3ff)';
+      mainContainer.style.border = '4px solid #1e90ff';
+      mainContainer.style.boxShadow = '';
+    }
+  }
+
+  // Guaranteed scramble that ensures no token stays in the same position
+  guaranteedScramble(originalTokens) {
+    if (originalTokens.length <= 1) return [...originalTokens];
+    
+    let shuffled = [...originalTokens];
+    let attempts = 0;
+    const maxAttempts = 100; // Safety limit
+    
+    do {
+      // Fisher-Yates shuffle
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      attempts++;
+    } while (this.hasTokenInOriginalPosition(originalTokens, shuffled) && attempts < maxAttempts);
+    
+    // If we couldn't find a valid shuffle after many attempts, force at least one change
+    if (attempts >= maxAttempts) {
+      shuffled = this.forceTokenMovement(originalTokens);
+    }
+    
+    return shuffled;
+  }
+
+  // Check if any token is still in its original position
+  hasTokenInOriginalPosition(original, shuffled) {
+    for (let i = 0; i < original.length; i++) {
+      if (original[i] === shuffled[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Force at least some tokens to move by swapping pairs
+  forceTokenMovement(originalTokens) {
+    const result = [...originalTokens];
+    
+    // Simple approach: swap first two tokens, then rotate others if needed
+    if (result.length >= 2) {
+      [result[0], result[1]] = [result[1], result[0]];
+    }
+    
+    // If there are more than 2 tokens, do additional swaps to ensure more movement
+    if (result.length >= 4) {
+      [result[2], result[3]] = [result[3], result[2]];
+    }
+    
+    return result;
+  }
+
+  // Start intermission at 80 points
+  startIntermission() {
+    this.tokenChallenge.intermissionShown = true;
+    
+    // Pause the game timer
+    if (this.tokenChallenge.gameTimer) {
+      clearInterval(this.tokenChallenge.gameTimer);
+      this.tokenChallenge.gameTimer = null;
+    }
+    
+    // Create intermission overlay
+    const intermissionOverlay = document.createElement('div');
+    intermissionOverlay.id = 'intermissionOverlay';
+    intermissionOverlay.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10003; display: flex; align-items: center; justify-content: center;">
+        <div style="background: linear-gradient(135deg, #f0f8ff, #e6f3ff); border: 4px solid #1e90ff; border-radius: 20px; padding: 40px; max-width: 600px; text-align: center; color: #333;">
+          <h2 style="color: #1e90ff; margin-bottom: 20px; font-size: 24px;">Intermission</h2>
+          <p style="font-size: 18px; margin-bottom: 15px;">The slots have been scrambled multiple times!</p>
+          <p style="font-size: 16px; margin-bottom: 20px;">Memorize the current slot positions:</p>
+          
+          <div id="intermissionSlotLayout" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; justify-items: center;">
+            <!-- Slot layout will be shown here -->
+          </div>
+          
+          <div style="font-size: 20px; font-weight: bold; color: #e74c3c; margin-top: 20px;">
+            Continuing in: <span id="intermissionCountdown" style="font-size: 24px;">5</span>s
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(intermissionOverlay);
+    
+    // Show current slot layout
+    this.showIntermissionSlotLayout();
+    
+    // Start 5-second countdown
+    let countdown = 5;
+    const countdownElement = document.getElementById('intermissionCountdown');
+    
+    const countdownTimer = setInterval(() => {
+      countdown--;
+      if (countdownElement) {
+        countdownElement.textContent = countdown;
+      }
+      
+      if (countdown <= 0) {
+        clearInterval(countdownTimer);
+        this.endIntermission();
+      }
+    }, 1000);
+  }
+
+  // Show the current slot layout during intermission
+  showIntermissionSlotLayout() {
+    const layoutContainer = document.getElementById('intermissionSlotLayout');
+    if (!layoutContainer) return;
+    
+    // Sync the allSlots array with current DOM state before showing
+    this.syncAllSlotsFromDOM();
+    
+    // Read the current slot layout - should now be accurate
+    const currentSlots = [...this.tokenChallenge.allSlots];
+    
+    
+    // Use the synchronized slot order
+    const slotsToShow = currentSlots;
+    
+    
+    slotsToShow.forEach(tokenType => {
+      const slotDisplay = document.createElement('div');
+      
+      const getTokenImageName = (type) => {
+        switch(type) {
+          case 'prisma': return 'prisma token';
+          case 'mushroom': return 'mushroom token';
+          case 'sparks': return 'spark token';
+          case 'petals': return 'petal token';
+          case 'water': return 'water token';
+          case 'stardust': return 'stardust token';
+          case 'swabucks': return 'Swa buck';
+          default: return 'berry token';
+        }
+      };
+      
+      slotDisplay.innerHTML = `
+        <div style="width: 80px; height: 80px; border: 2px solid #1e90ff; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.9);">
+          <img src="assets/icons/${getTokenImageName(tokenType)}.png" style="width: 35px; height: 35px; margin-bottom: 3px;">
+          <div style="font-size: 10px; font-weight: bold; text-transform: capitalize; color: #666;">${tokenType === 'swabucks' ? 'Swa Bucks' : tokenType}</div>
+        </div>
+      `;
+      
+      layoutContainer.appendChild(slotDisplay);
+    });
+  }
+
+  // End intermission and resume game
+  endIntermission() {
+    const intermissionOverlay = document.getElementById('intermissionOverlay');
+    if (intermissionOverlay) {
+      intermissionOverlay.remove();
+    }
+    
+    // Update the base slot order to match current scrambled positions
+    this.updateBaseSlotOrder();
+    
+    // Recreate slots with the new scrambled layout as the correct positions
+    this.createTokenSlots();
+    
+    // Resume the game timer
+    this.tokenChallenge.gameTimer = setInterval(() => {
+      this.tokenChallenge.timeLeft--;
+      document.getElementById('challengeTimer').textContent = this.tokenChallenge.timeLeft;
+      
+      if (this.tokenChallenge.timeLeft <= 0) {
+        this.endTokenChallenge();
+      }
+    }, 1000);
+  }
+
+  // Update the base slot order to current positions (called after intermission)
+  updateBaseSlotOrder() {
+    // Read the current scrambled slot positions from the DOM in exact same way as intermission display
+    const allSlotElements = document.querySelectorAll('#tokenSlots .token-slot');
+    const currentSlots = [];
+    
+    // Read in visual order (left to right, top to bottom) - same as intermission display
+    for (let i = 0; i < allSlotElements.length && i < 8; i++) {
+      const slotElement = allSlotElements[i];
+      const tokenType = slotElement.dataset.tokenType;
+      if (tokenType && tokenType !== 'unknown') {
+        currentSlots.push(tokenType);
+      }
+    }
+    
+    // Update the base slot order if we successfully read 8 slots
+    if (currentSlots.length === 8) {
+      this.tokenChallenge.allSlots = [...currentSlots];
+      this.tokenChallenge.availableSlots = [...currentSlots];
+    }
+  }
+
+  // Show visual feedback for correct matches
+  showSuccessEffect(slotType) {
+    const slot = document.querySelector(`[data-token-type="${slotType}"]`);
+    if (slot) {
+      const originalBg = slot.style.background;
+      slot.style.background = 'rgba(40, 180, 40, 0.7)';
+      slot.style.transform = 'scale(1.1)';
+      
+      setTimeout(() => {
+        slot.style.background = originalBg;
+        slot.style.transform = 'scale(1)';
+      }, 500);
+    }
+  }
+
+  // Show visual feedback for wrong matches
+  showPenaltyEffect(slotType) {
+    const slot = document.querySelector(`[data-token-type="${slotType}"]`);
+    if (slot) {
+      const originalBg = slot.style.background;
+      slot.style.background = 'rgba(255, 70, 70, 0.7)';
+      slot.style.transform = 'scale(1.1)';
+      
+      setTimeout(() => {
+        slot.style.background = originalBg;
+        slot.style.transform = 'scale(1)';
+      }, 500);
+    }
+  }
+
+  // Show bonus time visual effect
+  showBonusTimeEffect() {
+    const timerElement = document.getElementById('challengeTimer');
+    const originalColor = timerElement.style.color;
+    timerElement.style.color = '#00ff00';
+    timerElement.style.fontSize = '28px';
+    timerElement.style.fontWeight = 'bold';
+    
+    // Create +10 seconds popup
+    this.showTimePopup('+10s', '#00ff00', timerElement);
+    
+    setTimeout(() => {
+      timerElement.style.color = originalColor;
+      timerElement.style.fontSize = '20px';
+    }, 1000);
+  }
+
+  // Show time penalty visual effect
+  showTimePenaltyEffect() {
+    const timerElement = document.getElementById('challengeTimer');
+    const originalColor = timerElement.style.color;
+    timerElement.style.color = '#ff0000';
+    timerElement.style.fontSize = '28px';
+    timerElement.style.fontWeight = 'bold';
+    
+    // Create -3 seconds popup
+    this.showTimePopup('-3s', '#ff0000', timerElement);
+    
+    setTimeout(() => {
+      timerElement.style.color = originalColor;
+      timerElement.style.fontSize = '20px';
+    }, 1000);
+  }
+
+  // Show animated time popup above timer
+  showTimePopup(text, color, timerElement) {
+    const popup = document.createElement('div');
+    popup.textContent = text;
+    popup.style.cssText = `
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: ${color};
+      font-size: 24px;
+      font-weight: bold;
+      pointer-events: none;
+      z-index: 10003;
+      animation: timePopupFloat 2s ease-out forwards;
+    `;
+    
+    // Add CSS animation if not already added
+    if (!document.getElementById('timePopupStyle')) {
+      const style = document.createElement('style');
+      style.id = 'timePopupStyle';
+      style.textContent = `
+        @keyframes timePopupFloat {
+          0% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0px) scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-20px) scale(1.2);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-40px) scale(1);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Position relative to timer element
+    timerElement.parentElement.style.position = 'relative';
+    timerElement.parentElement.appendChild(popup);
+    
+    // Remove popup after animation
+    setTimeout(() => {
+      if (popup.parentNode) {
+        popup.parentNode.removeChild(popup);
+      }
+    }, 2000);
+  }
+
+  // End the token challenge early (triggered by button)
+  endTokenChallengeEarly() {
+    if (!this.tokenChallenge.isActive) return;
+    
+    // End the challenge immediately without confirmation
+    this.endTokenChallenge();
+  }
+
+  // End the token challenge and show results
+  endTokenChallenge() {
+    if (!this.tokenChallenge.isActive) return;
+    
+    this.tokenChallenge.isActive = false;
+    
+    // Clear timers
+    if (this.tokenChallenge.gameTimer) {
+      clearInterval(this.tokenChallenge.gameTimer);
+    }
+    if (this.tokenChallenge.countdownTimer) {
+      clearInterval(this.tokenChallenge.countdownTimer);
+    }
+    
+    // Calculate rewards based on score
+    const score = this.tokenChallenge.score;
+    const rewards = this.calculateTokenChallengeRewards(score);
+    
+    // Check if this is a new personal best
+    const currentPB = this.getTokenChallengePB();
+    if (score > currentPB) {
+      this.setTokenChallengePB(score);
+      
+      // Store in window.state for trophy system
+      if (!window.state) window.state = {};
+      window.state.tokenChallengePersonalBest = score;
+    } else if (!window.state.tokenChallengePersonalBest) {
+      // Ensure the PB is stored in window.state for trophy system
+      window.state.tokenChallengePersonalBest = currentPB;
+    }
+    
+    // Check for token challenge trophies
+    if (typeof window.checkChallengeTrophy === 'function') {
+      window.checkChallengeTrophy('tokenChallenge');
+    }
+    
+    // Remove game modal
+    const gameModal = document.getElementById('tokenChallengeGameModal');
+    if (gameModal) {
+      gameModal.remove();
+    }
+    
+    // Show results modal
+    this.showTokenChallengeResults(score, rewards);
+  }
+
+  // Calculate token rewards based on score
+  calculateTokenChallengeRewards(score) {
+    const rewards = {};
+    const tokenTypes = ['berries', 'sparks', 'petals', 'mushroom', 'water', 'prisma', 'stardust', 'swabucks'];
+    const premiumTokens = ['berryplate', 'batteries', 'mushroomsoup', 'chargedprisma', 'glitteringpetals'];
+    
+    // Give 1 random token per 2 points scored
+    const numRewards = Math.floor(score / 2);
+    
+    if (numRewards > 0) {
+      // Initialize reward counters for regular tokens
+      for (const tokenType of tokenTypes) {
+        rewards[tokenType] = 0;
+      }
+      
+      // Initialize reward counters for premium tokens
+      for (const premiumToken of premiumTokens) {
+        rewards[premiumToken] = 0;
+      }
+      
+      // Award random tokens
+      for (let i = 0; i < numRewards; i++) {
+        // 3% chance for premium token, 97% chance for regular token
+        if (Math.random() < 0.03) {
+          // Award premium token
+          const randomPremiumToken = premiumTokens[Math.floor(Math.random() * premiumTokens.length)];
+          rewards[randomPremiumToken]++;
+        } else {
+          // Award regular token
+          const randomTokenType = tokenTypes[Math.floor(Math.random() * tokenTypes.length)];
+          rewards[randomTokenType]++;
+        }
+      }
+      
+      // Remove token types with 0 rewards for cleaner display
+      const allTokenTypes = [...tokenTypes, ...premiumTokens];
+      for (const tokenType of allTokenTypes) {
+        if (rewards[tokenType] === 0) {
+          delete rewards[tokenType];
+        }
+      }
+    }
+    
+    return rewards;
+  }
+
+  // Show the results modal with rewards
+  showTokenChallengeResults(score, rewards) {
+    const resultsModal = document.createElement('div');
+    resultsModal.id = 'tokenChallengeResultsModal';
+    
+    // Update personal best if this score is higher
+    const currentPB = this.getTokenChallengePB();
+    if (score > currentPB) {
+      this.setTokenChallengePB(score);
+    }
+    
+    // Map token types to display names
+    const tokenDisplayNames = {
+      'berries': 'Berries',
+      'sparks': 'Sparks',
+      'petals': 'Petals',
+      'mushroom': 'Mushroom',
+      'water': 'Water',
+      'prisma': 'Prisma',
+      'stardust': 'Stardust',
+      'swabucks': 'Swa Bucks',
+      'berryplate': 'Berry Plates',
+      'batteries': 'Batteries',
+      'mushroomsoup': 'Mushroom Soup',
+      'chargedprisma': 'Charged Prisma',
+      'glitteringpetals': 'Glittering Petals'
+    };
+
+    let rewardText = '';
+    if (Object.keys(rewards).length > 0) {
+      rewardText = '<div style="margin-top: 15px;"><strong>Rewards Earned:</strong><br>';
+      for (const [tokenType, amount] of Object.entries(rewards)) {
+        const displayName = tokenDisplayNames[tokenType] || tokenType.charAt(0).toUpperCase() + tokenType.slice(1);
+        const isPremium = ['berryplate', 'batteries', 'mushroomsoup', 'chargedprisma', 'glitteringpetals'].includes(tokenType);
+        const style = isPremium ? 'color: #ff6b35; font-weight: bold;' : '';
+        rewardText += `<div style="margin: 5px 0; ${style}">${amount} ${displayName}${isPremium ? ' ⭐' : ''}</div>`;
+      }
+      rewardText += '</div>';
+    } else {
+      rewardText = '<div style="margin-top: 15px; color: #888;">No rewards earned. Try again to get a better score!</div>';
+    }
+    
+    resultsModal.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10002; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #BBDEFB; border: 3px solid #00bcd4; border-radius: 15px; padding: 30px; max-width: 600px; width: 90%; color: #333; text-align: center;">
+          
+          <!-- Sub-tabs -->
+          <div style="display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden;">
+            <button id="tokenResultsTab" onclick="window.boutique.showTokenChallengeTab('results')" style="flex: 1; padding: 12px; background: #FFA500; border: none; color: white; font-weight: bold; cursor: pointer;">Results</button>
+            <button id="tokenLeaderboardTab" onclick="window.boutique.showTokenChallengeTab('leaderboard')" style="flex: 1; padding: 12px; background: #4a90e2; border: none; color: white; font-weight: bold; cursor: pointer;">Leaderboard</button>
+          </div>
+
+          <h2 style="color: #FF6B35; margin: 0 0 20px 0;">Challenge Complete!</h2>
+          
+          <!-- Results Content -->
+          <div id="tokenResultsContent">
+            <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <div style="font-size: 24px; font-weight: bold; color: #1e90ff; margin-bottom: 10px;">Final Score: ${score}</div>
+              ${rewardText}
+            </div>
+          </div>
+          
+          <!-- Leaderboard Content -->
+          <div id="tokenLeaderboardContent" style="display: none;">
+            <div style="background: rgba(255,255,255,0.7); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h3 style="color: #FF6B35; margin-bottom: 15px;">Leaderboard:</h3>
+              <div id="tokenLeaderboardList" style="text-align: left; max-height: 300px; overflow-y: auto;">
+                <!-- Leaderboard will be populated here -->
+              </div>
+            </div>
+          </div>
+          
+          <button onclick="window.boutique.claimTokenChallengeRewards(${JSON.stringify(rewards).replace(/"/g, '&quot;')}); document.getElementById('tokenChallengeResultsModal').remove();" style="background: #27ae60; border: none; color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%;">Claim Rewards</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(resultsModal);
+    
+    // Initialize the results tab and populate leaderboard
+    this.showTokenChallengeTab('results');
+    this.populateTokenChallengeLeaderboard();
+  }
+
+  // Switch between tabs in token challenge results modal
+  showTokenChallengeTab(tab) {
+    const resultsTab = document.getElementById('tokenResultsTab');
+    const leaderboardTab = document.getElementById('tokenLeaderboardTab');
+    const resultsContent = document.getElementById('tokenResultsContent');
+    const leaderboardContent = document.getElementById('tokenLeaderboardContent');
+    
+    if (tab === 'results') {
+      resultsTab.style.background = '#FFA500';
+      leaderboardTab.style.background = '#4a90e2';
+      resultsContent.style.display = 'block';
+      leaderboardContent.style.display = 'none';
+    } else if (tab === 'leaderboard') {
+      resultsTab.style.background = '#4a90e2';
+      leaderboardTab.style.background = '#FFA500';
+      resultsContent.style.display = 'none';
+      leaderboardContent.style.display = 'block';
+    }
+  }
+
+  // Roll new scores for all characters (called when player starts a challenge)
+  rollCharacterTokenChallengeScores() {
+    // Get current character PBs
+    const characterPBs = this.getCharacterTokenChallengePBs();
+
+    // Check if Fluzzer is currently boosted by glittering petals
+    const isFluzzerCurrentlyBoosted = window.state && window.state.fluzzerGlitteringPetalsBoost && window.state.fluzzerGlitteringPetalsBoost > 0;
+    
+    // Check if Fluzzer has ever achieved a boosted score (has a PB as "Fluzzer (Boosted)")
+    const hasFluzzerBoostedPB = characterPBs['Fluzzer (Boosted)'] && characterPBs['Fluzzer (Boosted)'] > 0;
+
+    // Generate new scores and update PBs if higher
+    const newScores = {
+      'Mystic': Math.floor(Math.random() * 21) + 130, // 130-150 pts
+      'Lepre': Math.floor(Math.random() * 21) + 80, // 80-100 pts
+      'Vivien': Math.floor(Math.random() * 21) + 70, // 70-90 pts
+      'Tico': Math.floor(Math.random() * 21) + 60, // 60-80 pts
+      'Soap': Math.floor(Math.random() * 21) + 50, // 50-70 pts
+      'Bijou': Math.floor(Math.random() * 21) + 65, // 65-85 pts
+    };
+
+    // Add Fluzzer based on boost status - once boosted score is achieved, permanently use boosted name
+    if (isFluzzerCurrentlyBoosted || hasFluzzerBoostedPB) {
+      newScores['Fluzzer (Boosted)'] = Math.floor(Math.random() * 41) + 80; // 80-120 pts
+    } else {
+      newScores['Fluzzer'] = Math.floor(Math.random() * 11) + 40; // 40-50 pts
+    }
+
+    // Add front desk workers with star-based performance ranges
+    if (window.frontDesk && window.frontDesk.assignedWorkers) {
+      Object.keys(window.frontDesk.assignedWorkers).forEach(slotId => {
+        const worker = window.frontDesk.assignedWorkers[slotId];
+        if (worker && worker.stars) {
+          // Use custom name if available, otherwise use default name
+          const workerName = worker.customName || worker.name || `Worker ${slotId}`;
+          
+          // Initialize worker PB tracking if not exists
+          const workerKey = `worker_${worker.id}`;
+          if (!window.state.characterChallengePBs[workerKey]) {
+            window.state.characterChallengePBs[workerKey] = 0;
+          }
+          
+          // Calculate performance based on star rating for Token Challenge
+          // 1 star = 20-45 pts, 2 star = 30-60 pts, 3 star = 40-70 pts, 4 star = 55-90 pts, 5 star = 70-100 pts
+          let baseTimeRange;
+          switch (worker.stars) {
+            case 1: baseTimeRange = { min: 20, max: 45 }; break;
+            case 2: baseTimeRange = { min: 30, max: 60 }; break;
+            case 3: baseTimeRange = { min: 40, max: 70 }; break;
+            case 4: baseTimeRange = { min: 55, max: 90 }; break;
+            case 5: baseTimeRange = { min: 70, max: 100 }; break;
+            default: baseTimeRange = { min: 20, max: 45 }; break;
+          }
+          
+          // Generate performance with scaling factor
+          const baseTime = baseTimeRange.min + Math.random() * (baseTimeRange.max - baseTimeRange.min);
+          const scaledTime = Math.floor(baseTime * 1);
+          
+          // Update worker PB if this is better
+          if (scaledTime > window.state.characterChallengePBs[workerKey]) {
+            window.state.characterChallengePBs[workerKey] = scaledTime;
+          }
+          
+          newScores[workerName] = scaledTime;
+        }
+      });
+    }
+
+    // Update PBs only if new scores are higher
+    const updatedPBs = {};
+    Object.entries(newScores).forEach(([name, newScore]) => {
+      const currentPB = characterPBs[name] || 0;
+      updatedPBs[name] = Math.max(currentPB, newScore);
+    });
+
+    // Save updated PBs
+    this.setCharacterTokenChallengePBs(updatedPBs);
+  }
+
+  // Populate the token challenge leaderboard
+  populateTokenChallengeLeaderboard() {
+    const leaderboardList = document.getElementById('tokenLeaderboardList');
+    if (!leaderboardList) return;
+
+    // Get stored character PBs (don't generate new scores here)
+    const characterPBs = this.getCharacterTokenChallengePBs();
+
+    // Create leaderboard array with stored PBs
+    const leaderboard = [
+      { name: 'Peachy (You)', score: this.getTokenChallengePB() }
+    ];
+
+    // Add all characters with their stored PB scores
+    Object.entries(characterPBs).forEach(([name, score]) => {
+      // Clean up display name (remove "(Boosted)" text)
+      const displayName = name.replace(/\s*\(Boosted\)/i, '');
+      leaderboard.push({ name: displayName, score });
+    });
+
+    // Sort by score (highest first)
+    leaderboard.sort((a, b) => b.score - a.score);
+
+    let leaderboardHTML = '';
+    leaderboard.forEach((entry, index) => {
+      const isPlayer = entry.name.includes('You');
+      const rowStyle = isPlayer ? 'background: rgba(255, 165, 0, 0.3); border: 2px solid #FFA500; border-radius: 8px;' : '';
+      const position = index + 1;
+      
+      leaderboardHTML += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin: 4px 0; ${rowStyle}">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-weight: bold; color: #666; min-width: 30px;">#${position}</span>
+            <span style="font-weight: ${isPlayer ? 'bold' : 'normal'};">${entry.name}</span>
+          </div>
+          <span style="font-weight: bold; color: #1e90ff;">${entry.score}pts</span>
+        </div>
+      `;
+    });
+
+    leaderboardList.innerHTML = leaderboardHTML;
+  }
+
+  // Get token challenge personal best
+  getTokenChallengePB() {
+    return parseInt(localStorage.getItem('tokenChallengePB') || '0');
+  }
+
+  // Set token challenge personal best
+  setTokenChallengePB(score) {
+    localStorage.setItem('tokenChallengePB', score.toString());
+    this.updateTokenChallengePBDisplay();
+  }
+
+  // Get character token challenge personal bests
+  getCharacterTokenChallengePBs() {
+    try {
+      const stored = localStorage.getItem('characterTokenChallengePBs');
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Error loading character PBs:', error);
+      return {};
+    }
+  }
+
+  // Set character token challenge personal bests
+  setCharacterTokenChallengePBs(characterScores) {
+    try {
+      localStorage.setItem('characterTokenChallengePBs', JSON.stringify(characterScores));
+    } catch (error) {
+      console.warn('Error saving character PBs:', error);
+    }
+  }
+
+  // Update the PB display under the token challenge button
+  updateTokenChallengePBDisplay() {
+    const pbDisplay = document.getElementById('tokenChallengePBDisplay');
+    const pbText = document.getElementById('tokenChallengePBText');
+    
+    if (pbDisplay && pbText) {
+      const pb = this.getTokenChallengePB();
+      
+      if (pb > 0) {
+        pbText.textContent = `Personal Best: ${pb} points`;
+        pbDisplay.style.display = 'block';
+      } else {
+        pbDisplay.style.display = 'none';
+      }
+    }
+  }
+
+  // Claim the rewards from token challenge
+  claimTokenChallengeRewards(rewards) {
+    for (const [tokenType, amount] of Object.entries(rewards)) {
+      this.addTokenToInventory(tokenType, amount);
+    }
+    
+    // Show a thank you message
+    this.showMessage(`Token challenge completed! Rewards have been added to your inventory.`, 'success');
+    
+    // Update PB display in case it changed
+    this.updateTokenChallengePBDisplay();
+  }
+
+  // Add PB display to token challenge button (called when boutique UI is updated)
+  addTokenChallengePBDisplay() {
+    // This function is now deprecated since we use a static HTML element
+    // Just update the static PB display instead
+    this.updateTokenChallengePBDisplay();
+  }
+
+  // Initialize token challenge system (call this when boutique loads)
+  initializeTokenChallenge() {
+    setTimeout(() => {
+      // Set initial button visibility based on quest completion
+      this.updateTokenChallengeButtonVisibility();
+      // Update PB display when boutique is shown
+      this.updateTokenChallengePBDisplay();
+    }, 100);
+  }
+
   // Memory leak prevention: cleanup method to properly destroy the boutique instance
   destroy() {
     this.isDestroyed = true;
@@ -2825,12 +4314,12 @@ class Boutique {
       clearTimeout(this.currentSpeechTimeout);
       this.currentSpeechTimeout = null;
     }
-    
+
+
+
     // Clear speech queue
     this.speechQueue = [];
-    this.isSpeaking = false;
-    
-    // Reset all state
+    this.isSpeaking = false;    // Reset all state
     this.currentShopItems = [];
     this.purchaseHistory = {};
     this.dailyStock = {};
@@ -2839,6 +4328,17 @@ class Boutique {
 
 // Initialize boutique system
 window.boutique = new Boutique();
+
+// Initialize token challenge PB display when boutique loads
+if (typeof window.onBoutiqueOpen !== 'function') {
+  window.onBoutiqueOpen = function() {
+    setTimeout(() => {
+      window.boutique.initializeTokenChallenge();
+    }, 200);
+  };
+}
+
+
 
 // Hook into boutique sub tab button to force Lepre appearance
 function hookBoutiqueSubTabButton() {
@@ -3318,4 +4818,16 @@ window.testAllLepreStockBuffs = function() {
   });
   
   return results;
+};
+
+// Debug function to reset token challenge cooldown
+window.resetTokenChallengeCooldown = function() {
+  if (window.boutique) {
+    window.boutique.tokenChallengeUsedSinceRestock = false;
+    window.boutique.tokenChallengeLastUsed = 0;
+    window.boutique.updateTokenChallengeButtonVisibility();
+    return 'Token challenge cooldown reset! Challenge is now available.';
+  } else {
+    return 'Boutique not initialized.';
+  }
 };

@@ -1911,18 +1911,13 @@ window.anomalySystem = {
         if (dangerousRoll < this.getDangerousAnomalyChance()) {
             // Choose between dangerous anomalies
             const dangerousAnomalies = [];
-            if (!this.activeAnomalies.darkVoidAnomaly) {
-                dangerousAnomalies.push('darkVoid');
-            }
             if (!this.activeAnomalies.labDarknessAnomaly) {
                 dangerousAnomalies.push('labDarkness');
             }
             
             if (dangerousAnomalies.length > 0) {
                 const randomDangerous = dangerousAnomalies[Math.floor(Math.random() * dangerousAnomalies.length)];
-                if (randomDangerous === 'darkVoid') {
-                    this.spawnDarkVoidAnomaly();
-                } else if (randomDangerous === 'labDarkness') {
+                if (randomDangerous === 'labDarkness') {
                     this.spawnLabDarknessAnomaly();
                 }
                 return; // Early return - only spawn one anomaly at a time
@@ -6228,15 +6223,7 @@ window.anomalySystem = {
     
     // Debug function for testing KitoFox mode anomaly features
     debugKitoFoxAnomalies: function() {
-        console.log('=== KitoFox Anomaly System Debug ===');
-        console.log('KitoFox Mode Active:', window.state && window.state.kitoFoxModeActive);
-        console.log('Max Anomalies:', this.getMaxAnomalies());
-        console.log('Spawn Cooldown (ms):', this.getSpawnCooldown());
-        console.log('Dangerous Anomaly Chance:', this.getDangerousAnomalyChance());
-        console.log('Regular Spawn Chance:', this.getRegularSpawnChance());
-        console.log('Current Anomaly Count:', this.anomalies.length);
-        console.log('Current Penalty Multiplier:', this.getCurrencyDebuff());
-        console.log('Active Anomalies:', this.activeAnomalies);
+     
         console.log('====================================');
     }
 };

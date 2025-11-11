@@ -130,7 +130,8 @@ const INGREDIENT_TYPES = [
   { name: 'prisma', display: 'Prisma Shard' },
   { name: 'stardust', display: 'Stardust' }, 
   { name: 'swabucks', display: 'Swa bucks' },
-  { name: 'candy', display: 'Candy' }
+  { name: 'candy', display: 'Candy' },
+  { name: 'honey', display: 'Honey' }
 ];
 const INGREDIENT_TYPE_IMAGES = {
   mushroom: 'assets/icons/mushroom token.png',
@@ -141,7 +142,8 @@ const INGREDIENT_TYPE_IMAGES = {
   prisma: 'assets/icons/prisma token.png',
   stardust: 'assets/icons/stardust token.png',
   swabucks: 'assets/icons/Swa Buck.png',
-  candy: 'assets/icons/candy token.png'
+  candy: 'assets/icons/candy token.png',
+  honey: 'assets/icons/honey token.png'
 };
 
 // Make kitchen.js variables globally accessible
@@ -169,6 +171,11 @@ function getRandomIngredientType(context) {
     case 'prism':
       weights = [1, 1, 2, 1, 3, 6, isNight ? 7 : 0, 0.3];
       break;
+    case 'crusher':
+      // Heavily favor candy tokens from the Swandy Crusher minigame
+      // [mushroom, sparks, berries, petals, water, prisma, stardust, swabucks, candy]
+      weights = [1, 1, 1, 1, 1, 1, isNight ? 0.3 : 0, 0.2, 10];
+      break;
     default:
       weights = [1, 1, 1, 1, 1, 1, isNight ? 1 : 0, 1];
   }
@@ -193,7 +200,8 @@ window.ingredientTokenCooldown = window.ingredientTokenCooldown || {
   cargo: 0,
   generator: 0,
   terrarium: 0,
-  prism: 0
+  prism: 0,
+  crusher: 0
 };
 
 function getNearbyPosition(element) {
@@ -226,7 +234,11 @@ function spawnIngredientToken(context, sourceElement) {
   if (window.ingredientTokenCooldown[context] && now < window.ingredientTokenCooldown[context]) {
     return;
   }
-  let chance = (context === 'generator') ? 1/1000 : (context === 'prism') ? 1/30 :(context === 'terrarium') ? 1/1 : 1/75;
+  let chance = (context === 'generator') ? 1/1000 : 
+               (context === 'prism') ? 1/30 : 
+               (context === 'terrarium') ? 1/1 : 
+               (context === 'crusher') ? 1 : // Always pass for crusher (chance already checked)
+               1/75;
   if (Math.random() > chance) {
     return;
   }
@@ -268,6 +280,7 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
   const token = document.createElement('img');
   token.src = INGREDIENT_TYPE_IMAGES[type] || 'assets/icons/flower.png';
   token.className = 'ingredient-token';
+  token.dataset.context = context; // Store the source context for tracking
   token.style.position = 'fixed';
   token.style.zIndex = 99999;
   token.style.width = '48px';
@@ -328,6 +341,91 @@ function spawnSingleIngredientToken(context, sourceElement, isBurstToken = false
       }
     }
   }, 1000);
+  
+  // Add drag functionality for tokens
+  let dragStartTime = 0;
+  let isDragging = false;
+  
+  token.onmousedown = function(e) {
+    if (token.dataset.collected === 'true') return;
+    const spawnTime = parseInt(token.dataset.spawnTime);
+    const now = Date.now();
+    if (now - spawnTime < 1000) return;
+    
+    dragStartTime = now;
+    isDragging = false;
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    
+    const onMouseMove = function(moveEvent) {
+      const distance = Math.sqrt(
+        Math.pow(moveEvent.clientX - startX, 2) + 
+        Math.pow(moveEvent.clientY - startY, 2)
+      );
+      
+      if (distance > 5 && !isDragging) {
+        isDragging = true;
+        window._draggingToken = true;
+        window._draggingTokenType = type;
+        token.style.zIndex = 100000;
+        token.style.cursor = 'grabbing';
+        token.style.filter = 'brightness(1.2)';
+      }
+      
+      if (isDragging) {
+        token.style.left = (moveEvent.clientX - 24) + 'px';
+        token.style.top = (moveEvent.clientY - 24) + 'px';
+        token.style.transform = 'none';
+        token.style.transition = 'none';
+      }
+    };
+    
+    const onMouseUp = function(upEvent) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      
+      if (isDragging) {
+        // Check if mouse is over Jadeca's character image
+        const elementsUnderMouse = document.elementsFromPoint(upEvent.clientX, upEvent.clientY);
+        const jadecaImg = document.getElementById('jadecaCharacter');
+        const isOverJadeca = jadecaImg && elementsUnderMouse.includes(jadecaImg);
+        
+        
+        if (isOverJadeca && typeof handleTokenGivenToJadeca === 'function') {
+          // Give token to Jadeca
+          handleTokenGivenToJadeca(type, token);
+          
+          // Reset dragging state after handling
+          window._draggingToken = false;
+          window._draggingTokenType = null;
+          isDragging = false;
+        } else {
+          // Not over Jadeca, reset token position
+          window._draggingToken = false;
+          window._draggingTokenType = null;
+          isDragging = false;
+          
+          token.style.cursor = 'pointer';
+          token.style.zIndex = 99999;
+          if (isBurstToken) {
+            token.style.filter = 'drop-shadow(0 0 8px gold)';
+          } else {
+            token.style.filter = 'none';
+          }
+        }
+      } else {
+        const clickDuration = Date.now() - dragStartTime;
+        if (clickDuration < 200) {
+          token.onclick();
+        }
+      }
+    };
+    
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+  
   token.onclick = function() {
 
     if (token.dataset.collected === 'true') return;
@@ -430,8 +528,8 @@ function collectIngredientToken(type, token) {
     }
     
     // Track petal token collection for KitoFox Challenge 2
-    if (type === 'petals' && typeof window.trackKitoFox2PetalTokens === 'function') {
-      window.trackKitoFox2PetalTokens(tokenGainAmount);
+    if (type === 'petals' && typeof window.trackKitoFox2PetalTokenCollection === 'function') {
+      window.trackKitoFox2PetalTokenCollection(tokenGainAmount);
     }
     
     // Update Halloween event button display when candy is collected
@@ -468,6 +566,77 @@ function collectIngredientToken(type, token) {
   // Track token collection for quest progress
   if (typeof window.trackTokenCollection === 'function') {
     window.trackTokenCollection(tokenGainAmount);
+  }
+  
+  // Track specific token type for quest progress
+  if (typeof window.trackSpecificTokenCollection === 'function') {
+    window.trackSpecificTokenCollection(type, tokenGainAmount);
+  }
+  
+  // Track tokens from specific sources for quest progress
+  if (typeof window.trackTokensFromSource === 'function' && token.dataset && token.dataset.context) {
+    const context = token.dataset.context;
+    if (context === 'generator') {
+      window.trackTokensFromSource('boxes', tokenGainAmount);
+    } else if (context === 'cargo') {
+      window.trackTokensFromSource('cargoBoxes', tokenGainAmount);
+    } else if (context === 'prism') {
+      window.trackTokensFromSource('prism', tokenGainAmount);
+    } else if (context === 'terrarium') {
+      window.trackTokensFromSource('terrarium', tokenGainAmount);
+      
+      // Special Fluzzer reaction to petal tokens collected in terrarium
+      if (type === 'petals' && typeof window.isTerrariumTabVisible === 'function' && window.isTerrariumTabVisible()) {
+        if (typeof window.triggerFluzzerPetalReaction === 'function') {
+          window.triggerFluzzerPetalReaction();
+        }
+      }
+    }
+  }
+  
+  // Track nighttime token collection for quest progress
+  if (typeof window.trackTokensFromSource === 'function') {
+    // Check if it's currently nighttime using the same logic as quest system
+    const isNightTime = window.daynight && typeof window.daynight.getTime === 'function' && 
+                       (() => {
+                         const gameMinutes = window.daynight.getTime();
+                         const NIGHT_START = 22 * 60; // 22:00 = 1320 minutes
+                         const DAY_START = 6 * 60;    // 6:00 = 360 minutes
+                         return gameMinutes >= NIGHT_START || gameMinutes < DAY_START;
+                       })();
+    
+    if (isNightTime) {
+      window.trackTokensFromSource('night', tokenGainAmount);
+    }
+  }
+  
+  // Check for Token Challenge Trophy boost (chance for free Swa Bucks)
+  if (window.state && window.state.trophies && window.state.trophies.tokenChallenge && window.state.trophies.tokenChallenge.unlockedTier) {
+    let bonusChance = 0;
+    const trophyTier = window.state.trophies.tokenChallenge.unlockedTier;
+    
+    if (trophyTier === 'bronze') {
+      bonusChance = 0.02; // 2%
+    } else if (trophyTier === 'silver') {
+      bonusChance = 0.06; // 6%
+    } else if (trophyTier === 'gold') {
+      bonusChance = 0.15; // 15%
+    }
+    
+    if (bonusChance > 0 && Math.random() < bonusChance) {
+      // Award 1 free Swa Buck
+      if (!window.state.swabucks) {
+        window.state.swabucks = new Decimal(0);
+      } else if (!DecimalUtils.isDecimal(window.state.swabucks)) {
+        window.state.swabucks = new Decimal(window.state.swabucks);
+      }
+      window.state.swabucks = window.state.swabucks.add(1);
+      
+      // Show bonus notification
+      if (typeof window.showGenericRewardNotification === 'function') {
+        window.showGenericRewardNotification('swabucks', 1, 'Token Challenge Bonus!', 'Free Swa Buck from token collection');
+      }
+    }
   }
   
   if (typeof updateKitchenUI === 'function') updateKitchenUI(true);
@@ -570,6 +739,9 @@ function completeCooking(recipeId, amount) {
   if (typeof window.trackHardModeCookingAction === 'function') {
     window.trackHardModeCookingAction(recipeId, amount);
   }
+  if (typeof window.trackCookingAction === 'function') {
+    window.trackCookingAction(recipeId, amount);
+  }
 }
 
 function updateKitchenUI(forceUpdate = false) {
@@ -634,6 +806,9 @@ function updateCookingSpeedBoostDisplay() {
                            document.body.classList.contains('halloween-cargo-active') ||
                            document.body.classList.contains('halloween-event-active');
   
+  let displayContent = '';
+  let shouldDisplay = false;
+  
   // Check if mixing system exists and has mushroom soup
   if (window.state && window.state.mixingSystem && window.state.mixingSystem.totalMushroomSoupGiven) {
     // Ensure totalMushroomSoupGiven is a Decimal
@@ -644,11 +819,27 @@ function updateCookingSpeedBoostDisplay() {
     if (window.state.mixingSystem.totalMushroomSoupGiven.gt(0)) {
       const boostValue = new Decimal(1).add(window.state.mixingSystem.totalMushroomSoupGiven.mul(0.01));
       const speedText = isHalloweenActive ? 'brewing speed' : 'cooking speed';
-      boostText.innerHTML = `x${boostValue.toFixed(2)} <span id="cookingSpeedLabel">${speedText}</span>`;
-      boostDisplay.style.display = 'block';
-    } else {
-      boostDisplay.style.display = 'none';
+      displayContent += `<img src="assets/icons/mushroom soup token.png" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px;">x${boostValue.toFixed(2)} <span id="cookingSpeedLabel">${speedText}</span>`;
+      shouldDisplay = true;
     }
+  }
+  
+  // Check if Mystic quest premium token buff is active
+  if (typeof window.getMysticPremiumTokenBuffMultiplier === 'function') {
+    const mysticMultiplier = window.getMysticPremiumTokenBuffMultiplier();
+    if (mysticMultiplier > 1) {
+      if (shouldDisplay) {
+        displayContent += '<br>';
+      }
+      const bonusPercent = Math.round((mysticMultiplier - 1) * 100);
+      displayContent += `<span style="color: #9c27b0; font-weight: bold;">Premium token duration +${bonusPercent}%</span>`;
+      shouldDisplay = true;
+    }
+  }
+  
+  if (shouldDisplay) {
+    boostText.innerHTML = displayContent;
+    boostDisplay.style.display = 'block';
   } else {
     boostDisplay.style.display = 'none';
   }
@@ -752,6 +943,14 @@ const mysticChallengeQuotes = [
   { text: "I could probably get a better Power Generator Challenge time if I cared. But I don't. So there's that.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
   { text: "The Power Generator Challenge is like burnt toast - it exists, it's not great, but people still talk about it for some reason.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
   { text: "Power Generator Challenge times are temporary. Good cooking is eternal. Choose wisely.", condition: () => window.state.characterChallengePBs?.mystic || window.state.powerChallengePersonalBest },
+  
+  // Token Challenge specific quotes (only appear if player has done token challenge at least once) - Mystic is #1 best player
+  { text: () => `You scored ${window.state.tokenChallengePersonalBest || 0} points in Lepre's Token Challenge? That's... decent, I guess. I got 100+ points without even trying. I'm just naturally talented from all the ingredients I sort every day.`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+  { text: () => `Token Challenge personal best of ${window.state.tokenChallengePersonalBest || 0}? Not bad. I'm still the undisputed champion though. Organizing tokens is like organizing spices, natural talent.`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+  { text: "I tried Lepre's Token Challenge once. Got the highest score ever. Organizing things is just part of being a chef. Whatever.", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+  { text: () => `Your ${window.state.tokenChallengePersonalBest || 0} points in the Token Challenge isn't terrible. I mean, I'm still way better at it, but you're... trying.`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+  { text: "Everyone keeps asking how I'm so good at the Token Challenge. It's simple, precision, organization, and years of ingredient management.", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+  { text: "The Token Challenge is basically just sorting ingredients, which I do all day anyway. No wonder I'm the best at it. Now can we talk about something important?", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
 ];
 
 const mysticIdleSpeeches = [
@@ -793,6 +992,28 @@ const mysticIdleSpeeches = [
   { text: "I offered Bijou a chef's hat, but the hat was too big for Bijou.", condition: () => window.premiumState && window.premiumState.bijouEnabled },
   { text: "Bijou's energy is impressive. Maybe I should add more sugar to my recipes to make them move more.", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
   { text: "If I could bottle Bijou's speed, I'd have dinner ready in weeks!", condition: () => window.premiumState && window.premiumState.bijouUnlocked && window.premiumState.bijouEnabled },
+  
+  // Hexed Peachy concern dialogues - only appear when Peachy is hexed
+  { text: "Peachy... what's that strange mark on you? Did you spill something purple?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Is it just me, or do you look... different? There's something odd about your appearance.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "That glow around you... is it a new fashion statement or did something happen?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "You've got this weird energy around you. Did you eat something bad? I swear it wasn't my cooking!", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "What happened to you? You look like you've been... I don't know, cursed or something?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "That mark on you looks magical. Did you accidentally touch something in the Halloween area?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "I'm not an expert on magic, but that doesn't look normal. Are you feeling okay?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Your appearance changed and I have no idea why. Should I be worried about you?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "That aura around you is making me uneasy. What did you get yourself into?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "I've seen magical ingredients before, but whatever's on you is beyond my expertise.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Did something happen when you visited the Halloween area? You look... affected.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "That mark doesn't look like food coloring. Seriously, what is that?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "I deal with ingredients, not curses. Whatever's on you, I can't cook it away.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Your energy feels different. Like something magical happened to you recently.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Is that some kind of spell mark? I have no idea how to help with that!", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "You've got this mystical thing going on now. It's... concerning, to be honest.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "I'm a chef, not a wizard. Whatever that mark is, it's out of my skill range.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "That purple shimmer around you isn't from any ingredient I know. What happened?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Maybe you should find someone who knows about magic? This looks serious.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+  { text: "Whatever that is, I hope it's temporary. You're starting to worry me, Peachy.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
   
   // Anomaly-related quotes (only appear after doing an infinity reset at least once)
   { text: "Strange... everyone's talking about anomalies everywhere, but my kitchen stays perfectly normal. Professional chef privilege!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
@@ -2505,147 +2726,23 @@ function checkCandyTokenUnlock() {
 }
 
 function updateHalloweenEventButtonDisplay() {
-  const halloweenButton = document.querySelector('.halloween-event-btn');
-  if (!halloweenButton) return;
+  const worldMapButton = document.querySelector('.world-map-btn');
+  if (!worldMapButton) return;
   
-  // Check if Halloween mode is active - hide button if not
-  if (!window.state.halloweenEventActive) {
-    halloweenButton.style.display = 'none';
-    return;
-  }
-  
-  const isUnlocked = window.state.unlockedFeatures && window.state.unlockedFeatures.halloweenEvent;
-  
-  // Initialize Halloween event state if it doesn't exist
-  if (!window.state.halloweenEvent) {
-    window.state.halloweenEvent = { candyTokensGiven: new Decimal(0) };
-  }
-  if (!window.state.halloweenEvent.candyTokensGiven) {
-    window.state.halloweenEvent.candyTokensGiven = new Decimal(0);
-  }
-  
-  const candyTokensGiven = DecimalUtils.toDecimal(window.state.halloweenEvent.candyTokensGiven);
-  
-  // Show the drag & drop interface if candy tokens given is less than 10, regardless of unlock status
-  // This allows testing the unlock mechanism even after the event is unlocked
-  const shouldShowUnlockInterface = candyTokensGiven.lt(10);
-  
-  if (isUnlocked && !shouldShowUnlockInterface) {
-    // Show normal Halloween event button if unlocked and activated
-    if (window.state.halloweenEventActive) {
-      halloweenButton.style.display = 'block';
-      halloweenButton.innerHTML = `
-        <span style="font-size:1.5em;margin-right:0.5em;">🍬</span>
-        <span>Halloween Event</span>
-      `;
-      halloweenButton.onclick = function() { 
-        if (typeof switchToHalloweenEvent === 'function') {
-          switchToHalloweenEvent();
-        }
-      };
-      halloweenButton.style.cursor = 'pointer';
-      halloweenButton.style.opacity = '1';
-      // Remove drag and drop functionality when unlocked
-      halloweenButton._tokenDropActive = false;
-      halloweenButton.removeAttribute('data-character-name');
-      halloweenButton.style.border = '';
-      halloweenButton.style.borderRadius = '';
-      halloweenButton.style.padding = '';
-      halloweenButton.style.transition = '';
-    } else {
-      halloweenButton.style.display = 'none';
-    }
-  } else {
-    // Show candy collection requirement with drag & drop support
-    halloweenButton.style.display = 'block';
-    halloweenButton.innerHTML = `
-      <span style="font-size:1.5em;margin-right:0.5em;">🍬</span>
-      <span>${candyTokensGiven.toFixed(0)}/10 candy tokens given</span>
-      <div style="font-size:0.8em;margin-top:0.2em;color:#888;text-align:center;">
-        Drag candy tokens here to unlock
-      </div>
-    `;
-    halloweenButton.onclick = function() {
-      if (typeof window.showNotification === 'function') {
-        const needed = new Decimal(10).sub(candyTokensGiven);
-        window.showNotification(`🍬 Give ${needed.toFixed(0)} more candy tokens to unlock the Halloween Event! Drag candy tokens onto this button.`, 'info');
-      }
-    };
-    halloweenButton.style.cursor = 'pointer';
-    halloweenButton.style.opacity = '0.8';
-    
-    // Enable drag and drop for candy tokens
-    halloweenButton._tokenDropActive = true;
-    halloweenButton.setAttribute('data-character-name', 'HalloweenEventButton');
-    
-    // Add visual feedback for drag and drop
-    halloweenButton.style.border = '2px dashed #ff6600';
-    halloweenButton.style.borderRadius = '8px';
-    halloweenButton.style.padding = '8px';
-    halloweenButton.style.transition = 'all 0.3s ease';
-    
-    // Set up drag and drop event listeners
-    setupHalloweenButtonDragAndDrop(halloweenButton);
-  }
+  // World Map button is always visible - no longer requires Halloween mode
+  worldMapButton.style.display = 'block';
+  worldMapButton.innerHTML = `
+    <span style="font-size:1.5em;margin-right:0.5em;"></span>
+    <span>World Map</span>
+  `;
+  // Don't override onclick - let HTML handle navigation
+  worldMapButton.style.cursor = 'pointer';
+  worldMapButton.style.opacity = '1';
 }
 
-// Function to set up drag and drop for the Halloween event button
+// Function to set up drag and drop for the Halloween event button (deprecated - now handled in world map modal)
 function setupHalloweenButtonDragAndDrop(button) {
-  // Clean up any existing listeners
-  button.onmouseenter = null;
-  button.onmouseleave = null;
-  button.onmouseup = null;
-  
-  // Add mouseenter handler for visual feedback
-  button.addEventListener('mouseenter', function() {
-    if (window._draggingToken) {
-      const tokenType = window._draggingTokenType;
-      if (tokenType === 'candy') {
-        button.style.outline = '3px solid #00ff00';
-        button.style.backgroundColor = 'rgba(0, 255, 0, 0.1)';
-        button.title = 'Drop candy tokens here to unlock Halloween Event!';
-      } else {
-        button.style.outline = '3px solid #ff4444';
-        button.style.backgroundColor = 'rgba(255, 68, 68, 0.1)';
-        button.title = 'Halloween Event Button only accepts candy tokens!';
-      }
-    }
-  });
-  
-  // Add mouseleave handler
-  button.addEventListener('mouseleave', function() {
-    button.style.outline = '';
-    button.style.backgroundColor = '';
-    button.title = '';
-  });
-  
-  // Add mouseup handler for drop detection
-  button.addEventListener('mouseup', function(e) {
-    if (window._draggingToken && button._tokenDropActive) {
-      const tokenType = window._draggingTokenType;
-      
-      if (tokenType !== 'candy') {
-        button.style.outline = '3px solid #ff4444';
-        button.title = 'The Halloween Event Button only accepts candy tokens!';
-        setTimeout(() => {
-          button.style.outline = '';
-          button.title = '';
-        }, 1200);
-        return;
-      }
-      
-      // Show give token modal for candy tokens
-      if (typeof window.showGiveTokenModal === 'function') {
-        window.showGiveTokenModal(tokenType, 'HalloweenEventButton');
-      }
-      button.style.outline = '';
-      button.style.backgroundColor = '';
-      button._tokenDropActive = false;
-      setTimeout(() => {
-        button._tokenDropActive = true;
-      }, 100);
-    }
-  });
+  // This function is kept for backwards compatibility but is no longer used
 }
 
 // Make functions globally accessible

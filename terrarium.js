@@ -547,6 +547,8 @@ window.updateAllFluzzerImages = updateAllFluzzerImages;
 window.updateNectarizeFluzzerImage = updateNectarizeFluzzerImage;
 window.addDizzyModifier = addDizzyModifier;
 window.triggerFluzzerEnhancedTransformation = triggerFluzzerEnhancedTransformation;
+window.triggerFluzzerPetalReaction = triggerFluzzerPetalReaction;
+window.getFluzzerPetalTokenImage = getFluzzerPetalTokenImage;
 // Get nectarize quest variables from state
 let nectarizeMachineLevel = window.state?.terrarium?.nectarizeMachineLevel || 1;
 let nectarizeQuestActive = window.state?.terrarium?.nectarizeQuestActive || false;
@@ -2218,6 +2220,14 @@ function renderTerrariumUI(force = false) {
         if (typeof window.updateFloor2Visibility === 'function') {
           window.updateFloor2Visibility();
         }
+        
+        // Update Bijou UI position when returning to Floor 1
+        setTimeout(() => {
+          if (typeof window.updateBijouUIVisibility === 'function') {
+            window.updateBijouUIVisibility();
+          }
+        }, 10);
+        
         // Remove Halloween vines when going back to Floor 1
         removePageHalloweenVines();
       };
@@ -3295,6 +3305,88 @@ const fluzzerNormalSpeeches = [
       return isDay && hasBoost;
     }
   },
+  
+  // Hexed Peachy concern dialogues - only appear when Peachy is hexed
+  {
+    text: "Peachy... there's something different about you today. That mark on you... it feels wrong.",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I noticed that purple glow around you... is that a hex? Oh no, are you okay?",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "That mark looks really serious... I wish I knew how to help, but I only know about flowers...",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "The flowers seem uneasy when you're near now... I think they can sense that hex on you.",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "Did someone curse you? That's terrible! Who would do such a thing?",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I tried watering some flowers near you, but they wilted... that hex has a really dark energy.",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "Your appearance changed so much... I'm scared for you, Peachy. Please be careful!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I asked the flowers if they know how to remove curses, but they just rustled nervously...",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "That mark on you is glowing with dark magic... I've never seen anything like it before!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I'm really worried about you! That hex looks like it's spreading... can you feel it?",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "The terrarium feels colder when you visit now... that curse must be really powerful.",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I wish I could give you a flower to make you feel better, but I don't think it would help with a hex...",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "That purple aura around you is making the plants nervous... they're pulling away from you!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "Did something bad happen? You look cursed... like really seriously cursed!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I tried to research curse removal in my gardening books, but they only talk about plant diseases...",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "That mark is radiating dark magic so strongly, even I can feel it! This is really bad, isn't it?",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "The hex on you is interfering with the terrarium's natural energy... the flowers can sense it!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "You're still my friend even with that scary curse! But please, please be careful!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "I noticed some of the flowers turning purple when you walked by... that hex is affecting everything!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
+  {
+    text: "That curse looks really painful... are you sure you're okay? You don't have to pretend with me!",
+    condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed
+  },
 ];
 
 // New dizzy dialogue for when fluzzer is in the enhanced state (3+ total infinity)
@@ -3373,8 +3465,9 @@ const fluzzerNectarSpeeches = [
 
 // Fluzzer's challenge quotes - different personality based on PB time
 function getFluzzerChallengeQuotes() {
-  // Get Fluzzer's PB time
+  // Get Fluzzer's PB times
   const fluzzerPB = window.state?.characterChallengePBs?.fluzzer || 0;
+  const tokenChallengePB = window.state?.tokenChallengePB || 0;
   
   // Soft personality quotes for low PB (< 60 seconds)
   const softChallengeQuotes = [
@@ -3392,7 +3485,17 @@ function getFluzzerChallengeQuotes() {
     "The Power Generator Challenge is harder than taking care of flowers, and that's saying something!",
     "I tried asking a bee for challenge tips, but they just buzzed at me.",
     "Maybe I should practice on easier settings? Though I'm not sure if that exists...",
-    "The challenge makes me feel dizzy sometimes, like spinning in a flower field!"
+    "The challenge makes me feel dizzy sometimes, like spinning in a flower field!",
+    ...(tokenChallengePB > 0 && tokenChallengePB <= 100 ? [
+      "The Token Challenge? Oh my... I tried it once and got so nervous watching the tokens spin!",
+      "Lepre's Token Challenge is really tricky! I kept getting distracted by how shiny the tokens are.",
+      "I wish I was better at the Token Challenge, but I can't concentrate where the token slots are supposed to be! It's really confusing.",
+      "The Token Challenge makes me dizzy... but in a fun way? Like spinning in a meadow!",
+      "I tried humming while doing the Token Challenge, but I got too distracted by the tokens shining!",
+      "Maybe if I think of the tokens as flower petals, I'll do better? Probably not...",
+      "The Token Challenge is like trying to catch butterflies, so pretty but so hard!",
+      "I get so flustered during the Token Challenge! But Lepre was so sweet to make it for us!"
+    ] : [])
   ];
   
   // Cocky personality quotes for high PB (60+ seconds)
@@ -3411,6 +3514,17 @@ function getFluzzerChallengeQuotes() {
     "I've become the Power Generator Challenge expert of the terrarium! Pretty impressive, right?",
     "The challenge used to scare me, but now it's just another walk in the flower garden!",
     "The other workers ask ME for Power Generator Challenge advice now. Can you believe it?",
+    ...(tokenChallengePB > 100 ? [
+      "The Token Challenge? Oh please, I've mastered that too! Just slightly behind Mystic's score, but I'll beat them one day!",
+      "Lepre's Token Challenge? Yeah, I'm absolutely amazing at it now! Better than most workers here!",
+      "The Token Challenge is child's play once you understand the pattern! Lucky I'm so naturally gifted!",
+      "I've been dominating the Token Challenge lately! Those spinning tokens don't stand a chance against me!",
+      "Everyone's impressed with my Token Challenge skills now. I went from nervous to the best!",
+      "The Token Challenge? I practically dance through it now! Like a graceful butterfly collecting nectar!",
+      "I'm so good at the Token Challenge, even Lepre asks me for tips! Well, they should anyway!",
+      "The Token Challenge used to make me dizzy, but now I spin those tokens like I'm conducting a symphony!",
+      "My Token Challenge performance is so spectacular, the other workers are totally jealous of my skills!"
+    ] : [])
   ];
   
   // Return appropriate quotes based on PB
@@ -3856,6 +3970,107 @@ function stopFluzzerSpeechTimer() {
   window.fluzzerSpeechTimer = null;
 }
 
+// Special Fluzzer reaction when a petal token is collected in the terrarium
+function triggerFluzzerPetalReaction() {
+  // IMPORTANT: This reaction interrupts ANY existing speech - petal tokens are priority!
+  // Clear any existing speech timeout immediately
+  if (window.fluzzerSpeechTimeout) {
+    clearTimeout(window.fluzzerSpeechTimeout);
+    window.fluzzerSpeechTimeout = null;
+  }
+  
+  // Reset any speaking states to allow interruption
+  if (window.isFluzzerLevelUpSpeaking) {
+    window.isFluzzerLevelUpSpeaking = false;
+  }
+  
+  const charCard = document.getElementById('terrariumCharacterCard');
+  if (!charCard) return;
+  
+  const imgWrap = charCard.querySelector('.fluzzer-img-wrap');
+  if (!imgWrap) return;
+  
+  // Create speech bubble
+  let bubble = document.getElementById('fluzzerSpeech');
+  if (!bubble) {
+    bubble = document.createElement('div');
+    bubble.id = 'fluzzerSpeech';
+    bubble.className = 'swaria-speech';
+    bubble.style.position = 'absolute';
+    bubble.style.left = '100%';
+    bubble.style.top = '50%';
+    bubble.style.transform = 'translateY(-50%)';
+    bubble.style.marginLeft = '10px';
+    bubble.style.zIndex = '10';
+    imgWrap.appendChild(bubble);
+  }
+  
+  // Set the petal reaction message
+  const message = "Was that a petal?!";
+  bubble.textContent = message;
+  bubble.style.display = 'block';
+  bubble.style.background = '#fff';
+  bubble.style.color = '#222';
+  
+  // Add speech bubble pointer if it doesn't exist
+  if (!bubble._hasPointer) {
+    const pointer = document.createElement('div');
+    pointer.style.position = 'absolute';
+    pointer.style.left = '-18px';
+    pointer.style.top = '18px';
+    pointer.style.width = '0';
+    pointer.style.height = '0';
+    pointer.style.borderTop = '12px solid transparent';
+    pointer.style.borderBottom = '12px solid transparent';
+    pointer.style.borderRight = '18px solid #fff';
+    pointer.style.zIndex = '11';
+    pointer.className = 'fluzzer-speech-pointer';
+    bubble.appendChild(pointer);
+    bubble._hasPointer = true;
+  }
+  
+  // Get the special petal token image based on infinity count and Halloween mode
+  const fluzzerImg = document.getElementById('fluzzerImg');
+  if (fluzzerImg) {
+    fluzzerImg.src = getFluzzerPetalTokenImage();
+  }
+  
+  fluzzerIsTalking = true;
+  if (window.fluzzerSpeechTimeout) clearTimeout(window.fluzzerSpeechTimeout);
+  window.fluzzerSpeechTimeout = setTimeout(() => {
+    bubble.style.display = 'none';
+    if (fluzzerImg) {
+      if (window.isFluzzerSleeping) {
+        fluzzerImg.src = getFluzzerImagePath('sleeping');
+      } else {
+        fluzzerImg.src = getFluzzerImagePath('normal');
+      }
+    }
+    fluzzerIsTalking = false;
+    scheduleFluzzerRandomSpeech();
+  }, 5000);
+}
+
+// Helper function to get the appropriate petal token image
+function getFluzzerPetalTokenImage() {
+  const has3Infinities = window.infinitySystem && window.infinitySystem.totalInfinityEarned >= 3;
+  const isHalloweenActive = window.state && window.state.halloweenEventActive;
+  
+  if (isHalloweenActive) {
+    if (has3Infinities) {
+      return 'assets/icons/halloween fluzzer petal token1.png';
+    } else {
+      return 'assets/icons/halloween fluzzer petal token.png';
+    }
+  } else {
+    if (has3Infinities) {
+      return 'assets/icons/fluzzer petal token1.png';
+    } else {
+      return 'assets/icons/fluzzer petal token.png';
+    }
+  }
+}
+
 function handleWateringCanClick(index, cols, rows) {
   if (wateringCanCooldown) {
     return;
@@ -3896,6 +4111,11 @@ function handleWateringCanClick(index, cols, rows) {
   }
   if (flowersWatered > 0) {
     showTerrariumGainPopup('terrariumWatered', flowersWatered, 'Health');
+    
+    // Track watered flowers for quest system
+    if (typeof window.trackFlowerWatering === 'function') {
+      window.trackFlowerWatering(flowersWatered);
+    }
   }
   renderTerrariumUI(true); // Force immediate update for player interaction
 }
@@ -3929,6 +4149,11 @@ function handlePollenWandClick(index, cols, rows) {
       // Track flower click for KitoFox Challenge 2 immediately when flower is clicked
       if (typeof window.trackKitoFox2FlowerClickedPollen === 'function') {
         window.trackKitoFox2FlowerClickedPollen();
+      }
+      
+      // Track flower click for quest system
+      if (typeof window.trackFlowerClick === 'function') {
+        window.trackFlowerClick();
       }
       
       flower.health--;
@@ -4035,6 +4260,9 @@ function handlePollenWandClick(index, cols, rows) {
 
   const totalPollenGained = terrariumPollen - originalPollen;
   const totalFlowerGained = terrariumFlowers - originalFlowers;
+  
+
+  
   if (totalPollenGained > 0) showTerrariumGainPopup('terrariumPollen', totalPollenGained, 'Pollen');
   if (totalFlowerGained > 0) showTerrariumGainPopup('terrariumFlowers', totalFlowerGained, 'Flowers');
 }

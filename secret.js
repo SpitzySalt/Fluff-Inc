@@ -152,7 +152,7 @@ const secretAchievements = {
   },
   secret8: {
     id: 'secret8',
-    name: 'Impatient',
+    name: 'Tasty money',
     description: '???',
     icon: 'assets/icons/light.png',
     type: 'secret',
@@ -163,7 +163,7 @@ const secretAchievements = {
     row: 2,
     position: 3,
     rewarded: false,
-    realDescription: 'Click the collect plate button 10 times when there is no plate available'
+    realDescription: 'Eat some swa bucks'
   },
   secret9: {
     id: 'secret9',
@@ -345,6 +345,81 @@ const secretAchievements = {
     rewarded: false,
     realDescription: 'Listen to the entire peachy dialogue'
   },
+  halloween_secret1: {
+    id: 'halloween_secret1',
+    name: 'Rereshuffling',
+    description: '???',
+    icon: 'assets/icons/red swandy.png',
+    type: 'halloween_secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'halloween_secret',
+    row: 1,
+    position: 1,
+    rewarded: false,
+    realDescription: 'Reshuffle the swandy crusher twice in a row'
+  },
+  halloween_secret2: {
+    id: 'halloween_secret2',
+    name: 'Return to sender',
+    description: '???',
+    icon: 'assets/icons/hex staff.png',
+    type: 'halloween_secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'halloween_secret',
+    row: 1,
+    position: 2,
+    rewarded: false,
+    realDescription: 'Attempt to hex Jadeca (It did not work)'
+  },
+  halloween_secret3: {
+    id: 'halloween_secret3',
+    name: 'Why would you do that?',
+    description: '???',
+    icon: 'assets/icons/swandy orb.png',
+    type: 'halloween_secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'halloween_secret',
+    row: 1,
+    position: 3,
+    rewarded: false,
+    realDescription: 'Break a swandy orb with the hex staff'
+  },
+  halloween_secret4: {
+    id: 'halloween_secret4',
+    name: 'Turning the grid purple',
+    description: '???',
+    icon: 'assets/icons/hex staff.png',
+    type: 'halloween_secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'halloween_secret',
+    row: 1,
+    position: 4,
+    rewarded: false,
+    realDescription: 'Turn every tiles in the swandy crusher into hexed tiles'
+  },
+  halloween_secret5: {
+    id: 'halloween_secret5',
+    name: 'ORBED',
+    description: '???',
+    icon: 'assets/icons/swandy orb.png',
+    type: 'halloween_secret',
+    requirement: 1,
+    unlocked: false,
+    progress: 0,
+    category: 'halloween_secret',
+    row: 1,
+    position: 5,
+    rewarded: false,
+    realDescription: 'Match 2 swandy orbs together'
+  },
 };
 
 function updateSecretAchievementDescription(achievementId) {
@@ -388,6 +463,45 @@ function unlockSecretAchievement(achievementId) {
         // Show notification for the reward
         if (typeof window.showNotification === 'function') {
           window.showNotification('Secret Achievement Reward: +50 Swa Bucks!', 'success');
+        }
+      }
+    } else if (achievementId === 'halloween_secret2') {
+      // Halloween Secret 2: Give 20 swa bucks for attempting to hex Jadeca
+      if (window.state && typeof window.state.swaria !== 'undefined') {
+        if (!window.DecimalUtils.isDecimal(window.state.swaria)) {
+          window.state.swaria = new Decimal(window.state.swaria || 0);
+        }
+        window.state.swaria = window.state.swaria.add(20);
+        
+        // Show notification for the reward
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Secret Achievement Reward: +20 Swa Bucks!', 'success');
+        }
+      }
+    } else if (achievementId === 'halloween_secret4') {
+      // Halloween Secret 4: Give 100 swa bucks for turning every tile hexed
+      if (window.state && typeof window.state.swaria !== 'undefined') {
+        if (!window.DecimalUtils.isDecimal(window.state.swaria)) {
+          window.state.swaria = new Decimal(window.state.swaria || 0);
+        }
+        window.state.swaria = window.state.swaria.add(100);
+        
+        // Show notification for the reward
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Secret Achievement Reward: +100 Swa Bucks!', 'success');
+        }
+      }
+    } else if (achievementId === 'halloween_secret5') {
+      // Halloween Secret 5: Give 100 swa bucks for matching 2 orbs together
+      if (window.state && typeof window.state.swaria !== 'undefined') {
+        if (!window.DecimalUtils.isDecimal(window.state.swaria)) {
+          window.state.swaria = new Decimal(window.state.swaria || 0);
+        }
+        window.state.swaria = window.state.swaria.add(100);
+        
+        // Show notification for the reward
+        if (typeof window.showNotification === 'function') {
+          window.showNotification('Secret Achievement Reward: +100 Swa Bucks!', 'success');
         }
       }
     }
@@ -482,6 +596,17 @@ Object.keys(secretAchievements).forEach(key => {
     }
     if (!window.state.secretAchievements[key].progress) {
       window.state.secretAchievements[key].progress = new Decimal(0);
+    }
+  } else {
+    window.state.secretAchievements[key].name = secretAchievements[key].name;
+    window.state.secretAchievements[key].icon = secretAchievements[key].icon;
+    window.state.secretAchievements[key].type = secretAchievements[key].type;
+    window.state.secretAchievements[key].category = secretAchievements[key].category;
+    window.state.secretAchievements[key].row = secretAchievements[key].row;
+    window.state.secretAchievements[key].position = secretAchievements[key].position;
+    window.state.secretAchievements[key].realDescription = secretAchievements[key].realDescription;
+    if (!window.state.secretAchievements[key].unlocked) {
+      window.state.secretAchievements[key].description = secretAchievements[key].description;
     }
   }
 });
@@ -634,12 +759,20 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
     initSecretAchievements();
     initFluzzerNightOwlTracking();
-    // Force achievements display update after a short delay
     setTimeout(() => {
+      Object.keys(secretAchievements).forEach(key => {
+        if (window.state.secretAchievements[key]) {
+          window.state.secretAchievements[key].name = secretAchievements[key].name;
+          window.state.secretAchievements[key].icon = secretAchievements[key].icon;
+          window.state.secretAchievements[key].realDescription = secretAchievements[key].realDescription;
+          if (!window.state.secretAchievements[key].unlocked) {
+            window.state.secretAchievements[key].description = secretAchievements[key].description;
+          }
+        }
+      });
       if (typeof window.updateAchievementsDisplay === 'function') {
         window.updateAchievementsDisplay();
       }
-      // Also try direct update of secret achievements
       if (typeof window.updateSecretAchievements === 'function') {
         window.updateSecretAchievements();
       }
@@ -648,8 +781,17 @@ if (document.readyState === 'loading') {
 } else {
   initSecretAchievements();
   initFluzzerNightOwlTracking();
-  // Force achievements display update after a short delay
   setTimeout(() => {
+    Object.keys(secretAchievements).forEach(key => {
+      if (window.state.secretAchievements[key]) {
+        window.state.secretAchievements[key].name = secretAchievements[key].name;
+        window.state.secretAchievements[key].icon = secretAchievements[key].icon;
+        window.state.secretAchievements[key].realDescription = secretAchievements[key].realDescription;
+        if (!window.state.secretAchievements[key].unlocked) {
+          window.state.secretAchievements[key].description = secretAchievements[key].description;
+        }
+      }
+    });
     if (typeof window.updateAchievementsDisplay === 'function') {
       window.updateAchievementsDisplay();
     }

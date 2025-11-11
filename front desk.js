@@ -72,7 +72,29 @@
       { text: "I've been thinking these anomalies might become dangerous, if they do, stay alert and safe.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
       { text: "Managing a facility with unstable reality is definitely not covered in standard management training!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
       { text: "The good news is that anomalies make every workday unique! The bad news is... the dangerous ones, you may lose some of your inventory tokens if failed to analyze them fast enough.", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
-      { text: "I'm considering adding 'anomaly resistance' as a job requirement for future hires!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 }
+      { text: "I'm considering adding 'anomaly resistance' as a job requirement for future hires!", condition: () => window.infinitySystem && window.infinitySystem.totalInfinityEarned > 0 },
+      
+      // Hexed Peachy concern dialogues - only appear when Peachy is hexed
+      { text: "Peachy, I need to document this... there's an unusual mark on you. Can you explain what happened?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "That aura around you... I should file an incident report. Are you experiencing any adverse effects?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I'm very concerned about your condition. That mark appears to be some form of magical affliction.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I've never seen anything like that mark before in all my records. Have you consulted with anyone about it?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "Your appearance has changed significantly. I should add this to my facility incident log... for documentation purposes.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "That strange energy emanating from you... is it painful? Should I be concerned for facility safety?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I'm documenting unusual occurrences, and that mark on you definitely qualifies. Do you know what caused it?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "That purple glow wasn't there before. I keep detailed records of everyone here, and this is... new.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I should probably create a new file category for 'Magical Afflictions' because of that mark you have.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "Your condition appears stable, but I'm monitoring the situation closely. That mark is highly unusual.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I don't have any protocols for dealing with magical curses or marks. This is outside my area of expertise.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "The workers have been asking questions about your appearance. I'm trying to keep morale up, but that mark is concerning.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I've cross-referenced every record I have, and nothing matches that mark. It's completely unprecedented.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "That magical energy around you... I hope it's not contagious. I need to ensure worker safety.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I'm maintaining professional composure, but I'm genuinely worried about you. What exactly happened?", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "Should I be evacuating workers? That mark looks... powerful. I don't know if it's dangerous.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I've scheduled a reminder to check on your condition regularly. That mark needs monitoring.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "The bureaucratic procedures don't cover 'manager cursed by unknown magical force.' I'm improvising here.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "I tried looking up remedies for magical afflictions in my files, but came up empty. This is beyond my training.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed },
+      { text: "That mark makes you look different, but you're still Peachy to me. I just... wish I knew how to help.", condition: () => window.state?.halloweenEvent?.jadeca?.peachyIsHexed }
     ];
     this.pokeSpeeches = [
       "Oh! Hello there! Need something?",
@@ -299,6 +321,20 @@
         const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
         return `I'm considering offering ${randomWorker} a Power Generator Challenge performance bonus - their dedication to improvement is exceptional!`;
       }, condition: () => window.state.characterChallengePBs?.tico || window.state.powerChallengePersonalBest },
+      
+      // Token Challenge specific quotes (only appear if player has done token challenge at least once) - Professional management analysis
+      { text: () => `Impressive Token Challenge results! ${window.state.tokenChallengePersonalBest || 0} points shows strong pattern recognition and systematic thinking!`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: "I've been analyzing Lepre's Token Challenge design, it's an excellent assessment tool for organizational skills and decision-making under time pressure! Its also very similar to soap's power generator challenge.", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: () => `Your Token Challenge personal best of ${window.state.tokenChallengePersonalBest || 0} points correlates perfectly with your facility management efficiency! I'm adding this data to my performance database.`, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: "I'm considering implementing Token Challenge assessments in our Rikkor worker evaluation process. It measures sorting efficiency and stress management beautifully!", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: () => {
+        const workers = window.frontDesk?.assignedWorkers || {};
+        const workerNames = Object.values(workers).map(w => w.displayName || w.name).filter(Boolean);
+        if (workerNames.length === 0) return "Once we have Rikkor workers, I'll have them practice the Token Challenge for organizational skill development!";
+        const randomWorker = workerNames[Math.floor(Math.random() * workerNames.length)];
+        return `${randomWorker} showed great interest in the Token Challenge methodology. I'm scheduling them for organizational efficiency training based on Lepre's system!`;
+      }, condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
+      { text: "The Token Challenge combines resource management, time pressure, and pattern recognition, it's like a comprehensive management skills assessment in miniature form!", condition: () => window.state.tokenChallengePersonalBest && window.state.tokenChallengePersonalBest > 0 },
     ];
 
     // Halloween-specific dialogue for Tico (only appears when Halloween mode is active)
@@ -3126,7 +3162,8 @@
                   window.state.boxesProducedByType[boxType] = new Decimal(window.state.boxesProducedByType[boxType] || 0);
                 }
                 window.state.boxesProducedByType[boxType] = window.state.boxesProducedByType[boxType].add(1);
-                window.state.boxesProduced = (window.state.boxesProduced || 0) + 1;
+                // BUG FIX: Removed conflicting numeric counter
+                // window.state.boxesProduced = (window.state.boxesProduced || 0) + 1;
                 if (earnFunction && typeof earnFunction === 'function') {
                   try {
                     earnFunction(boxType, 1, true, 1);
@@ -3136,10 +3173,14 @@
               }
             });
             if (typeof window.upgradeMk2Speed === 'function') {
-              const oldMk2SpeedLevel = window.state.mk2SpeedUpgrades || 0;
+              const oldMk2SpeedLevel = DecimalUtils.isDecimal(window.state.boxGeneratorMk2.speedUpgrades) 
+                ? window.state.boxGeneratorMk2.speedUpgrades.toNumber() 
+                : (window.state.boxGeneratorMk2.speedUpgrades || 0);
               try {
                 window.upgradeMk2Speed();
-                const newMk2SpeedLevel = window.state.mk2SpeedUpgrades || 0;
+                const newMk2SpeedLevel = DecimalUtils.isDecimal(window.state.boxGeneratorMk2.speedUpgrades) 
+                  ? window.state.boxGeneratorMk2.speedUpgrades.toNumber() 
+                  : (window.state.boxGeneratorMk2.speedUpgrades || 0);
                 if (newMk2SpeedLevel > oldMk2SpeedLevel) {
                 }
               } catch (error) {

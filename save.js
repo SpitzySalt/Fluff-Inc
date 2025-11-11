@@ -14,6 +14,10 @@ window.SaveSystem = {
   db: null,
   dbInitialized: false,
   
+  // Game initialization safety
+  gameInitTime: Date.now(), // Track when game was initialized
+  initSafetyDelay: 5000, // 5 seconds safety delay before allowing saves
+  
   // Throttling properties
   lastSaveTime: 0,
   lastExportTime: 0,
@@ -238,6 +242,29 @@ window.SaveSystem = {
     return `fluffIncSave_slot${this.currentSlot}${suffix ? '_' + suffix : ''}`;
   },
 
+  // Validate and clean boxesProduced to prevent bloat
+  validateBoxesProduced() {
+    if (!window.state || !window.state.boxesProduced) return;
+    
+    const expectedKeys = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+    const bp = window.state.boxesProduced;
+    const allKeys = Object.keys(bp);
+    const unexpectedKeys = allKeys.filter(k => !expectedKeys.includes(k));
+    
+    if (unexpectedKeys.length > 0) {
+      const cleaned = {};
+      expectedKeys.forEach(key => {
+        if (bp[key] !== undefined) {
+          cleaned[key] = bp[key];
+        } else {
+          cleaned[key] = new Decimal(0);
+        }
+      });
+      
+      window.state.boxesProduced = cleaned;
+    }
+  },
+
   // Serialize game state for saving
   serializeState() {
     // First, ensure all systems have saved their current state
@@ -248,6 +275,11 @@ window.SaveSystem = {
     // Sync terrarium variables to state before saving
     if (typeof window.syncTerrariumToState === 'function') {
       window.syncTerrariumToState();
+    }
+    
+    // Validate and clean boxesProduced structure before saving
+    if (window.state && window.state.boxesProduced) {
+      this.validateBoxesProduced();
     }
     
     const saveData = {
@@ -369,6 +401,19 @@ window.SaveSystem = {
     return !this.isSaving && (now - this.lastSaveTime) >= this.saveThrottleDelay;
   },
 
+  // Check if game initialization safety period has passed
+  isInitSafetyPeriodComplete() {
+    const now = Date.now();
+    return (now - this.gameInitTime) >= this.initSafetyDelay;
+  },
+
+  // Get remaining time in initialization safety period
+  getInitSafetyTimeRemaining() {
+    const now = Date.now();
+    const elapsed = now - this.gameInitTime;
+    return Math.max(0, this.initSafetyDelay - elapsed);
+  },
+
   // Check if export is allowed (throttling)
   canExport() {
     const now = Date.now();
@@ -383,6 +428,14 @@ window.SaveSystem = {
 
   // Throttled save game to current slot
   async saveGame(force = false) {
+    // Check initialization safety period unless forced
+    if (!force && !this.isInitSafetyPeriodComplete()) {
+      const timeLeft = Math.ceil(this.getInitSafetyTimeRemaining() / 1000);
+      this.showSaveNotification(`Game initializing... wait ${timeLeft}s before saving`, true);
+      console.log(`Save blocked: Game still in ${timeLeft}s initialization safety period`);
+      return false;
+    }
+
     // Check throttling unless forced
     if (!force && !this.canSave()) {
       const timeLeft = Math.ceil((this.saveThrottleDelay - (Date.now() - this.lastSaveTime)) / 1000);
@@ -739,14 +792,14 @@ window.SaveSystem = {
   },
 
   // Export delivery reset backup as code
-  exportDeliveryResetBackup() {
+  async exportDeliveryResetBackup() {
     try {
       // Use the SaveSystem's current slot, fallback to localStorage
       const saveSlotNumber = this.currentSlot || localStorage.getItem('currentSaveSlot');
       const backupKey = saveSlotNumber ? 
         `deliveryResetBackup_slot${saveSlotNumber}` : 
         'deliveryResetBackup';      
-      const backupDataString = localStorage.getItem(backupKey);
+      const backupDataString = await this.getIndexedDBItem(backupKey);
       
       if (!backupDataString) {
         // Check if there's a backup with a different slot number
@@ -1322,10 +1375,13 @@ window.SaveSystem = {
 
     // Set up new autosave with configurable interval
     this.autosaveInterval = setInterval(() => {
-      if (window.settings && window.settings.autosave) {
-        // Force autosave to bypass throttling
+      if (window.settings && window.settings.autosave && this.isInitSafetyPeriodComplete()) {
+        // Force autosave to bypass throttling (but still respect init safety)
         this.saveGame(true);
         console.log(`Autosave completed (${autosaveIntervalSeconds}s interval)`);
+      } else if (window.settings && window.settings.autosave && !this.isInitSafetyPeriodComplete()) {
+        const timeLeft = Math.ceil(this.getInitSafetyTimeRemaining() / 1000);
+        console.log(`Autosave skipped: Game still in ${timeLeft}s initialization safety period`);
       }
     }, autosaveIntervalSeconds * 1000); // Convert seconds to milliseconds
   },
@@ -1334,12 +1390,14 @@ window.SaveSystem = {
   getThrottlingStatus() {
     const now = Date.now();
     return {
-      canSave: this.canSave(),
+      canSave: this.canSave() && this.isInitSafetyPeriodComplete(),
       canExport: this.canExport(),
       canImport: this.canImport(),
       saveTimeLeft: Math.max(0, Math.ceil((this.saveThrottleDelay - (now - this.lastSaveTime)) / 1000)),
       exportTimeLeft: Math.max(0, Math.ceil((this.exportThrottleDelay - (now - this.lastExportTime)) / 1000)),
       importTimeLeft: Math.max(0, Math.ceil((this.importThrottleDelay - (now - this.lastImportTime)) / 1000)),
+      initSafetyTimeLeft: Math.max(0, Math.ceil(this.getInitSafetyTimeRemaining() / 1000)),
+      isInitSafetyActive: !this.isInitSafetyPeriodComplete(),
       isSaving: this.isSaving,
       isExporting: this.isExporting,
       isImporting: this.isImporting
@@ -1415,10 +1473,10 @@ window.SaveSystem = {
   }
 };
 
-window.testCreateBackup = function() {
+window.testCreateBackup = async function() {
   console.log('Testing backup creation manually');
   if (typeof window.saveDeliveryResetBackup === 'function') {
-    window.saveDeliveryResetBackup();
+    await window.saveDeliveryResetBackup();
     console.log('Manual backup creation completed');
   } else {
     console.log('saveDeliveryResetBackup function not available');
@@ -2194,4 +2252,41 @@ window.quickRestore = function() {
   console.log('');
   console.log('Custom restore:');
   console.log('  manualProgressRestore(fluffAmount, gradeLevel, swariaAmount, feathersAmount, artifactsAmount)');
+};
+
+// Debug function to check initialization safety status
+window.debugInitSafety = function() {
+  console.log('=== INITIALIZATION SAFETY DEBUG ===');
+  console.log('Game init time:', new Date(window.SaveSystem.gameInitTime).toLocaleTimeString());
+  console.log('Current time:', new Date().toLocaleTimeString());
+  console.log('Safety period duration:', window.SaveSystem.initSafetyDelay / 1000, 'seconds');
+  console.log('Safety period complete:', window.SaveSystem.isInitSafetyPeriodComplete());
+  console.log('Time remaining:', Math.ceil(window.SaveSystem.getInitSafetyTimeRemaining() / 1000), 'seconds');
+  console.log('Can save:', window.SaveSystem.canSave() && window.SaveSystem.isInitSafetyPeriodComplete());
+};
+
+// Debug function to reset initialization timer (for testing)
+window.resetInitSafety = function() {
+  window.SaveSystem.gameInitTime = Date.now();
+  console.log('Initialization safety timer reset - 5 second safety period started');
+};
+
+// Debug function to test save protection
+window.testSaveProtection = function() {
+  console.log('=== TESTING SAVE PROTECTION ===');
+  window.resetInitSafety();
+  console.log('Attempting to save immediately after reset...');
+  window.saveGame();
+  
+  console.log('Waiting 3 seconds then trying again...');
+  setTimeout(() => {
+    console.log('Attempting save after 3 seconds...');
+    window.saveGame();
+  }, 3000);
+  
+  console.log('Waiting 6 seconds then trying again...');
+  setTimeout(() => {
+    console.log('Attempting save after 6 seconds (should work)...');
+    window.saveGame();
+  }, 6000);
 };

@@ -564,12 +564,24 @@ function claimAchievementReward(achievementId) {
       } else if (achievementId === 'secret16') {
         rewardAmount = 1100; 
       } else if (achievementId === 'secret17') {
-        rewardAmount = 50; // 50 Swa Bucks for the ultra-rare achievement
+        rewardAmount = 50;
       } else if (achievementId === 'secret18') {
-        rewardAmount = 20; // 20 Swa Bucks for touching Lepre's chest zipper
+        rewardAmount = 20;
       } else {
         const isLastInRow = achievement.position === 5;
         rewardAmount = isLastInRow ? 25 : 15;
+      }
+    } else if (achievement.category === 'halloween_secret') {
+      if (achievementId === 'halloween_secret1') {
+        rewardAmount = 50;
+      } else if (achievementId === 'halloween_secret2') {
+        rewardAmount = 20;
+      } else if (achievementId === 'halloween_secret3') {
+        rewardAmount = 50;
+      } else if (achievementId === 'halloween_secret4') {
+        rewardAmount = 100;
+      } else {
+        rewardAmount = 30; // Default for any future halloween secrets
       }
     } else {
       const isLastInRow = achievement.position === 5;
@@ -893,18 +905,23 @@ function updateSecretAchievements() {
   const totalCount = document.getElementById('secretTotalCount');
   const progressPercent = document.getElementById('secretProgressPercent');
   if (!grid) return;
-  // Use only window.secretAchievements since all secret achievements are now managed there
   const allSecretAchievements = typeof window.secretAchievements !== 'undefined' ? Object.values(window.secretAchievements) : [];
+  
+  const regularSecrets = allSecretAchievements.filter(a => a.category === 'secret');
+  const halloweenSecrets = allSecretAchievements.filter(a => a.category === 'halloween_secret');
+  
   let unlocked = 0;
   let total = allSecretAchievements.length;
   grid.innerHTML = '';
+  
   const achievementsByRow = {};
-  allSecretAchievements.forEach(achievement => {
+  regularSecrets.forEach(achievement => {
     if (!achievementsByRow[achievement.row]) {
       achievementsByRow[achievement.row] = [];
     }
     achievementsByRow[achievement.row].push(achievement);
   });
+  
   Object.keys(achievementsByRow).sort((a, b) => parseInt(a) - parseInt(b)).forEach(rowNum => {
     const rowAchievements = achievementsByRow[rowNum];
     const rowContainer = document.createElement('div');
@@ -917,6 +934,52 @@ function updateSecretAchievements() {
     });
     grid.appendChild(rowContainer);
   });
+  
+  if (halloweenSecrets.length > 0) {
+    const separator = document.createElement('div');
+    separator.style.cssText = `
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #ff6b00, transparent);
+      margin: 30px 0 20px 0;
+      box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+    `;
+    grid.appendChild(separator);
+    
+    const subtitle = document.createElement('div');
+    subtitle.textContent = 'Halloween event secret achievements';
+    subtitle.style.cssText = `
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #ff6b00;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+    `;
+    grid.appendChild(subtitle);
+    
+    const halloweenAchievementsByRow = {};
+    halloweenSecrets.forEach(achievement => {
+      if (!halloweenAchievementsByRow[achievement.row]) {
+        halloweenAchievementsByRow[achievement.row] = [];
+      }
+      halloweenAchievementsByRow[achievement.row].push(achievement);
+    });
+    
+    Object.keys(halloweenAchievementsByRow).sort((a, b) => parseInt(a) - parseInt(b)).forEach(rowNum => {
+      const rowAchievements = halloweenAchievementsByRow[rowNum];
+      const rowContainer = document.createElement('div');
+      rowContainer.className = 'achievement-row visible';
+      rowContainer.dataset.row = 'halloween-' + rowNum;
+      rowAchievements.forEach(achievement => {
+        if (achievement.unlocked) unlocked++;
+        const card = createAchievementCard(achievement);
+        rowContainer.appendChild(card);
+      });
+      grid.appendChild(rowContainer);
+    });
+  }
+  
   if (unlockedCount) unlockedCount.textContent = unlocked;
   if (totalCount) totalCount.textContent = total;
   if (progressPercent) {
@@ -973,6 +1036,20 @@ function createAchievementCard(achievement) {
       } else {
         rewardAmount = isLastInRow ? 25 : 15;
       }
+    } else if (achievement.category === 'halloween_secret') {
+      if (achievement.id === 'halloween_secret1') {
+        rewardAmount = 50;
+      } else if (achievement.id === 'halloween_secret2') {
+        rewardAmount = 20;
+      } else if (achievement.id === 'halloween_secret3') {
+        rewardAmount = 50;
+      } else if (achievement.id === 'halloween_secret4') {
+        rewardAmount = 100;
+      } else if (achievement.id === 'halloween_secret5') {
+        rewardAmount = 100;
+      } else {
+        rewardAmount = 30; // Default for any future halloween secrets
+      }
     } else {
     if (achievement.row === 2) {
       rewardAmount = isLastInRow ? 30 : 15;
@@ -992,7 +1069,7 @@ function createAchievementCard(achievement) {
       card.onclick = () => claimAchievementReward(achievement.id);
       card.dataset.achievementListenerAdded = 'true';
     }
-    const iconHtml = achievement.category === 'secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
+    const iconHtml = achievement.category === 'secret' || achievement.category === 'halloween_secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
     card.innerHTML = `
       ${iconHtml}
       <div class="achievement-title">${achievement.name}</div>
@@ -1005,7 +1082,7 @@ function createAchievementCard(achievement) {
     }
   else if (achievement.unlocked && achievement.rewarded) {
     card.className = `achievement-card unlocked claimed`;
-    const iconHtml = achievement.category === 'secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
+    const iconHtml = achievement.category === 'secret' || achievement.category === 'halloween_secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
     card.innerHTML = `
       ${iconHtml}
       <div class="achievement-title">${achievement.name}</div>
@@ -1017,13 +1094,13 @@ function createAchievementCard(achievement) {
     `;
     }
    else {
-    const iconHtml = achievement.category === 'secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
+    const iconHtml = achievement.category === 'secret' || achievement.category === 'halloween_secret' ? '' : `<img src="${achievement.icon}" alt="${achievement.name}" class="achievement-icon">`;
     card.innerHTML = `
       ${iconHtml}
       <div class="achievement-title">${achievement.name}</div>
       <div class="achievement-description">${achievement.description}</div>
     `;
-    if (achievement.category === 'secret' && typeof window.handleSecretAchievementClick === 'function') {
+    if ((achievement.category === 'secret' || achievement.category === 'halloween_secret') && typeof window.handleSecretAchievementClick === 'function') {
       card.style.cursor = 'pointer';
       if (!card.dataset.achievementListenerAdded) {
         card.onclick = () => window.handleSecretAchievementClick(achievement.id);
@@ -1430,6 +1507,39 @@ const trophies = {
     },
     slot: '1-1',
     unlockedTier: null
+  },
+  tokenChallenge: {
+    id: 'tokenChallenge',
+    name: 'Token Challenge',
+    description: 'Master the Token Challenge minigame',
+    icon: 'assets/icons/bronze token challenge.png',
+    type: 'challenge',
+    category: 'trophy',
+    tiers: {
+      bronze: {
+        requirement: 60,
+        unlocked: false,
+        name: 'Bronze Token Sorting Master',
+        description: 'Score 60+ points in the Token Challenge',
+        icon: 'assets/icons/bronze token challenge.png'
+      },
+      silver: {
+        requirement: 90,
+        unlocked: false,
+        name: 'Silver Token Sorting Master',
+        description: 'Score 90+ points in the Token Challenge',
+        icon: 'assets/icons/silver token challenge.png'
+      },
+      gold: {
+        requirement: 120,
+        unlocked: false,
+        name: 'Gold Token Sorting Master',
+        description: 'Score 120+ points in the Token Challenge',
+        icon: 'assets/icons/gold token challenge.png'
+      }
+    },
+    slot: '1-2',
+    unlockedTier: null
   }
 };
 
@@ -1529,24 +1639,35 @@ function addTrophyToSlot(slotId, trophyType = 'gold', trophyId = null) {
     const trophy3D = document.createElement('div');
     trophy3D.className = 'trophy-3d';
     
-    // Check if this is the power generator challenge trophy
-    if (trophyId === 'powerGeneratorChallenge') {
+    // Check if this is a trophy that uses PNG images
+    if (trophyId === 'powerGeneratorChallenge' || trophyId === 'tokenChallenge') {
       const trophy = trophies[trophyId];
       const tierIcon = trophy?.tiers?.[trophyType]?.icon;
       
       if (tierIcon) {
-        // Create tooltip content for power generator challenge
+        // Create tooltip content based on trophy type
         let buffText = '';
         let multiplier = 1;
-        if (trophyType === 'bronze') {
-          multiplier = 1.1;
-          buffText = '+10% Power Cap Boost';
-        } else if (trophyType === 'silver') {
-          multiplier = 1.25;
-          buffText = '+25% Power Cap Boost';
-        } else if (trophyType === 'gold') {
-          multiplier = 1.5;
-          buffText = '+50% Power Cap Boost';
+        
+        if (trophyId === 'powerGeneratorChallenge') {
+          if (trophyType === 'bronze') {
+            multiplier = 1.1;
+            buffText = '+10% Power Cap Boost';
+          } else if (trophyType === 'silver') {
+            multiplier = 1.25;
+            buffText = '+25% Power Cap Boost';
+          } else if (trophyType === 'gold') {
+            multiplier = 1.5;
+            buffText = '+50% Power Cap Boost';
+          }
+        } else if (trophyId === 'tokenChallenge') {
+          if (trophyType === 'bronze') {
+            buffText = '+2% chance for free Swa Bucks when collecting tokens';
+          } else if (trophyType === 'silver') {
+            buffText = '+6% chance for free Swa Bucks when collecting tokens';
+          } else if (trophyType === 'gold') {
+            buffText = '+15% chance for free Swa Bucks when collecting tokens';
+          }
         }
         
         const tierInfo = trophy.tiers[trophyType];
@@ -1660,6 +1781,24 @@ function checkChallengeTrophy(trophyId) {
     if (newTier && newTier !== currentTier) {
       unlockTrophy(trophyId, newTier);
     }
+  } else if (trophyId === 'tokenChallenge') {
+    const bestScore = window.state.tokenChallengePersonalBest || 0;
+    
+    // Check each tier from highest to lowest
+    let newTier = null;
+    if (bestScore >= trophy.tiers.gold.requirement) {
+      newTier = 'gold';
+    } else if (bestScore >= trophy.tiers.silver.requirement) {
+      newTier = 'silver';
+    } else if (bestScore >= trophy.tiers.bronze.requirement) {
+      newTier = 'bronze';
+    }
+    
+    // Only unlock if we have a new tier or no tier unlocked yet
+    const currentTier = window.state.trophies[trophyId]?.unlockedTier;
+    if (newTier && newTier !== currentTier) {
+      unlockTrophy(trophyId, newTier);
+    }
   }
 }
 
@@ -1692,7 +1831,6 @@ function unlockTrophy(trophyId, tier = 'gold') {
     if (typeof window.calculatePowerGeneratorCap === 'function') {
       const newCap = window.calculatePowerGeneratorCap();
       window.state.powerMaxEnergy = newCap;
-      console.log('Trophy unlocked! New power cap:', newCap.toString());
     }
     
     // Update UI
@@ -1712,23 +1850,35 @@ function showTrophyNotification(trophy, tier) {
   const notification = document.createElement('div');
   notification.className = 'trophy-notification';
   
-  // Check if this is the power generator challenge trophy
+  // Check if this is a trophy that uses PNG images
   let trophyIconHTML;
-  if (trophy.id === 'powerGeneratorChallenge' && tierInfo.icon) {
-    // Add power buff information to notification
+  if ((trophy.id === 'powerGeneratorChallenge' || trophy.id === 'tokenChallenge') && tierInfo.icon) {
+    // Add buff information to notification
     let buffText = '';
-    if (tier === 'bronze') {
-      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+10% Power Cap Boost!</div>';
-    } else if (tier === 'silver') {
-      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+25% Power Cap Boost!</div>';
-    } else if (tier === 'gold') {
-      buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+50% Power Cap Boost!</div>';
+    
+    if (trophy.id === 'powerGeneratorChallenge') {
+      if (tier === 'bronze') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+10% Power Cap Boost!</div>';
+      } else if (tier === 'silver') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+25% Power Cap Boost!</div>';
+      } else if (tier === 'gold') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+50% Power Cap Boost!</div>';
+      }
+    } else if (trophy.id === 'tokenChallenge') {
+      if (tier === 'bronze') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+2% chance for free Swa Bucks when collecting tokens!</div>';
+      } else if (tier === 'silver') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+6% chance for free Swa Bucks when collecting tokens!</div>';
+      } else if (tier === 'gold') {
+        buffText = '<div style="color: #4caf50; font-weight: bold; margin-top: 6px;">+15% chance for free Swa Bucks when collecting tokens!</div>';
+      }
     }
     
-    // Use PNG image for power generator challenge
+    // Use PNG image for special trophies
+    const altText = trophy.id === 'powerGeneratorChallenge' ? `${tier} power challenge trophy` : `${tier} token challenge trophy`;
     trophyIconHTML = `
       <div class="trophy-notification-icon">
-        <img src="${tierInfo.icon}" alt="${tier} power challenge trophy" style="width: 85px; height: 85px; object-fit: contain; display: block; opacity: 1;" loading="eager" />
+        <img src="${tierInfo.icon}" alt="${altText}" style="width: 85px; height: 85px; object-fit: contain; display: block; opacity: 1;" loading="eager" />
       </div>
     `;
     
@@ -1840,10 +1990,26 @@ function refreshPowerCapForTrophies() {
       window.updatePowerGeneratorUI();
     }
     
-    console.log('Power cap refreshed to:', newCap.toString());
     return newCap;
   }
   return null;
+}
+
+// Function to get the current token challenge trophy boost chance
+function getTokenChallengeTrophyBonus() {
+  if (window.state && window.state.trophies && window.state.trophies.tokenChallenge && window.state.trophies.tokenChallenge.unlockedTier) {
+    const trophyTier = window.state.trophies.tokenChallenge.unlockedTier;
+    
+    if (trophyTier === 'bronze') {
+      return 0.02; // 2%
+    } else if (trophyTier === 'silver') {
+      return 0.06; // 6%
+    } else if (trophyTier === 'gold') {
+      return 0.15; // 15%
+    }
+  }
+  
+  return 0; // No trophy = no bonus
 }
 
 // Expose trophy functions globally
@@ -1855,6 +2021,7 @@ window.checkChallengeTrophy = checkChallengeTrophy;
 window.observeTrophyVisibility = observeTrophyVisibility;
 window.getTrophyPowerCapMultiplier = getTrophyPowerCapMultiplier;
 window.refreshPowerCapForTrophies = refreshPowerCapForTrophies;
+window.getTokenChallengeTrophyBonus = getTokenChallengeTrophyBonus;
 window.unlockTrophy = unlockTrophy;
 window.showTrophyNotification = showTrophyNotification;
 window.updateTrophyProgressDisplay = updateTrophyProgressDisplay;
@@ -1867,3 +2034,42 @@ window.showNextPopup = showNextPopup;
 window.showRewardNotification = showRewardNotification;
 window.showAchievementNotification = showAchievementNotification;
 window.showGenericRewardNotification = showGenericRewardNotification;
+
+// Initialize trophies system
+function initializeTrophies() {
+  // Initialize trophy state if not exists
+  if (!window.state) window.state = {};
+  if (!window.state.trophies) window.state.trophies = {};
+  
+  // Initialize individual trophies if not exists
+  Object.keys(trophies).forEach(trophyId => {
+    if (!window.state.trophies[trophyId]) {
+      window.state.trophies[trophyId] = { unlockedTier: null };
+    }
+  });
+  
+  // Check trophy progress on initialization
+  setTimeout(() => {
+    checkTrophyProgress();
+  }, 1000);
+  
+
+}
+
+// Auto-initialize trophies when the file loads
+if (typeof window !== 'undefined') {
+  // Wait for state to be ready
+  if (window.state) {
+    initializeTrophies();
+  } else {
+    // If state doesn't exist yet, wait for it
+    const checkStateInterval = setInterval(() => {
+      if (window.state) {
+        clearInterval(checkStateInterval);
+        initializeTrophies();
+      }
+    }, 100);
+  }
+}
+
+window.initializeTrophies = initializeTrophies;

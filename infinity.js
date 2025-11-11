@@ -706,14 +706,14 @@ window.infinitySystem = {
     },
     
     // Perform infinity reset
-    performInfinityReset: function() {
+    performInfinityReset: async function() {
         if (!this.canInfinityReset()) {
             return false;
         }
         
         // Save infinity reset backup before reset
         if (typeof window.saveInfinityResetBackup === 'function') {
-            window.saveInfinityResetBackup();
+            await window.saveInfinityResetBackup();
         }
         
         const infinityGain = this.calculateInfinityGain();
@@ -4460,13 +4460,13 @@ function removeFloatingSymbols(filterEl) {
 }
 
 // Force infinity reset for challenge (preserves expansion levels)
-function forceInfinityResetForChallenge() {
+async function forceInfinityResetForChallenge() {
     // Reset all currencies but preserve expansion level
     const currentExpansion = window.state.grade;
     
     // Call the regular infinity reset
     if (typeof window.infinitySystem.performInfinityReset === 'function') {
-        window.infinitySystem.performInfinityReset();
+        await window.infinitySystem.performInfinityReset();
     }
     
     // Restore expansion level

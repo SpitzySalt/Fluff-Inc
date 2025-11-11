@@ -251,7 +251,7 @@ const gradePrestigeMilestones = [
   { grade: 1, reward: 'Unlock the cargo and the generator.' },
   { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab and the permanently front desk' },
     { grade: 3, reward: 'Double light gain and swaria coins gain for every new expansion starting at third expansion' },
-    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light, Unlock the merchant.' },
+    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light.' },
     { grade: 5, reward: 'Double red light gain and Wing artifact gain for every new expansion starting at fourth expansion, unlock the charger' },
     { grade: 6, reward: 'Unlock orange light and unlock the second floor' },
     { grade: 7, reward: 'Double orange light gain and expand the terrarium' },
@@ -267,7 +267,7 @@ function updateMilestoneTable() {
     { grade: 1, reward: 'Unlock the cargo and the generator.' },
     { grade: 2, reward: 'Double Fluff gain for every new expansion starting at second expansion, Add 20 more power generator cap every new expansion, unlock the lab and permanently unlock the front desk' },
     { grade: 3, reward: 'Double light gain and swaria coins gain for every new expansion starting at third expansion, Unlock the kitchen.' },
-    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light, Unlock the merchant.' },
+    { grade: 4, reward: 'Double Feathers gain for every new expansion starting at fourth expansion, Unlock red light.' },
     { grade: 5, reward: 'Double red light and Wing artifact for every new expansion starting at fifth expansion, unlock the charger' },
     { grade: 6, reward: 'Unlock orange light and unlock the second floor' },
     { grade: 7, reward: 'Double orange light gain and expand the terrarium' },
@@ -406,7 +406,7 @@ function resetTerrariumContent() {
 
 window.resetTerrariumContent = resetTerrariumContent;
 
-function gradeUp() {
+async function gradeUp() {
   const currentGrade = DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : (window.state.grade || 1);
   const nextGrade = currentGrade + 1;
   const nextCost = getGradeKPCost(nextGrade);
@@ -415,7 +415,7 @@ function gradeUp() {
   
   // Save expansion reset backup before reset
   if (typeof window.saveExpansionResetBackup === 'function') {
-    window.saveExpansionResetBackup();
+    await window.saveExpansionResetBackup();
   }
   
   const oldGrade = currentGrade;
@@ -535,7 +535,9 @@ function gradeUp() {
   window.state.artifactsInfinityCount = new Decimal(0);
   
 
-  window.state.mk2SpeedUpgrades = 0;
+  // Reset Mk.2 box generator system
+  window.state.boxGeneratorMk2.speedUpgrades = new Decimal(0);
+  window.state.boxGeneratorMk2.progress = 0;
   window.state.doubleAllBoxUpgrades = 0;
   
   // Reset all light-related variables

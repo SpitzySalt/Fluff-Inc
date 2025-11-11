@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Map - Fluff Inc.</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .world-map-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .world-map-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .world-map-header h1 {
+      font-size: 3em;
+      margin: 0;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    .continent-selector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .continent-arrow {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      color: rgba(255, 255, 255, 0.3);
+      cursor: not-allowed;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .continent-arrow.active {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: #ffd700;
+      color: #ffd700;
+      cursor: pointer;
+    }
+
+    .continent-arrow.active:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .continent-name {
+      font-size: 1.5em;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      min-width: 250px;
+      text-align: center;
+    }
+
+    .map-container {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    .map-wrapper {
+      position: relative;
+      width: 100%;
+      display: inline-block;
+    }
+
+    .map-image {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      display: block;
+    }
+
+    .travel-button {
+      position: absolute;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+      border: 4px solid #4CAF50;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #1a1a2e;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .travel-button:hover {
+      transform: scale(1.15);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      border-color: #0044ff;
+      background: linear-gradient(135deg, #ffffff, #f0f0f0);
+    }
+
+    .travel-button:active {
+      transform: scale(1.05);
+    }
+
+    /* Fluff Inc button - positioned under the building */
+    #fluffIncButton {
+      bottom: 33%;
+      left: 32%;
+      border-color: #0044ff;
+    }
+
+    /* Haunted Grove button - positioned at the entrance of the grove */
+    #hauntedGroveButton {
+      top: 60%;
+      right: 34%;
+      border-color: #ff6b35;
+      display: none;
+    }
+
+    #hauntedGroveButton:hover {
+      border-color: #ff9500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="world-map-page">
+    <div class="world-map-header">
+      <h1>World Map</h1>
+      <div class="continent-selector">
+        <button class="continent-arrow" id="prevContinent" disabled>←</button>
+        <div class="continent-name">The Water Continent</div>
+        <button class="continent-arrow" id="nextContinent" disabled>→</button>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <div class="map-wrapper">
+        <img src="assets/icons/water continent.png" alt="World Map" class="map-image">
+        
+        <!-- Travel buttons positioned on the map -->
+        <button id="fluffIncButton" class="travel-button" onclick="window.location.href='index.html'">
+          Fluff Inc.
+        </button>
+        
+        <button id="hauntedGroveButton" class="travel-button" onclick="travelToHauntedGrove()">
+          Haunted grove
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <script src="break_eternity.js"></script>
+  <script src="decimal_utils.js"></script>
+  <script>
+    // IndexedDB configuration
+    const dbName = 'FluffIncGame';
+    const dbVersion = 1;
+    const storeName = 'saves';
+    let db = null;
+
+    // Initialize IndexedDB
+    async function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, dbVersion);
+        
+        request.onerror = () => {
+          reject(request.error);
+        };
+        
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          const database = event.target.result;
+          if (!database.objectStoreNames.contains(storeName)) {
+            database.createObjectStore(storeName, { keyPath: 'key' });
+          }
+        };
+      });
+    }
+
+    // Get item from IndexedDB
+    async function getIndexedDBItem(key) {
+      if (!db) {
+        await initIndexedDB();
+      }
+      
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.get(key);
+        
+        request.onsuccess = () => {
+          const result = request.result;
+          resolve(result ? result.data : null);
+        };
+        
+        request.onerror = () => {
+          resolve(null);
+        };
+      });
+    }
+
+    // Load game state from IndexedDB
+    async function loadGameState() {
+      try {
+        // Get current slot number
+        const currentSlotData = await getIndexedDBItem('currentSaveSlot');
+        const currentSlot = currentSlotData ? parseInt(currentSlotData) : 1;
+        
+        // Load save data for current slot
+        const saveKey = `fluffIncSave_slot${currentSlot}`;
+        const savedState = await getIndexedDBItem(saveKey);
+        
+        if (savedState) {
+          // Data should be a compressed string
+          if (typeof savedState === 'string') {
+            try {
+              // Decompress the data using LZ-String
+              let decompressedString = savedState;
+              if (typeof LZString !== 'undefined') {
+                try {
+                  const decompressed = LZString.decompressFromUTF16(savedState);
+                  if (decompressed) {
+                    decompressedString = decompressed;
+                  }
+                } catch (decompressionError) {
+                  // Use as-is if decompression fails
+                }
+              }
+              
+              // Parse the JSON
+              return JSON.parse(decompressedString);
+            } catch (parseError) {
+              return null;
+            }
+          } else {
+            return savedState;
+          }
+        }
+      } catch (error) {
+        // Silent error handling
+      }
+      return null;
+    }
+
+    // Check if Halloween event is active and show Haunted Grove button
+    async function updateHauntedGroveButton() {
+      const state = await loadGameState();
+      const hauntedGroveButton = document.getElementById('hauntedGroveButton');
+
+      if (!state) {
+        return;
+      }
+
+      // The actual game state is nested inside state.state
+      const gameState = state.state || state;
+      
+      // Check if Halloween event is activated OR Halloween code has been redeemed
+      const halloweenActive = gameState.halloweenEventActive || false;
+      const halloweenUnlocked = gameState.unlockedFeatures?.halloweenEvent || false;
+      
+      if (halloweenActive || halloweenUnlocked) {
+        // Show the Haunted Grove button (use flex to maintain centering)
+        hauntedGroveButton.style.display = 'flex';
+      } else {
+        // Hide if neither condition is met
+        hauntedGroveButton.style.display = 'none';
+      }
+      
+    }
+
+    // Travel to Haunted Grove
+    async function travelToHauntedGrove() {
+      // Easter egg: 0.1% chance to play spooky music when arriving at Halloween page
+      if (Math.random() < 0.001) {
+        // Set flag in sessionStorage to play music on arrival
+        sessionStorage.setItem('playSpookyMusic', 'true');
+      }
+      
+      // Load current game state
+      const state = await loadGameState();
+      
+      if (state && state.state) {
+        const gameState = state.state;
+        
+        // If Halloween mode is not active, enable it
+        if (!gameState.halloweenEventActive) {
+          gameState.halloweenEventActive = true;
+          
+          // Save the updated state back to IndexedDB
+          try {
+            const currentSlotData = await getIndexedDBItem('currentSaveSlot');
+            const currentSlot = currentSlotData ? parseInt(currentSlotData) : 1;
+            const saveKey = `fluffIncSave_slot${currentSlot}`;
+            
+            // Stringify and compress the updated state
+            const stateString = JSON.stringify(state);
+            let compressedState = stateString;
+            
+            if (typeof LZString !== 'undefined') {
+              compressedState = LZString.compressToUTF16(stateString);
+            }
+            
+            // Save to IndexedDB
+            if (db) {
+              const transaction = db.transaction([storeName], 'readwrite');
+              const store = transaction.objectStore(storeName);
+              const saveObject = {
+                key: saveKey,
+                data: compressedState,
+                timestamp: Date.now(),
+                slot: currentSlot
+              };
+              store.put(saveObject);
+            }
+          } catch (error) {
+            // Silent error handling
+          }
+        }
+      }
+      
+      // Navigate to Halloween event
+      window.location.href = 'index.html#halloween';
+    }
+
+    // Update on page load
+    document.addEventListener('DOMContentLoaded', updateHauntedGroveButton);
+  </script>
+</body>
+</html>

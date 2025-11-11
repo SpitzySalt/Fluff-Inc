@@ -71,40 +71,12 @@ function loadChargerState() {
         if (typeof chargerData.charge !== 'undefined') {
           charger.charge = DecimalUtils.isDecimal(chargerData.charge) ? chargerData.charge : new Decimal(chargerData.charge || 0);
         }
-        charger.milestoneQuests = {
-          3: { required: 10, given: new Decimal(0), completed: false }, 
-          4: { required: 15, given: new Decimal(0), completed: false }, 
-          5: { required: 25, given: new Decimal(0), completed: false }, 
-          6: { required: 50, given: new Decimal(0), completed: false }, 
-          7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-          8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
-        };
         if (Array.isArray(chargerData.milestones)) {
           chargerData.milestones.forEach((ms, idx) => {
             if (idx < charger.milestones.length) {
               charger.milestones[idx].unlocked = ms.unlocked || false;
             }
           });
-        }
-        if (chargerData.milestoneQuests) {
-          Object.entries(chargerData.milestoneQuests).forEach(([index, quest]) => {
-            if (charger.milestoneQuests[index]) {
-              // Always load as Decimal
-              charger.milestoneQuests[index].given = DecimalUtils.isDecimal(quest.given) ? quest.given : new Decimal(quest.given || 0);
-              charger.milestoneQuests[index].completed = quest.completed || false;
-              if ((index === '7' || index === '8') && typeof quest.batteryGiven !== 'undefined') {
-                charger.milestoneQuests[index].batteryGiven = quest.batteryGiven;
-              }
-            }
-          });
-        }
-        if (chargerData.questStage !== undefined && state) {
-          if (!state.soapChargeQuest) {
-            state.soapChargeQuest = { stage: chargerData.questStage, initialized: true };
-          } else {
-            state.soapChargeQuest.stage = chargerData.questStage;
-            state.soapChargeQuest.initialized = true;
-          }
         }
       }
     }
@@ -114,16 +86,8 @@ function loadChargerState() {
       const parsed = JSON.parse(savedState);
       if (parsed) {
         if (typeof parsed.charge !== 'undefined') {
-          charger.charge = parsed.charge;
+          charger.charge = new Decimal(parsed.charge || 0);
         }
-        charger.milestoneQuests = {
-          3: { required: 10, given: new Decimal(0), completed: false }, 
-          4: { required: 15, given: new Decimal(0), completed: false }, 
-          5: { required: 25, given: new Decimal(0), completed: false }, 
-          6: { required: 50, given: new Decimal(0), completed: false }, 
-          7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-          8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
-        };
         if (Array.isArray(parsed.milestones)) {
           parsed.milestones.forEach((ms, idx) => {
             if (idx < charger.milestones.length) {
@@ -131,51 +95,15 @@ function loadChargerState() {
             }
           });
         }
-        if (parsed.milestoneQuests) {
-          Object.entries(parsed.milestoneQuests).forEach(([index, quest]) => {
-            if (charger.milestoneQuests[index]) {
-              // Always load as Decimal
-              charger.milestoneQuests[index].given = DecimalUtils.isDecimal(quest.given) ? quest.given : new Decimal(quest.given || 0);
-              charger.milestoneQuests[index].completed = quest.completed || false;
-            }
-          });
-        }
-        if (parsed.questStage !== undefined && state) {
-          if (!state.soapChargeQuest) {
-            state.soapChargeQuest = { stage: parsed.questStage, initialized: true };
-          } else {
-            state.soapChargeQuest.stage = parsed.questStage;
-            state.soapChargeQuest.initialized = true;
-          }
-        }
       }
     }
   }
 }
 
 function saveChargerState() {
-  if (!charger.milestoneQuests) {
-    charger.milestoneQuests = {
-      3: { required: 10, given: new Decimal(0), completed: false },
-      4: { required: 15, given: new Decimal(0), completed: false },
-      5: { required: 25, given: new Decimal(0), completed: false }, 
-      6: { required: 50, given: new Decimal(0), completed: false }, 
-      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
-    };
-  }
   const stateToSave = {
     charge: DecimalUtils.isDecimal(charger.charge) ? charger.charge.toString() : charger.charge,
-    milestones: charger.milestones.map(ms => ({ unlocked: ms.unlocked })),
-    milestoneQuests: {
-  3: { required: 10, given: (charger.milestoneQuests && charger.milestoneQuests[3]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[3].given) ? charger.milestoneQuests[3].given.toString() : new Decimal(charger.milestoneQuests[3].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[3]) ? charger.milestoneQuests[3].completed || false : false },
-  4: { required: 15, given: (charger.milestoneQuests && charger.milestoneQuests[4]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[4].given) ? charger.milestoneQuests[4].given.toString() : new Decimal(charger.milestoneQuests[4].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[4]) ? charger.milestoneQuests[4].completed || false : false },
-  5: { required: 25, given: (charger.milestoneQuests && charger.milestoneQuests[5]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[5].given) ? charger.milestoneQuests[5].given.toString() : new Decimal(charger.milestoneQuests[5].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[5]) ? charger.milestoneQuests[5].completed || false : false },
-  6: { required: 50, given: (charger.milestoneQuests && charger.milestoneQuests[6]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[6].given) ? charger.milestoneQuests[6].given.toString() : new Decimal(charger.milestoneQuests[6].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[6]) ? charger.milestoneQuests[6].completed || false : false },
-  7: { required: 30, given: (charger.milestoneQuests && charger.milestoneQuests[7]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[7].given) ? charger.milestoneQuests[7].given.toString() : new Decimal(charger.milestoneQuests[7].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].completed || false : false, batteryRequired: 1, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[7]) ? charger.milestoneQuests[7].batteryGiven || 0 : 0 },
-  8: { required: 75, given: (charger.milestoneQuests && charger.milestoneQuests[8]) ? (DecimalUtils.isDecimal(charger.milestoneQuests[8].given) ? charger.milestoneQuests[8].given.toString() : new Decimal(charger.milestoneQuests[8].given || 0).toString()) : "0", completed: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].completed || false : false, batteryRequired: 2, batteryGiven: (charger.milestoneQuests && charger.milestoneQuests[8]) ? charger.milestoneQuests[8].batteryGiven || 0 : 0 }
-    },
-    questStage: state?.soapChargeQuest?.stage || 0
+    milestones: charger.milestones.map(ms => ({ unlocked: ms.unlocked }))
   };
   const currentSaveSlot = localStorage.getItem('currentSaveSlot');
   if (currentSaveSlot) {
@@ -193,7 +121,6 @@ function saveChargerState() {
 let charger = {
   isOn: false,
   charge: new Decimal(0),
-  questDialogueShown: false, 
   milestones: [
     { amount: new Decimal(10), unlocked: false, effect: 'Boost your charge gain based on how much charge you have.' },
     { amount: new Decimal(100), unlocked: false, effect: 'Boost the 4 main currency gain (fluff, swaria coins, feathers, artifacts) based on your charge.' },
@@ -213,7 +140,7 @@ let charger = {
   soapIsMad: false,
   soapIsTalking: false,
   soapCurrentSpeechTimeout: null,
-  soapChargeEaten: 0, 
+  soapChargeEaten: new Decimal(0), 
   soapWillEatCharge: false, 
 };
 window.charger = charger;
@@ -295,38 +222,7 @@ function updateChargerUI(forceUpdate = false) {
   
   checkChargerMilestones(forceUpdate);
   ensureChargerBoostElements();
-  if (typeof state !== 'undefined') {
-    if (!state.soapChargeQuest || typeof state.soapChargeQuest === 'undefined') {
-      state.soapChargeQuest = { stage: 0, initialized: false };
-    }
-    if (!charger.milestoneQuests || !state.soapChargeQuest.initialized) {
-      charger.milestoneQuests = {
-        3: { required: 10, given: new Decimal(0), completed: false }, 
-        4: { required: 15, given: new Decimal(0), completed: false }, 
-        5: { required: 25, given: new Decimal(0), completed: false }, 
-        6: { required: 50, given: new Decimal(0), completed: false }, 
-        7: { required: 30, given: new Decimal(0), completed: false },
-        8: { required: 75, given: new Decimal(0), completed: false }, 
-      };
-      state.soapChargeQuest.initialized = true;
-    }
-    if (state.soapChargeQuest && state.soapChargeQuest.initialized) {
-      // Automatically advance quest stage for all soap charger quests if the corresponding milestone is unlocked
-      const questMilestoneStages = [
-        { milestone: 3, stage: 1 },
-        { milestone: 4, stage: 2 },
-        { milestone: 5, stage: 3 },
-        { milestone: 6, stage: 4 },
-        { milestone: 7, stage: 5 },
-        { milestone: 8, stage: 6 }
-      ];
-      for (const { milestone, stage } of questMilestoneStages) {
-        if (charger.milestones[milestone] && charger.milestones[milestone].unlocked && state.soapChargeQuest.stage < stage) {
-          state.soapChargeQuest.stage = stage;
-        }
-      }
-    }
-  }
+
   const chargerCard = document.getElementById('chargerCard');
   if (chargerCard) {
     if (charger.isOn) {
@@ -413,17 +309,8 @@ function updateChargerUI(forceUpdate = false) {
     
     let html = '<table style="width:100%;border-collapse:collapse;">';
     html += '<tr><th style="text-align:left;padding:4px 8px;">Milestone</th><th style="text-align:left;padding:4px 8px;">Effect</th><th style="text-align:left;padding:4px 8px;">Status</th></tr>';
-    let visibleMilestones = 4; 
-    if (state && state.soapChargeQuest) {
-      if (state.soapChargeQuest.stage >= 1) visibleMilestones = 5;
-      if (state.soapChargeQuest.stage >= 2) visibleMilestones = 6;
-      if (state.soapChargeQuest.stage >= 3) visibleMilestones = 7;
-      if (state.soapChargeQuest.stage >= 4) visibleMilestones = 8;
-      if (state.soapChargeQuest.stage >= 5) visibleMilestones = 9;
-      if (state.soapChargeQuest.stage >= 6) visibleMilestones = 10;
-    }
+    
     charger.milestones.forEach((ms, idx) => {
-      if (idx >= visibleMilestones && !ms.unlocked) return;
       let status = '';
       if (!ms.unlocked) {
         status = `<span style=\"color:#888;\">Need ${formatNumber(ms.amount)} charge</span>`;
@@ -437,16 +324,14 @@ function updateChargerUI(forceUpdate = false) {
           let isSoftcapped = false;
           if (charger.charge.gte(100)) {
             let effectiveCharge = charger.charge.sub(100);
-            let softcapThreshold = new Decimal("1e30").sub(100); // 1e30 - 100
+            let softcapThreshold = new Decimal("1e30").sub(100);
             
             if (effectiveCharge.lte(softcapThreshold)) {
-              // Below softcap: normal formula
               boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.5));
             } else {
-              // Above softcap: calculate pre-softcap value + softcapped portion
               let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.5));
               let excessCharge = effectiveCharge.sub(softcapThreshold);
-              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.25); // Reduced from 0.5 to 0.25
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.25);
               boost = preSoftcapBoost.add(softcappedPortion);
               isSoftcapped = true;
             }
@@ -459,16 +344,14 @@ function updateChargerUI(forceUpdate = false) {
           let isSoftcapped = false;
           if (charger.charge.gte(2500)) {
             let effectiveCharge = charger.charge.sub(2500);
-            let softcapThreshold = new Decimal("1e30").sub(2500); // 1e30 - 2500
+            let softcapThreshold = new Decimal("1e30").sub(2500);
             
             if (effectiveCharge.lte(softcapThreshold)) {
-              // Below softcap: normal formula
               boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.3));
             } else {
-              // Above softcap: calculate pre-softcap value + softcapped portion
               let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.3));
               let excessCharge = effectiveCharge.sub(softcapThreshold);
-              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.15); // Reduced from 0.3 to 0.15
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.15);
               boost = preSoftcapBoost.add(softcappedPortion);
               isSoftcapped = true;
             }
@@ -487,16 +370,14 @@ function updateChargerUI(forceUpdate = false) {
           let isSoftcapped = false;
           if (charger.charge.gte(25000)) {
             let effectiveCharge = charger.charge.sub(25000);
-            let softcapThreshold = new Decimal("1e30").sub(25000); // 1e30 - 25000
+            let softcapThreshold = new Decimal("1e30").sub(25000);
             
             if (effectiveCharge.lte(softcapThreshold)) {
-              // Below softcap: normal formula
               boost = new Decimal(1).add(DecimalUtils.pow(effectiveCharge, 0.2));
             } else {
-              // Above softcap: calculate pre-softcap value + softcapped portion
               let preSoftcapBoost = new Decimal(1).add(DecimalUtils.pow(softcapThreshold, 0.2));
               let excessCharge = effectiveCharge.sub(softcapThreshold);
-              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.1); // Reduced from 0.2 to 0.1
+              let softcappedPortion = DecimalUtils.pow(excessCharge, 0.1);
               boost = preSoftcapBoost.add(softcappedPortion);
               isSoftcapped = true;
             }
@@ -537,48 +418,11 @@ function updateChargerUI(forceUpdate = false) {
         }
       }
       let effectText = ms.effect;
-      let milestoneStatus = '';
-              if (!ms.unlocked) {
-          if (idx >= 3) {
-            const quest = charger.milestoneQuests[idx];
-            if (!quest) {
-              if (idx === 7) {
-                const batteryTokens = (typeof state !== 'undefined' && state.batteryTokens) ? state.batteryTokens : 0;
-                const sparks = (typeof state !== 'undefined' && state.sparks) ? state.sparks : 0;
-                const batteryProgress = "0/1";
-                const sparkProgress = `${Math.min(sparks, 30)}/30`;
-                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
-              } else {
-                milestoneStatus = `<span style="color:#888;">Quest not initialized</span>`;
-              }
-            } else {
-              // Always display quest.given and quest.required as numbers (handle Decimal)
-              const given = (quest.given && typeof quest.given.toNumber === 'function') ? quest.given.toNumber() : (Number(quest.given) || 0);
-              const required = (quest.required && typeof quest.required.toNumber === 'function') ? quest.required.toNumber() : (Number(quest.required) || 0);
-              if (idx === 3 && state && state.soapChargeQuest && state.soapChargeQuest.stage === 0) {
-                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${given}/${required} sparks</span>`;
-              } else if (idx === 7) {
-                const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 1}`;
-                const sparkProgress = `${given}/${required}`;
-                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} battery and ${sparkProgress} sparks</span>`;
-              } else if (idx === 8) {
-                const batteryProgress = `${quest.batteryGiven || 0}/${quest.batteryRequired || 2}`;
-                const sparkProgress = `${given}/${required}`;
-                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${batteryProgress} batteries and ${sparkProgress} sparks</span>`;
-              } else {
-                milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge<br>${given}/${required} sparks</span>`;
-              }
-            }
-          } else {
-            milestoneStatus = `<span style="color:#888;">Need ${formatNumber(ms.amount)} charge</span>`;
-          }
-        } else {
-          milestoneStatus = status;
-        }
+      
       html += `<tr style="background:${!ms.unlocked ? '#f8f8f8' : '#eaffea'};">
         <td style="padding:4px 8px;">Reach ${formatNumber(ms.amount)} charge</td>
         <td style="padding:4px 8px;">${effectText}</td>
-        <td style="padding:4px 8px;">${milestoneStatus}</td>
+        <td style="padding:4px 8px;">${status}</td>
       </tr>`;
     });
     html += '</table>';
@@ -812,83 +656,12 @@ function checkChargerMilestones(forceUpdate = false) {
     charger.charge = new Decimal(charger.charge || 0);
   }
   
-  if (!charger.milestoneQuests) {
-    charger.milestoneQuests = {
-      3: { required: 10, given: new Decimal(0), completed: false }, 
-      4: { required: 15, given: new Decimal(0), completed: false }, 
-      5: { required: 25, given: new Decimal(0), completed: false }, 
-      6: { required: 50, given: new Decimal(0), completed: false }, 
-      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 }, 
-      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }  
-    };
-  }
-  
-  // Auto-unlock milestones if a later milestone quest is completed
-  // This fixes cases where milestones get stuck due to quest order issues
-  if (typeof state !== 'undefined' && state.soapChargeQuest && state.soapChargeQuest.initialized) {
-    for (let idx = 3; idx < charger.milestones.length; idx++) {
-      if (!charger.milestones[idx].unlocked && charger.charge.gte(charger.milestones[idx].amount)) {
-        // Check if any later milestone quest is completed
-        for (let laterIdx = idx + 1; laterIdx < Math.min(charger.milestones.length, 9); laterIdx++) {
-          const laterQuest = charger.milestoneQuests[laterIdx];
-          if (laterQuest && laterQuest.completed) {
-            // A later milestone is complete, so auto-unlock this one
-            charger.milestones[idx].unlocked = true;
-            const currentQuest = charger.milestoneQuests[idx];
-            if (currentQuest) {
-              currentQuest.completed = true;
-            }
-
-            break; // Only need to find one later completed milestone
-          }
-        }
-      }
+  // Simple charge-based milestone unlocking - no quests required
+  charger.milestones.forEach((ms, idx) => {
+    if (!ms.unlocked && charger.charge.gte(ms.amount)) {
+      ms.unlocked = true;
     }
-  }
-  if (typeof state !== 'undefined' && state.soapChargeQuest && state.soapChargeQuest.initialized) {
-    charger.milestones.forEach((ms, idx) => {
-      if (!ms.unlocked) {
-        if (idx < 3) {
-          if (charger.charge.gte(ms.amount)) {
-            ms.unlocked = true;
-          }
-        } else {
-          const quest = charger.milestoneQuests[idx];
-          // Ensure quest.given is a Decimal
-          if (quest && !DecimalUtils.isDecimal(quest.given)) {
-            quest.given = new Decimal(quest.given || 0);
-          }
-          const batteryRequirementMet = (idx === 7 || idx === 8) ? 
-            (quest.batteryGiven >= quest.batteryRequired) : true;
-          if (quest && !quest.completed && DecimalUtils.gte(quest.given, quest.required) && batteryRequirementMet && charger.charge.gte(ms.amount)) {
-            ms.unlocked = true;
-            quest.completed = true;
-            if (typeof state !== 'undefined' && state.soapChargeQuest) {
-              if (idx === 3 && state.soapChargeQuest.stage === 0) {
-                state.soapChargeQuest.stage = 1;
-              } else if (idx === 4 && state.soapChargeQuest.stage === 1) {
-                state.soapChargeQuest.stage = 2;
-              } else if (idx === 5 && state.soapChargeQuest.stage === 2) {
-                state.soapChargeQuest.stage = 3;
-              } else if (idx === 6 && state.soapChargeQuest.stage === 3) {
-                state.soapChargeQuest.stage = 4; 
-              } else if (idx === 7 && state.soapChargeQuest.stage === 4) {
-                state.soapChargeQuest.stage = 5; 
-              } else if (idx === 8 && state.soapChargeQuest.stage === 5) {
-                state.soapChargeQuest.stage = 6; 
-              }
-            }
-            if (idx === 6 && state && state.soapChargeQuest && state.soapChargeQuest.stage === 3) {
-              state.soapChargeQuest.stage = 4;
-            }
-            if (idx === 7 && state && state.soapChargeQuest && state.soapChargeQuest.stage === 4) {
-              state.soapChargeQuest.stage = 5;
-            }
-          }
-        }
-      }
-    });
-  }
+  });
 }
 
 function applyChargerMilestoneEffects() {
@@ -1195,55 +968,47 @@ function initializeChargerElementUnlocking() {
 }
 
 function giveSparksToSoap(amount) {
-  if (typeof state === 'undefined' || !state.soapChargeQuest || !state.soapChargeQuest.initialized) {
+  // Quest system removed - sparks now only give friendship points to Soap
+  if (typeof state === 'undefined') {
     return;
   }
   amount = Math.max(0, parseInt(amount) || 0);
   if (amount === 0) return;
   
-  // Add friendship points for giving sparks to Soap (following script2.js pattern)
+  // Add friendship points for giving sparks to Soap
   if (amount > 0) {
-    const dept = 'Generator'; // Soap belongs to Generator department
-    const pointsPerToken = 20; // Sparks are Soap's liked token
+    const dept = 'Generator';
+    const pointsPerToken = 20;
     const totalPoints = new Decimal(pointsPerToken).mul(amount);
 
-    // Add friendship points and check for single level-up (following script2.js logic)
     window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
     
-    // Ensure existing points is a Decimal
     if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
       window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
     }
     
-    // Ensure level is properly initialized as a number
     if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
       window.state.friendship[dept].level = 0;
     }
     
-    // Add the points to the current total
     window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
     
-    // Check if points are enough for exactly one level-up
     const currentLevel = window.state.friendship[dept].level;
     const nextLevel = currentLevel + 1;
     
     if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
-      // Points needed to level up from current level (not total points for next level)
       const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
       
       if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
-        // Level up by exactly 1 and reset points to 0
         window.state.friendship[dept].level = nextLevel;
         window.state.friendship[dept].points = new Decimal(0);
       }
     }
     
-    // Update UI manually since we bypassed addPoints
     if (typeof window.renderDepartmentStatsButtons === 'function') {
       window.renderDepartmentStatsButtons();
     }
     
-    // Update stats modal if it's open for this department
     const statsModal = document.getElementById('departmentStatsModal');
     if (statsModal && statsModal.style.display !== 'none') {
       const title = document.getElementById('departmentStatsModalTitle');
@@ -1251,95 +1016,13 @@ function giveSparksToSoap(amount) {
         if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
       }
     }
-  }
-  
-  if (!charger.milestoneQuests) {
-    charger.milestoneQuests = {
-      3: { required: 10, given: new Decimal(0), completed: false },
-      4: { required: 15, given: new Decimal(0), completed: false },
-      5: { required: 25, given: new Decimal(0), completed: false },
-      6: { required: 50, given: new Decimal(0), completed: false },
-      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 },
-      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }
-    };
-  }
-  
-  let currentMilestoneIndex;
-  let questStage = state.soapChargeQuest.stage;
-  if (questStage === 0 && !charger.milestones[3].unlocked) {
-    currentMilestoneIndex = 3; 
-  } else if (questStage === 1 && !charger.milestones[4].unlocked) {
-    currentMilestoneIndex = 4; 
-  } else if (questStage === 2 && !charger.milestones[5].unlocked) {
-    currentMilestoneIndex = 5; 
-  } else if (questStage === 3 && !charger.milestones[6].unlocked) {
-    currentMilestoneIndex = 6; 
-  } else if (questStage === 4 && !charger.milestones[7].unlocked) {
-    currentMilestoneIndex = 7; 
-  } else if (questStage === 5 && !charger.milestones[8].unlocked) {
-    currentMilestoneIndex = 8; 
-  }
-  
-  if (currentMilestoneIndex !== undefined) {
-    const quest = charger.milestoneQuests[currentMilestoneIndex];
-    if (!quest) return;
-    if (quest.completed) {
-      showSoapQuestMessage("This effect is already unlocked!");
-      return;
-    }
-    // DEBUG LOGGING
-
-    // Ensure quest.given is a Decimal and add the amount
-    if (!DecimalUtils.isDecimal(quest.given)) {
-      quest.given = new Decimal(quest.given || 0);
-    }
-    quest.given = quest.given.plus(amount);
-
-    saveChargerState();
-    // Check if quest requirement is met (convert to numbers for simple comparison)
-    const givenAmount = quest.given.toNumber();
-    if (givenAmount >= quest.required) {
-      const neededCharge = charger.milestones[currentMilestoneIndex].amount;
-      const currentCharge = DecimalUtils.isDecimal(charger.charge) ? charger.charge.toNumber() : charger.charge;
-      if (currentCharge >= neededCharge) {
-        quest.completed = true;
-        charger.milestones[currentMilestoneIndex].unlocked = true;
-        // Update quest stage and show completion message
-        if (currentMilestoneIndex === 3) {
-          state.soapChargeQuest.stage = 1;
-          showSoapQuestCompletionMessage("Perfect! Now the fourth effect is working. Each OoM of charge over 10,000 will reduce red tiles by 1 in the generator minigame! Let's get 15 more sparks for the next effect!");
-        } else if (currentMilestoneIndex === 4) {
-          state.soapChargeQuest.stage = 2;
-          showSoapQuestCompletionMessage("Excellent! The fifth effect is now active. Your charge will boost box generation! Just 25 more sparks for the final effect!");
-        } else if (currentMilestoneIndex === 5) {
-          state.soapChargeQuest.stage = 3;
-          showSoapQuestCompletionMessage("Amazing! The sixth effect is now working. Your charge will give an additional boost to charge generation! Now, let's get 50 more sparks for the ultimate boost!");
-        } else if (currentMilestoneIndex === 6) {
-          state.soapChargeQuest.stage = 4;
-          showSoapQuestCompletionMessage("INCREDIBLE! You've unlocked the seventh charge effect - your charge will now boost your terrarium production! For the next effect, I need 1 battery and 30 sparks!");
-        } else if (currentMilestoneIndex === 7) {
-          state.soapChargeQuest.stage = 5;
-          showSoapQuestCompletionMessage("LEGENDARY! You've unlocked the almost final charge effect - your charge will now boost your terrarium XP gain! For the ultimate effect, I need 2 batteries and 75 sparks!");
-        } else if (currentMilestoneIndex === 8) {
-          state.soapChargeQuest.stage = 6;
-          showSoapQuestCompletionMessage("TRANSCENDENT! You've unlocked the ultimate charge effect - your charge will now boost your nectar gain! All charge effects are now truly complete!");
-        }
-        saveChargerState();
-        if (typeof updateChargerUI === 'function') updateChargerUI(true); // Force immediate update for quest completion
-      } else {
-        const neededCharge = charger.milestones[currentMilestoneIndex].amount;
-        showSoapQuestMessage(`You have enough sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
-      }
-    } else {
-      const remaining = quest.required - givenAmount;
-      showSoapQuestMessage(`Thanks! I still need ${remaining} more sparks to get this effect working.`);
-    }
-    updateChargerUI();
+    
+    showSoapQuestMessage(`Thanks for the ${amount} spark${amount > 1 ? 's' : ''}! Milestones now unlock automatically when you reach the required charge amount.`);
   }
 }
 
 function resetChargerTabState() {
-  charger.questDialogueShown = false; 
+  // No longer needed without quest system, kept for compatibility
 }
 
 function showSoapQuestMessage(message, duration = 8000) {
@@ -1367,55 +1050,47 @@ function showSoapQuestCompletionMessage(message) {
 }
 
 function giveBatteriesToSoap(amount) {
-  if (typeof state === 'undefined' || !state.soapChargeQuest || !state.soapChargeQuest.initialized) {
+  // Quest system removed - batteries now only give friendship points to Soap
+  if (typeof state === 'undefined') {
     return;
   }
   amount = Math.max(0, parseInt(amount) || 0);
   if (amount === 0) return;
   
-  // Add friendship points for giving batteries to Soap (following script2.js pattern)
+  // Add friendship points for giving batteries to Soap
   if (amount > 0) {
-    const dept = 'Generator'; // Soap belongs to Generator department
-    const pointsPerToken = 5; // Batteries are neutral for Soap
+    const dept = 'Generator';
+    const pointsPerToken = 50;
     const totalPoints = new Decimal(pointsPerToken).mul(amount);
 
-    // Add friendship points and check for single level-up (following script2.js logic)
     window.state.friendship[dept] = window.state.friendship[dept] || { level: 0, points: new Decimal(0) };
     
-    // Ensure existing points is a Decimal
     if (!DecimalUtils.isDecimal(window.state.friendship[dept].points)) {
       window.state.friendship[dept].points = new Decimal(window.state.friendship[dept].points || 0);
     }
     
-    // Ensure level is properly initialized as a number
     if (typeof window.state.friendship[dept].level !== 'number' || isNaN(window.state.friendship[dept].level)) {
       window.state.friendship[dept].level = 0;
     }
     
-    // Add the points to the current total
     window.state.friendship[dept].points = window.state.friendship[dept].points.add(totalPoints);
     
-    // Check if points are enough for exactly one level-up
     const currentLevel = window.state.friendship[dept].level;
     const nextLevel = currentLevel + 1;
     
     if (nextLevel <= window.MAX_FRIENDSHIP_LEVEL && typeof window.getFriendshipPointsForLevel === 'function') {
-      // Points needed to level up from current level (not total points for next level)
       const pointsNeededForCurrentLevel = window.getFriendshipPointsForLevel(currentLevel);
       
       if (window.state.friendship[dept].points.gte(pointsNeededForCurrentLevel)) {
-        // Level up by exactly 1 and reset points to 0
         window.state.friendship[dept].level = nextLevel;
         window.state.friendship[dept].points = new Decimal(0);
       }
     }
     
-    // Update UI manually since we bypassed addPoints
     if (typeof window.renderDepartmentStatsButtons === 'function') {
       window.renderDepartmentStatsButtons();
     }
     
-    // Update stats modal if it's open for this department
     const statsModal = document.getElementById('departmentStatsModal');
     if (statsModal && statsModal.style.display !== 'none') {
       const title = document.getElementById('departmentStatsModalTitle');
@@ -1423,67 +1098,8 @@ function giveBatteriesToSoap(amount) {
         if (typeof window.showDepartmentStatsModal === 'function') window.showDepartmentStatsModal(dept);
       }
     }
-  }
-  
-  if (!charger.milestoneQuests) {
-    charger.milestoneQuests = {
-      7: { required: 30, given: new Decimal(0), completed: false, batteryRequired: 1, batteryGiven: 0 },
-      8: { required: 75, given: new Decimal(0), completed: false, batteryRequired: 2, batteryGiven: 0 }
-    };
-  }
-  
-  let currentMilestoneIndex;
-  let questStage = state.soapChargeQuest.stage;
-  if (questStage === 4 && !charger.milestones[7].unlocked) {
-    currentMilestoneIndex = 7;
-  } else if (questStage === 5 && !charger.milestones[8].unlocked) {
-    currentMilestoneIndex = 8;
-  }
-  
-  if (currentMilestoneIndex !== undefined) {
-    const quest = charger.milestoneQuests[currentMilestoneIndex];
-    if (!quest) return;
-    if (quest.completed) {
-      showSoapQuestMessage("This effect is already unlocked!");
-      return;
-    }
     
-    if (typeof quest.batteryGiven !== 'number') quest.batteryGiven = 0;
-    const batteryNeeded = quest.batteryRequired - quest.batteryGiven;
-    const batteryContribution = Math.min(amount, batteryNeeded);
-    
-    if (batteryContribution > 0) {
-      quest.batteryGiven += batteryContribution;
-      saveChargerState();
-    }
-    
-    // Check quest completion (convert Decimal to number for comparison)
-    const givenSparks = DecimalUtils.isDecimal(quest.given) ? quest.given.toNumber() : quest.given;
-    if (quest.batteryGiven >= quest.batteryRequired && givenSparks >= quest.required) {
-      const neededCharge = charger.milestones[currentMilestoneIndex].amount;
-      const currentCharge = DecimalUtils.isDecimal(charger.charge) ? charger.charge.toNumber() : charger.charge;
-      
-      if (currentCharge >= neededCharge) {
-        quest.completed = true;
-        charger.milestones[currentMilestoneIndex].unlocked = true;
-        if (currentMilestoneIndex === 7) {
-          state.soapChargeQuest.stage = 5;
-          showSoapQuestCompletionMessage("LEGENDARY! Now I have everything I need! The final effect is now working! For the ultimate effect, I need 2 batteries and 75 sparks!");
-        } else if (currentMilestoneIndex === 8) {
-          state.soapChargeQuest.stage = 6;
-          showSoapQuestCompletionMessage("TRANSCENDENT! Now I have everything I need! The ultimate effect is now working! All charge effects are truly complete!");
-        }
-        saveChargerState();
-        updateChargerUI(true); // Force immediate update for milestone unlock
-      } else {
-        showSoapQuestMessage(`You have enough batteries and sparks, but you need ${formatNumber(neededCharge)} charge to unlock this effect!`);
-      }
-    } else if (quest.batteryGiven >= quest.batteryRequired) {
-      showSoapQuestMessage(`Perfect! I have the ${quest.batteryRequired === 1 ? 'battery' : 'batteries'} I need! I still need ${quest.required - givenSparks} more sparks for this effect.`);
-    } else {
-      showSoapQuestMessage(`Thanks! I still need ${quest.batteryRequired - quest.batteryGiven} more ${quest.batteryRequired - quest.batteryGiven === 1 ? 'battery' : 'batteries'} for this effect.`);
-    }
-    updateChargerUI(true); // Force immediate update for user interaction
+    showSoapQuestMessage(`Thanks for the ${amount} batter${amount > 1 ? 'ies' : 'y'}! Milestones now unlock automatically when you reach the required charge amount.`);
   }
 }
 

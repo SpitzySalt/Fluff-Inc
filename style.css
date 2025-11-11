@@ -389,6 +389,76 @@ select {
   border-bottom: 12px solid transparent;
   border-right: 18px solid #fffbe8;
 }
+.jadeca-container {
+  position: relative;
+  display: inline-block;
+}
+.jadeca-speech {
+  position: absolute;
+  left: 100%;
+  top: 60px;
+  margin-left: 18px;
+  min-width: 150px;
+  max-width: 280px;
+  background: linear-gradient(135deg, rgba(80,0,100,0.98), rgba(60,0,80,0.98));
+  color: #ff6b9d;
+  border-radius: 16px;
+  border: 2px solid #8b2bea;
+  box-shadow: 0 0 20px rgba(139,43,234,0.8), inset 0 0 15px rgba(185,103,255,0.3);
+  padding: 0.8em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  z-index: 10;
+  display: none;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(255,107,157,0.6);
+  animation: hexPulse 2s ease-in-out infinite;
+}
+.jadeca-speech::after {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 18px;
+  width: 0;
+  height: 0;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+  border-right: 18px solid rgba(80,0,100,0.98);
+  filter: drop-shadow(-2px 0 2px rgba(139,43,234,0.5));
+}
+@keyframes hexPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139,43,234,0.8), inset 0 0 15px rgba(185,103,255,0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(185,103,255,0.9), inset 0 0 20px rgba(185,103,255,0.5);
+  }
+}
+.jadeca-poke-speech {
+  background: linear-gradient(135deg, rgba(139,0,0,0.98), rgba(80,0,0,0.98)) !important;
+  color: #ff0000 !important;
+  border: 3px solid #ff0000 !important;
+  box-shadow: 0 0 30px rgba(255,0,0,0.9), inset 0 0 25px rgba(255,0,0,0.5), 0 0 50px rgba(139,0,0,0.8) !important;
+  text-shadow: 0 0 10px rgba(255,0,0,0.9), 0 0 20px rgba(139,0,0,0.7) !important;
+  font-weight: bold !important;
+  font-size: 1.1em !important;
+  animation: demonicPulse 1s ease-in-out infinite !important;
+  letter-spacing: 0.5px;
+}
+.jadeca-poke-speech::after {
+  border-right: 18px solid rgba(139,0,0,0.98) !important;
+  filter: drop-shadow(-2px 0 3px rgba(255,0,0,0.7)) !important;
+}
+@keyframes demonicPulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255,0,0,0.9), inset 0 0 25px rgba(255,0,0,0.5), 0 0 50px rgba(139,0,0,0.8);
+    text-shadow: 0 0 10px rgba(255,0,0,0.9), 0 0 20px rgba(139,0,0,0.7);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255,0,0,1), inset 0 0 30px rgba(255,0,0,0.7), 0 0 70px rgba(139,0,0,1);
+    text-shadow: 0 0 15px rgba(255,0,0,1), 0 0 30px rgba(139,0,0,0.9);
+  }
+}
 .card.fullwidth {
   width: 100vw;
   max-width: 1800px;
@@ -8878,3 +8948,1196 @@ body.halloween-event-active #generatorBoxGenArea {
   filter: brightness(0.1) !important;
   transition: opacity 0.3s ease, filter 0.3s ease;
 }
+
+/* Tree of Horrors Upgrade System Styles */
+#treeCanvasContainer {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+#treeCanvasContainer:active {
+  cursor: grabbing;
+}
+
+/* Disable scrolling when Tree of Horrors is active */
+body.tree-horrors-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+html.tree-horrors-active {
+  overflow: hidden !important;
+}
+
+.tree-upgrade-node {
+  display: inline-block;
+  margin: 10px;
+}
+
+.upgrade-button {
+  width: 280px;
+  min-height: 120px;
+  background: linear-gradient(135deg, #ff6600, #cc4400);
+  border: 3px solid #ff8800;
+  border-radius: 12px;
+  padding: 15px;
+  cursor: pointer;
+  transition: none;
+  box-shadow: none;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.upgrade-button:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #ff8800;
+}
+
+.upgrade-button.can-afford {
+  border-color: #00ff88;
+  box-shadow: none;
+  animation: none;
+}
+
+.upgrade-button.purchased {
+  background: linear-gradient(135deg, #444444, #222222);
+  border-color: #666666;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 1;
+  position: relative;
+  z-index: 10;
+}
+
+.upgrade-button.purchased:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.upgrade-title {
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+  text-align: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.upgrade-description {
+  font-size: 13px;
+  color: #ffeecc;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.3;
+  text-align: center;
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upgrade-cost {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffdd99;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.upgrade-effect {
+  font-size: 16px;
+  font-weight: bold;
+  color: #4CAF50;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+  text-align: center;
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: 4px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.upgrade-button.purchased .upgrade-cost {
+  color: #aaaaaa;
+}
+
+/* Allow hex deposit on purchased upgrades (override not-allowed cursor) */
+.upgrade-button.purchased.can-hex {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.upgrade-button.purchased.fully-hexed {
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background: linear-gradient(135deg, #8b2bea, #b967ff) !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.6) !important;
+}
+
+.upgrade-button.purchased.fully-hexed .upgrade-cost {
+  color: #ffffff !important;
+}
+
+.upgrade-button.purchased.fully-hexed .hex-effect-description {
+  color: #ffffff !important;
+}
+
+/* Swandy Shard upgrade button (red/purple theme) */
+.upgrade-button.shard-upgrade {
+  background: linear-gradient(135deg, #cc0066, #6600cc);
+  border: 3px solid #aa0088;
+}
+
+.upgrade-button.shard-upgrade:hover {
+  border-color: #ff00aa;
+}
+
+.upgrade-button.shard-upgrade.can-afford {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(204, 0, 102, 0.6);
+  animation: pulse-shard 2s infinite;
+}
+
+.upgrade-button.shard-upgrade.purchased {
+  background: linear-gradient(135deg, #553344, #332244);
+  border-color: #664466;
+}
+
+.upgrade-button.shard-upgrade.purchased .upgrade-cost {
+  color: #aa88aa;
+}
+
+.upgrade-button.shard-upgrade.locked {
+  background: linear-gradient(135deg, rgba(204, 0, 102, 0.3), rgba(102, 0, 204, 0.3));
+  border-color: rgba(170, 0, 136, 0.3);
+}
+
+.upgrade-button.shard-upgrade.semi-locked {
+  background: linear-gradient(135deg, rgba(204, 0, 102, 0.6), rgba(102, 0, 204, 0.6));
+  border-color: rgba(170, 0, 136, 0.6);
+}
+
+@keyframes pulse-shard {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(204, 0, 102, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(204, 0, 102, 0.8);
+  }
+}
+
+/* Hexed Swandy Shard Upgrade Styles (HSS Branch) */
+.upgrade-button.hexed-shard-upgrade {
+  background: linear-gradient(135deg, #2d1b3d, #1a0f2e);
+  border: 3px solid #ffffff;
+}
+
+.upgrade-button.hexed-shard-upgrade:hover {
+  border-color: #ccccff;
+}
+
+.upgrade-button.hexed-shard-upgrade.can-afford {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
+  animation: pulse-hexed-shard 2s infinite;
+}
+
+.upgrade-button.hexed-shard-upgrade.purchased {
+  background: linear-gradient(135deg, #1a0f2e, #0d0515);
+  border-color: #9999cc;
+}
+
+.upgrade-button.hexed-shard-upgrade.purchased .upgrade-cost {
+  color: #ccaaff;
+}
+
+.upgrade-button.hexed-shard-upgrade.locked {
+  background: linear-gradient(135deg, rgba(45, 27, 61, 0.3), rgba(26, 15, 46, 0.3));
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.upgrade-button.hexed-shard-upgrade.semi-locked {
+  background: linear-gradient(135deg, rgba(45, 27, 61, 0.6), rgba(26, 15, 46, 0.6));
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+@keyframes pulse-hexed-shard {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(138, 43, 226, 0.9);
+  }
+}
+
+/* Locked upgrade button states */
+.upgrade-button.locked {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.3), rgba(204, 68, 0, 0.3));
+  border-color: rgba(255, 136, 0, 0.3);
+  opacity: 0;
+  cursor: not-allowed;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.tree-upgrade-node.locked {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.tree-upgrade-node.unlocked {
+  opacity: 1;
+}
+
+/* Semi-locked upgrade button states (visible but not purchasable) */
+.upgrade-button.semi-locked {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.6), rgba(204, 68, 0, 0.6));
+  border-color: rgba(255, 136, 0, 0.6);
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tree-upgrade-node.semi-locked {
+  opacity: 0.6;
+  transition: opacity 0.5s ease;
+}
+
+/* Connection lines between upgrades */
+.upgrade-connection-line {
+  z-index: -1;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(255, 136, 0, 0.5);
+}
+
+.upgrade-connection-line.active {
+  opacity: 1 !important;
+  box-shadow: 0 0 8px rgba(255, 136, 0, 0.8);
+}
+
+/* Swandy Crusher Grid Styles */
+.swandy-cell {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 136, 0, 0.15);
+  border: 2px solid rgba(255, 136, 0, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.swandy-cell:hover {
+  background: rgba(255, 136, 0, 0.25);
+  border-color: rgba(255, 136, 0, 0.5);
+  transform: scale(1.05);
+}
+
+.swandy-cell.selected {
+  background: rgba(255, 200, 0, 0.4);
+  border-color: #ffdd00;
+  box-shadow: 0 0 15px rgba(255, 221, 0, 0.6);
+  transform: scale(1.1);
+}
+
+.swandy-icon {
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.swandy-cell:hover .swandy-icon {
+  transform: scale(1.1);
+}
+
+.swandy-cell.selected .swandy-icon {
+  transform: scale(1.15);
+}
+
+/* Animation for shaking before shattering */
+@keyframes swandy-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, -2px) rotate(-2deg); }
+  20% { transform: translate(2px, 2px) rotate(2deg); }
+  30% { transform: translate(-2px, 2px) rotate(-1deg); }
+  40% { transform: translate(2px, -2px) rotate(1deg); }
+  50% { transform: translate(-2px, -2px) rotate(-2deg); }
+  60% { transform: translate(2px, 2px) rotate(2deg); }
+  70% { transform: translate(-2px, 2px) rotate(-1deg); }
+  80% { transform: translate(2px, -2px) rotate(1deg); }
+  90% { transform: translate(-2px, -2px) rotate(-2deg); }
+}
+
+.swandy-cell.shaking {
+  animation: swandy-shake 0.5s ease-in-out;
+}
+
+/* Swap animation */
+.swandy-cell.swapping {
+  transition: transform 0.3s ease-out;
+  z-index: 10;
+}
+
+.swandy-cell.swapping .blaster-arrows {
+  pointer-events: none;
+}
+
+/* Disable blaster pulse animation during swap */
+.swandy-cell.swandy-blaster.swapping {
+  animation: none !important;
+}
+
+/* Disable arrow float animation during swap */
+.swandy-cell.swapping .arrow-left,
+.swandy-cell.swapping .arrow-right,
+.swandy-cell.swapping .arrow-up,
+.swandy-cell.swapping .arrow-down {
+  animation: none !important;
+}
+
+/* Animation for matching Swandies - Shatter effect */
+@keyframes swandy-shatter {
+  0% { 
+    transform: scale(1) rotate(0deg); 
+    opacity: 1; 
+  }
+  30% { 
+    transform: scale(1.15) rotate(5deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: scale(0.3) rotate(180deg); 
+    opacity: 0; 
+  }
+}
+
+.swandy-cell.matching {
+  animation: swandy-shatter 0.5s ease-out forwards;
+  overflow: visible;
+}
+
+.swandy-cell.matching .swandy-icon {
+  animation: swandy-icon-shatter 0.5s ease-out forwards;
+}
+
+@keyframes swandy-icon-shatter {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  60% {
+    transform: scale(0.8) rotate(15deg);
+    opacity: 0.7;
+    filter: brightness(1.8) blur(1px);
+  }
+  100% {
+    transform: scale(0.2) rotate(180deg);
+    opacity: 0;
+    filter: brightness(2) blur(3px);
+  }
+}
+
+.shatter-fragment {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes shatter-fragment-1 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(-30px, -30px) rotate(-180deg) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
+@keyframes shatter-fragment-2 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(30px, -35px) rotate(200deg) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
+@keyframes shatter-fragment-3 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(-35px, 25px) rotate(-220deg) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
+@keyframes shatter-fragment-4 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(35px, 30px) rotate(240deg) scale(0.3); 
+    opacity: 0; 
+  }
+}
+
+@keyframes shatter-fragment-5 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(0, -40px) rotate(180deg) scale(0.2); 
+    opacity: 0; 
+  }
+}
+
+@keyframes shatter-fragment-6 {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translate(0, 40px) rotate(-180deg) scale(0.2); 
+    opacity: 0; 
+  }
+}
+
+/* Animation for falling Swandies */
+@keyframes swandy-fall {
+  from { transform: translateY(-100px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.swandy-cell.falling {
+  animation: swandy-fall 0.3s ease-out;
+}
+
+/* Swandy Blaster styles */
+.swandy-cell.swandy-blaster {
+  position: relative;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  transform-origin: center center;
+}
+
+/* Only animate when selected or being hovered */
+.swandy-cell.swandy-blaster.selected,
+.swandy-cell.swandy-blaster:hover {
+  animation: blasterPulse 1.5s ease-in-out infinite;
+}
+
+.blaster-arrows {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  pointer-events: none;
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  z-index: 10;
+  will-change: auto;
+}
+
+.blaster-horizontal .blaster-arrows {
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.blaster-vertical .blaster-arrows {
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.arrow-left, .arrow-right, .arrow-up, .arrow-down {
+  animation: arrowFloat 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* Color-specific text shadows for arrows */
+.blaster-color-red .arrow-left,
+.blaster-color-red .arrow-right,
+.blaster-color-red .arrow-up,
+.blaster-color-red .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #660000,
+    2px -2px 0 #660000,
+    -2px 2px 0 #660000,
+    2px 2px 0 #660000,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-orange .arrow-left,
+.blaster-color-orange .arrow-right,
+.blaster-color-orange .arrow-up,
+.blaster-color-orange .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #8B4500,
+    2px -2px 0 #8B4500,
+    -2px 2px 0 #8B4500,
+    2px 2px 0 #8B4500,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-yellow .arrow-left,
+.blaster-color-yellow .arrow-right,
+.blaster-color-yellow .arrow-up,
+.blaster-color-yellow .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #8B8B00,
+    2px -2px 0 #8B8B00,
+    -2px 2px 0 #8B8B00,
+    2px 2px 0 #8B8B00,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-green .arrow-left,
+.blaster-color-green .arrow-right,
+.blaster-color-green .arrow-up,
+.blaster-color-green .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #004d00,
+    2px -2px 0 #004d00,
+    -2px 2px 0 #004d00,
+    2px 2px 0 #004d00,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-blue .arrow-left,
+.blaster-color-blue .arrow-right,
+.blaster-color-blue .arrow-up,
+.blaster-color-blue .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #00004d,
+    2px -2px 0 #00004d,
+    -2px 2px 0 #00004d,
+    2px 2px 0 #00004d,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-purple .arrow-left,
+.blaster-color-purple .arrow-right,
+.blaster-color-purple .arrow-up,
+.blaster-color-purple .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #4d004d,
+    2px -2px 0 #4d004d,
+    -2px 2px 0 #4d004d,
+    2px 2px 0 #4d004d,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.blaster-color-white .arrow-left,
+.blaster-color-white .arrow-right,
+.blaster-color-white .arrow-up,
+.blaster-color-white .arrow-down {
+  text-shadow: 
+    -2px -2px 0 #666666,
+    2px -2px 0 #666666,
+    -2px 2px 0 #666666,
+    2px 2px 0 #666666,
+    0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+.arrow-right {
+  animation-delay: 0.5s;
+}
+
+.arrow-down {
+  animation-delay: 0.5s;
+}
+
+/* Blaster beam animation */
+.blaster-beam {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 20%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.8) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.6);
+  opacity: 0;
+  animation: beamPulse 0.5s ease-out forwards;
+}
+
+.blaster-beam-horizontal {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 20%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.8) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.blaster-beam-vertical {
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 20%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.8) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@keyframes beamPulse {
+  0% {
+    opacity: 0;
+    filter: brightness(2);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(3);
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(1);
+  }
+}
+
+@keyframes blasterPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes arrowFloat {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Blaster activation animations */
+.swandy-cell.blaster-wipe-horizontal {
+  animation: horizontalWipe 0.4s ease-out forwards;
+}
+
+.swandy-cell.blaster-wipe-vertical {
+  animation: verticalWipe 0.4s ease-out forwards;
+}
+
+.swandy-cell.blaster-wipe-explosion {
+  animation: explosionWipe 0.5s ease-out forwards;
+}
+
+@keyframes horizontalWipe {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(1.3) scaleY(0.7);
+    opacity: 0.8;
+    filter: brightness(2);
+  }
+  100% {
+    transform: scaleX(2) scaleY(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes verticalWipe {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(0.7) scaleY(1.3);
+    opacity: 0.8;
+    filter: brightness(2);
+  }
+  100% {
+    transform: scaleX(0.3) scaleY(2);
+    opacity: 0;
+  }
+}
+
+@keyframes explosionWipe {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1.5);
+    opacity: 1;
+    filter: brightness(2) saturate(2);
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+    filter: brightness(0);
+  }
+}
+
+.swandy-orb {
+  position: relative;
+}
+
+.orb-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+@keyframes orbPulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1.2);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.5);
+  }
+}
+
+@keyframes orbGlowPulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+@keyframes orbExplosion {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  50% {
+    width: 600px;
+    height: 600px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 800px;
+    height: 800px;
+    opacity: 0;
+  }
+}
+
+.swandy-cell.orb-wipe {
+  animation: orbWipeEffect 0.5s ease-out forwards;
+}
+
+@keyframes orbWipeEffect {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.4);
+    opacity: 1;
+    filter: brightness(3) saturate(2);
+  }
+  100% {
+    transform: scale(0.5);
+    opacity: 0;
+    filter: brightness(0);
+  }
+}
+
+.orb-activating {
+  animation: orbActivation 0.5s ease-in-out forwards, orbShake 0.15s linear infinite 0.5s;
+  z-index: 200 !important;
+}
+
+@keyframes orbActivation {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    transform: scale(1.3) translateY(-15px);
+  }
+}
+
+@keyframes orbShake {
+  0%, 100% {
+    transform: scale(1.3) translateY(-15px) translateX(0);
+  }
+  10% {
+    transform: scale(1.3) translateY(-15px) translateX(-8px) rotate(-3deg);
+  }
+  20% {
+    transform: scale(1.3) translateY(-15px) translateX(8px) rotate(3deg);
+  }
+  30% {
+    transform: scale(1.3) translateY(-15px) translateX(-7px) rotate(-2deg);
+  }
+  40% {
+    transform: scale(1.3) translateY(-15px) translateX(7px) rotate(2deg);
+  }
+  50% {
+    transform: scale(1.3) translateY(-15px) translateX(-6px) rotate(-1deg);
+  }
+  60% {
+    transform: scale(1.3) translateY(-15px) translateX(6px) rotate(1deg);
+  }
+  70% {
+    transform: scale(1.3) translateY(-15px) translateX(-4px) rotate(-1deg);
+  }
+  80% {
+    transform: scale(1.3) translateY(-15px) translateX(4px) rotate(1deg);
+  }
+  90% {
+    transform: scale(1.3) translateY(-15px) translateX(-2px) rotate(0deg);
+  }
+}
+
+.orb-exploding {
+  animation: orbViolentShake 0.5s linear infinite !important;
+}
+
+@keyframes orbViolentShake {
+  0%, 100% {
+    transform: scale(1.3) translateY(-15px) translateX(0) rotate(0deg);
+  }
+  5% {
+    transform: scale(1.3) translateY(-15px) translateX(-12px) rotate(-8deg);
+  }
+  10% {
+    transform: scale(1.3) translateY(-15px) translateX(12px) rotate(8deg);
+  }
+  15% {
+    transform: scale(1.3) translateY(-15px) translateX(-10px) rotate(-6deg);
+  }
+  20% {
+    transform: scale(1.3) translateY(-15px) translateX(10px) rotate(6deg);
+  }
+  25% {
+    transform: scale(1.3) translateY(-15px) translateX(-12px) rotate(-7deg);
+  }
+  30% {
+    transform: scale(1.3) translateY(-15px) translateX(12px) rotate(7deg);
+  }
+  35% {
+    transform: scale(1.3) translateY(-15px) translateX(-10px) rotate(-5deg);
+  }
+  40% {
+    transform: scale(1.3) translateY(-15px) translateX(10px) rotate(5deg);
+  }
+  45% {
+    transform: scale(1.3) translateY(-15px) translateX(-11px) rotate(-6deg);
+  }
+  50% {
+    transform: scale(1.3) translateY(-15px) translateX(11px) rotate(6deg);
+  }
+  55% {
+    transform: scale(1.3) translateY(-15px) translateX(-10px) rotate(-4deg);
+  }
+  60% {
+    transform: scale(1.3) translateY(-15px) translateX(10px) rotate(4deg);
+  }
+  65% {
+    transform: scale(1.3) translateY(-15px) translateX(-9px) rotate(-5deg);
+  }
+  70% {
+    transform: scale(1.3) translateY(-15px) translateX(9px) rotate(5deg);
+  }
+  75% {
+    transform: scale(1.3) translateY(-15px) translateX(-8px) rotate(-3deg);
+  }
+  80% {
+    transform: scale(1.3) translateY(-15px) translateX(8px) rotate(3deg);
+  }
+  85% {
+    transform: scale(1.3) translateY(-15px) translateX(-7px) rotate(-2deg);
+  }
+  90% {
+    transform: scale(1.3) translateY(-15px) translateX(7px) rotate(2deg);
+  }
+  95% {
+    transform: scale(1.3) translateY(-15px) translateX(-5px) rotate(-1deg);
+  }
+}
+
+.shockwave-hit {
+  animation: shockwaveHit 0.4s ease-out;
+}
+
+@keyframes shockwaveHit {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  30% {
+    filter: brightness(4) saturate(3);
+    transform: scale(1.4);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+.orb-laser-hit {
+  animation: laserHit 0.3s ease-out;
+}
+
+@keyframes laserHit {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(3) saturate(2);
+    transform: scale(1.2);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes laserPulse {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+/* Combo notification animation */
+@keyframes comboPopup {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  80% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -80%) scale(1); opacity: 0; }
+}
+
+/* Combo display pulse animation */
+@keyframes comboPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+}
+
+.combo-notification {
+  animation: comboPopup 1s ease-out forwards;
+}
+
+/* Score popup animation on matched tiles */
+@keyframes scorePopup {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -120%) scale(1.2); opacity: 0; }
+}
+
+.score-popup {
+  animation: scorePopup 0.8s ease-out forwards;
+}
+
+/* Drop in animation for new grid after shattery reset */
+@keyframes dropIn {
+  0% { 
+    transform: translateY(-600px); 
+    opacity: 0; 
+  }
+  60% { 
+    transform: translateY(10px); 
+    opacity: 1; 
+  }
+  80% { 
+    transform: translateY(-5px); 
+  }
+  100% { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+}
+
+/* Combo text pulse animation */
+@keyframes comboTextPulse {
+  0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+  20% { transform: translateX(-50%) scale(1.3); opacity: 1; }
+  80% { transform: translateX(-50%) scale(1.3); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 0; }
+}
+
+/* Hexed tile styling */
+.swandy-cell.hexed {
+  background: linear-gradient(135deg, #9d4edd 0%, #7b2cbf 100%);
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 15px rgba(157, 78, 221, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  animation: hexedPulse 2s ease-in-out infinite;
+}
+
+.swandy-cell.hexed:hover {
+  box-shadow: 0 0 20px rgba(157, 78, 221, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes hexedPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(157, 78, 221, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(157, 78, 221, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Hexagon projectile - outer purple border */
+.hexagon-projectile {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  background: #9d4edd;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 0 20px rgba(157, 78, 221, 1), 0 0 35px rgba(157, 78, 221, 0.6);
+}
+
+/* Hexagon projectile - inner white */
+.hexagon-projectile-inner {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.hexagon-projectile.spinning {
+  animation: hexagonSpin 0.5s linear infinite;
+}
+
+@keyframes hexagonSpin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Hex Staff Styles */
+#hexStaffToggleBtn.active {
+  background: linear-gradient(135deg, #8b2bea, #b967ff) !important;
+  border-color: #b967ff !important;
+  box-shadow: 0 0 20px rgba(139, 43, 234, 0.8), inset 0 0 10px rgba(185, 103, 255, 0.4);
+  transform: scale(1.05);
+}
+
+#hexStaffModeNormal.active {
+  background: linear-gradient(135deg, #8b2bea, #b967ff) !important;
+  border-color: #b967ff !important;
+  box-shadow: 0 0 15px rgba(139, 43, 234, 0.6);
+  font-weight: bold;
+}
+
+#hexStaffModeBlaster.active {
+  background: linear-gradient(135deg, #ff8800, #ffaa44) !important;
+  border-color: #ffaa44 !important;
+  box-shadow: 0 0 15px rgba(255, 136, 0, 0.6);
+  font-weight: bold;
+}
+
+#hexStaffModeOrb.active {
+  background: linear-gradient(135deg, #44ff44, #88ff88) !important;
+  border-color: #88ff88 !important;
+  box-shadow: 0 0 15px rgba(68, 255, 68, 0.6);
+  font-weight: bold;
+}
+
+.swandy-cell.hex-staff-break {
+  animation: hexStaffShatter 0.5s ease-out forwards;
+}
+
+@keyframes hexStaffShatter {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3) rotate(15deg);
+    opacity: 0.8;
+    filter: brightness(2) hue-rotate(270deg);
+  }
+  100% {
+    transform: scale(0) rotate(90deg);
+    opacity: 0;
+    filter: brightness(0);
+  }
+}
+
+/* Hex Staff cursor inheritance - ensure cursor shows over all child elements in Halloween event tabs */
+#halloweenCrusherContent *,
+#halloweenCrusherContent *:hover,
+#halloweenHubContent *,
+#halloweenHubContent *:hover,
+#halloweenTreeContent *,
+#halloweenTreeContent *:hover,
+#halloweenJadecasHutContent *,
+#halloweenJadecasHutContent *:hover {
+  cursor: inherit !important;
+}
+

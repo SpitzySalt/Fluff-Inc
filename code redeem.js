@@ -92,6 +92,22 @@ class CodeRedeemSystem {
         },
         oneTimeUse: true
       },
+      'supreme dedication': {
+        id: 'kito_mode_unlock',
+        description: 'Secret unlock: Kito mode + Honey Token',
+        rewards: [
+          {
+            type: 'unlock',
+            unlockType: 'kitoMode'
+          },
+          {
+            type: 'token',
+            tokenType: 'honey',
+            amount: 1
+          }
+        ],
+        oneTimeUse: true
+      },
       'give me 1 million swa bucks': {
         id: 'swa_bucks_trap',
         description: 'Trap code: You fell for it!',
@@ -329,6 +345,18 @@ class CodeRedeemSystem {
               window.addKitoFoxModeToggleButton();
             }
           }, 100);
+        } else if (reward.unlockType === 'kitoMode') {
+          window.state.unlockedFeatures.kitoMode = true;
+          // Initialize Kito mode state
+          if (!window.state.kitoModeActive) {
+            window.state.kitoModeActive = false;
+          }
+          // Refresh settings UI to show the new toggle
+          setTimeout(() => {
+            if (typeof window.addKitoModeToggleButton === 'function') {
+              window.addKitoModeToggleButton();
+            }
+          }, 100);
         } else if (reward.unlockType === 'halloweenEvent') {
           window.state.unlockedFeatures.halloweenEvent = true;
           // Initialize Halloween event state
@@ -377,6 +405,8 @@ class CodeRedeemSystem {
           return 'Unlocked Recorder Mode!';
         } else if (reward.unlockType === 'kitoFoxMode') {
           return 'Unlocked KitoFox Mode!';
+        } else if (reward.unlockType === 'kitoMode') {
+          return 'Unlocked Kito Mode!';
         } else if (reward.unlockType === 'halloweenEvent') {
           return 'Unlocked Halloween Event!';
         }

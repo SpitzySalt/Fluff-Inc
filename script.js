@@ -207,6 +207,75 @@ let state = {
     legendary: new Decimal(0),
     mythic: new Decimal(0)
   },
+  // Complete box generator state
+  boxGenerators: {
+    common: {
+      unlocked: false,
+      upgrades: new Decimal(0),
+      speedUpgrades: new Decimal(0),
+      speedMultiplier: new Decimal(1),
+      progress: 0,
+      speed: 5,
+      baseSpeed: 5,
+      baseCost: new Decimal(1e6),
+      costMultiplier: 10
+    },
+    uncommon: {
+      unlocked: false,
+      upgrades: new Decimal(0),
+      speedUpgrades: new Decimal(0),
+      speedMultiplier: new Decimal(1),
+      progress: 0,
+      speed: 4,
+      baseSpeed: 4,
+      baseCost: new Decimal(1e8),
+      costMultiplier: 100
+    },
+    rare: {
+      unlocked: false,
+      upgrades: new Decimal(0),
+      speedUpgrades: new Decimal(0),
+      speedMultiplier: new Decimal(1),
+      progress: 0,
+      speed: 3,
+      baseSpeed: 3,
+      baseCost: new Decimal(1e10),
+      costMultiplier: 1000
+    },
+    legendary: {
+      unlocked: false,
+      upgrades: new Decimal(0),
+      speedUpgrades: new Decimal(0),
+      speedMultiplier: new Decimal(1),
+      progress: 0,
+      speed: 2,
+      baseSpeed: 2,
+      baseCost: new Decimal(1e12),
+      costMultiplier: 10000
+    },
+    mythic: {
+      unlocked: false,
+      upgrades: new Decimal(0),
+      speedUpgrades: new Decimal(0),
+      speedMultiplier: new Decimal(1),
+      progress: 0,
+      speed: 1,
+      baseSpeed: 1,
+      baseCost: new Decimal(1e15),
+      costMultiplier: 100000
+    }
+  },
+  // Box Generator Mk.2 system state (unlocked at Soap friendship level 10+)
+  boxGeneratorMk2: {
+    unlocked: false, // true when Soap friendship >= 10
+    speedUpgrades: new Decimal(0), // Number of Mk.2 speed upgrades purchased
+    progress: 0, // Current progress (0-100)
+    baseSpeed: 10, // Base speed for Mk.2 system
+    speed: 10, // Current calculated speed
+    maxSpeedUpgrades: 50, // Maximum upgrades allowed
+    transitionCompleted: false, // Whether the one-time transition from individual to unified has been done
+    unifiedUpgrades: new Decimal(0) // Combined upgrade level for all box types in Mk.2 mode
+  },
   // Prism system state
   prismState: {
     light: new Decimal(0),
@@ -442,10 +511,12 @@ let settings = {
   colour: "green",
   style: "rounded",
   notation: "numeral",
+  cursor: "special",
   disableOfflineProgress: false,
   confirmReset: true,
   confirmNectarizeReset: true,
   autosave: false,
+  autosaveInterval: 30
 };
 window.settings = settings;
 window.applySettings = applySettings;
@@ -1246,6 +1317,80 @@ function migrateInfinityUpgradesToState() {
   }
 }
 
+// Migrate box generator state to window.state
+function migrateBoxGeneratorsToState() {
+  // Ensure state object exists
+  if (!window.state) window.state = {};
+  
+  // Initialize boxGenerators state if it doesn't exist (already done in state initialization)
+  if (!window.state.boxGenerators) {
+    window.state.boxGenerators = {
+      common: { unlocked: false, upgrades: new Decimal(0), speedUpgrades: new Decimal(0), speedMultiplier: new Decimal(1), progress: 0, speed: 5, baseSpeed: 5, baseCost: new Decimal(1e6), costMultiplier: 10 },
+      uncommon: { unlocked: false, upgrades: new Decimal(0), speedUpgrades: new Decimal(0), speedMultiplier: new Decimal(1), progress: 0, speed: 4, baseSpeed: 4, baseCost: new Decimal(1e8), costMultiplier: 100 },
+      rare: { unlocked: false, upgrades: new Decimal(0), speedUpgrades: new Decimal(0), speedMultiplier: new Decimal(1), progress: 0, speed: 3, baseSpeed: 3, baseCost: new Decimal(1e10), costMultiplier: 1000 },
+      legendary: { unlocked: false, upgrades: new Decimal(0), speedUpgrades: new Decimal(0), speedMultiplier: new Decimal(1), progress: 0, speed: 2, baseSpeed: 2, baseCost: new Decimal(1e12), costMultiplier: 10000 },
+      mythic: { unlocked: false, upgrades: new Decimal(0), speedUpgrades: new Decimal(0), speedMultiplier: new Decimal(1), progress: 0, speed: 1, baseSpeed: 1, baseCost: new Decimal(1e15), costMultiplier: 100000 }
+    };
+  }
+  
+  // Migrate existing window.generators data if it exists
+  if (typeof window.generators !== 'undefined' && window.generators && Array.isArray(window.generators)) {
+    const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+    
+    window.generators.forEach((gen, index) => {
+      const type = typeMap[index];
+      if (type && window.state.boxGenerators[type]) {
+        // Migrate existing data from generators array to state
+        window.state.boxGenerators[type].unlocked = gen.unlocked || false;
+        window.state.boxGenerators[type].upgrades = DecimalUtils.toDecimal(gen.upgrades || 0);
+        window.state.boxGenerators[type].speedUpgrades = DecimalUtils.toDecimal(gen.speedUpgrades || 0);
+        window.state.boxGenerators[type].speedMultiplier = DecimalUtils.toDecimal(gen.speedMultiplier || 1);
+        window.state.boxGenerators[type].progress = gen.progress || 0;
+        window.state.boxGenerators[type].speed = gen.speed || window.state.boxGenerators[type].baseSpeed;
+      }
+    });
+  }
+  
+  // Migrate existing Mk.2 state variables if they exist
+  if (!window.state.boxGeneratorMk2) {
+    window.state.boxGeneratorMk2 = {
+      unlocked: false,
+      speedUpgrades: new Decimal(0),
+      progress: 0,
+      baseSpeed: 10,
+      speed: 10,
+      maxSpeedUpgrades: 50,
+      transitionCompleted: false,
+      unifiedUpgrades: new Decimal(0)
+    };
+  }
+  
+  // Migrate existing mk2SpeedUpgrades from scattered state
+  if (typeof window.state.mk2SpeedUpgrades !== 'undefined') {
+    window.state.boxGeneratorMk2.speedUpgrades = DecimalUtils.toDecimal(window.state.mk2SpeedUpgrades);
+    // Clean up the old scattered variable
+    delete window.state.mk2SpeedUpgrades;
+  }
+  
+  // Migrate existing mk2Progress from scattered state
+  if (typeof window.state.mk2Progress !== 'undefined') {
+    window.state.boxGeneratorMk2.progress = window.state.mk2Progress;
+    // Clean up the old scattered variable
+    delete window.state.mk2Progress;
+  }
+  
+  // Check if Mk.2 should be unlocked based on friendship level
+  if (window.state.friendship && window.state.friendship.Generator && window.state.friendship.Generator.level >= 10) {
+    window.state.boxGeneratorMk2.unlocked = true;
+  }
+  
+  // Calculate current speed
+  const speedUpgrades = DecimalUtils.isDecimal(window.state.boxGeneratorMk2.speedUpgrades) 
+    ? window.state.boxGeneratorMk2.speedUpgrades.toNumber() 
+    : (window.state.boxGeneratorMk2.speedUpgrades || 0);
+  window.state.boxGeneratorMk2.speed = window.state.boxGeneratorMk2.baseSpeed * Math.pow(1.3, speedUpgrades);
+}
+
 // Sync global references to centralized state
 function syncGlobalReferencesToState() {
   // Sync boughtElements reference
@@ -1551,6 +1696,44 @@ function syncGlobalReferencesToState() {
       window.friendship.recheckAllLevels = state.friendship.recheckAllLevels;
     }
   }
+  
+  // Sync box generator state to global generators array
+  if (state.boxGenerators) {
+    const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+    
+    // Ensure window.generators exists and has the right structure
+    if (!window.generators || !Array.isArray(window.generators) || window.generators.length !== 5) {
+      window.generators = [];
+    }
+    
+    typeMap.forEach((type, index) => {
+      if (state.boxGenerators[type]) {
+        // Create/update generator object for backward compatibility
+        if (!window.generators[index]) {
+          window.generators[index] = {
+            id: index,
+            name: `${type.charAt(0).toUpperCase() + type.slice(1)} Box Generator`,
+            currency: type === 'common' ? 'fluff' : type === 'uncommon' ? 'swaria coins' : type === 'rare' ? 'feathers' : type === 'legendary' ? 'artifacts' : 'kp',
+            reward: type
+          };
+        }
+        
+        // Sync state to generators array
+        const gen = window.generators[index];
+        const stateGen = state.boxGenerators[type];
+        
+        gen.unlocked = stateGen.unlocked;
+        gen.upgrades = DecimalUtils.isDecimal(stateGen.upgrades) ? stateGen.upgrades.toNumber() : (stateGen.upgrades || 0);
+        gen.speedUpgrades = DecimalUtils.isDecimal(stateGen.speedUpgrades) ? stateGen.speedUpgrades.toNumber() : (stateGen.speedUpgrades || 0);
+        gen.speedMultiplier = DecimalUtils.isDecimal(stateGen.speedMultiplier) ? stateGen.speedMultiplier.toNumber() : (stateGen.speedMultiplier || 1);
+        gen.progress = stateGen.progress || 0;
+        gen.speed = stateGen.speed || stateGen.baseSpeed;
+        gen.baseSpeed = stateGen.baseSpeed;
+        gen.baseCost = stateGen.baseCost;
+        gen.costMultiplier = stateGen.costMultiplier;
+      }
+    });
+  }
 }
 
 // Run migrations
@@ -1565,6 +1748,7 @@ migrateAchievementsToState();
 migrateSecretAchievementsToState();
 migratePermanentTabUnlocksToState();
 migrateInfinityUpgradesToState();
+migrateBoxGeneratorsToState();
 
 // Make sync function globally accessible
 window.syncGlobalReferencesToState = syncGlobalReferencesToState;
@@ -2274,6 +2458,11 @@ function gameTick() {
   }
   if (window.tickLightGenerators) window.tickLightGenerators(diff);
   
+  // Halloween Event: Swandy generation tick
+  if (window.state && window.state.halloweenEvent && typeof window.tickSwandyGeneration === 'function') {
+    window.tickSwandyGeneration(diff * 1000); // Convert seconds to milliseconds for consistency
+  }
+  
   // Ultra-rare secret achievement check - 1 in 10 million chance per tick
   if (Math.random() < 1 / 10000000) {
     if (typeof window.unlockSecretAchievement === 'function') {
@@ -2301,6 +2490,15 @@ function gameTick() {
     }
   }
   
+  // Update Halloween Event UI (throttled to ~1 second intervals)
+  if (typeof window.updateHalloweenUI === 'function' && window.state && window.state.halloweenEventActive) {
+    if (!window.lastHalloweenUIUpdate) window.lastHalloweenUIUpdate = 0;
+    if (now - window.lastHalloweenUIUpdate >= 1000) {
+      window.updateHalloweenUI();
+      window.lastHalloweenUIUpdate = now;
+    }
+  }
+
   // Update stable light displays in Advanced Prism UI (throttled to ~1 second intervals)
   if (typeof window.updateStableLightDisplays === 'function') {
     if (!window.lastStableLightDisplayUpdate) window.lastStableLightDisplayUpdate = 0;
@@ -3134,6 +3332,11 @@ function buyBox(type) {
       window.spawnIngredientToken('cargo', btn);
     }
   }
+  
+  // Track box purchases for quest system
+  if (typeof window.trackBoxPurchase === 'function') {
+    window.trackBoxPurchase(type);
+  }
 }
 
 function resetGame() {
@@ -3798,11 +4001,33 @@ function updateUI() {
   }
   const boxesProducedEl = document.getElementById("boxesProduced");
   if (boxesProducedEl) {
-    boxesProducedEl.textContent = formatNumber(Math.floor(state.boxesProduced || 0));
+    // BUG FIX: Calculate total from boxesProducedByType instead of using boxesProduced directly
+    let total = new Decimal(0);
+    if (state.boxesProducedByType) {
+      Object.values(state.boxesProducedByType).forEach(count => {
+        if (DecimalUtils.isDecimal(count)) {
+          total = total.add(count);
+        } else if (typeof count === 'number') {
+          total = total.add(count);
+        }
+      });
+    }
+    boxesProducedEl.textContent = formatNumber(total);
   }
   const boxesCountEl = document.getElementById("boxesProducedCount");
   if (boxesCountEl) {
-    boxesCountEl.textContent = formatNumber(Math.floor(state.boxesProduced || 0));
+    // BUG FIX: Calculate total from boxesProducedByType instead of using boxesProduced directly
+    let total = new Decimal(0);
+    if (state.boxesProducedByType) {
+      Object.values(state.boxesProducedByType).forEach(count => {
+        if (DecimalUtils.isDecimal(count)) {
+          total = total.add(count);
+        } else if (typeof count === 'number') {
+          total = total.add(count);
+        }
+      });
+    }
+    boxesCountEl.textContent = formatNumber(total);
   }
   
   // Update Swa Bucks display
@@ -4032,10 +4257,10 @@ window.setFluffToInfinity = function() {
 };
 
 // Debug function to perform infinity reset without confirmation (for testing only)
-window.forceInfinityReset = function() {
+window.forceInfinityReset = async function() {
   if (window.infinitySystem && window.infinitySystem.canInfinityReset()) {
 
-    window.infinitySystem.performInfinityReset();
+    await window.infinitySystem.performInfinityReset();
     
     // Update displays
     setTimeout(() => {
@@ -4509,8 +4734,27 @@ function applySettings() {
   document.getElementById("colorSelect").value = settings.colour;
   document.getElementById("styleSelect").value = settings.style;
   document.getElementById("notationSelect").value = settings.notation;
+  document.getElementById("cursorSelect").value = settings.cursor;
   // Sync notation to localStorage for decimal_utils compatibility
   localStorage.setItem('notationPreference', settings.notation);
+  
+  // Apply cursor setting
+  if (settings.cursor === "special") {
+    // Enable special cursor effects
+    if (typeof window.initializeBaseGameCursors === 'function') {
+      window.initializeBaseGameCursors();
+    }
+    document.body.classList.remove('cursor-normal');
+    document.body.classList.add('cursor-special');
+  } else {
+    // Disable all special cursor effects and use normal cursor
+    if (typeof window.removeAllCursorEffects === 'function') {
+      window.removeAllCursorEffects();
+    }
+    document.body.classList.remove('cursor-special');
+    document.body.classList.add('cursor-normal');
+  }
+  
   document.getElementById("disableOfflineProgressToggle").checked = settings.disableOfflineProgress;
   document.getElementById("confirmResetToggle").checked = settings.confirmReset;
   const nectarizeResetLabel = document.getElementById("confirmNectarizeResetLabel");
@@ -4544,6 +4788,35 @@ document.getElementById("notationSelect").onchange = e => {
   localStorage.setItem('notationPreference', e.target.value);
   // Trigger a UI update to refresh all number displays
   updateUI();
+};
+document.getElementById("cursorSelect").onchange = e => {
+  settings.cursor = e.target.value;
+  applySettings(); saveSettings();
+  
+  // Apply cursor effects based on setting
+  if (settings.cursor === "special") {
+    // Enable special cursor effects
+    if (typeof window.initializeBaseGameCursors === 'function') {
+      window.initializeBaseGameCursors();
+    }
+    // Re-initialize Halloween cursor effects if Halloween is active
+    if (typeof window.updateHalloweenCursorEffects === 'function') {
+      window.updateHalloweenCursorEffects();
+    }
+    document.body.classList.remove('cursor-normal');
+    document.body.classList.add('cursor-special');
+  } else {
+    // Disable all special cursor effects and use normal cursor
+    if (typeof window.removeAllCursorEffects === 'function') {
+      window.removeAllCursorEffects();
+    }
+    // Also update Halloween cursor effects to respect the normal setting
+    if (typeof window.updateHalloweenCursorEffects === 'function') {
+      window.updateHalloweenCursorEffects();
+    }
+    document.body.classList.remove('cursor-special');
+    document.body.classList.add('cursor-normal');
+  }
 };
 document.getElementById("disableOfflineProgressToggle").onchange = e => {
   settings.disableOfflineProgress = e.target.checked;
@@ -5642,7 +5915,7 @@ function updateInfinityResetInfo() {
     
     // Add click handler if not already added
     if (!resetButton.hasAttribute('data-handler-added')) {
-      resetButton.addEventListener('click', function() {
+      resetButton.addEventListener('click', async function() {
         if (window.infinitySystem.canInfinityReset()) {
           // Get infinity gain for confirmation message
           const infinityGain = window.infinitySystem.calculateInfinityGain();
@@ -5654,7 +5927,7 @@ function updateInfinityResetInfo() {
           
           // Show confirmation dialog
           if (confirm(confirmMessage)) {
-            window.infinitySystem.performInfinityReset();
+            await window.infinitySystem.performInfinityReset();
             // Update the display after reset
             setTimeout(() => {
               updateInfinityResetInfo();
@@ -6147,13 +6420,22 @@ function earnBox(type, rewardMultiplier = 1, suppressPopup = false, count = 1) {
     boostedCount = window.applyTwoInfinityBenefitBoost(countDecimal);
   }
   
-  state.boxesProduced = (state.boxesProduced || 0) + boostedCount.toNumber();
+  // BUG FIX: Removed conflicting numeric counter
+  // state.boxesProduced should be an object with box types, not a number
+  // Use boxesProducedByType instead for tracking
+  // state.boxesProduced = (state.boxesProduced || 0) + boostedCount.toNumber();
+  
   if (state.boxesProducedByType && state.boxesProducedByType[type] !== undefined) {
     // Ensure it's a Decimal before adding
     if (!DecimalUtils.isDecimal(state.boxesProducedByType[type])) {
       state.boxesProducedByType[type] = new Decimal(state.boxesProducedByType[type] || 0);
     }
     state.boxesProducedByType[type] = state.boxesProducedByType[type].add(boostedCount);
+  }
+  
+  // Track box generation for quest objectives
+  if (typeof window.trackBoxGeneration === 'function') {
+    window.trackBoxGeneration(boostedCount.toNumber());
   }
   let swariaGain = new Decimal(0);
   let featherGain = new Decimal(0);
@@ -6533,14 +6815,19 @@ function renderGenerators() {
     // Mk.2 mode always works independently - no need to check for unlocked generators
     
     // Use a base speed for Mk.2 system independent of individual generators
-    const mk2BaseSpeed = 10; // Base speed for Mk.2 system
-    const mk2SpeedUpgrades = state.mk2SpeedUpgrades || 0;
+    const mk2BaseSpeed = window.state.boxGeneratorMk2.baseSpeed; // Use state value
+    const mk2SpeedUpgrades = DecimalUtils.isDecimal(window.state.boxGeneratorMk2.speedUpgrades) 
+      ? window.state.boxGeneratorMk2.speedUpgrades.toNumber() 
+      : (window.state.boxGeneratorMk2.speedUpgrades || 0);
     const mk2Speed = mk2BaseSpeed * Math.pow(1.3, mk2SpeedUpgrades);
+    
+    // Update state speed
+    window.state.boxGeneratorMk2.speed = mk2Speed;
     
     // Create a virtual generator object for Mk.2 progress tracking
     const mk2Generator = {
       speed: mk2Speed,
-      progress: state.mk2Progress || 0,
+      progress: state.boxGeneratorMk2.progress,
       reward: 'mk2-unified'
     };
     
@@ -6549,10 +6836,10 @@ function renderGenerators() {
       // Create a virtual generator for Mk.2 with independent speed
       const slowestGen = {
         speed: mk2Speed,
-        progress: state.mk2Progress || 0,
+        progress: state.boxGeneratorMk2.progress,
         reward: 'mk2-unified',
         baseSpeed: 10,
-        speedUpgrades: state.mk2SpeedUpgrades || 0,
+        speedUpgrades: state.boxGeneratorMk2.speedUpgrades,
         speedMultiplier: 1
       };
       
@@ -6560,12 +6847,12 @@ function renderGenerators() {
       const speedCost = getMk2SpeedUpgradeCost();
       const combinedBoxes = getCombinedBoxCount();
       const canUpgrade = combinedBoxes.gte(speedCost);
-      const allMaxed = (state.mk2SpeedUpgrades || 0) >= 50; // Mk.2 speed upgrade cap
+      const allMaxed = state.boxGeneratorMk2.speedUpgrades >= 50; // Mk.2 speed upgrade cap
       
       if (allMaxed) {
         content += `<button id="upgradeMk2Speed" disabled>Maxed</button>`;
       } else {
-        const upgradeCount = state.mk2SpeedUpgrades || 0;
+        const upgradeCount = state.boxGeneratorMk2.speedUpgrades;
         content += `<button id="upgradeMk2Speed" onclick="upgradeMk2Speed(); updateMk2ButtonsImmediately();" ${!canUpgrade ? 'disabled' : ''}>
           Upgrade Mk.2 Speed (${formatNumber(speedCost)} combined boxes)
         </button>`;
@@ -6796,6 +7083,14 @@ function unlockGenerator(i) {
     state[gen.currency] = state[gen.currency].sub(unlockCost);
   }
   gen.unlocked = true;
+  
+  // Update state to match generator change
+  const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+  const type = typeMap[i];
+  if (type && window.state.boxGenerators && window.state.boxGenerators[type]) {
+    window.state.boxGenerators[type].unlocked = true;
+  }
+  
   if (typeof window.trackGeneratorUnlocks === 'function') {
     window.trackGeneratorUnlocks();
   }
@@ -6828,10 +7123,65 @@ function upgradeGenerator(i) {
   gen.speedUpgrades = (gen.speedUpgrades || 0) + 1;
   gen.upgrades++;
   gen.speed = gen.baseSpeed * Math.pow(1.3, gen.speedUpgrades);
+  
+  // Update state to match generator changes
+  const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+  const type = typeMap[i];
+  if (type && window.state.boxGenerators && window.state.boxGenerators[type]) {
+    window.state.boxGenerators[type].speedUpgrades = DecimalUtils.toDecimal(gen.speedUpgrades);
+    window.state.boxGenerators[type].upgrades = DecimalUtils.toDecimal(gen.upgrades);
+    window.state.boxGenerators[type].speed = gen.speed;
+  }
+  
   updateUI();
   updateKnowledgeUI();
   renderGenerators();
 }
+
+// Helper function to sync generator progress to state
+function syncGeneratorProgressToState() {
+  const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+  
+  if (window.generators && window.state.boxGenerators) {
+    window.generators.forEach((gen, i) => {
+      const type = typeMap[i];
+      if (type && window.state.boxGenerators[type]) {
+        window.state.boxGenerators[type].progress = gen.progress || 0;
+        window.state.boxGenerators[type].speed = gen.speed || gen.baseSpeed;
+        window.state.boxGenerators[type].speedMultiplier = gen.speedMultiplier || 1;
+      }
+    });
+  }
+}
+
+// Make helper function globally accessible
+window.syncGeneratorProgressToState = syncGeneratorProgressToState;
+
+// Debug function to check box generator state
+window.debugBoxGenerators = function() {
+  console.log('=== BOX GENERATOR STATE DEBUG ===');
+  console.log('window.generators:', window.generators);
+  console.log('window.state.boxGenerators:', window.state.boxGenerators);
+  
+  if (window.generators && window.state.boxGenerators) {
+    const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+    
+    console.log('\n--- State Comparison ---');
+    window.generators.forEach((gen, i) => {
+      const type = typeMap[i];
+      console.log(`${type.toUpperCase()}:`);
+      console.log(`  Array: unlocked=${gen.unlocked}, upgrades=${gen.upgrades}, speedUpgrades=${gen.speedUpgrades}, progress=${gen.progress}`);
+      if (window.state.boxGenerators[type]) {
+        const state = window.state.boxGenerators[type];
+        console.log(`  State: unlocked=${state.unlocked}, upgrades=${state.upgrades}, speedUpgrades=${state.speedUpgrades}, progress=${state.progress}`);
+      }
+    });
+  }
+  
+  console.log('\n--- Sync Test ---');
+  syncGeneratorProgressToState();
+  console.log('State synced to match generator array');
+};
 
 // Helper function to calculate combined box count for upgrade costs
 function getCombinedBoxCount() {
@@ -6867,15 +7217,10 @@ function getCombinedBoxCount() {
 
 // Helper function to calculate Mk.2 speed upgrade cost
 function getMk2SpeedUpgradeCost() {
-  // Initialize upgrade counter if it doesn't exist
-  if (!state.mk2SpeedUpgrades) {
-    state.mk2SpeedUpgrades = 0;
-  }
-  
   // Base cost: 1e20, scaling: x1e20 per upgrade
   const baseCost = new Decimal("1e20");
   const scalingFactor = new Decimal("1e20");
-  const upgrades = new Decimal(state.mk2SpeedUpgrades);
+  const upgrades = DecimalUtils.toDecimal(state.boxGeneratorMk2.speedUpgrades);
   
   return baseCost.mul(scalingFactor.pow(upgrades));
 }
@@ -6912,13 +7257,10 @@ function upgradeMk2Speed() {
   // Just increment the upgrade counter
   
   // Increment upgrade counter
-  if (!state.mk2SpeedUpgrades) {
-    state.mk2SpeedUpgrades = 0;
-  }
-  state.mk2SpeedUpgrades++;
+  state.boxGeneratorMk2.speedUpgrades = DecimalUtils.toDecimal(state.boxGeneratorMk2.speedUpgrades).add(1);
   
   // In Mk.2 mode, we don't need to upgrade individual generators
-  // The Mk.2 system manages speed independently through mk2SpeedUpgrades counter
+  // The Mk.2 system manages speed independently through speedUpgrades counter
   // Individual generator speeds are handled by the Mk.2 system
   
   updateUI();
@@ -7269,18 +7611,15 @@ function tickGenerators(diff) {
     {
       // Create independent Mk.2 generator with its own speed system
       const mk2BaseSpeed = 10;
-      const mk2SpeedUpgrades = state.mk2SpeedUpgrades || 0;
+      const mk2SpeedUpgrades = DecimalUtils.isDecimal(state.boxGeneratorMk2.speedUpgrades) 
+        ? state.boxGeneratorMk2.speedUpgrades.toNumber() 
+        : (state.boxGeneratorMk2.speedUpgrades || 0);
       const mk2Speed = mk2BaseSpeed * Math.pow(1.3, mk2SpeedUpgrades);
-      
-      // Initialize Mk.2 progress if not exists
-      if (typeof state.mk2Progress === 'undefined') {
-        state.mk2Progress = 0;
-      }
       
       // Create virtual Mk.2 generator object
       const slowestGen = {
         speed: mk2Speed,
-        progress: state.mk2Progress,
+        progress: state.boxGeneratorMk2.progress,
         reward: 'mk2-unified',
         baseSpeed: mk2BaseSpeed,
         speedUpgrades: mk2SpeedUpgrades,
@@ -7292,6 +7631,7 @@ function tickGenerators(diff) {
       
       if (!isFrozen) {
         slowestGen.progress += slowestGen.speed * diff;
+        state.boxGeneratorMk2.progress = slowestGen.progress;
       }
       
       // Update Mk.2 progress bar
@@ -7385,7 +7725,8 @@ function tickGenerators(diff) {
       }
       
       // Save Mk.2 progress back to state
-      state.mk2Progress = slowestGen.progress;
+      // Update progress in state
+      state.boxGeneratorMk2.progress = slowestGen.progress;
     }
   } else {
     // Individual generator mode (original behavior)
@@ -7403,6 +7744,14 @@ function tickGenerators(diff) {
         let instantFill = gen.speed * diff >= 100;
         if (gen.progress >= 100) {
           gen.progress = 0;
+          
+          // Update state to match generator progress reset
+          const typeMap = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
+          const type = typeMap[i];
+          if (type && window.state.boxGenerators && window.state.boxGenerators[type]) {
+            window.state.boxGenerators[type].progress = 0;
+          }
+          
           const upgradeLevel = generatorUpgrades[gen.reward] || new Decimal(0);
           const upgradeLevelDecimal = DecimalUtils.isDecimal(upgradeLevel) ? upgradeLevel : new Decimal(upgradeLevel);
           const boxCount = new Decimal(2).pow(upgradeLevelDecimal);
@@ -7463,6 +7812,14 @@ function tickGenerators(diff) {
       }
     });
   }
+  
+  // Sync generator progress to state periodically (every 10th tick for performance)
+  if (!window._generatorSyncTick) window._generatorSyncTick = 0;
+  window._generatorSyncTick++;
+  if (window._generatorSyncTick % 10 === 0) {
+    syncGeneratorProgressToState();
+  }
+  
   updateUI(); 
 }
 
@@ -9906,9 +10263,14 @@ function startPowerGeneratorChallenge() {
         tokensAwarded: {} // Track specific tokens awarded
     };
     
-    // Save original power state and set to max
+    // Save original power state and apply power cap
     window.powerChallenge.originalPower = window.state.powerEnergy.toNumber();
-    window.state.powerEnergy = window.state.powerMaxEnergy;
+    
+    // Apply challenge power cap
+    const challengePowerCap = calculateChallengePowerCap();
+    const effectivePower = new Decimal(challengePowerCap);
+    window.powerChallenge.effectivePowerCap = effectivePower.toNumber();
+    window.state.powerEnergy = effectivePower;
     
     // Show the challenge recharge modal
     showChallengeRechargeModal();
@@ -9938,8 +10300,8 @@ function showChallengeRechargeModal() {
                     </div>
                     
                     <!-- Challenge Power Display -->
-                    <div id="challengePowerDisplay" style="background: #2c2c2c; border: 2px solid #ffa500; border-radius: 8px; padding: 12px 20px; color: #ffa500; font-size: 1.4em; font-weight: bold; text-align: center; font-family: 'Orbitron', monospace; box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);">
-                        Power: <span id="challengePowerCurrent">0</span>/<span id="challengePowerMax">0</span>
+                    <div id="challengePowerDisplay" style="background: #2c2c2c; border: 2px solid #ffa500; border-radius: 8px; padding: 12px 20px; color: #ffa500; font-size: 1.4em; font-weight: bold; text-align: center; font-family: 'Orbitron', monospace; box-shadow: 0 0 10px rgba(255, 165, 0, 0.3); display: flex; align-items: center; gap: 10px;">
+                        <span>Power: <span id="challengePowerCurrent">0</span>/<span id="challengePowerMax">0</span></span>
                     </div>
                 </div>
                 
@@ -9975,6 +10337,181 @@ function showChallengeRechargeModal() {
     
     // Start countdown
     startChallengeCountdown();
+}
+
+function openRemotePowerRecharge() {
+    // Check if upgrade is unlocked
+    if (!window.state.halloweenEvent.swandyCrusher.remotePowerRechargeUnlocked) {
+        return;
+    }
+    
+    // Show the recharge modal without challenge mode
+    showRemoteRechargeModal();
+}
+
+function showRemoteRechargeModal() {
+    // Remove any existing modals
+    const existingModal = document.getElementById('remoteRechargeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create remote recharge modal (no timer, no challenge)
+    const modal = document.createElement('div');
+    modal.id = 'remoteRechargeModal';
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+            
+            <div style="background: linear-gradient(135deg, #2c3e50, #34495e); border: 3px solid #3498db; border-radius: 20px; padding: 25px; color: white; text-align: center; max-width: 90vw; max-height: 70vh; overflow-y: auto;">
+                <h3 style="margin: 0 0 15px 0; color: #3498db;">Remote Power Recharging</h3>
+                <p style="margin: 0 0 20px 0; color: #bdc3c7;">Click the red energy cells to recharge the facility's power!</p>
+                
+                <!-- Power Grid -->
+                <div id="remotePowerGrid" style="display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(5, 60px); gap: 8px; justify-content: center; margin-bottom: 20px;">
+                    <!-- Grid will be populated by JavaScript -->
+                </div>
+                
+                <!-- Progress Display -->
+                <div id="remoteProgressDisplay" style="background: #34495e; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                    <span id="remoteRedTilesRemaining">0</span> red cells cleared
+                </div>
+                
+                <!-- Close Button -->
+                <button onclick="closeRemoteRechargeModal()" style="background: #e74c3c; border: none; padding: 12px 30px; border-radius: 8px; color: white; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: all 0.2s;">
+                    Close
+                </button>
+            </div>
+            
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Initialize remote grid
+    initializeRemoteRechargeGrid();
+}
+
+function initializeRemoteRechargeGrid() {
+    const grid = document.getElementById('remotePowerGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    // Determine number of red tiles based on current power deficit
+    const currentPower = window.state.powerEnergy.toNumber();
+    const maxPower = window.state.maxPowerEnergy.toNumber();
+    const powerDeficit = Math.max(0, maxPower - currentPower);
+    const redTiles = Math.min(Math.ceil(powerDeficit / 10), 25); // 1 red tile per 10 power, max 25
+    
+    // Create array of tile types (red/green)
+    const tiles = [];
+    for (let i = 0; i < redTiles; i++) {
+        tiles.push('red');
+    }
+    for (let i = redTiles; i < 25; i++) {
+        tiles.push('green');
+    }
+    
+    // Shuffle tiles
+    for (let i = tiles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+    
+    // Create grid
+    tiles.forEach((type, index) => {
+        const tile = document.createElement('div');
+        tile.dataset.type = type;
+        tile.dataset.index = index;
+        
+        const baseStyle = `
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        `;
+        
+        if (type === 'red') {
+            tile.style.cssText = baseStyle + `
+                background: linear-gradient(135deg, #e74c3c, #c0392b);
+                border: 2px solid #a93226;
+            `;
+            tile.onclick = () => clickRemoteRedTile(index);
+        } else {
+            tile.style.cssText = baseStyle + `
+                background: linear-gradient(135deg, #2ecc71, #27ae60);
+                border: 2px solid #229954;
+            `;
+            tile.onclick = () => clickRemoteGreenTile(index);
+        }
+        
+        grid.appendChild(tile);
+    });
+    
+    // Update progress display
+    updateRemoteProgressDisplay(redTiles);
+}
+
+function clickRemoteRedTile(index) {
+    const grid = document.getElementById('remotePowerGrid');
+    if (!grid) return;
+    
+    const tile = grid.children[index];
+    if (!tile || tile.dataset.type !== 'red') return;
+    
+    // Add power (10 per red tile)
+    window.state.powerEnergy = window.state.powerEnergy.add(10);
+    if (window.state.powerEnergy.gt(window.state.maxPowerEnergy)) {
+        window.state.powerEnergy = new Decimal(window.state.maxPowerEnergy);
+    }
+    
+    // Change tile to green
+    tile.dataset.type = 'green';
+    tile.style.cssText = `
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        border: 2px solid #229954;
+    `;
+    tile.onclick = () => clickRemoteGreenTile(index);
+    
+    // Count remaining red tiles
+    const redTilesRemaining = Array.from(grid.children).filter(t => t.dataset.type === 'red').length;
+    updateRemoteProgressDisplay(25 - redTilesRemaining);
+    
+    // If all red tiles cleared, close modal
+    if (redTilesRemaining === 0) {
+        setTimeout(() => {
+            closeRemoteRechargeModal();
+            if (typeof showToast === 'function') {
+                showToast('Power fully recharged!', 'success');
+            }
+        }, 500);
+    }
+}
+
+function clickRemoteGreenTile(index) {
+    // Clicked green tile - do nothing
+}
+
+function updateRemoteProgressDisplay(clearedCount) {
+    const display = document.getElementById('remoteRedTilesRemaining');
+    if (display) {
+        display.textContent = clearedCount;
+    }
+}
+
+function closeRemoteRechargeModal() {
+    const modal = document.getElementById('remoteRechargeModal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 function initializeChallengeGrid() {
@@ -10069,11 +10606,21 @@ function startChallengeGame() {
             // Update timer display with precise timing
             document.getElementById('timerDisplay').textContent = Math.floor(timeElapsedPrecise);
             
-            // Update challenge power display
+            // Update challenge power display (use effective capped power)
             const currentPower = Math.floor(window.state.powerEnergy.toNumber());
-            const maxPower = calculatePowerGeneratorCap();
+            const maxPower = window.powerChallenge?.effectivePowerCap || calculateChallengePowerCap();
             document.getElementById('challengePowerCurrent').textContent = currentPower;
             document.getElementById('challengePowerMax').textContent = maxPower;
+            
+            // Update remote recharge button visibility
+            const remoteRechargeBtn = document.getElementById('remotePowerRechargeBtn');
+            if (remoteRechargeBtn) {
+                if (window.state.halloweenEvent.swandyCrusher.remotePowerRechargeUnlocked) {
+                    remoteRechargeBtn.style.display = 'inline-block';
+                } else {
+                    remoteRechargeBtn.style.display = 'none';
+                }
+            }
         }
     }, 100);
     
@@ -10530,6 +11077,11 @@ function showChallengeResults() {
         }
     }
     
+    // Track power challenge record for quest system (lepre_quest_5)
+    if (typeof window.trackPowerChallengeRecord === 'function') {
+        window.trackPowerChallengeRecord(currentTime);
+    }
+    
     // Create token rewards text
     let tokenRewardsText = '';
     if (Object.keys(window.powerChallenge.tokensAwarded).length > 0) {
@@ -10612,6 +11164,19 @@ function switchChallengeTab(tab) {
     }
 }
 
+// Calculate the effective power cap for challenges (hard capped at 500)
+function calculateChallengePowerCap() {
+    const CHALLENGE_POWER_HARD_CAP = 500;
+    const basePowerCap = calculatePowerGeneratorCap();
+    const effectiveCap = Math.min(basePowerCap, CHALLENGE_POWER_HARD_CAP);
+    
+    // Log when power cap is applied
+    if (basePowerCap > CHALLENGE_POWER_HARD_CAP) {
+    }
+    
+    return effectiveCap;
+}
+
 // Get challenge leaderboard data for all characters
 function getChallengeLeaderboard() {
     // Initialize character PBs if they don't exist
@@ -10640,20 +11205,20 @@ function getChallengeLeaderboard() {
         window.state.fluzzerEverReceivedGlitteringPetals = true;
     }
     
-    // Get current power cap to scale character times
-    const powerCap = calculatePowerGeneratorCap();
+    // Get current power cap to scale character times (with challenge power cap)
+    const effectivePowerCap = calculateChallengePowerCap();
     
     // Custom scaling: 100=1x, 200=1.5x, 300=2x, 400=2.25x, 500=2.5x
     let scalingFactor;
-    if (powerCap <= 100) {
-        scalingFactor = powerCap / 100; // Linear up to 1x at 100
-    } else if (powerCap <= 300) {
+    if (effectivePowerCap <= 100) {
+        scalingFactor = effectivePowerCap / 100; // Linear up to 1x at 100
+    } else if (effectivePowerCap <= 300) {
         // From 100 to 300: scale from 1x to 2x
-        const progress = (powerCap - 100) / 200; // 0 to 1
+        const progress = (effectivePowerCap - 100) / 200; // 0 to 1
         scalingFactor = 1 + progress; // 1x to 2x
     } else {
         // After 300: slower scaling (2x + 0.25x per 100 power)
-        const excessCap = powerCap - 300;
+        const excessCap = effectivePowerCap - 300;
         scalingFactor = 2 + (excessCap / 100) * 0.25;
     }
     
@@ -10888,18 +11453,18 @@ function ensureCharacterPBsExist() {
                              (!window.state.characterChallengePBs.bijou || window.state.characterChallengePBs.bijou === 0);
     
     if (needsPBGeneration) {
-        // Get current power cap to scale character times
-        const powerCap = calculatePowerGeneratorCap();
+        // Get current power cap to scale character times (with challenge power cap)
+        const effectivePowerCap = calculateChallengePowerCap();
         
         // Custom scaling: 100=1x, 200=1.5x, 300=2x, 400=2.25x, 500=2.5x
         let scalingFactor;
-        if (powerCap <= 100) {
-            scalingFactor = powerCap / 100;
-        } else if (powerCap <= 300) {
-            const progress = (powerCap - 100) / 200;
+        if (effectivePowerCap <= 100) {
+            scalingFactor = effectivePowerCap / 100;
+        } else if (effectivePowerCap <= 300) {
+            const progress = (effectivePowerCap - 100) / 200;
             scalingFactor = 1 + progress;
         } else {
-            const excessCap = powerCap - 300;
+            const excessCap = effectivePowerCap - 300;
             scalingFactor = 2 + (excessCap / 100) * 0.25;
         }
         
@@ -10950,6 +11515,7 @@ function ensureCharacterPBsExist() {
 }
 
 // Make functions globally accessible
+window.calculateChallengePowerCap = calculateChallengePowerCap;
 window.switchChallengeTab = switchChallengeTab;
 window.getChallengeLeaderboard = getChallengeLeaderboard;
 window.ensureCharacterPBsExist = ensureCharacterPBsExist;

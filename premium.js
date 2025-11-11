@@ -206,8 +206,9 @@ function updatePremiumUI() {
     if (h3 && h3.textContent.trim() === 'Unlock Bijou') {
       const bijouButton = card.querySelector('button');
       if (bijouButton) {
-        if (window.state.unlockedFeatures?.bijou) {
-          bijouButton.textContent = 'Unlocked';
+        const bijouUnlocked = isBijouUnlocked();
+        if (bijouUnlocked) {
+          bijouButton.textContent = 'Bought';
           bijouButton.disabled = true;
           bijouButton.style.backgroundColor = '#4CAF50';
           bijouButton.style.color = 'white';
@@ -303,7 +304,7 @@ function buyBijou() {
 }
 
 function buyVrchatMirror() {
-  const cost = new Decimal(5000);
+  const cost = new Decimal(1000000);
   if (window.premiumState.vrchatMirrorUnlocked) {
     return;
   }
@@ -378,6 +379,9 @@ function updateBijouToggleUI() {
   // Also update KitoFox mode toggle
   updateKitoFoxModeToggleUI();
   
+  // Also update Kito mode toggle
+  updateKitoModeToggleUI();
+  
   // Also update Halloween event toggle
   updateHalloweenEventToggleUI();
 }
@@ -404,6 +408,20 @@ function updateKitoFoxModeToggleUI() {
     } else {
       // Update checkbox state
       checkbox.checked = window.state.kitoFoxModeActive || false;
+    }
+  } else if (checkbox) {
+    checkbox.parentElement.parentElement.remove();
+  }
+}
+
+function updateKitoModeToggleUI() {
+  const checkbox = document.getElementById('kitoModeToggleCheckbox');
+  if (window.state.unlockedFeatures && window.state.unlockedFeatures.kitoMode) {
+    if (!checkbox) {
+      addKitoModeToggleButton();
+    } else {
+      // Update checkbox state
+      checkbox.checked = window.state.kitoModeActive || false;
     }
   } else if (checkbox) {
     checkbox.parentElement.parentElement.remove();
@@ -449,6 +467,9 @@ function addBijouToggleButton() {
   
   // Add KitoFox mode toggle if unlocked
   addKitoFoxModeToggleButton();
+  
+  // Add Kito mode toggle if unlocked
+  addKitoModeToggleButton();
   
   // Add Halloween event toggle if unlocked
   addHalloweenEventToggleButton();
@@ -508,6 +529,33 @@ function addKitoFoxModeToggleButton() {
   }
 }
 
+function addKitoModeToggleButton() {
+  if (document.getElementById('kitoModeToggleCheckbox')) {
+    return;
+  }
+  
+  // Only show if Kito mode is unlocked
+  if (!window.state.unlockedFeatures || !window.state.unlockedFeatures.kitoMode) {
+    return;
+  }
+  
+  const settingsCard = document.querySelector('#settingsSavesTab .card');
+  if (settingsCard) {
+    const checkboxContainer = document.createElement('div');
+    checkboxContainer.style.marginTop = '1em';
+    checkboxContainer.style.textAlign = 'center';
+    checkboxContainer.style.borderTop = '1px solid #ddd';
+    checkboxContainer.style.paddingTop = '1em';
+    checkboxContainer.innerHTML = `
+      <label style="display: flex; align-items: center; gap: 0.5em; justify-content: center;">
+        <input type="checkbox" id="kitoModeToggleCheckbox" ${window.state.kitoModeActive ? 'checked' : ''} onchange="toggleKitoMode()">
+        <span>Enable Kito Mode</span>
+      </label>
+    `;
+    settingsCard.appendChild(checkboxContainer);
+  }
+}
+
 function addHalloweenEventToggleButton() {
   if (document.getElementById('halloweenEventToggleCheckbox')) {
     return;
@@ -554,13 +602,21 @@ function toggleRecorderMode() {
   
   window.state.recorderModeActive = !window.state.recorderModeActive;
   
-  // If turning on recorder mode, turn off KitoFox mode
+  // If turning on recorder mode, turn off KitoFox mode and Kito mode
   if (window.state.recorderModeActive && window.state.kitoFoxModeActive) {
     window.state.kitoFoxModeActive = false;
     // Update KitoFox toggle UI
     const kitoFoxCheckbox = document.getElementById('kitoFoxModeToggleCheckbox');
     if (kitoFoxCheckbox) {
       kitoFoxCheckbox.checked = false;
+    }
+  }
+  if (window.state.recorderModeActive && window.state.kitoModeActive) {
+    window.state.kitoModeActive = false;
+    // Update Kito mode toggle UI
+    const kitoCheckbox = document.getElementById('kitoModeToggleCheckbox');
+    if (kitoCheckbox) {
+      kitoCheckbox.checked = false;
     }
   }
   
@@ -586,7 +642,7 @@ function toggleKitoFoxMode() {
   
   window.state.kitoFoxModeActive = !window.state.kitoFoxModeActive;
   
-  // If turning on KitoFox mode, turn off recorder mode
+  // If turning on KitoFox mode, turn off recorder mode (but allow Kito mode to stay active)
   if (window.state.kitoFoxModeActive && window.state.recorderModeActive) {
     window.state.recorderModeActive = false;
     // Update recorder toggle UI
@@ -597,6 +653,31 @@ function toggleKitoFoxMode() {
   }
   
   updateKitoFoxModeImages();
+  
+  // Save the state
+  if (typeof window.saveGame === 'function') {
+    window.saveGame();
+  }
+}
+
+function toggleKitoMode() {
+  if (!window.state.unlockedFeatures || !window.state.unlockedFeatures.kitoMode) {
+    return;
+  }
+  
+  window.state.kitoModeActive = !window.state.kitoModeActive;
+  
+  // If turning on Kito mode, turn off recorder mode (but allow KitoFox mode to stay active)
+  if (window.state.kitoModeActive && window.state.recorderModeActive) {
+    window.state.recorderModeActive = false;
+    // Update recorder toggle UI
+    const recorderCheckbox = document.getElementById('recorderModeToggleCheckbox');
+    if (recorderCheckbox) {
+      recorderCheckbox.checked = false;
+    }
+  }
+  
+  updateKitoModeImages();
   
   // Save the state
   if (typeof window.saveGame === 'function') {
@@ -858,6 +939,29 @@ function updateKitoFoxModeImages() {
   }
 }
 
+function updateKitoModeImages() {
+  if (!window.state.kitoModeActive) {
+    // Revert to appropriate images based on current mode (including Bijou)
+    const normalImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(false) : 'swa normal.png';
+    const speechImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(true) : 'swa talking.png';
+    updateAllSwariaImages(normalImage, speechImage);
+  } else {
+    // Switch to Kito images
+    updateAllSwariaImages('assets/icons/kito.png', 'assets/icons/kito speech.png');
+  }
+  
+  // Force update all character images that use these functions
+  if (typeof updateMainCargoCharacterImage === 'function') {
+    updateMainCargoCharacterImage();
+  }
+  if (typeof updateTerrariumCharacterImage === 'function') {
+    updateTerrariumCharacterImage();
+  }
+  if (typeof forceUpdateCargoCharacter === 'function') {
+    forceUpdateCargoCharacter();
+  }
+}
+
 function updateRecorderModeImages() {
   if (!window.state.recorderModeActive) {
     // Revert to appropriate images based on current mode (including Bijou)
@@ -899,15 +1003,23 @@ function updateAllModeImages() {
   
   let normalImage, speechImage;
   
-  // Priority: KitoFox mode takes precedence over recorder mode
-  if (window.state.kitoFoxModeActive) {
-    // Use KitoFox images
-    normalImage = 'assets/icons/kitomode.png';
-    speechImage = 'assets/icons/kitomode speech.png';
-  } else if (window.state.recorderModeActive) {
+  // Priority: Recorder mode first, then if both KitoFox and Kito are active use Kito visuals, then individual modes
+  if (window.state.recorderModeActive) {
     // Use recorder images
     normalImage = 'assets/icons/recorder.png';
     speechImage = 'assets/icons/recorder speech.png';
+  } else if (window.state.kitoFoxModeActive && window.state.kitoModeActive) {
+    // Both modes active - use Kito images (visual priority)
+    normalImage = 'assets/icons/kito.png';
+    speechImage = 'assets/icons/kito speech.png';
+  } else if (window.state.kitoFoxModeActive) {
+    // Use KitoFox images
+    normalImage = 'assets/icons/kitomode.png';
+    speechImage = 'assets/icons/kitomode speech.png';
+  } else if (window.state.kitoModeActive) {
+    // Use Kito images
+    normalImage = 'assets/icons/kito.png';
+    speechImage = 'assets/icons/kito speech.png';
   } else {
     // Use appropriate images based on current mode (including Bijou)
     normalImage = window.getMainCargoCharacterImage ? window.getMainCargoCharacterImage(false) : 'swa normal.png';
@@ -932,7 +1044,7 @@ function updateAllModeImages() {
 
 function updateAllSwariaImages(normalImage, speechImage) {
   // Find all Swaria character images (not currency icons)
-  const swariaCharacterImages = document.querySelectorAll('img[src*="swa normal"], img[src*="swa talking"], img[src*="recorder.png"], img[src*="recorder speech"], img[src*="kitomode.png"], img[src*="kitomode speech"]');
+  const swariaCharacterImages = document.querySelectorAll('img[src*="swa normal"], img[src*="swa talking"], img[src*="recorder.png"], img[src*="recorder speech"], img[src*="kitomode.png"], img[src*="kitomode speech"], img[src*="kito.png"], img[src*="kito speech"]');
   
   swariaCharacterImages.forEach(img => {
     const isSpeech = img.src.includes('talking') || img.src.includes('speech');
@@ -946,7 +1058,7 @@ function updateAllSwariaImages(normalImage, speechImage) {
   }
   
   // Also look for any background images that might be set via CSS
-  const swariaElements = document.querySelectorAll('[style*="swa normal"], [style*="swa talking"], [style*="recorder.png"], [style*="recorder speech"]');
+  const swariaElements = document.querySelectorAll('[style*="swa normal"], [style*="swa talking"], [style*="recorder.png"], [style*="recorder speech"], [style*="kito.png"], [style*="kito speech"]');
   swariaElements.forEach(element => {
     const style = element.style.backgroundImage;
     if (style) {
@@ -1054,6 +1166,62 @@ const kitoFoxQuotes = [
   { text: "If you want to have fun, turn this mode off.", condition: () => true },
   { text: "EXTREME!!!", condition: () => true },
  
+];
+
+// Kito mode quotes - special dialogue when Kito mode is active
+const kitoQuotes = [
+  { text: "Hehe~ I'm helping out now!", condition: () => true },
+  { text: "This place is really cool! So many boxes!", condition: () => true },
+  { text: "I can see Peachy staring at me while I took their usual spot.", condition: () => true },
+  { text: "Peachy showed me around! Everything is so organized!", condition: () => true },
+  { text: "I got over 600s on the power generator challenge but lepre is still better.", condition: () => true },
+  { text: "I'm still learning how everything works here!", condition: () => true },
+  { text: "So many resources to manage! And I can do it better than Peachy!", condition: () => true },
+  { text: "I heard the Generator Department is really important!", condition: () => true },
+  { text: "The cargo area is not very busy, its just me and Peachy here.", condition: () => true },
+  { text: "Fluff production is fascinating to watch!", condition: () => true },
+  { text: "I got the hang of this place~", condition: () => true },
+  { text: "I like chatting.", condition: () => true },
+  { text: "Hey uhh I think I broke the game or something.", condition: () => true },
+  { text: "I love seeing all the different departments!", condition: () => true },
+  { text: "This purple abyss anomaly will not appear if I stay here. Peachy could not do anything about it.", condition: () => true },
+  { text: "This honey token is out of this world!", condition: () => true },
+  { text: "I'm impressed by how efficient everyone is! Except for Soap, of course. Too invested in their soap collection all the time.", condition: () => true },
+  { text: "So many upgrades to keep track of!", condition: () => true },
+  { text: "giving batteries to Soap doesnt progress the final charger miles- Oh wait that's gone.", condition: () => true },
+  { text: "I'm enjoying helping out around here~", condition: () => true },
+  { text: "Everyone here is so dedicated to their work! And Soap is dedicated to their soap collection.", condition: () => true },
+  { text: "With my help, Tico was able to craft more than 300,000 food rations for the rikkor workers.", condition: () => true },
+  { text: "I think I know who 𝒯𝒽𝑒 𝒮𝓌𝒶 𝐸𝓁𝒾𝓉𝑒, their real name must be  ████████", condition: () => true },
+  { text: "I'm a real fluff veteran here, my computer survived the terrarium memory leak multiple times.", condition: () => true },
+  { text: "When I give Soap a battery, the current power goes back to 100, like what, how does that work, what is Soap doing with the battery token I gave them, our power generator has a capacity of 6000 power and the battery is only supposed to stop the power from draining, so why does the power go back to 100??? I don't understand. WHAT IS SOAP DOING TO THE POWER GENERATOR WITH THAT BATTERY. RRRRAAAAAA", condition: () => true },
+  { text: "I actually have the infinity challenges unlocked when these should not be possible to reach.", condition: () => true },
+  { text: "Fluzzer thought I was never gonna be able to unlock the flower grid, but I did.", condition: () => true },
+  { text: "Also, the rikkor workers with decimal amount of seconds for a task extrapolate that part of a second into a full second, resulting in waiting longer than they are indicated, how does Tico let that happen? The workers are being a extra second lazy!", condition: () => true },
+  { text: "I hope I'm being helpful~", condition: () => true },
+  { text: "Me and Soap likes to party when the anomalies turns the power generator into the Soap generator, we may not be able to refill the power but that's fine since our power capacity is above 6000. So instead we like to slip and slide in the generator room~", condition: () => true },
+  { text: "Soap's quest is very hard to accomplish when you currently have an infinity, because you dont get any fluff at all, can't they see I have an infinity of fluff and count that toward their quest?", condition: () => true },
+  { text: "I've noticed something strange about the terrarium xp... When me and fluzzer are extracting the pollen from flowers, I noticed the xp bar jiggling, and I'm not getting that experience at all, how is Fluzzer not seeing that? Its like right in our faces and they just don't do anything about it, it's like they don't care, they'll just keep saying stupid stuff like 'I asked a worm for gardening tips. It just wiggled.'.", condition: () => true },
+  { text: "I got 700 seconds in the power generator challenge, try to beat that.", condition: () => true },
+  
+  // Bijou-related quotes
+  { text: "Bijou is really good at collecting tokens! I'm impressed~", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I'm trying to train Bijou to collect every tokens from a token burst, but they always seem to only collect 1 of the 5 tokens.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou used to get sent to the shadow realm when peachy would eat a berry plate, I'm glad this no longer happens.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I saw Bijou grab a token super fast! They are improving!", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou seems really dedicated to helping out here! But they like staying on Peachy's head instead of mine, why not.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I wonder if Bijou could teach me how to spot tokens that quickly.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou's magnet is so cool! Where did they get it?", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I think Bijou and I could make a great team! But Bijou rather stays on Peachy's head instead of mine.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou always seems so focused when collecting tokens~", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I hope Bijou doesn't mind me being here too!", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I have this conspiracy theory that Bijou is actually a pigeon Swaria.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Maybe Bijou and I could coordinate our efforts somehow?", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I noticed Bijou gets really excited about shiny tokens! It's cute~", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou mentioned something about not being greedy with tokens. They're lying.", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I wonder what Bijou thinks about all the upgrades happening here...", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "Bijou seems to really care about being helpful. I respect that!", condition: () => window.state?.unlockedFeatures?.bijou },
+  { text: "I should ask Bijou about their favorite part of working here~ It's probably nesting on Peachy's head. And collecting tokens.", condition: () => window.state?.unlockedFeatures?.bijou },
 ];
 
 // Halloween Recorder Visibility Easter Egg System
@@ -1571,6 +1739,48 @@ function refreshPremiumState() {
   }
 }
 
+// Force refresh boutique items
+window.refreshBoutique = function() {
+  if (window.boutique) {
+    window.boutique.restockShop();
+    window.boutique.updateBoutiqueUI();
+  }
+};
+
+// Debug function to manually refresh premium UI
+window.debugPremiumUI = function() {
+  console.log('=== Premium State Debug ===');
+  console.log('window.state?.unlockedFeatures?.bijou:', window.state?.unlockedFeatures?.bijou);
+  console.log('window.premiumState?.bijouUnlocked:', window.premiumState?.bijouUnlocked);
+  console.log('isBijouUnlocked():', isBijouUnlocked());
+  console.log('window.isBijouUnlocked (global):', window.isBijouUnlocked?.());
+  
+  // Check merchant system
+  if (window.boutique) {
+    console.log('=== Merchant System Debug ===');
+    const bijouItem = window.boutique.currentShopItems?.find(item => item.id === 'bijou');
+    console.log('Bijou merchant item:', bijouItem);
+    console.log('Bijou merchant isUnlocked result:', bijouItem?.isUnlocked?.());
+    
+    // Test the new isUnlocked logic manually
+    console.log('Manual bijou unlock check:');
+    console.log('  window.state.unlockedFeatures.bijou:', window.state?.unlockedFeatures?.bijou);
+    console.log('  window.premiumState.bijouUnlocked:', window.premiumState?.bijouUnlocked);
+    console.log('  typeof window.isBijouUnlocked:', typeof window.isBijouUnlocked);
+    
+    console.log('Forcing boutique restock to refresh items...');
+    window.boutique.restockShop();
+    console.log('Calling boutique.updateBoutiqueUI()...');
+    window.boutique.updateBoutiqueUI();
+    
+    // Check again after restock
+    const bijouItemAfter = window.boutique.currentShopItems?.find(item => item.id === 'bijou');
+    console.log('Bijou item after restock:', bijouItemAfter?.isUnlocked?.());
+  }
+  
+  updatePremiumUI();
+};
+
 let bijouUIElement = null;
 let bijouCollectionQueue = [];
 let bijouIsCollecting = false;
@@ -1604,6 +1814,23 @@ const bijouDialogues = [
   
 ];
 
+// Bijou's concerned dialogue about hexed Peachy - only appears when Peachy is hexed
+const bijouHexedPeachyDialogues = [
+  "Hey... are you okay? You look different...",
+  "Peachy, what happened to you? You have this strange aura around you...",
+  "I'm really worried about you... that mark looks serious.",
+  "Did someone curse you? Please tell me you're okay!",
+  "Your appearance changed... is this permanent? I'm scared for you...",
+  "I've never seen a mark like that before. Does it hurt?",
+  "I wish I could help remove that mark... but I don't know how...",
+  "You're still you, right? The mark didn't change who you are right?",
+  "That aura around you... it's unnatural. I'm worried.",
+  "Your eyes look different now... are you okay?",
+  "I'm here for you, even with that scary mark on you.",
+  "I can sense some dark magic on you... please tell me you're not in pain.",
+  "I don't care what you look like, you're still my friend!"
+];
+
 // Bijou's challenge quotes - good at clicking but scared of color shifts
 const bijouChallengeQuotes = [
   { text: "In Soap's challenge, I'm really good at clicking the red tiles quickly! But when the colors start changing... Nuh uh, that's where I draw the line.", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
@@ -1621,6 +1848,55 @@ const bijouChallengeQuotes = [
   { text: "Everyone says I'm really good at the clicking part of the challenge! If only it didn't have those scary color changes...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
   { text: "I practice my clicking skills all the time! But no amount of practice helps with my fear of color shifting...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
   { text: "The moment those tiles start changing colors, I just want to hide! That's always when my run ends...", condition: () => window.state.characterChallengePBs?.bijou || window.state.powerChallengePersonalBest },
+  
+  // Token Challenge quotes - only appear if player has tried the Token Challenge
+  { text: "Lepre's Token Challenge? Oh my, those spinning tokens are so shiny and mesmerizing! I could watch them all day!", condition: () => window.state.tokenChallengePB > 0 },
+  { text: "I love the Token Challenge so much more than the Power Generator one! The tokens sparkle and there are no sudden color shifts!", condition: () => window.state.tokenChallengePB > 0 },
+  { text: "Those spinning tokens are absolutely gorgeous! I get so distracted by how pretty they are that I sometimes forget I'm in the challenge!", condition: () => window.state.tokenChallengePB > 0 },
+  { text: "Finally, a challenge where I don't have to worry about colors changing! No epilepsy triggers!", condition: () => window.state.tokenChallengePB > 0 },
+  { text: "I wish I could decorate my workspace with those tokens I earned from the token challenge! They're so much prettier than Soap's power generator's tiles!", condition: () => window.state.tokenChallengePB > 0 },
+  { text: "The Token Challenge is perfect for someone like me who loves shiny things but hates unpredictable color changes!", condition: () => window.state.tokenChallengePB > 0 },
+];
+
+// Bijou's dialogue when Kito mode is active - talking about/to Kito
+const bijouKitoDialogues = [
+  "Oh! Kito is here! Hi Kito~",
+  "Kito seems really knowledgeable about this place! I should learn from them~",
+  "I saw Kito chatting earlier. They seem really friendly!",
+  "Hey Peachy, Kito mentioned something about surviving the terrarium memory leak... Do you know what they are talking about?",
+  "I'm sure we're better than Kito at collecting tokens, right? Right?!",
+  "Hey peachy, I heard Kito talking about Soap's battery situation... they are onto the conspiracy!",
+  "Kito seems to know every little detail about this place. Scary!",
+  "I should introduce myself to Kito properly! But they seem to know everything about me already.",
+  "Hey Peachy, Kito mentioned they got over 600 seconds on the power generator challenge... they actually have a chance to beat lepre!",
+  "I noticed Kito staring at your anomaly resolver earlier. What were they thinking about?",
+  "Kito and I could probably work together really well! We both love helping out~",
+  "Hey Peachy, I heard Kito talking about the rikkor workers being lazy... they notice everything!",
+  "Kito seems to have strong opinions about how things work here. I respect that!",
+  "Hey Peachy, I heard Kito mentioned something about my magnet... do you think they know my secret?",
+  "Hey Peachy, I heard Kito mentioned they think I'm some sort of 'Pigeon Swaria'... what does that even mean?!",
+  "Maybe Kito and I should compare our token collection strategies sometime?",
+  "I saw Kito mention something about a conspiracy theory... about me being a pigeon Swaria? That sounds wild!",
+  "Kito really cares about this place, you can tell by how much they talk about it!",
+  "I wonder what Kito thinks about my magnet... they seem curious about everything!",
+  "Kito mentioned they're better at managing resources than you Peachy... that's bold!",
+  "Kito talks about me a lot... I heard them! How nice of them~",
+  "I heard Kito saying I'm good at collecting tokens! That makes me so happy!",
+  "Kito noticed I usually only collect 1 out of 5 tokens from bursts... they're onto me!",
+  "Kito said they're trying to train me? That's so sweet of them!",
+  "I appreciate that Kito acknowledges my dedication! Even if I prefer to be on your head...",
+  "Kito wondering about my magnet is funny, it's a secret~",
+  "Kito thinks we could make a great team! I agree, but I'm still staying on your head!",
+  "Kito calling me 'focused' makes me feel professional!",
+  "I'm glad Kito doesn't mind me being here too. We can both help out!",
+  "Kito has a conspiracy theory about me being a pigeon Swaria... What am I supposed to say? I'm just a tiny Swaria!",
+  "Kito suggesting we coordinate our efforts sounds like a great idea!",
+  "Kito noticed I get excited about shiny tokens! They really pay attention~",
+  "Kito caught me being greedy with tokens... okay maybe they have a point there...",
+  "I wonder what Kito would think if they knew how much I love nesting on your head?",
+  "Kito respecting my dedication to being helpful means a lot to me!",
+  "Hey Peachy, have you noticed that one strange token Kito has, it looks like some honey token, it looks completly out of this world, how did they get this? I'm curious.",
+  "Hey Peachy, have you noticed that Tico and Kito's names are so similar, could this be another conspiracy?",
 ];
 
 // Function to get Bijou's challenge quotes for external access
@@ -1636,15 +1912,17 @@ function initBijouUI() {
   if (!bijouUIElement) {
     bijouUIElement = document.createElement('div');
     bijouUIElement.id = 'bijouUI';
+    const isFloor2 = window.currentFloor === 2;
+    const bottomPosition = isFloor2 ? '20px' : '80px';
     bijouUIElement.style.cssText = `
       position: fixed;
-      bottom: 80px;
+      bottom: ${bottomPosition};
       right: 0px;
       width: 300px;
       height: 300px;
       z-index: 1;
       pointer-events: auto;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, bottom 0.3s ease;
       cursor: pointer;
     `;
     const bijouImg = document.createElement('img');
@@ -1658,6 +1936,10 @@ function initBijouUI() {
     bijouUIElement.appendChild(bijouImg);
     document.body.appendChild(bijouUIElement);
     bijouUIElement.addEventListener('click', triggerBijouDialogue);
+  } else {
+    const isFloor2 = window.currentFloor === 2;
+    const bottomPosition = isFloor2 ? '20px' : '80px';
+    bijouUIElement.style.bottom = bottomPosition;
   }
   bijouUIElement.style.display = 'block';
 }
@@ -1883,29 +2165,47 @@ function triggerBijouDialogue() {
   
   let randomDialogue;
   
+  // Check if Kito mode is active - 50% chance for Kito-specific dialogue
+  const isKitoModeActive = window.state && window.state.kitoModeActive;
+  
+  // Check if Peachy is hexed - 40% chance for hex concern dialogue if hexed
+  const isPeachyHexed = window.state && 
+                        window.state.halloweenEvent && 
+                        window.state.halloweenEvent.jadeca && 
+                        window.state.halloweenEvent.jadeca.peachyIsHexed;
+  
+  if (isKitoModeActive && Math.random() < 0.50) {
+    // Show Kito-specific dialogue
+    randomDialogue = bijouKitoDialogues[Math.floor(Math.random() * bijouKitoDialogues.length)];
+  } else if (isPeachyHexed && Math.random() < 0.40) {
+    // Show concerned dialogue about hexed Peachy
+    randomDialogue = bijouHexedPeachyDialogues[Math.floor(Math.random() * bijouHexedPeachyDialogues.length)];
+  }
   // 15% chance for challenge quotes (only if quest 5 is completed to unlock the challenge)
-  const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
-  if (questCompleted && Math.random() < 0.15) {
-    // Ensure character PBs exist
-    if (typeof window.ensureCharacterPBsExist === 'function') {
-      window.ensureCharacterPBsExist();
-    }
-    
-    // Filter challenge speeches by their conditions
-    const availableChallengeSpeeches = bijouChallengeQuotes.filter(speech => {
-      return speech.condition ? speech.condition() : true;
-    });
-    
-    if (availableChallengeSpeeches.length > 0) {
-      const randomChallengeSpeech = availableChallengeSpeeches[Math.floor(Math.random() * availableChallengeSpeeches.length)];
-      randomDialogue = typeof randomChallengeSpeech.text === 'function' ? randomChallengeSpeech.text() : randomChallengeSpeech.text;
+  else {
+    const questCompleted = window.state?.questSystem?.completedQuests?.includes('soap_quest_5') || false;
+    if (questCompleted && Math.random() < 0.15) {
+      // Ensure character PBs exist
+      if (typeof window.ensureCharacterPBsExist === 'function') {
+        window.ensureCharacterPBsExist();
+      }
+      
+      // Filter challenge speeches by their conditions
+      const availableChallengeSpeeches = bijouChallengeQuotes.filter(speech => {
+        return speech.condition ? speech.condition() : true;
+      });
+      
+      if (availableChallengeSpeeches.length > 0) {
+        const randomChallengeSpeech = availableChallengeSpeeches[Math.floor(Math.random() * availableChallengeSpeeches.length)];
+        randomDialogue = typeof randomChallengeSpeech.text === 'function' ? randomChallengeSpeech.text() : randomChallengeSpeech.text;
+      } else {
+        // Fallback to regular dialogue if no challenge speeches are available
+        randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
+      }
     } else {
-      // Fallback to regular dialogue if no challenge speeches are available
+      // Use regular dialogue
       randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
     }
-  } else {
-    // Use regular dialogue
-    randomDialogue = bijouDialogues[Math.floor(Math.random() * bijouDialogues.length)];
   }
   
   createBijouSpeechBubble(randomDialogue);
@@ -1944,15 +2244,46 @@ function hideBijouTalkingOverlay() {
   }
 }
 
+// Special function to show custom Bijou message with automatic cleanup
+function showBijouCustomMessage(message, duration = 5000) {
+  // Clear any existing timeout and speech
+  if (bijouSpeechTimeout) {
+    clearTimeout(bijouSpeechTimeout);
+    bijouSpeechTimeout = null;
+  }
+  if (bijouSpeechBubble) {
+    bijouSpeechBubble.remove();
+    bijouSpeechBubble = null;
+  }
+  
+  // Show talking overlay
+  showBijouTalkingOverlay();
+  
+  // Create speech bubble
+  createBijouSpeechBubble(message);
+  
+  // Auto cleanup after duration
+  bijouSpeechTimeout = setTimeout(() => {
+    hideBijouTalkingOverlay();
+    if (bijouSpeechBubble) {
+      bijouSpeechBubble.remove();
+      bijouSpeechBubble = null;
+    }
+    bijouSpeechTimeout = null;
+  }, duration);
+}
+
 function createBijouSpeechBubble(text) {
   if (!bijouUIElement) return;
   if (bijouSpeechBubble) {
     bijouSpeechBubble.remove();
   }
   bijouSpeechBubble = document.createElement('div');
+  const isFloor2 = window.currentFloor === 2;
+  const bottomPosition = isFloor2 ? '260px' : '320px';
   bijouSpeechBubble.style.cssText = `
     position: fixed;
-    bottom: 320px;
+    bottom: ${bottomPosition};
     right: 160px;
     max-width: 250px;
     background: white;
@@ -2071,6 +2402,7 @@ window.premiumSystem = {
   showBijouTalkingOverlay,
   hideBijouTalkingOverlay,
   createBijouSpeechBubble,
+  showBijouCustomMessage,
   addSpeechBubbleCSS,
   getBijouChallengeQuotes
 };
@@ -2086,9 +2418,15 @@ function getAppropriateQuotes() {
     return []; // Return empty array to prevent any random speech
   }
   
-  if (window.state && window.state.kitoFoxModeActive && Math.random() < 0.25) {
-    // 25% chance to use KitoFox quotes when KitoFox mode is active (takes priority over recorder mode)
+  if (window.state && window.state.kitoFoxModeActive && window.state.kitoModeActive) {
+    // Both KitoFox and Kito modes active: combine both quote arrays
+    return [...kitoQuotes, ...kitoFoxQuotes];
+  } else if (window.state && window.state.kitoFoxModeActive && Math.random() < 0.25) {
+    // 25% chance to use KitoFox quotes when KitoFox mode is active (takes priority over other modes)
     return kitoFoxQuotes;
+  } else if (window.state && window.state.kitoModeActive) {
+    // Always use Kito quotes when Kito mode is active
+    return kitoQuotes;
   } else if (window.state && window.state.recorderModeActive && window.state.halloweenEventActive) {
     // Halloween + Recorder combination: 50% chance for spooky Halloween recorder quotes, 50% chance for normal recorder quotes
     if (Math.random() < 0.5) {
@@ -2100,7 +2438,7 @@ function getAppropriateQuotes() {
     // 75% chance to use recorder quotes when only recorder mode is active (and KitoFox is not active or failed its roll)
     return recorderQuotes;
   } else {
-    // Use normal swaria quotes (75% chance for KitoFox mode, 25% chance for recorder mode, 100% when no modes active)
+    // Use normal swaria quotes (25% chance for KitoFox mode, 25% chance for recorder mode, 100% when no modes active)
     return window.swariaQuotes || [];
   }
 }
@@ -2910,6 +3248,7 @@ window.addRecorderModeToggleButton = addRecorderModeToggleButton;
 window.getAppropriateQuotes = getAppropriateQuotes;
 window.testRecorderSpeech = testRecorderSpeech;
 window.halloweenRecorderQuotes = halloweenRecorderQuotes;
+window.kitoQuotes = kitoQuotes;
 
 // Make Halloween Recorder easter egg functions globally accessible
 window.isHalloweenRecorderEasterEggActive = isHalloweenRecorderEasterEggActive;
@@ -2949,6 +3288,12 @@ window.toggleKitoFoxMode = toggleKitoFoxMode;
 window.updateKitoFoxModeImages = updateKitoFoxModeImages;
 window.addKitoFoxModeToggleButton = addKitoFoxModeToggleButton;
 window.updateKitoFoxModeToggleUI = updateKitoFoxModeToggleUI;
+
+// Make Kito mode functions globally accessible
+window.toggleKitoMode = toggleKitoMode;
+window.updateKitoModeImages = updateKitoModeImages;
+window.addKitoModeToggleButton = addKitoModeToggleButton;
+window.updateKitoModeToggleUI = updateKitoModeToggleUI;
 
 // Make unified mode functions globally accessible
 window.updateAllModeImages = updateAllModeImages;
