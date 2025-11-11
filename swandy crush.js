@@ -613,6 +613,9 @@ function swapCells(row1, col1, row2, col2) {
     const isValidMove = hasOrb || isTwoBlastersMerge || isPartOfMatch(grid, row1, col1) || isPartOfMatch(grid, row2, col2);
     
     if (!isValidMove) {
+      // Invalid move - set processing flag to prevent additional moves
+      crusherState.isProcessing = true;
+      
       // Invalid move - animate swap back smoothly
       setTimeout(() => {
         // Reset transform to animate back to original position
@@ -631,6 +634,9 @@ function swapCells(row1, col1, row2, col2) {
           
           // Re-render to show the original positions
           renderSwandyCrusherGrid();
+          
+          // Re-enable moves after swap-back animation completes
+          crusherState.isProcessing = false;
         }, 300);
       }, 100);
       return;
