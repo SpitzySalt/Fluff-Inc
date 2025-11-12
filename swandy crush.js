@@ -757,6 +757,37 @@ function isOrbUnlocked() {
   return treeUpgrades.ultimate_swandy_orb === true;
 }
 
+// Helper function to separate matched cells by color and find the largest same-color group
+function findLargestColorGroup(matchedCells, grid) {
+  const colorGroups = new Map();
+  
+  // Group cells by color
+  matchedCells.forEach(cellKey => {
+    const [row, col] = cellKey.split(',').map(Number);
+    const color = getCellType(grid[row][col]);
+    
+    if (!colorGroups.has(color)) {
+      colorGroups.set(color, new Set());
+    }
+    colorGroups.get(color).add(cellKey);
+  });
+  
+  // Find the largest group
+  let largestGroup = null;
+  let largestSize = 0;
+  let largestColor = null;
+  
+  colorGroups.forEach((group, color) => {
+    if (group.size > largestSize) {
+      largestSize = group.size;
+      largestGroup = group;
+      largestColor = color;
+    }
+  });
+  
+  return { group: largestGroup, color: largestColor, size: largestSize };
+}
+
 // Determine if a match should create a blaster (6+ swandies matched)
 function shouldCreateBlaster(matchedCells, grid) {
   if (!isBlasterUnlocked()) {
@@ -2475,18 +2506,21 @@ function processMatches(isPlayerMove = false) {
       let orbPosition = null;
       let orbType = null;
       
-      if (!blasterActivated && shouldCreateOrb(originalMatchedCells, grid)) {
-        const firstCell = Array.from(originalMatchedCells)[0];
+      // Find the largest same-color group for blaster/orb creation
+      const largestColorGroup = findLargestColorGroup(originalMatchedCells, grid);
+      
+      if (!blasterActivated && shouldCreateOrb(largestColorGroup.group, grid)) {
+        const firstCell = Array.from(largestColorGroup.group)[0];
         const [orbRow, orbCol] = firstCell.split(',').map(Number);
         orbPosition = { row: orbRow, col: orbCol };
-        orbType = getCellType(grid[orbRow][orbCol]);
+        orbType = largestColorGroup.color;
         orbCreated = true;
-      } else if (!blasterActivated && shouldCreateBlaster(originalMatchedCells, grid)) {
-        const firstCell = Array.from(originalMatchedCells)[0];
+      } else if (!blasterActivated && shouldCreateBlaster(largestColorGroup.group, grid)) {
+        const firstCell = Array.from(largestColorGroup.group)[0];
         const [blasterRow, blasterCol] = firstCell.split(',').map(Number);
         blasterPosition = { row: blasterRow, col: blasterCol };
-        blasterType = getCellType(grid[blasterRow][blasterCol]);
-        blasterDirection = getBlasterDirection(originalMatchedCells, grid);
+        blasterType = largestColorGroup.color;
+        blasterDirection = getBlasterDirection(largestColorGroup.group, grid);
         blasterCreated = true;
       }
       
