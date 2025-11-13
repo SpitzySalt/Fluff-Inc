@@ -480,8 +480,8 @@ function collectIngredientToken(type, token) {
     tokenGainAmount = window.applyGreenStableLightBuff(tokenGainAmount);
   }
   
-  // Apply KitoFox mode 5x multiplier
-  if (window.state && window.state.kitoFoxModeActive) {
+  // Apply KitoFox mode 5x multiplier (except for candy tokens)
+  if (window.state && window.state.kitoFoxModeActive && type !== 'candy') {
     tokenGainAmount = tokenGainAmount.mul(5);
   }
   
