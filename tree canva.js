@@ -32,6 +32,7 @@ window.upgradeLabelMapping = {
   'break_in': 'S20',
   'excuse_me_price_increase': 'S21',
   'recovering_from_hexion': 'S22',
+  'tree_age_dilation': 'S23',
   'shards_multi': 'SH1',
   'shards_multi_2': 'SH2',
   'super_shard_multi': 'SH3',
@@ -45,9 +46,13 @@ window.upgradeLabelMapping = {
   'orb_requirement_8': 'SH11',
   'little_bit_more_shards': 'SH12',
   'second_half_key': 'SH13',
-  'tree_age_shard_boost': 'SH14',
-  'extending_softcap': 'SH15',
-  'hexed_shard_multi_1': 'HSS1'
+  'tree_age_shard_boost': 'SS14',
+  'extending_softcap': 'SS15',
+  'shattery_insane': 'SS16',
+  'final_shard_upgrade': 'SS17',
+  'hexed_shard_multi_1': 'HSS1',
+  'hexed_shard_multi_2': 'HSS2',
+  'hexed_shard_multi_3': 'HSS3'
 };
 
 // Hex effect descriptions - displayed when upgrade is fully hexed
@@ -162,10 +167,17 @@ const treeUpgradeLayout = {
   },
   'recovering_from_hexion': {
     position: { x: -1450, y: -300 },
-    connections: [],
+    connections: ['tree_age_dilation'],
     prerequisite: 'excuse_me_price_increase',
     visibilityPrerequisite: 'excuse_me_price_increase',
     unlockPrerequisite: 'excuse_me_price_increase'
+  },
+  'tree_age_dilation': {
+    position: { x: -2000, y: -300 },
+    connections: [],
+    prerequisite: 'recovering_from_hexion',
+    visibilityPrerequisite: 'recovering_from_hexion',
+    unlockPrerequisite: 'recovering_from_hexion'
   },
   'revolution_upcoming': {
     position: { x: 1300, y: 500 },
@@ -190,10 +202,24 @@ const treeUpgradeLayout = {
   },
   'hexed_shard_multi_1': {
     position: { x: -900, y: 1300 },
-    connections: [],
+    connections: ['hexed_shard_multi_2'],
     prerequisite: 'crush_swandies',
     hexedVisibilityPrerequisite: 'crush_swandies',
     unlockPrerequisite: 'crush_swandies'
+  },
+  'hexed_shard_multi_2': {
+    position: { x: -1450, y: 900 },
+    connections: ['hexed_shard_multi_3'],
+    prerequisite: 'hexed_shard_multi_1',
+    visibilityPrerequisite: 'hexed_shard_multi_1',
+    unlockPrerequisite: 'hexed_shard_multi_1'
+  },
+  'hexed_shard_multi_3': {
+    position: { x: -1450, y: 1700 },
+    connections: [],
+    prerequisite: 'hexed_shard_multi_2',
+    visibilityPrerequisite: 'hexed_shard_multi_2',
+    unlockPrerequisite: 'hexed_shard_multi_2'
   },
   'swandy_resety': {
     position: { x: 200, y: 1700 },
@@ -355,6 +381,20 @@ const treeUpgradeLayout = {
     prerequisite: 'tree_age_shard_boost',
     visibilityPrerequisite: 'tree_age_shard_boost',
     unlockPrerequisite: 'tree_age_shard_boost'
+  },
+  'shattery_insane': {
+    position: { x: 3500, y: 2500 },
+    connections: ['final_shard_upgrade'],
+    prerequisite: 'second_half_key',
+    visibilityPrerequisite: 'second_half_key',
+    unlockPrerequisite: 'second_half_key'
+  },
+  'final_shard_upgrade': {
+    position: { x: 3500, y: 2900 },
+    connections: [],
+    prerequisite: 'shattery_insane',
+    visibilityPrerequisite: 'shattery_insane',
+    unlockPrerequisite: 'shattery_insane'
   }
 };
 
@@ -409,6 +449,11 @@ const connectionLines = [
     id: 'connection_s21_s22',
     from: 'excuse_me_price_increase',
     to: 'recovering_from_hexion'
+  },
+  {
+    id: 'connection_s22_s23',
+    from: 'recovering_from_hexion',
+    to: 'tree_age_dilation'
   },
   {
     id: 'connection_s5_s9',
@@ -474,6 +519,16 @@ const connectionLines = [
     id: 'connection_s10_hss1',
     from: 'crush_swandies',
     to: 'hexed_shard_multi_1'
+  },
+  {
+    id: 'connection_hss1_hss2',
+    from: 'hexed_shard_multi_1',
+    to: 'hexed_shard_multi_2'
+  },
+  {
+    id: 'connection_hss1_hss3',
+    from: 'hexed_shard_multi_1',
+    to: 'hexed_shard_multi_3'
   },
   {
     id: 'connection_sh1_sh2',
@@ -544,6 +599,16 @@ const connectionLines = [
     id: 'connection_sh14_sh15',
     from: 'tree_age_shard_boost',
     to: 'extending_softcap'
+  },
+  {
+    id: 'connection_ss13_ss16',
+    from: 'second_half_key',
+    to: 'shattery_insane'
+  },
+  {
+    id: 'connection_ss16_ss17',
+    from: 'shattery_insane',
+    to: 'final_shard_upgrade'
   }
 ];
 
@@ -911,6 +976,24 @@ function renderUpgradeNodes() {
         : '1.00';
       
       effectElement.textContent = `Current: ×${currentMultiplier}`;
+      buttonElement.appendChild(effectElement);
+    }
+    
+    // Special effect display for hexed_shard_multi_2 (HSS2)
+    if (upgradeId === 'hexed_shard_multi_2' && isPurchased) {
+      const treeAge = window.state.halloweenEvent.treeAge || 0;
+      const multiplierValue = 1 + 0.60 * Math.log(1 + treeAge / 1200);
+      const currentMultiplier = multiplierValue.toFixed(2);
+      
+      effectElement.textContent = `Current: ×${currentMultiplier}`;
+      effectElement.classList.add('hexed-shard-effect'); // Add identifying class
+      effectElement.style.display = 'block';
+      effectElement.style.color = '#4CAF50';
+      effectElement.style.fontWeight = 'bold';
+      effectElement.style.marginTop = '5px';
+      effectElement.style.padding = '4px 8px';
+      effectElement.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+      effectElement.style.borderRadius = '4px';
       buttonElement.appendChild(effectElement);
     }
     

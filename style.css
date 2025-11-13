@@ -9073,6 +9073,13 @@ html.tree-horrors-active {
   border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
+/* Ensure hexed shard upgrade effects display properly */
+.upgrade-button.hexed-shard-upgrade .upgrade-effect {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .upgrade-button.purchased .upgrade-cost {
   color: #aaaaaa;
 }

@@ -1848,9 +1848,11 @@ function updateTreeAgeUI() {
     treeAgeDisplay.style.display = 'block';
     treeAgeValue.textContent = formatTreeAge(window.state.halloweenEvent.treeAge || 0);
     
-    // Update tree age per tick display (always 1 second per tick)
+    // Update tree age per tick display (1 second per tick, or 2 if S23 is purchased)
     if (treeAgePerTick) {
-      const timePerTick = formatTreeAge(1);
+      const s23Purchased = window.state.halloweenEvent.treeUpgrades.purchased['tree_age_dilation'] || false;
+      const tickAmount = s23Purchased ? 2 : 1;
+      const timePerTick = formatTreeAge(tickAmount);
       treeAgePerTick.textContent = `Tree age per tick: ${timePerTick}`;
     }
   } else {
@@ -1884,7 +1886,10 @@ function tickTreeAge() {
   const s1FullyHexed = window.state.halloweenEvent.treeUpgrades.hexData['swandy_start']?.isFullyHexed || false;
   
   if (s1FullyHexed) {
-    window.state.halloweenEvent.treeAge = (window.state.halloweenEvent.treeAge || 0) + 1;
+    const s23Purchased = window.state.halloweenEvent.treeUpgrades.purchased['tree_age_dilation'] || false;
+    const ageMultiplier = s23Purchased ? 2 : 1;
+    
+    window.state.halloweenEvent.treeAge = (window.state.halloweenEvent.treeAge || 0) + ageMultiplier;
     updateTreeAgeUI();
   }
 }
@@ -4505,6 +4510,17 @@ const treeUpgrades = {
     prerequisite: 'excuse_me_price_increase',
     effect: function() {
       // Flag is automatically set by purchase system in treeUpgrades.purchased
+    },
+    unlocks: ['tree_age_dilation']
+  },
+  'tree_age_dilation': {
+    title: 'Tree age dilation? (S23)',
+    description: 'You\'re making the tree age faster, X2 to tree age',
+    cost: new Decimal(20000000000000),
+    costCurrency: 'swandies',
+    prerequisite: 'recovering_from_hexion',
+    effect: function() {
+      // Flag is automatically set by purchase system in treeUpgrades.purchased
     }
   },
   'revolution_upcoming': {
@@ -4549,6 +4565,27 @@ const treeUpgrades = {
     cost: new Decimal(5000),
     costCurrency: 'hexedSwandyShards',
     prerequisite: 'crush_swandies',
+    effect: function() {
+      // Flag is automatically set by purchase system in treeUpgrades.purchased
+    },
+    unlocks: ['hexed_shard_multi_2', 'hexed_shard_multi_3']
+  },
+  'hexed_shard_multi_2': {
+    title: 'Everything is getting expensive, well this too (HSS2)',
+    description: 'Tree age boost swandy shard gain',
+    cost: new Decimal(300000),
+    costCurrency: 'hexedSwandyShards',
+    prerequisite: 'hexed_shard_multi_1',
+    effect: function() {
+      // Flag is automatically set by purchase system in treeUpgrades.purchased
+    }
+  },
+  'hexed_shard_multi_3': {
+    title: 'Better multipliers (HSS3)',
+    description: 'The multiplier scaling for swandy production and shard multiplier is improved',
+    cost: new Decimal(25000000),
+    costCurrency: 'hexedSwandyShards',
+    prerequisite: 'hexed_shard_multi_2',
     effect: function() {
       // Flag is automatically set by purchase system in treeUpgrades.purchased
     }
@@ -4706,6 +4743,39 @@ const treeUpgrades = {
     cost: new Decimal(1000000000000000),
     costCurrency: 'swandyShards',
     prerequisite: 'tree_age_shard_boost',
+    effect: function() {
+      // Flag is automatically set by purchase system in treeUpgrades.purchased
+    }
+  },
+  'shattery_insane': {
+    title: 'Shattery is getting insane (SS16)',
+    description: 'Starting at lvl 30, the shard shattery buff will go up by 1.4X',
+    cost: new Decimal(100000000000000000),
+    costCurrency: 'swandyShards',
+    prerequisite: 'second_half_key',
+    effect: function() {
+      // Recalculate the shard multiplier with the new 1.4x boost for levels 30+
+      if (window.state.halloweenEvent.swandyCrusher && window.state.halloweenEvent.treeUpgrades.purchased.shattery_shards) {
+        const crusherState = window.state.halloweenEvent.swandyCrusher;
+        const currentLevel = crusherState.level || 1;
+        
+        // Shard multiplier starts at level 10
+        // Level 10-29: use 1.25x, Level 30+: use 1.4x
+        const levelsBelow30 = Math.max(0, Math.min(currentLevel, 29) - 9); // Levels 10-29
+        const levelsFrom30Plus = Math.max(0, currentLevel - 29); // Levels 30+
+        
+        const nextShardsMult = Math.pow(1.25, levelsBelow30) * Math.pow(1.4, levelsFrom30Plus);
+        crusherState.resety.shardsMultiplier = new Decimal(nextShardsMult);
+      }
+    },
+    unlocks: ['final_shard_upgrade']
+  },
+  'final_shard_upgrade': {
+    title: 'Go get that second hexomancy milestone (SS17)',
+    description: 'The final shard multiplier upgrade, X5 to shard gain',
+    cost: new Decimal(5000000000000000000),
+    costCurrency: 'swandyShards',
+    prerequisite: 'shattery_insane',
     effect: function() {
       // Flag is automatically set by purchase system in treeUpgrades.purchased
     }
@@ -4884,7 +4954,7 @@ let treeCanvasState = {
   currentX: 0,
   currentY: 0,
   scale: 1,
-  minScale: 0.3,
+  minScale: 0.1,
   maxScale: 2.0,
   keys: {
     w: false,

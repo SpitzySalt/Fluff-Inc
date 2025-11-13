@@ -153,12 +153,12 @@ function trackTokenCollection(tokenValue = 1) {
     if (quest && progress && quest.objectives) {
       // Track legacy token objective (ensure proper numeric addition)
       if (quest.objectives.tokens) {
-        const currentTokens = Number(progress.tokensCollectedDuringQuest || 0);
-        progress.tokensCollectedDuringQuest = currentTokens + tokenAmount;
+        const currentTokens = Number(progress.tokens || 0);
+        progress.tokens = currentTokens + tokenAmount;
       }
       
       // Track collectAnyTokens objective (ensure numeric addition)
-      if (progress.collectAnyTokens !== undefined) {
+      if (quest.objectives.collectAnyTokens !== undefined) {
         const currentCollected = Number(progress.collectAnyTokens || 0);
         progress.collectAnyTokens = currentCollected + tokenAmount;
       }

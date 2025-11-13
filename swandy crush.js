@@ -1048,6 +1048,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
         if (treeUpgrades.wooden_building) shardsUpgradeMultiplier *= 1.75;
         if (treeUpgrades.someone_inside) shardsUpgradeMultiplier *= 1.5;
         if (treeUpgrades.little_bit_more_shards) shardsUpgradeMultiplier *= 5;
+        if (treeUpgrades.final_shard_upgrade) shardsUpgradeMultiplier *= 5;
         if (treeUpgrades.devilish_swandy) {
           const s6Multiplier = typeof getUpgradeHexMultiplier === 'function' 
             ? getUpgradeHexMultiplier('devilish_swandy') 
@@ -1074,6 +1075,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
         const swandyBoostMultiplier = getSwandyShardBoostMultiplier();
         const treeAgeBoostMultiplier = getTreeAgeShardBoostMultiplier();
         const hexedShardBoostMultiplier = getHexedSwandyShardBoostMultiplier();
+        const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
         
         function hitSwandyWithShockwave(index) {
           if (index >= allSwandies.length) {
@@ -1113,7 +1115,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
           const isHexed = hexedPositions[posKey];
           const hexedMultiplier = isHexed ? 5 : 1;
           
-          const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hexedMultiplier;
+          const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexedMultiplier;
           totalShards += shardsForThisSwandy;
           
           if (swandyElement) {
@@ -1203,6 +1205,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
       if (treeUpgrades.wooden_building) shardsUpgradeMultiplier *= 1.75;
       if (treeUpgrades.someone_inside) shardsUpgradeMultiplier *= 1.5;
       if (treeUpgrades.little_bit_more_shards) shardsUpgradeMultiplier *= 5;
+      if (treeUpgrades.final_shard_upgrade) shardsUpgradeMultiplier *= 5;
       if (treeUpgrades.devilish_swandy) {
         const s6Multiplier = typeof getUpgradeHexMultiplier === 'function' 
           ? getUpgradeHexMultiplier('devilish_swandy') 
@@ -1229,6 +1232,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
       const swandyBoostMultiplier = getSwandyShardBoostMultiplier();
       const treeAgeBoostMultiplier = getTreeAgeShardBoostMultiplier();
       const hexedShardBoostMultiplier = getHexedSwandyShardBoostMultiplier();
+      const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
       
       function shootLaserAtTarget(index) {
         if (index >= targetCells.length) {
@@ -1249,7 +1253,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
         }
         
         currentMultiplier *= 1.3;
-        const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier;
+        const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier;
         totalShards += shardsForThisSwandy;
         
         if (targetElement) {
@@ -1333,6 +1337,7 @@ function activateBlasterChain(blasters, index, grid, gridElement, currentMultipl
     if (treeUpgrades.wooden_building) shardsUpgradeMultiplier *= 1.75;
     if (treeUpgrades.someone_inside) shardsUpgradeMultiplier *= 1.5;
     if (treeUpgrades.little_bit_more_shards) shardsUpgradeMultiplier *= 5;
+    if (treeUpgrades.final_shard_upgrade) shardsUpgradeMultiplier *= 5;
     if (treeUpgrades.devilish_swandy) {
       const s6Multiplier = typeof getUpgradeHexMultiplier === 'function' 
         ? getUpgradeHexMultiplier('devilish_swandy') 
@@ -1358,11 +1363,12 @@ function activateBlasterChain(blasters, index, grid, gridElement, currentMultipl
     
     const swandyBoostMultiplier = getSwandyShardBoostMultiplier();
     const treeAgeBoostMultiplier = getTreeAgeShardBoostMultiplier();
+    const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
     
     affectedCells.forEach(cellKey => {
       const [row, col] = cellKey.split(',').map(Number);
       blasterMultiplier *= 1.1;
-      const shardsForThisSwandy = baseShardValue * blasterMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier;
+      const shardsForThisSwandy = baseShardValue * blasterMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hss2TreeAgeBoostMultiplier;
       totalShards += shardsForThisSwandy;
       
       showScorePopup(row, col, shardsForThisSwandy);
@@ -2219,6 +2225,7 @@ function processMatches(isPlayerMove = false) {
     if (treeUpgrades.wooden_building) shardsUpgradeMultiplier *= 1.75; // S17
     if (treeUpgrades.someone_inside) shardsUpgradeMultiplier *= 1.5; // S19
     if (treeUpgrades.little_bit_more_shards) shardsUpgradeMultiplier *= 5; // SH12
+    if (treeUpgrades.final_shard_upgrade) shardsUpgradeMultiplier *= 5; // SS17
     if (treeUpgrades.devilish_swandy) {
       const s6Multiplier = typeof getUpgradeHexMultiplier === 'function' 
         ? getUpgradeHexMultiplier('devilish_swandy') 
@@ -2253,6 +2260,9 @@ function processMatches(isPlayerMove = false) {
     // Get hexed swandy shard boost multiplier
     const hexedShardBoostMultiplier = getHexedSwandyShardBoostMultiplier();
     
+    // Get HSS2 tree age shard boost multiplier
+    const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
+    
     // Calculate base points and apply multipliers
     let totalPoints = 0;
     
@@ -2272,7 +2282,7 @@ function processMatches(isPlayerMove = false) {
         blasterType = 'Single Blaster';
       }
       
-      const basePointsPerSwandy = 10 * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier;
+      const basePointsPerSwandy = 10 * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier;
       let cascadingMultiplier = 1.0;
       
       // Detailed shard calculation logging for blaster
@@ -2332,7 +2342,7 @@ function processMatches(isPlayerMove = false) {
         cascadingRate = 1.3;
       }
       
-      const basePointsPerSwandy = 10 * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier;
+      const basePointsPerSwandy = 10 * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier;
       let cascadingMultiplier = 1.0;
       
       const hexedPositions = crusherState.hexedPositions || {};
@@ -2347,7 +2357,7 @@ function processMatches(isPlayerMove = false) {
       });
     } else {
       // Normal match: All swandies give same value
-      const pointsPerSwandy = 10 * comboMultiplier * matchSizeMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier;
+      const pointsPerSwandy = 10 * comboMultiplier * matchSizeMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier;
       const hexedPositions = crusherState.hexedPositions || {};
       matchedCells.forEach(cellKey => {
         const [row, col] = cellKey.split(',').map(Number);
@@ -3007,6 +3017,26 @@ function getTreeAgeShardBoostMultiplier() {
   return multiplier;
 }
 
+// Calculate HSS2 tree age boost to swandy shards
+// Formula: 1 + 0.60 × ln(1 + t/1200)
+function getHSS2TreeAgeShardBoostMultiplier() {
+  const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased;
+  
+  // Check if HSS2 is purchased
+  if (!treeUpgrades || !treeUpgrades.hexed_shard_multi_2) {
+    return 1;
+  }
+  
+  // Get tree age in seconds
+  const treeAge = window.state.halloweenEvent.treeAge || 0;
+  
+  // Formula: 1 + 0.60 × ln(1 + t/1200)
+  // Where t is tree age in seconds
+  const multiplier = 1 + 0.60 * Math.log(1 + treeAge / 1200);
+  
+  return multiplier;
+}
+
 // Calculate hexed swandy shard boost to swandy shards
 // Formula: 1 + 0.25 × ln(1 + HSS/120)
 function getHexedSwandyShardBoostMultiplier() {
@@ -3149,12 +3179,18 @@ function updateLevelMultipliers() {
   const crusherState = window.state.halloweenEvent.swandyCrusher;
   const level = crusherState.level;
   
-  // Swandy production multiplier: 1.3x per level (starting at 1.3x for level 1)
-  const swandyProductionMult = Math.pow(1.3, level);
+  // Check if HSS3 is purchased
+  const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased || {};
+  const hasHSS3 = treeUpgrades.hexed_shard_multi_3 || false;
+  
+  // Swandy production multiplier: 1.3x per level (1.4x with HSS3)
+  const prodBase = hasHSS3 ? 1.4 : 1.3;
+  const swandyProductionMult = Math.pow(prodBase, level);
   crusherState.multipliers.swandyProduction = new Decimal(swandyProductionMult);
   
-  // Score multiplier: 1.5x per level (starting at 1.5x for level 1)
-  const scoreMult = Math.pow(1.5, level);
+  // Score multiplier: 1.5x per level (1.75x with HSS3)
+  const scoreBase = hasHSS3 ? 1.75 : 1.5;
+  const scoreMult = Math.pow(scoreBase, level);
   crusherState.multipliers.scoreMultiplier = new Decimal(scoreMult);
 }
 
@@ -3290,8 +3326,18 @@ function updateSwandyCrusherUI() {
               : (crusherState.resety.shardsMultiplier || 1);
             
             // Calculate what it will be after reset (based on current level)
-            const levelsAbove10 = Math.max(0, currentLevel - 9);
-            const nextShardsMult = Math.pow(1.25, levelsAbove10);
+            let nextShardsMult;
+            if (treeUpgrades.shattery_insane) {
+              // Shard multiplier starts at level 10
+              // Level 10-29: use 1.25x, Level 30+: use 1.4x
+              const levelsBelow30 = Math.max(0, Math.min(currentLevel, 29) - 9); // Levels 10-29
+              const levelsFrom30Plus = Math.max(0, currentLevel - 29); // Levels 30+
+              
+              nextShardsMult = Math.pow(1.25, levelsBelow30) * Math.pow(1.4, levelsFrom30Plus);
+            } else {
+              const levelsAbove10 = Math.max(0, currentLevel - 9);
+              nextShardsMult = Math.pow(1.25, levelsAbove10);
+            }
             
             // Only show next if it's higher than current
             if (nextShardsMult > currentShardsMult) {
@@ -3311,8 +3357,18 @@ function updateSwandyCrusherUI() {
             
             // If level >= 10, show current → next format for shards only if next is higher
             if (currentLevel >= 10) {
-              const levelsAbove10 = Math.max(0, currentLevel - 9);
-              const nextShardsMult = Math.pow(1.25, levelsAbove10);
+              let nextShardsMult;
+              if (treeUpgrades.shattery_insane) {
+                // Shard multiplier starts at level 10
+                // Level 10-29: use 1.25x, Level 30+: use 1.4x
+                const levelsBelow30 = Math.max(0, Math.min(currentLevel, 29) - 9); // Levels 10-29
+                const levelsFrom30Plus = Math.max(0, currentLevel - 29); // Levels 30+
+                
+                nextShardsMult = Math.pow(1.25, levelsBelow30) * Math.pow(1.4, levelsFrom30Plus);
+              } else {
+                const levelsAbove10 = Math.max(0, currentLevel - 9);
+                nextShardsMult = Math.pow(1.25, levelsAbove10);
+              }
               
               // Only show next if it's higher than current
               if (nextShardsMult > currentShardsMult) {
@@ -3519,8 +3575,21 @@ function performSwandyResety() {
   
   // Calculate shards multiplier if SH8 upgrade is purchased (starts at level 10+)
   if (treeUpgrades.shattery_shards) {
-    const levelsAbove10 = Math.max(0, currentLevel - 9); // Starts at level 10
-    const nextShardsMult = Math.pow(1.25, levelsAbove10);
+    let nextShardsMult;
+    
+    // SS16: Apply 1.4x multiplier for levels gained at crusher level 30+
+    if (treeUpgrades.shattery_insane) {
+      // Shard multiplier starts at level 10, so we need to calculate based on current level
+      // Level 10-29: use 1.25x, Level 30+: use 1.4x
+      const levelsBelow30 = Math.max(0, Math.min(currentLevel, 29) - 9); // Levels 10-29
+      const levelsFrom30Plus = Math.max(0, currentLevel - 29); // Levels 30+
+      
+      nextShardsMult = Math.pow(1.25, levelsBelow30) * Math.pow(1.4, levelsFrom30Plus);
+    } else {
+      const levelsAbove10 = Math.max(0, currentLevel - 9);
+      nextShardsMult = Math.pow(1.25, levelsAbove10);
+    }
+    
     crusherState.resety.shardsMultiplier = new Decimal(nextShardsMult);
   } else {
     crusherState.resety.shardsMultiplier = new Decimal(1);
@@ -3725,8 +3794,21 @@ function performSwandyResetyReset() {
   
   // Calculate shards multiplier if SH8 upgrade is purchased (starts at level 10+)
   if (treeUpgrades.shattery_shards) {
-    const levelsAbove10 = Math.max(0, currentLevel - 9); // Starts at level 10
-    const nextShardsMult = Math.pow(1.25, levelsAbove10);
+    let nextShardsMult;
+    
+    // SS16: Apply 1.4x multiplier for levels gained at crusher level 30+
+    if (treeUpgrades.shattery_insane) {
+      // Shard multiplier starts at level 10, so we need to calculate based on current level
+      // Level 10-29: use 1.25x, Level 30+: use 1.4x
+      const levelsBelow30 = Math.max(0, Math.min(currentLevel, 29) - 9); // Levels 10-29
+      const levelsFrom30Plus = Math.max(0, currentLevel - 29); // Levels 30+
+      
+      nextShardsMult = Math.pow(1.25, levelsBelow30) * Math.pow(1.4, levelsFrom30Plus);
+    } else {
+      const levelsAbove10 = Math.max(0, currentLevel - 9);
+      nextShardsMult = Math.pow(1.25, levelsAbove10);
+    }
+    
     crusherState.resety.shardsMultiplier = new Decimal(nextShardsMult);
   } else {
     crusherState.resety.shardsMultiplier = new Decimal(1);
@@ -3972,6 +4054,7 @@ function getTotalShardMultiplier() {
   if (treeUpgrades.wooden_building) shardsUpgradeMultiplier *= 1.75;
   if (treeUpgrades.someone_inside) shardsUpgradeMultiplier *= 1.5;
   if (treeUpgrades.little_bit_more_shards) shardsUpgradeMultiplier *= 5;
+  if (treeUpgrades.final_shard_upgrade) shardsUpgradeMultiplier *= 5;
   if (treeUpgrades.devilish_swandy) {
     const s6Multiplier = typeof getUpgradeHexMultiplier === 'function' 
       ? getUpgradeHexMultiplier('devilish_swandy') 
@@ -4001,6 +4084,7 @@ function getTotalShardMultiplier() {
   const swandyBoostMultiplier = getSwandyShardBoostMultiplier();
   const treeAgeBoostMultiplier = getTreeAgeShardBoostMultiplier();
   const hexedShardBoostMultiplier = getHexedSwandyShardBoostMultiplier();
+  const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
   
   // Hexomancy milestone multiplier (X2 per milestone starting from milestone 2)
   let hexomancyMilestoneMultiplier = 1;
@@ -4013,7 +4097,7 @@ function getTotalShardMultiplier() {
   // Combine all multipliers
   return levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * 
          expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * 
-         hexedShardBoostMultiplier * hexomancyMilestoneMultiplier;
+         hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexomancyMilestoneMultiplier;
 }
 
 // Apply normal break effect (single tile, 20x shards, hex center tile only)
@@ -4504,6 +4588,7 @@ window.performSwandyResetyReset = performSwandyResetyReset;
 window.getSwandyShardBoostMultiplier = getSwandyShardBoostMultiplier;
 window.getTreeAgeShardBoostMultiplier = getTreeAgeShardBoostMultiplier;
 window.getHexedSwandyShardBoostMultiplier = getHexedSwandyShardBoostMultiplier;
+window.getHSS2TreeAgeShardBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier;
 window.createSwandyCell = createSwandyCell;
 window.getCellType = getCellType;
 window.isBlasterCell = isBlasterCell;
