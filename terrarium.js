@@ -1757,6 +1757,13 @@ function handleFluzzerPollenWandClick(index, cols, rows) {
     totalFlowerGain = window.applyTotalInfinityReachedBoost(totalFlowerGain);
   }
   
+  // Apply Halloween pollen/flower boost
+  if (window.boutique && typeof window.boutique.getHalloweenPollenFlowerBoostMultiplier === 'function') {
+    const halloweenBoost = window.boutique.getHalloweenPollenFlowerBoostMultiplier();
+    totalPollenGain = totalPollenGain.mul(halloweenBoost).floor();
+    totalFlowerGain = totalFlowerGain.mul(halloweenBoost).floor();
+  }
+  
   terrariumPollen = terrariumPollen.add(totalPollenGain);
   terrariumFlowers = terrariumFlowers.add(totalFlowerGain);
   
@@ -4213,6 +4220,13 @@ function handlePollenWandClick(index, cols, rows) {
   if (typeof window.applyTotalInfinityReachedBoost === 'function') {
     totalPollenGain = window.applyTotalInfinityReachedBoost(totalPollenGain);
     totalFlowerGain = window.applyTotalInfinityReachedBoost(totalFlowerGain);
+  }
+  
+  // Apply Halloween pollen/flower boost
+  if (window.boutique && typeof window.boutique.getHalloweenPollenFlowerBoostMultiplier === 'function') {
+    const halloweenBoost = window.boutique.getHalloweenPollenFlowerBoostMultiplier();
+    totalPollenGain = totalPollenGain.mul(halloweenBoost).floor();
+    totalFlowerGain = totalFlowerGain.mul(halloweenBoost).floor();
   }
   
   terrariumPollen = terrariumPollen.add(totalPollenGain);

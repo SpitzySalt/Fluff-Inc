@@ -1077,6 +1077,11 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
         const hexedShardBoostMultiplier = getHexedSwandyShardBoostMultiplier();
         const hss2TreeAgeBoostMultiplier = getHSS2TreeAgeShardBoostMultiplier();
         
+        let halloweenShopShardBoost = 1;
+        if (window.boutique && typeof window.boutique.getHalloweenSwandyShardBoostMultiplier === 'function') {
+          halloweenShopShardBoost = window.boutique.getHalloweenSwandyShardBoostMultiplier();
+        }
+        
         function hitSwandyWithShockwave(index) {
           if (index >= allSwandies.length) {
             setTimeout(() => {
@@ -1115,7 +1120,7 @@ function activateOrb(grid, orbRow, orbCol, matchColor, isChainActivation = false
           const isHexed = hexedPositions[posKey];
           const hexedMultiplier = isHexed ? 5 : 1;
           
-          const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexedMultiplier;
+          const shardsForThisSwandy = baseShardValue * currentMultiplier * levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexedMultiplier * halloweenShopShardBoost;
           totalShards += shardsForThisSwandy;
           
           if (swandyElement) {
@@ -4094,10 +4099,17 @@ function getTotalShardMultiplier() {
     if (milestones.milestone3) hexomancyMilestoneMultiplier *= 2;
   }
   
+  // Halloween shop swandy shard boost
+  let halloweenShopShardBoost = 1;
+  if (window.boutique && typeof window.boutique.getHalloweenSwandyShardBoostMultiplier === 'function') {
+    halloweenShopShardBoost = window.boutique.getHalloweenSwandyShardBoostMultiplier();
+  }
+  
   // Combine all multipliers
   return levelScoreMultiplier * shardsUpgradeMultiplier * shatteryShardsMultiplier * 
          expansionShardMultiplier * swandyBoostMultiplier * treeAgeBoostMultiplier * 
-         hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexomancyMilestoneMultiplier;
+         hexedShardBoostMultiplier * hss2TreeAgeBoostMultiplier * hexomancyMilestoneMultiplier * 
+         halloweenShopShardBoost;
 }
 
 // Apply normal break effect (single tile, 20x shards, hex center tile only)

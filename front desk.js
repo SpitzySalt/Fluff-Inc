@@ -3328,7 +3328,7 @@
   }
   executeTokenFinderAutomatorAction(worker, automator) {
     worker.lastActionTime = Date.now();
-    const commonTokens = ['berries', 'sparks', 'mushroom', 'petals', 'water', 'prisma'];
+    const commonTokens = ['berry', 'spark', 'mushroom', 'petal', 'water', 'prisma'];
     const rareTokens = ['stardust', 'swabucks'];
     let selectedTokenType;
     if (Math.random() < 0.8) {
@@ -3347,10 +3347,10 @@
         dummyToken.dataset.collected = 'false';
         window.collectIngredientToken(selectedTokenType, dummyToken);
         const tokenDisplayNames = {
-          berries: 'berry',
-          sparks: 'spark',
+          berry: 'berry',
+          spark: 'spark',
           mushroom: 'mushroom',
-          petals: 'petal',
+          petal: 'petal',
           water: 'water',
           prisma: 'prisma shard',
           stardust: 'stardust',

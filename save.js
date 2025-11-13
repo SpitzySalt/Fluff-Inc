@@ -534,7 +534,7 @@ window.SaveSystem = {
         Object.assign(window.state, loadedState);
         
         // Ensure critical currencies are Decimal objects
-        const currenciesToValidate = ['fluff', 'swaria', 'feathers', 'artifacts', 'kp', 'grade', 'powerEnergy', 'powerMaxEnergy'];
+        const currenciesToValidate = ['fluff', 'swaria', 'feathers', 'artifacts', 'kp', 'grade', 'powerEnergy', 'powerMaxEnergy', 'berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma'];
         currenciesToValidate.forEach(currency => {
           if (window.state[currency] !== undefined && !DecimalUtils.isDecimal(window.state[currency])) {
             window.state[currency] = new Decimal(window.state[currency] || 0);
@@ -1201,6 +1201,9 @@ window.SaveSystem = {
       }
       if (typeof window.updateInventoryModal === 'function') {
         window.updateInventoryModal(true);
+      }
+      if (typeof window.renderInventoryTokens === 'function') {
+        window.renderInventoryTokens(true);
       }
       if (typeof window.renderDepartmentStatsButtons === 'function') {
         window.renderDepartmentStatsButtons();

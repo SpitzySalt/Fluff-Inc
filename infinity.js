@@ -509,6 +509,12 @@ window.infinitySystem = {
             }
         }
         
+        // Apply Halloween infinity point boost
+        if (window.boutique && typeof window.boutique.getHalloweenInfinityPointBoostMultiplier === 'function') {
+            const halloweenBoost = window.boutique.getHalloweenInfinityPointBoostMultiplier();
+            rate = rate.mul(halloweenBoost);
+        }
+        
         return rate;
     },
     

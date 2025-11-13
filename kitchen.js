@@ -123,9 +123,9 @@ const recipes = [
 ];
 const INGREDIENT_TYPES = [
   { name: 'mushroom', display: 'Mushroom' },
-  { name: 'sparks', display: 'Sparks' },
-  { name: 'berries', display: 'Berries' },
-  { name: 'petals', display: 'Petals' },
+  { name: 'spark', display: 'Sparks' },
+  { name: 'berry', display: 'Berries' },
+  { name: 'petal', display: 'Petals' },
   { name: 'water', display: 'Water' }, 
   { name: 'prisma', display: 'Prisma Shard' },
   { name: 'stardust', display: 'Stardust' }, 
@@ -135,9 +135,9 @@ const INGREDIENT_TYPES = [
 ];
 const INGREDIENT_TYPE_IMAGES = {
   mushroom: 'assets/icons/mushroom token.png',
-  sparks: 'assets/icons/spark token.png',
-  berries: 'assets/icons/berry token.png',
-  petals: 'assets/icons/petal token.png',
+  spark: 'assets/icons/spark token.png',
+  berry: 'assets/icons/berry token.png',
+  petal: 'assets/icons/petal token.png',
   water: 'assets/icons/water token.png', 
   prisma: 'assets/icons/prisma token.png',
   stardust: 'assets/icons/stardust token.png',
@@ -489,14 +489,15 @@ function collectIngredientToken(type, token) {
   if (!window.state) window.state = {};
   if (!window.state.tokens) {
     window.state.tokens = {
-      berries: new Decimal(0),
-      sparks: new Decimal(0),
-      petals: new Decimal(0),
+      berry: new Decimal(0),
+      spark: new Decimal(0),
+      petal: new Decimal(0),
       mushroom: new Decimal(0),
       water: new Decimal(0),
       prisma: new Decimal(0),
       stardust: new Decimal(0),
-      candy: new Decimal(0)
+      candy: new Decimal(0),
+      honey: new Decimal(0)
     };
   }
 
@@ -515,7 +516,7 @@ function collectIngredientToken(type, token) {
     collectedResources[type] = tokenGainAmount;
     
     // Track token collection for KitoFox Challenge
-    if (type === 'berries' && typeof window.trackHardModeBerryTokenCollection === 'function') {
+    if (type === 'berry' && typeof window.trackHardModeBerryTokenCollection === 'function') {
       window.trackHardModeBerryTokenCollection(tokenGainAmount);
     }
     if (type === 'stardust' && typeof window.trackHardModeStardustTokenCollection === 'function') {
@@ -528,7 +529,7 @@ function collectIngredientToken(type, token) {
     }
     
     // Track petal token collection for KitoFox Challenge 2
-    if (type === 'petals' && typeof window.trackKitoFox2PetalTokenCollection === 'function') {
+    if (type === 'petal' && typeof window.trackKitoFox2PetalTokenCollection === 'function') {
       window.trackKitoFox2PetalTokenCollection(tokenGainAmount);
     }
     
@@ -538,6 +539,14 @@ function collectIngredientToken(type, token) {
     }
     
     showIngredientGainPopup(token, tokenGainAmount);
+    
+    // Force inventory update
+    if (typeof window.renderInventoryTokens === 'function') {
+      window.renderInventoryTokens(true);
+    }
+    if (typeof window.updateInventoryModal === 'function') {
+      window.updateInventoryModal(true);
+    }
   }
 
   // Use TokenCleanupSystem for proper cleanup
@@ -751,29 +760,36 @@ function updateKitchenUI(forceUpdate = false) {
   }
   lastKitchenUIUpdate = now;
 
-  // Initialize state.tokens if needed
+  // Initialize state.tokens if needed - ensure object exists first
   if (!window.state) window.state = {};
   if (!window.state.tokens) {
-    window.state.tokens = {
-      berries: new Decimal(0),
-      sparks: new Decimal(0),
-      petals: new Decimal(0),
-      mushroom: new Decimal(0),
-      water: new Decimal(0),
-      prisma: new Decimal(0),
-      stardust: new Decimal(0),
-      candy: new Decimal(0)
-    };
+    window.state.tokens = {};
   }
   
-  const basicTokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'candy'];
-  basicTokenTypes.forEach(type => {
-    if (!DecimalUtils.isDecimal(window.state.tokens[type])) {
-      window.state.tokens[type] = new Decimal(0);
+  // Map display element IDs (plural) to state keys (singular)
+  const tokenDisplayMap = [
+    { stateKey: 'berry', elementId: 'berries' },
+    { stateKey: 'mushroom', elementId: 'mushroom' },
+    { stateKey: 'spark', elementId: 'sparks' },
+    { stateKey: 'petal', elementId: 'petals' },
+    { stateKey: 'water', elementId: 'water' },
+    { stateKey: 'prisma', elementId: 'prisma' },
+    { stateKey: 'stardust', elementId: 'stardust' },
+    { stateKey: 'candy', elementId: 'candy' },
+    { stateKey: 'honey', elementId: 'honey' }
+  ];
+  
+  tokenDisplayMap.forEach(token => {
+    // Only initialize to 0 if the key doesn't exist at all, preserve existing values
+    if (window.state.tokens[token.stateKey] === undefined || window.state.tokens[token.stateKey] === null) {
+      window.state.tokens[token.stateKey] = new Decimal(0);
+    } else if (!DecimalUtils.isDecimal(window.state.tokens[token.stateKey])) {
+      // Convert existing value to Decimal without losing the value
+      window.state.tokens[token.stateKey] = new Decimal(window.state.tokens[token.stateKey]);
     }
-    const el = document.getElementById('ingredientCount-' + type);
+    const el = document.getElementById('ingredientCount-' + token.elementId);
     if (el) {
-      el.textContent = formatNumber(window.state.tokens[type]);
+      el.textContent = formatNumber(window.state.tokens[token.stateKey]);
     }
   });
   
@@ -2738,6 +2754,11 @@ function updateHalloweenEventButtonDisplay() {
   // Don't override onclick - let HTML handle navigation
   worldMapButton.style.cursor = 'pointer';
   worldMapButton.style.opacity = '1';
+  
+  // Update Halloween shop button visibility
+  if (window.boutique && typeof window.boutique.updateHalloweenShopButtonVisibility === 'function') {
+    window.boutique.updateHalloweenShopButtonVisibility();
+  }
 }
 
 // Function to set up drag and drop for the Halloween event button (deprecated - now handled in world map modal)

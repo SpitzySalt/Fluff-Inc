@@ -385,11 +385,12 @@ function trackSpecificTokenCollection(tokenType, amount = 1) {
     if (!progress) return;
     
     // Track specific token types (ensure numeric addition)
-    if (tokenType === 'sparks' && progress.sparksTokens !== undefined) {
+    // Accept both singular and plural forms for backward compatibility
+    if ((tokenType === 'spark' || tokenType === 'sparks') && progress.sparksTokens !== undefined) {
       progress.sparksTokens = Number(progress.sparksTokens || 0) + Number(amount);
-    } else if (tokenType === 'berries' && progress.berryTokens !== undefined) {
+    } else if ((tokenType === 'berry' || tokenType === 'berries') && progress.berryTokens !== undefined) {
       progress.berryTokens = Number(progress.berryTokens || 0) + Number(amount);
-    } else if (tokenType === 'petals' && progress.petalTokens !== undefined) {
+    } else if ((tokenType === 'petal' || tokenType === 'petals') && progress.petalTokens !== undefined) {
       progress.petalTokens = Number(progress.petalTokens || 0) + Number(amount);
     } else if (tokenType === 'prisma' && progress.prismaTokens !== undefined) {
       progress.prismaTokens = Number(progress.prismaTokens || 0) + Number(amount);
@@ -5654,66 +5655,105 @@ function completeQuestTurnIn(questId) {
 
 // Give quest rewards to player
 function giveQuestRewards(rewards) {
-  // Initialize state and inventory if needed
+  // Initialize state if needed
   if (!window.state) window.state = {};
-  if (!window.state.inventory) {
-    window.state.inventory = {
-      swabucks: 0,
-      batteries: 0,
-      berries: 0,
-      mushroom: 0,
-      sparks: 0,
-      petals: 0,
-      water: 0,
-      prisma: 0,
-      stardust: 0,
-      glitteringPetals: 0,
-      chargedPrisma: 0,
-      berryPlate: 0,
-      mushroomSoup: 0,
-      batteryTokens: 0
-    };
+  
+  // Initialize tokens if needed (using singular keys)
+  if (!window.state.tokens) {
+    window.state.tokens = {};
   }
   
-  if (rewards.swabucks) {
-    window.state.inventory.swabucks = (window.state.inventory.swabucks || 0) + rewards.swabucks;
-  }
-  
-  if (rewards.batteries) {
-    window.state.inventory.batteries = (window.state.inventory.batteries || 0) + rewards.batteries;
-  }
-  
+  // Give token rewards using new token system (singular keys)
   if (rewards.berries) {
-    window.state.inventory.berries = (window.state.inventory.berries || 0) + rewards.berries;
+    if (!window.state.tokens.berry) window.state.tokens.berry = new Decimal(0);
+    window.state.tokens.berry = DecimalUtils.toDecimal(window.state.tokens.berry).plus(rewards.berries);
   }
   
   if (rewards.water) {
-    window.state.inventory.water = (window.state.inventory.water || 0) + rewards.water;
+    if (!window.state.tokens.water) window.state.tokens.water = new Decimal(0);
+    window.state.tokens.water = DecimalUtils.toDecimal(window.state.tokens.water).plus(rewards.water);
   }
   
   if (rewards.sparks) {
-    window.state.inventory.sparks = (window.state.inventory.sparks || 0) + rewards.sparks;
+    if (!window.state.tokens.spark) window.state.tokens.spark = new Decimal(0);
+    window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).plus(rewards.sparks);
   }
   
   if (rewards.petals) {
-    window.state.inventory.petals = (window.state.inventory.petals || 0) + rewards.petals;
+    if (!window.state.tokens.petal) window.state.tokens.petal = new Decimal(0);
+    window.state.tokens.petal = DecimalUtils.toDecimal(window.state.tokens.petal).plus(rewards.petals);
   }
   
   if (rewards.stardust) {
-    window.state.inventory.stardust = (window.state.inventory.stardust || 0) + rewards.stardust;
+    if (!window.state.tokens.stardust) window.state.tokens.stardust = new Decimal(0);
+    window.state.tokens.stardust = DecimalUtils.toDecimal(window.state.tokens.stardust).plus(rewards.stardust);
   }
   
-  if (rewards.artifacts) {
-    window.state.inventory.artifacts = (window.state.inventory.artifacts || 0) + rewards.artifacts;
+  if (rewards.prisma) {
+    if (!window.state.tokens.prisma) window.state.tokens.prisma = new Decimal(0);
+    window.state.tokens.prisma = DecimalUtils.toDecimal(window.state.tokens.prisma).plus(rewards.prisma);
+  }
+  
+  if (rewards.mushroom) {
+    if (!window.state.tokens.mushroom) window.state.tokens.mushroom = new Decimal(0);
+    window.state.tokens.mushroom = DecimalUtils.toDecimal(window.state.tokens.mushroom).plus(rewards.mushroom);
+  }
+  
+  if (rewards.candy) {
+    if (!window.state.tokens.candy) window.state.tokens.candy = new Decimal(0);
+    window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).plus(rewards.candy);
+  }
+  
+  // Give special item rewards (stored directly in state)
+  if (rewards.swabucks) {
+    if (!window.state.swabucks) window.state.swabucks = new Decimal(0);
+    window.state.swabucks = DecimalUtils.toDecimal(window.state.swabucks).plus(rewards.swabucks);
+  }
+  
+  if (rewards.batteries) {
+    if (!window.state.batteries) window.state.batteries = new Decimal(0);
+    window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(rewards.batteries);
   }
   
   if (rewards.batteryTokens) {
-    window.state.inventory.batteryTokens = (window.state.inventory.batteryTokens || 0) + rewards.batteryTokens;
+    if (!window.state.batteries) window.state.batteries = new Decimal(0);
+    window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(rewards.batteryTokens);
   }
   
-  // Update inventory display if function exists
+  if (rewards.berryPlate) {
+    if (!window.state.berryPlate) window.state.berryPlate = new Decimal(0);
+    window.state.berryPlate = DecimalUtils.toDecimal(window.state.berryPlate).plus(rewards.berryPlate);
+  }
+  
+  if (rewards.mushroomSoup) {
+    if (!window.state.mushroomSoup) window.state.mushroomSoup = new Decimal(0);
+    window.state.mushroomSoup = DecimalUtils.toDecimal(window.state.mushroomSoup).plus(rewards.mushroomSoup);
+  }
+  
+  if (rewards.glitteringPetals) {
+    if (!window.state.glitteringPetals) window.state.glitteringPetals = new Decimal(0);
+    window.state.glitteringPetals = DecimalUtils.toDecimal(window.state.glitteringPetals).plus(rewards.glitteringPetals);
+  }
+  
+  if (rewards.chargedPrisma) {
+    if (!window.state.chargedPrisma) window.state.chargedPrisma = new Decimal(0);
+    window.state.chargedPrisma = DecimalUtils.toDecimal(window.state.chargedPrisma).plus(rewards.chargedPrisma);
+  }
+  
+  if (rewards.artifacts) {
+    if (!window.state.artifacts) window.state.artifacts = new Decimal(0);
+    window.state.artifacts = DecimalUtils.toDecimal(window.state.artifacts).plus(rewards.artifacts);
+  }
+  
+  // Update inventory and kitchen UI
   if (typeof window.updateInventoryModal === 'function') {
     window.updateInventoryModal(true);
+  }
+  if (typeof window.renderInventoryTokens === 'function') {
+    window.renderInventoryTokens(true);
+  }
+  if (typeof window.updateKitchenUI === 'function') {
+    window.updateKitchenUI(true);
   }
 }
 
@@ -6805,7 +6845,7 @@ function checkQuestProgress() {
 function getTotalTokenCount() {
   if (!window.state || !window.state.tokens) return 0;
   
-  const tokenTypes = ['berries', 'mushroom', 'sparks', 'petals', 'water', 'prisma', 'stardust', 'batteries'];
+  const tokenTypes = ['berry', 'mushroom', 'spark', 'petal', 'water', 'prisma', 'stardust', 'batteries'];
   let totalTokens = 0;
   
   tokenTypes.forEach(type => {

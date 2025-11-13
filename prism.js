@@ -2966,6 +2966,11 @@ if (!window.getLightGain) {
         gain = gain.mul(boost);
       }
     }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
+    }
     return gain;
   } 
 }
@@ -2988,6 +2993,11 @@ if (!window.getRedlightGain) {
         const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
         gain = gain.mul(boost);
       }
+    }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
     }
     return gain;
   } 
@@ -3019,6 +3029,11 @@ if (!window.getOrangelightGain) {
         gain = gain.mul(boost);
       }
     }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
+    }
     return gain;
   } 
 }
@@ -3041,6 +3056,11 @@ if (!window.getYellowlightGain) {
         const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
         gain = gain.mul(boost);
       }
+    }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
     }
     return gain;
   } 
@@ -3065,6 +3085,11 @@ if (!window.getGreenlightGain) {
         gain = gain.mul(boost);
       }
     }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
+    }
     return gain;
   } 
 }
@@ -3087,6 +3112,11 @@ if (!window.getBluelightGain) {
         const boost = DecimalUtils.isDecimal(chargedPrismaBoost) ? chargedPrismaBoost : new Decimal(chargedPrismaBoost);
         gain = gain.mul(boost);
       }
+    }
+    // Apply Halloween prism light boost
+    if (window.boutique && typeof window.boutique.getHalloweenPrismLightBoostMultiplier === 'function') {
+      const halloweenBoost = window.boutique.getHalloweenPrismLightBoostMultiplier();
+      gain = gain.mul(halloweenBoost);
     }
     return gain;
   } 

@@ -5277,6 +5277,14 @@ function getKpGainPreview() {
     }
   }
   
+  // Apply Halloween shop KP boost
+  if (window.boutique && typeof window.boutique.getHalloweenKPBoostMultiplier === 'function') {
+    const halloweenKPBoost = window.boutique.getHalloweenKPBoostMultiplier();
+    if (halloweenKPBoost > 1) {
+      preview = preview.mul(halloweenKPBoost);
+    }
+  }
+  
   return preview;
 }
 
@@ -8398,8 +8406,9 @@ tickPowerGenerator = function(diff) {
 };
 
 function tickCafeteria(diff) {
-  if (!state.characterHunger) {
-    state.characterHunger = {
+  // Initialize hunger system in window.state
+  if (!window.state.characterHunger) {
+    window.state.characterHunger = {
       swaria: 100,
       soap: 100,
       fluzzer: 100,
@@ -8407,119 +8416,184 @@ function tickCafeteria(diff) {
       vi: 100
     };
   }
+  
+  if (!window.state.lastHungerTick) {
+    window.state.lastHungerTick = Date.now();
+  }
+  
   const now = Date.now();
-  if (now - state.lastHungerTick >= 120000) { 
-    if (!document.hidden) {
-      Object.keys(state.characterHunger).forEach(character => {
+  
+  // Hunger depletion: -2 every 30 seconds (or -1 if below 50)
+  if (now - window.state.lastHungerTick >= 30000) {
+    const isTabbedOut = document.hidden;
+    const currentHunger = window.state.characterHunger.swaria || 100;
+    
+    // When tabbed out, only deplete if hunger is above 50
+    const shouldDeplete = !isTabbedOut || currentHunger > 50;
+    
+    if (shouldDeplete) {
+      Object.keys(window.state.characterHunger).forEach(character => {
+        // Check for hunger boost (prevents depletion)
         const hasHungerBoost = character === 'swaria' && 
                               window.state && 
                               window.state.peachyHungerBoost && 
                               window.state.peachyHungerBoost > 0;
-        if (hasHungerBoost) {
-        } else {
-          if (state.characterHunger[character] > 0) {
-            state.characterHunger[character] = Math.max(0, state.characterHunger[character] - 1);
-          }
+        
+        if (!hasHungerBoost && window.state.characterHunger[character] > 0) {
+          const currentValue = window.state.characterHunger[character];
+          // Slower depletion when below 50: -1 instead of -2
+          const depletionAmount = currentValue < 50 ? 1 : 2;
+          window.state.characterHunger[character] = Math.max(0, currentValue - depletionAmount);
         }
       });
     }
-    state.lastHungerTick = now;
+    
+    window.state.lastHungerTick = now;
   }
-  if (state.characterHunger) {
-    // Auto-feeding logic removed - berry plates mechanic disabled
+  
+  // Check if hunger reached 0 and trigger desperate eating modal
+  if (window.state.characterHunger.swaria === 0 && !window.state.swariaDesperateEatingTriggered) {
+    window.state.swariaDesperateEatingTriggered = true;
+    showDesperateEatingModal();
   }
-  const isTabbedOut = document.hidden;
-  const shouldTriggerDesperateEating = state.characterHunger && state.characterHunger.swaria === 0;
-  const shouldTriggerSafetyRefill = isTabbedOut && state.characterHunger && state.characterHunger.swaria <= 20 && !state.swariaSafetyRefillTriggered;
-  if (shouldTriggerSafetyRefill) {
-    state.swariaSafetyRefillTriggered = true;
-    const swariaSpeech = document.getElementById('swariaSpeech');
-    if (swariaSpeech) {
-      swariaSpeech.textContent = "Thanks for coming back! I was getting really hungry...";
-      swariaSpeech.style.display = "block";
-      setTimeout(() => {
-        swariaSpeech.style.display = "none";
-      }, 5000);
+}
+
+window.tickCafeteria = tickCafeteria;
+
+// Show desperate eating modal when hunger reaches 0
+function showDesperateEatingModal() {
+  // Create modal overlay
+  const modalOverlay = document.createElement('div');
+  modalOverlay.id = 'desperateEatingModalOverlay';
+  modalOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  `;
+  
+  // Create modal content
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: linear-gradient(135deg, #2a1810 0%, #3d2517 100%);
+    border: 3px solid #8B4513;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  `;
+  
+  // Add description
+  const description = document.createElement('div');
+  description.textContent = 'You got too hungry... And you ate 25% of your entire inventory out of desperation';
+  description.style.cssText = `
+    font-size: 1.2em;
+    color: #FFD700;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  `;
+  
+  // Add Swaria image
+  const swariaImg = document.createElement('img');
+  swariaImg.src = 'assets/icons/swa talking.png';
+  swariaImg.style.cssText = `
+    width: 200px;
+    height: 200px;
+    margin: 20px 0;
+    border-radius: 10px;
+    border: 2px solid #8B4513;
+  `;
+  
+  // Add close button
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Sweehhh';
+  closeButton.style.cssText = `
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  `;
+  
+  closeButton.onmouseover = function() {
+    this.style.transform = 'scale(1.05)';
+    this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.4)';
+  };
+  
+  closeButton.onmouseout = function() {
+    this.style.transform = 'scale(1)';
+    this.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
+  };
+  
+  closeButton.onclick = function() {
+    // Consume 25% of inventory
+    consumeInventoryPercentage(25);
+    
+    // Restore hunger to 100
+    window.state.characterHunger.swaria = 100;
+    window.state.swariaDesperateEatingTriggered = false;
+    
+    // Update UI
+    updateSwariaHungerUI();
+    if (typeof window.updateInventoryModal === 'function') {
+      window.updateInventoryModal(true);
     }
-    state.characterHunger.swaria = 100;
-    setTimeout(() => {
-      state.swariaSafetyRefillTriggered = false;
-    }, 60000); 
-  }
-  if (shouldTriggerDesperateEating && !state.swariaDesperateEatingTriggered) {
-    state.swariaDesperateEatingTriggered = true;
-    const consumedResources = [];
-    if (state.fluff > 0) {
-      consumedResources.push(`${formatNumber(state.fluff)} Fluff`);
-      state.fluff = 0;
+    if (typeof window.renderInventoryTokens === 'function') {
+      window.renderInventoryTokens(true);
     }
-    if (state.swaria > 0) {
-      consumedResources.push(`${formatNumber(state.swaria)} Swaria Coins`);
-      state.swaria = 0;
+    if (typeof window.updateKitchenUI === 'function') {
+      window.updateKitchenUI(true);
     }
-    if (state.feathers > 0) {
-      consumedResources.push(`${formatNumber(state.feathers)} Feathers`);
-      state.feathers = 0;
+    if (typeof window.updateUI === 'function') {
+      window.updateUI();
     }
-    if (state.artifacts > 0) {
-      consumedResources.push(`${formatNumber(state.artifacts)} Wing Artifacts`);
-      state.artifacts = 0;
-    }
-    if (state.kp > 0) {
-      consumedResources.push(`${formatLargeInt(state.kp)} Knowledge Points`);
-      state.kp = new Decimal(0);
-    }
-    if (window.prismState) {
-      const lightTypes = ['light', 'redlight', 'orangelight', 'yellowlight', 'greenlight', 'bluelight'];
-      lightTypes.forEach(lightType => {
-        if (window.prismState[lightType] > 0) {
-          consumedResources.push(`${formatNumber(window.prismState[lightType])} ${lightType.replace('light', ' Light')}`);
-          window.prismState[lightType] = 0;
-        }
-      });
-    }
-    if (window.charger && window.charger.charge > 0) {
-      consumedResources.push(`${formatNumber(window.charger.charge)} Charge`);
-      window.charger.charge = new Decimal(0);
-    }
-    for (let i = 0; i < 118; i++) {
-      if (i !== 6 && i !== 7 && boughtElements[i] > 0) { 
-        consumedResources.push(`${formatNumber(boughtElements[i])} Element ${i + 1}`);
-        boughtElements[i] = 0;
+    
+    // Remove modal
+    document.body.removeChild(modalOverlay);
+  };
+  
+  // Assemble modal
+  modalContent.appendChild(description);
+  modalContent.appendChild(swariaImg);
+  modalContent.appendChild(closeButton);
+  modalOverlay.appendChild(modalContent);
+  document.body.appendChild(modalOverlay);
+}
+
+// Consume 25% of inventory tokens only
+function consumeInventoryPercentage(percentage) {
+  const multiplier = percentage / 100;
+  
+  // Consume only tokens (inventory items)
+  if (window.state.tokens) {
+    Object.keys(window.state.tokens).forEach(tokenType => {
+      if (window.state.tokens[tokenType] && DecimalUtils.isDecimal(window.state.tokens[tokenType])) {
+        window.state.tokens[tokenType] = window.state.tokens[tokenType].mul(1 - multiplier);
       }
-    }
-    if (window.terrariumPollen > 0) {
-      consumedResources.push(`${formatNumber(window.terrariumPollen)} Pollen`);
-      window.terrariumPollen = new Decimal(0);
-    }
-    if (window.terrariumFlowers > 0) {
-      consumedResources.push(`${formatNumber(window.terrariumFlowers)} Flowers`);
-      window.terrariumFlowers = new Decimal(0);
-    }
-    if (generators) {
-      generators.forEach((gen, index) => {
-        if (gen.amount > 0) {
-          consumedResources.push(`${formatNumber(gen.amount)} ${gen.name}`);
-          gen.amount = 0;
-        }
-      });
-    }
-    // Berry plates consumption removed - mechanic disabled
-    if (consumedResources.length > 0) {
-      const swariaSpeech = document.getElementById('swariaSpeech');
-      if (swariaSpeech) {
-        swariaSpeech.textContent = "I was so hungry I ate everything! *burp*";
-        swariaSpeech.style.display = "block";
-        setTimeout(() => {
-          swariaSpeech.style.display = "none";
-        }, 5000);
-      }
-    }
-    state.characterHunger.swaria = 100;
-    setTimeout(() => {
-      state.swariaDesperateEatingTriggered = false;
-    }, 60000); 
+    });
   }
+  
+  // Consume premium tokens (also part of inventory)
+  const premiumTokens = ['berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma', 'swabucks'];
+  premiumTokens.forEach(token => {
+    if (window.state[token] && DecimalUtils.isDecimal(window.state[token])) {
+      window.state[token] = window.state[token].mul(1 - multiplier);
+    }
+  });
 }
 
 // Stub function for updateCafeteriaUI - berry plate mechanic was removed
@@ -8531,21 +8605,28 @@ window.updateCafeteriaUI = updateCafeteriaUI;
 function updateSwariaHungerUI() {
   const swariaHungerValue = document.getElementById('swariaHungerValue');
   const swariaHungerBar = document.getElementById('swariaHungerBar');
+  const halloweenSwariaHungerValue = document.getElementById('halloweenSwariaHungerValue');
+  const halloweenSwariaHungerBar = document.getElementById('halloweenSwariaHungerBar');
+  
+  const hunger = (window.state.characterHunger && window.state.characterHunger.swaria) || 100;
+  const hungerBoostTime = (window.state && window.state.peachyHungerBoost) || 0;
+  const hasHungerBoost = hungerBoostTime > 0;
+  
+  let color = '#4CAF50';
+  if (hasHungerBoost) {
+    color = '#FFD700'; 
+  } else if (hunger < 30) {
+    color = '#f44336';
+  } else if (hunger < 60) {
+    color = '#ff9800';
+  }
+  
+  // Update main hunger bar
   if (swariaHungerValue && swariaHungerBar) {
-    const hunger = state.characterHunger.swaria || 100;
-    const hungerBoostTime = (window.state && window.state.peachyHungerBoost) || 0;
-    const hasHungerBoost = hungerBoostTime > 0;
     swariaHungerValue.textContent = hunger;
-    let color = '#4CAF50';
-    if (hasHungerBoost) {
-      color = '#FFD700'; 
-    } else if (hunger < 30) {
-      color = '#f44336';
-    } else if (hunger < 60) {
-      color = '#ff9800';
-    }
     swariaHungerBar.style.background = `linear-gradient(90deg, ${color}, ${color}dd)`;
     swariaHungerBar.style.width = `${hunger}%`;
+    
     let timerElement = document.getElementById('swariaHungerBoostTimer');
     if (hasHungerBoost) {
       if (!timerElement) {
@@ -8574,7 +8655,332 @@ function updateSwariaHungerUI() {
       }
     }
   }
+  
+  // Update Halloween hunger bar
+  if (halloweenSwariaHungerValue && halloweenSwariaHungerBar) {
+    halloweenSwariaHungerValue.textContent = hunger;
+    halloweenSwariaHungerBar.style.background = `linear-gradient(90deg, ${color}, ${color}dd)`;
+    halloweenSwariaHungerBar.style.width = `${hunger}%`;
+    
+    let halloweenTimerElement = document.getElementById('halloweenSwariaHungerBoostTimer');
+    if (hasHungerBoost) {
+      if (!halloweenTimerElement) {
+        halloweenTimerElement = document.createElement('div');
+        halloweenTimerElement.id = 'halloweenSwariaHungerBoostTimer';
+        halloweenTimerElement.style.cssText = `
+          text-align: center;
+          font-size: 0.9em;
+          color: #FFD700;
+          font-weight: bold;
+          margin-top: 0.3em;
+          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        `;
+        const halloweenHungerBarContainer = halloweenSwariaHungerBar.parentElement;
+        if (halloweenHungerBarContainer) {
+          halloweenHungerBarContainer.appendChild(halloweenTimerElement);
+        }
+      }
+      const minutesLeft = Math.ceil(hungerBoostTime / (60 * 1000));
+      const secondsLeft = Math.ceil((hungerBoostTime % (60 * 1000)) / 1000);
+      halloweenTimerElement.textContent = `HUNGER BOOST: ${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+      halloweenTimerElement.style.display = 'block';
+    } else {
+      if (halloweenTimerElement) {
+        halloweenTimerElement.style.display = 'none';
+      }
+    }
+  }
 }
+
+// Feed Swaria with different items
+function feedSwaria(itemType, skipDeduction = false, showSpeech = true) {
+  if (!window.state.characterHunger) {
+    window.state.characterHunger = { swaria: 100 };
+  }
+  
+  let hungerChange = 0;
+  let itemConsumed = false;
+  let itemName = '';
+  let fullnessBoost = false;
+  
+  // Determine hunger change based on item type
+  switch(itemType) {
+    // Normal tokens: +2 hunger
+    case 'berry':
+    case 'mushroom':
+    case 'petal':
+    case 'water':
+      hungerChange = 2;
+      itemName = itemType;
+      if (!skipDeduction && window.state.tokens && window.state.tokens[itemType] && DecimalUtils.isDecimal(window.state.tokens[itemType]) && window.state.tokens[itemType].gte(1)) {
+        window.state.tokens[itemType] = window.state.tokens[itemType].sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true; // Mark as consumed if we're skipping deduction (already deducted elsewhere)
+      }
+      break;
+    
+    // Stardust: +5 hunger
+    case 'stardust':
+      hungerChange = 5;
+      itemName = 'stardust';
+      if (!skipDeduction && window.state.tokens && window.state.tokens.stardust && DecimalUtils.isDecimal(window.state.tokens.stardust) && window.state.tokens.stardust.gte(1)) {
+        window.state.tokens.stardust = window.state.tokens.stardust.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Prisma: -3 hunger
+    case 'prisma':
+      hungerChange = -3;
+      itemName = 'prisma';
+      if (!skipDeduction && window.state.tokens && window.state.tokens.prisma && DecimalUtils.isDecimal(window.state.tokens.prisma) && window.state.tokens.prisma.gte(1)) {
+        window.state.tokens.prisma = window.state.tokens.prisma.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Spark: no effect
+    case 'spark':
+      hungerChange = 0;
+      itemName = 'spark';
+      break;
+    
+    // Berry Plate: full restore + fullness boost
+    case 'berryPlate':
+      hungerChange = 100 - (window.state.characterHunger.swaria || 0);
+      fullnessBoost = true;
+      itemName = 'Berry Plate';
+      if (!skipDeduction && window.state.berryPlate && DecimalUtils.isDecimal(window.state.berryPlate) && window.state.berryPlate.gte(1)) {
+        window.state.berryPlate = window.state.berryPlate.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Mushroom Soup: full restore + fullness boost
+    case 'mushroomSoup':
+      hungerChange = 100 - (window.state.characterHunger.swaria || 0);
+      fullnessBoost = true;
+      itemName = 'Mushroom Soup';
+      if (!skipDeduction && window.state.mushroomSoup && DecimalUtils.isDecimal(window.state.mushroomSoup) && window.state.mushroomSoup.gte(1)) {
+        window.state.mushroomSoup = window.state.mushroomSoup.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Swa Buck: -1 hunger
+    case 'swabucks':
+      hungerChange = -1;
+      itemName = 'Swa Buck';
+      if (!skipDeduction && window.state.swabucks && DecimalUtils.isDecimal(window.state.swabucks) && window.state.swabucks.gte(1)) {
+        window.state.swabucks = window.state.swabucks.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Battery: -10 hunger
+    case 'batteries':
+    case 'battery':
+      hungerChange = -10;
+      itemName = 'Battery';
+      if (!skipDeduction && window.state.batteries && DecimalUtils.isDecimal(window.state.batteries) && window.state.batteries.gte(1)) {
+        window.state.batteries = window.state.batteries.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Candy: +3 hunger
+    case 'candy':
+      hungerChange = 3;
+      itemName = 'candy';
+      if (!skipDeduction && window.state.tokens && window.state.tokens.candy && DecimalUtils.isDecimal(window.state.tokens.candy) && window.state.tokens.candy.gte(1)) {
+        window.state.tokens.candy = window.state.tokens.candy.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Glittering Petals: +25 hunger
+    case 'glitteringPetals':
+    case 'glitteringPetal':
+      hungerChange = 25;
+      itemName = 'Glittering Petal';
+      if (!skipDeduction && window.state.glitteringPetals && DecimalUtils.isDecimal(window.state.glitteringPetals) && window.state.glitteringPetals.gte(1)) {
+        window.state.glitteringPetals = window.state.glitteringPetals.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Honey: refuses to eat
+    case 'honey':
+      hungerChange = 0;
+      itemName = 'Honey';
+      if (!skipDeduction && window.state.tokens && window.state.tokens.honey && DecimalUtils.isDecimal(window.state.tokens.honey) && window.state.tokens.honey.gte(1)) {
+        window.state.tokens.honey = window.state.tokens.honey.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    // Charged Prisma: -25 hunger (very bad!)
+    case 'chargedPrisma':
+      hungerChange = -25;
+      itemName = 'Charged Prisma';
+      if (!skipDeduction && window.state.chargedPrisma && DecimalUtils.isDecimal(window.state.chargedPrisma) && window.state.chargedPrisma.gte(1)) {
+        window.state.chargedPrisma = window.state.chargedPrisma.sub(1);
+        itemConsumed = true;
+      } else if (skipDeduction) {
+        itemConsumed = true;
+      }
+      break;
+    
+    default:
+      hungerChange = 0;
+  }
+  
+  // Apply hunger change if item was consumed
+  if (itemConsumed) {
+    window.state.characterHunger.swaria = Math.max(0, Math.min(100, window.state.characterHunger.swaria + hungerChange));
+    
+    // Apply fullness boost if applicable (prevents hunger depletion for 10 minutes)
+    if (fullnessBoost) {
+      if (!window.state.peachyHungerBoost) {
+        window.state.peachyHungerBoost = 0;
+      }
+      window.state.peachyHungerBoost = 10 * 60 * 1000; // 10 minutes
+    }
+    
+    // Show feedback message with image changes (only if showSpeech is true)
+    if (showSpeech) {
+      const swariaSpeech = document.getElementById('swariaSpeech');
+      const swariaImg = document.getElementById('swariaCharacter');
+      const halloweenPeachySpeech = document.getElementById('halloweenPeachySpeech');
+      const halloweenPeachyImg = document.getElementById('halloweenPeachyCharacter');
+      
+      if (swariaSpeech) {
+      let message = '';
+      // Special message for honey
+      if (itemName === 'Honey') {
+        message = "I'm not eating that!";
+      } else if (itemName === 'water') {
+        message = "Now I'm hydrated!";
+      } else if (hungerChange > 0) {
+        message = `Yum! This ${itemName} was delicious!`;
+      } else if (hungerChange < 0) {
+        // Special messages for very bad items
+        if (itemName === 'Charged Prisma' || itemName === 'Battery') {
+          const badMessages = ['Urgh disgusting...', 'Swehhh...'];
+          message = badMessages[Math.floor(Math.random() * badMessages.length)];
+        } else {
+          message = `Ugh... This ${itemName} made me feel worse...`;
+        }
+      } else {
+        message = `That ${itemName} didn't do anything...`;
+      }
+      
+      if (fullnessBoost) {
+        message += ' I feel so full now!';
+      }
+      
+      // Show main Swaria speech
+      swariaSpeech.textContent = message;
+      swariaSpeech.style.display = 'block';
+      
+      // Change to speaking image
+      if (swariaImg && typeof getMainCargoCharacterImage === 'function') {
+        swariaImg.src = getMainCargoCharacterImage(true);
+      }
+      
+      setTimeout(() => {
+        swariaSpeech.style.display = 'none';
+        // Restore to normal image
+        if (swariaImg && typeof getMainCargoCharacterImage === 'function') {
+          swariaImg.src = getMainCargoCharacterImage(false);
+        }
+      }, 3000);
+    }
+    
+    // Show Halloween Peachy speech
+    if (halloweenPeachySpeech) {
+      let message = '';
+      // Special message for honey
+      if (itemName === 'Honey') {
+        message = "I'm not eating that!";
+      } else if (itemName === 'water') {
+        message = "Now I'm hydrated!";
+      } else if (hungerChange > 0) {
+        message = `Yum! This ${itemName} was delicious!`;
+      } else if (hungerChange < 0) {
+        // Special messages for very bad items
+        if (itemName === 'Charged Prisma' || itemName === 'Battery') {
+          const badMessages = ['Urgh disgusting...', 'Swehhh...'];
+          message = badMessages[Math.floor(Math.random() * badMessages.length)];
+        } else {
+          message = `Ugh... This ${itemName} made me feel worse...`;
+        }
+      } else {
+        message = `That ${itemName} didn't do anything...`;
+      }
+      
+      if (fullnessBoost) {
+        message += ' I feel so full now!';
+      }
+      
+      // Show Halloween Peachy speech
+      halloweenPeachySpeech.textContent = message;
+      halloweenPeachySpeech.style.display = 'block';
+      
+      // Change to speaking image
+      if (halloweenPeachyImg && typeof window.getHalloweenPeachyImage === 'function') {
+        halloweenPeachyImg.src = window.getHalloweenPeachyImage('talking');
+      }
+      
+      setTimeout(() => {
+        halloweenPeachySpeech.style.display = 'none';
+        // Restore to normal image
+        if (halloweenPeachyImg && typeof window.getHalloweenPeachyImage === 'function') {
+          halloweenPeachyImg.src = window.getHalloweenPeachyImage('normal');
+        }
+      }, 3000);
+    }
+    } // End of showSpeech check
+    
+    // Update UI
+    updateSwariaHungerUI();
+    if (typeof window.updateInventoryModal === 'function') {
+      window.updateInventoryModal(true);
+    }
+    if (typeof window.renderInventoryTokens === 'function') {
+      window.renderInventoryTokens(true);
+    }
+    if (typeof window.updateKitchenUI === 'function') {
+      window.updateKitchenUI(true);
+    }
+    if (typeof window.updateUI === 'function') {
+      window.updateUI();
+    }
+  }
+  
+  return itemConsumed;
+}
+
+window.feedSwaria = feedSwaria;
 
 function initializeCafeteria() {
   // Cafeteria initialization - berry plates removed
@@ -8610,6 +9016,8 @@ window.addEventListener('DOMContentLoaded', function() {
     'viCharacterTalking',
     'viCharacterSleeping',
     'viCharacterSleepTalking',
+    // Halloween Peachy character
+    'halloweenPeachyCharacter',
     // Power generator card for battery feeding
     'powerGeneratorCard',
     // Delivery card for berry plate feeding
@@ -8657,6 +9065,8 @@ window.restoreSwariaImage = restoreSwariaImage;
       case 'viCharacterTalking': return 'Vivien';
       case 'viCharacterSleeping': return 'Vivien';
       case 'viCharacterSleepTalking': return 'Vivien';
+      // Halloween Peachy character
+      case 'halloweenPeachyCharacter': return 'Swaria';
       case 'powerGeneratorCard': return 'PowerGenerator';
       case 'deliveryCard': return 'DeliverySystem';
       case 'terrariumNectarizeMachine': return 'NectarizeSystem';
@@ -8718,6 +9128,15 @@ window.restoreSwariaImage = restoreSwariaImage;
               swariaImg.src = getMainCargoCharacterImage(true);
             }
           }
+          
+          // Change Halloween Peachy image to talking when token is dragged over
+          if (id === 'halloweenPeachyCharacter') {
+            const halloweenPeachyImg = document.getElementById('halloweenPeachyCharacter');
+            if (halloweenPeachyImg && typeof window.getHalloweenPeachyImage === 'function') {
+              halloweenPeachyImg._originalSrc = halloweenPeachyImg.src; // Store original source
+              halloweenPeachyImg.src = window.getHalloweenPeachyImage('talking');
+            }
+          }
         }
       });
       
@@ -8730,6 +9149,15 @@ window.restoreSwariaImage = restoreSwariaImage;
         if (id === 'swariaCharacter') {
           if (typeof restoreSwariaImage === 'function') {
             restoreSwariaImage();
+          }
+        }
+        
+        // Restore original Halloween Peachy image when token leaves
+        if (id === 'halloweenPeachyCharacter') {
+          const halloweenPeachyImg = document.getElementById('halloweenPeachyCharacter');
+          if (halloweenPeachyImg && halloweenPeachyImg._originalSrc) {
+            halloweenPeachyImg.src = halloweenPeachyImg._originalSrc;
+            delete halloweenPeachyImg._originalSrc;
           }
         }
       });
@@ -9056,9 +9484,9 @@ window.restoreSwariaImage = restoreSwariaImage;
             return;
           }
           
-          if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'PrismCore') {
+          if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'Swaria' && characterName !== 'PrismCore') {
             el.style.outline = '3px solid #ff4444';
-            el.title = 'Charged Prisma can only be given to Vi or the Prism Core!';
+            el.title = 'Charged Prisma can only be given to Vi, Swaria, or the Prism Core!';
             setTimeout(() => {
               el.style.outline = '';
               el.title = '';
@@ -9089,24 +9517,13 @@ window.restoreSwariaImage = restoreSwariaImage;
             }
           }
           
-          // Special case for Swaria rejecting certain tokens
-          if (characterName === 'Swaria' && ['sparks', 'petals', 'prisma', 'stardust'].includes(tokenType)) {
-            const swariaSpeech = document.getElementById('swariaSpeech');
-            const swariaImg = document.getElementById('swariaCharacter');
-            if (swariaSpeech) {
-              swariaSpeech.textContent = "I'm not eating that";
-              swariaSpeech.style.display = "block";
-              if (swariaImg) {
-                swariaImg.src = getMainCargoCharacterImage(true); 
-              }
-              setTimeout(() => {
-                swariaSpeech.style.display = "none";
-                if (swariaImg) {
-                  swariaImg.src = getMainCargoCharacterImage(false); 
-                }
-              }, 3000);
-            }
-            return; 
+          // Special case for Swaria feeding system - all tokens can be fed
+          if (characterName === 'Swaria') {
+            // Show the give token modal for feeding
+            showGiveTokenModal(tokenType, characterName);
+            el.style.outline = '';
+            el._tokenDropActive = false;
+            return;
           }
           
           // Special case for Power Generator battery feeding
@@ -9602,14 +10019,9 @@ function showCharacterSpeech(characterName, tokenType) {
       return; // Exit early, don't use the standard speech bubble system
     }
   } else if (characterName === 'Swaria') {
-    const hardModeTab = document.getElementById('settingsHardModeTab');
-    if (hardModeTab && hardModeTab.style.display !== 'none') {
-      el = document.getElementById('hardModeSwariaSpeech');
-      img = document.getElementById('hardModeSwariaImg');
-    } else {
-      el = document.getElementById('swariaSpeech');
-      img = document.getElementById('swariaCharacter');
-    }
+    // Swaria uses the feedSwaria speech system exclusively
+    // Don't show generic speech here, let feedSwaria handle it
+    return;
   } else if (characterName === 'Lepre') {
     // Handle Lepre's speech using the boutique speech system
     const lines = characterTokenSpeech[characterName] && characterTokenSpeech[characterName][tokenType];
@@ -9703,14 +10115,6 @@ function showCharacterSpeech(characterName, tokenType) {
     }
     if (tokenType === 'batteries' && characterName !== 'Soap' && characterName !== 'Fluzzer' && characterName !== 'Tico' && characterName !== 'PowerGenerator') {
       alert('Batteries can only be given to Soap, Fluzzer, or the Power Generator!');
-      return;
-    }
-    if ((tokenType === 'glitteringPetals' || tokenType === 'glitteringPetal') && characterName !== 'Fluzzer' && characterName !== 'Tico' && characterName !== 'NectarizeSystem') {
-      alert('Glittering Petals can only be given to Fluzzer or the Nectarize Machine!');
-      return;
-    }
-    if (tokenType === 'chargedPrisma' && characterName !== 'Vi' && characterName !== 'Tico' && characterName !== 'PrismCore') {
-      alert('Charged Prisma can only be given to Vi or the Prism Core!');
       return;
     }
     if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'Tico' && characterName !== 'MixingSystem') {
@@ -9839,16 +10243,22 @@ function showCharacterSpeech(characterName, tokenType) {
 
 
 
-    // Map token names to storage keys (some tokens have different names for display vs storage)
+    // Map token names to storage keys - using SINGULAR keys as that's how tokens are stored
     const tokenToStorageKey = {
-      'berry': 'berries',
-      'petal': 'petals',
-      'spark': 'sparks',
+      'berry': 'berry',
+      'berries': 'berry',
+      'petal': 'petal',
+      'petals': 'petal',
+      'spark': 'spark',
+      'sparks': 'spark',
       'mushroom': 'mushroom',
       'water': 'water',
       'stardust': 'stardust',
       'prisma': 'prisma',
-      'glitteringPetal': 'glitteringPetals'
+      'candy': 'candy',
+      'honey': 'honey',
+      'glitteringPetal': 'glitteringPetals',
+      'glitteringPetals': 'glitteringPetals'
     };
     
     let storageKey = tokenToStorageKey[tokenType] || tokenType;
@@ -10015,16 +10425,16 @@ function showCharacterSpeech(characterName, tokenType) {
       if (characterName === 'Soap' && (tokenType === 'spark' || tokenType === 'sparks') && typeof window.giveSparksToSoap === 'function') {
 
         // Deduct sparks from inventory (check both new and old locations)
-        if (window.state && window.state.tokens && window.state.tokens.sparks) {
-          // New location: window.state.tokens.sparks
+        if (window.state && window.state.tokens && window.state.tokens.spark) {
+          // New location: window.state.tokens.spark
           if (typeof Decimal !== 'undefined') {
-            window.state.tokens.sparks = DecimalUtils.toDecimal(window.state.tokens.sparks).minus(amount);
-            if (window.state.tokens.sparks.lt(0)) window.state.tokens.sparks = new Decimal(0);
+            window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).minus(amount);
+            if (window.state.tokens.spark.lt(0)) window.state.tokens.spark = new Decimal(0);
           } else {
-            window.state.tokens.sparks = Math.max(0, Number(window.state.tokens.sparks) - amount);
+            window.state.tokens.spark = Math.max(0, Number(window.state.tokens.spark) - amount);
           }
         } else if (window.state && window.state.sparks) {
-          // Legacy location: window.state.sparks
+          // Legacy location: window.state.sparks (old save compatibility)
           if (typeof Decimal !== 'undefined') {
             window.state.sparks = DecimalUtils.toDecimal(window.state.sparks).minus(amount);
             if (window.state.sparks.lt(0)) window.state.sparks = new Decimal(0);
@@ -10475,63 +10885,17 @@ function showCharacterSpeech(characterName, tokenType) {
         }
       }
       if (characterName === 'Swaria') {
-        if (tokenType === 'berryPlate') {
-          if (state.characterHunger && state.characterHunger.swaria !== undefined) {
-            state.characterHunger.swaria = 100;
-          }
-          const baseDurationMs = 10 * 60 * 1000; // 10 minutes base
-          const adjustedDurationMs = (typeof window.applyMysticPremiumTokenBuff === 'function') 
-            ? window.applyMysticPremiumTokenBuff(baseDurationMs) 
-            : baseDurationMs;
-          if (!window.state) window.state = {};
-          window.state.peachyHungerBoost = adjustedDurationMs;
-          if (typeof window.updateBoostDisplay === 'function') {
-            window.updateBoostDisplay();
-          }
-          const swariaSpeech = document.getElementById('swariaSpeech');
-          const swariaImg = document.getElementById('swariaCharacter');
-          if (swariaSpeech) {
-            swariaSpeech.textContent = "Mmm, that berry plate was delicious! I feel completely full now!";
-            swariaSpeech.style.display = "block";
-            if (swariaImg) {
-              swariaImg.src = getMainCargoCharacterImage(true); 
-            }
-            setTimeout(() => {
-              swariaSpeech.style.display = "none";
-              if (swariaImg) {
-                swariaImg.src = getMainCargoCharacterImage(false); 
-              }
-            }, 5000);
-          }
-        } else {
-          if (state.characterHunger && state.characterHunger.swaria !== undefined) {
-            const hungerGain = amount * 2;
-            const newHunger = Math.min(100, state.characterHunger.swaria + hungerGain);
-            const actualGain = newHunger - state.characterHunger.swaria;
-            state.characterHunger.swaria = newHunger;
-            if (typeof showGainPopup === 'function') {
-              showGainPopup("hungerGain", `+${actualGain} Hunger`, "Swaria");
-            }
-            const swariaSpeech = document.getElementById('swariaSpeech');
-            const swariaImg = document.getElementById('swariaCharacter');
-            if (swariaSpeech) {
-              const tokenName = displayNames[tokenType] || tokenType;
-              swariaSpeech.textContent = `Nom nom nom! That ${tokenName} was delicious!`;
-              swariaSpeech.style.display = "block";
-              if (swariaImg) {
-                swariaImg.src = getMainCargoCharacterImage(true); 
-              }
-              setTimeout(() => {
-                swariaSpeech.style.display = "none";
-                if (swariaImg) {
-                  swariaImg.src = getMainCargoCharacterImage(false); 
-                }
-              }, 5000);
-            }
+        // Use the new unified feeding system
+        if (typeof window.feedSwaria === 'function') {
+          // Feed tokens one at a time to properly track each feeding
+          // Pass true to skip deduction since we already deducted above
+          // Only show speech on the last token to avoid speech spam
+          for (let i = 0; i < amount; i++) {
+            const isLastToken = (i === amount - 1);
+            window.feedSwaria(tokenType, true, isLastToken);
           }
         }
-      }
-      if (characterName === 'Mystic') {
+      } else if (characterName === 'Mystic') {
         if (tokenType === 'mushroomSoup') {
           const baseDurationMs = 10 * 60 * 1000; // 10 minutes base
           const adjustedDurationMs = (typeof window.applyMysticPremiumTokenBuff === 'function') 
@@ -10558,8 +10922,7 @@ function showCharacterSpeech(characterName, tokenType) {
             }, 5000);
           }
         }
-      }
-      if (characterName === 'Soap') {
+      } else if (characterName === 'Soap') {
         if (tokenType === 'batteries' || tokenType === 'battery') {
           const baseDurationMs = 10 * 60 * 1000; // 10 minutes base
           const adjustedDurationMs = (typeof window.applyMysticPremiumTokenBuff === 'function') 
@@ -10739,45 +11102,45 @@ function showCharacterSpeech(characterName, tokenType) {
         };
         const dept = charToDept[characterName];
 
-        // Define character token preferences (using storage keys)
+        // Define character token preferences (using SINGULAR storage keys)
         const characterTokenPreferences = {
           Soap: {
-            likes: ['sparks'],
+            likes: ['spark'],
             dislikes: ['mushroom', 'water'],
-            neutral: ['berries', 'prisma', 'petals', 'stardust']
+            neutral: ['berry', 'prisma', 'petal', 'stardust']
           },
           Mystic: {
-            likes: ['mushroom', 'berries', 'stardust'],
-            dislikes: ['sparks', 'prisma'],
-            neutral: ['petals', 'water']
+            likes: ['mushroom', 'berry', 'stardust'],
+            dislikes: ['spark', 'prisma'],
+            neutral: ['petal', 'water']
           },
           Fluzzer: {
-            likes: ['berries', 'petals'],
+            likes: ['berry', 'petal'],
             dislikes: ['prisma'],
-            neutral: ['mushroom', 'sparks', 'water', 'stardust']
+            neutral: ['mushroom', 'spark', 'water', 'stardust']
           },
           Vi: { 
             likes: ['prisma', 'water'],
-            dislikes: ['sparks'],
-            neutral: ['berries', 'petals', 'mushroom', 'stardust']
+            dislikes: ['spark'],
+            neutral: ['berry', 'petal', 'mushroom', 'stardust']
           },
           Vivien: { 
             likes: ['prisma', 'water'],
-            dislikes: ['sparks'],
-            neutral: ['berries', 'petals', 'mushroom', 'stardust']
+            dislikes: ['spark'],
+            neutral: ['berry', 'petal', 'mushroom', 'stardust']
           },
           Swaria: { 
-            likes: ['berries', 'berryPlate'],
-            dislikes: ['sparks', 'petals', 'prisma', 'stardust'],
+            likes: ['berry', 'berryPlate'],
+            dislikes: ['spark', 'petal', 'prisma', 'stardust'],
             neutral: ['mushroom', 'water']
           },
           Lepre: {
-            likes: ['berries', 'stardust'],
+            likes: ['berry', 'stardust'],
             dislikes: ['water'],
-            neutral: ['sparks', 'prisma', 'mushroom', 'petals']
+            neutral: ['spark', 'prisma', 'mushroom', 'petal']
           },
           Tico: {
-            likes: ['berries', 'mushroom', 'water'],
+            likes: ['berry', 'mushroom', 'water'],
             dislikes: [],
             neutral: ['sparks', 'prisma', 'petals', 'stardust']
           }
@@ -10850,12 +11213,15 @@ function showCharacterSpeech(characterName, tokenType) {
       }
 
       // Handle character speech for non-quest tokens
-
-      if (!questSpeech && typeof showCharacterSpeech === 'function') {
+      // Skip speech for Swaria since feedSwaria has its own speech system
+      if (!questSpeech && characterName !== 'Swaria' && typeof showCharacterSpeech === 'function') {
         const tokenToStorageKey = {
-          'berry': 'berries',
-          'petal': 'petals',
-          'spark': 'sparks', 
+          'berry': 'berry',
+          'berries': 'berry',
+          'petal': 'petal',
+          'petals': 'petal',
+          'spark': 'spark',
+          'sparks': 'spark',
           'mushroom': 'mushroom',
           'water': 'water',
           'stardust': 'stardust',
@@ -10906,9 +11272,9 @@ function showCharacterSpeech(characterName, tokenType) {
       snapshot.swabucks = window.state.swabucks.toString();
     }
     
-    // Add basic ingredient tokens from window.state.tokens
+    // Add basic ingredient tokens from window.state.tokens (using SINGULAR keys)
     if (window.state && window.state.tokens) {
-      const ingredientKeys = ['berries', 'petals', 'stardust', 'prisma', 'sparks', 'water', 'mushroom'];
+      const ingredientKeys = ['berry', 'petal', 'stardust', 'prisma', 'spark', 'water', 'mushroom', 'candy', 'honey'];
       ingredientKeys.forEach(key => {
         const value = window.state.tokens[key];
         if (value !== undefined && value !== null) {
@@ -10984,11 +11350,11 @@ function showCharacterSpeech(characterName, tokenType) {
     
     // Add regular kitchen ingredients (the main token system)
     const ingredientTokens = [
-      { key: 'berries', name: 'berry', display: 'Berries', icon: 'berry token.png' },
-      { key: 'petals', name: 'petal', display: 'Petals', icon: 'petal token.png' },
+      { key: 'berry', name: 'berry', display: 'Berries', icon: 'berry token.png' },
+      { key: 'petal', name: 'petal', display: 'Petals', icon: 'petal token.png' },
       { key: 'stardust', name: 'stardust', display: 'Stardust', icon: 'stardust token.png' },
       { key: 'prisma', name: 'prisma', display: 'Prisma Shard', icon: 'prisma token.png' },
-      { key: 'sparks', name: 'spark', display: 'Sparks', icon: 'spark token.png' },
+      { key: 'spark', name: 'spark', display: 'Sparks', icon: 'spark token.png' },
       { key: 'water', name: 'water', display: 'Water', icon: 'water token.png' },
       { key: 'mushroom', name: 'mushroom', display: 'Mushroom', icon: 'mushroom token.png' },
       { key: 'candy', name: 'candy', display: 'Candy', icon: 'candy token.png' },
@@ -11536,15 +11902,15 @@ function showCharacterSpeech(characterName, tokenType) {
 
 
     // Always use quest logic for Soap's spark and battery tokens
-    if (characterName === 'Soap' && tokenType === 'sparks' && typeof window.giveSparksToSoap === 'function') {
+    if (characterName === 'Soap' && (tokenType === 'spark' || tokenType === 'sparks') && typeof window.giveSparksToSoap === 'function') {
       // Deduct sparks from tokens before calling quest function
-      if (window.state && window.state.tokens && window.state.tokens.sparks) {
-        if (typeof window.state.tokens.sparks.minus === 'function') {
-          window.state.tokens.sparks = window.state.tokens.sparks.minus(amount);
+      if (window.state && window.state.tokens && window.state.tokens.spark) {
+        if (typeof window.state.tokens.spark.minus === 'function') {
+          window.state.tokens.spark = window.state.tokens.spark.minus(amount);
         } else {
-          window.state.tokens.sparks = new Decimal(window.state.tokens.sparks).minus(amount);
+          window.state.tokens.spark = new Decimal(window.state.tokens.spark).minus(amount);
         }
-        if (window.state.tokens.sparks.lt(0)) window.state.tokens.sparks = new Decimal(0);
+        if (window.state.tokens.spark.lt(0)) window.state.tokens.spark = new Decimal(0);
       }
       window.giveSparksToSoap(amount);
       if (typeof window.updateChargerUI === 'function') window.updateChargerUI();

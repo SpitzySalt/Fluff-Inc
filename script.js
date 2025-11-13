@@ -504,7 +504,29 @@ let state = {
   kitoFoxModeActive: false,
   
   // Halloween event state
-  halloweenEventActive: false
+  halloweenEventActive: false,
+  
+  // Halloween shop state
+  halloweenShopPurchases: {
+    kpBoost: 0,
+    prismLightBoost: 0,
+    chargerBoost: 0,
+    pollenFlowerBoost: 0,
+    infinityPointBoost: 0,
+    swandyBoost: 0,
+    swandyShardBoost: 0,
+    hexingBoost: 0,
+    starterBundle: false,
+    sparkyBundle: false,
+    berryliciousBundle: false,
+    naturalBundle: false,
+    prismaBundle: false,
+    richesBundle: false,
+    premiumBundle: false,
+    ultimateOmegaBundle: false,
+    honeyBundle: false,
+    mirrorDwellerBundle: false
+  }
 };
 let settings = {
   theme: "light",
@@ -2013,6 +2035,29 @@ window.validateAndFixDecimals = function() {
     }
   });
   
+  // Fix premium tokens (crafted items)
+  const premiumTokens = ['berryPlate', 'mushroomSoup', 'batteries', 'glitteringPetals', 'chargedPrisma'];
+  premiumTokens.forEach(token => {
+    if (window.state[token] !== undefined && !DecimalUtils.isDecimal(window.state[token])) {
+      window.state[token] = new Decimal(window.state[token] || 0);
+    }
+  });
+  
+  // Fix swabucks
+  if (window.state.swabucks !== undefined && !DecimalUtils.isDecimal(window.state.swabucks)) {
+    window.state.swabucks = new Decimal(window.state.swabucks || 0);
+  }
+  
+  // Fix basic tokens in window.state.tokens
+  if (window.state.tokens) {
+    const tokenTypes = ['berry', 'spark', 'petal', 'mushroom', 'water', 'prisma', 'stardust', 'candy', 'honey'];
+    tokenTypes.forEach(tokenType => {
+      if (window.state.tokens[tokenType] !== undefined && !DecimalUtils.isDecimal(window.state.tokens[tokenType])) {
+        window.state.tokens[tokenType] = new Decimal(window.state.tokens[tokenType] || 0);
+      }
+    });
+  }
+  
   // Fix boxes produced by type
   const boxTypes = ['common', 'uncommon', 'rare', 'legendary', 'mythic'];
   boxTypes.forEach(boxType => {
@@ -2461,6 +2506,11 @@ function gameTick() {
   // Halloween Event: Swandy generation tick
   if (window.state && window.state.halloweenEvent && typeof window.tickSwandyGeneration === 'function') {
     window.tickSwandyGeneration(diff * 1000); // Convert seconds to milliseconds for consistency
+  }
+  
+  // Cafeteria hunger system tick
+  if (typeof window.tickCafeteria === 'function') {
+    window.tickCafeteria(diff);
   }
   
   // Ultra-rare secret achievement check - 1 in 10 million chance per tick
@@ -11028,9 +11078,9 @@ function awardChallengeTokens() {
                     : new Decimal(window.state.tokens[tokenType] || 0).add(amount);
             } else {
                 // Fallback to berry tokens if the token type doesn't exist
-                window.state.tokens.berries = DecimalUtils.isDecimal(window.state.tokens.berries)
-                    ? window.state.tokens.berries.add(amount)
-                    : new Decimal(window.state.tokens.berries || 0).add(amount);
+                window.state.tokens.berry = DecimalUtils.isDecimal(window.state.tokens.berry)
+                    ? window.state.tokens.berry.add(amount)
+                    : new Decimal(window.state.tokens.berry || 0).add(amount);
             }
         } else if (window.state[token.key] !== undefined) {
             // Handle regular properties (including Decimal types for premium tokens)
@@ -11041,9 +11091,9 @@ function awardChallengeTokens() {
             }
         } else {
             // Fallback to berry tokens if the token type doesn't exist
-            window.state.tokens.berries = DecimalUtils.isDecimal(window.state.tokens.berries)
-                ? window.state.tokens.berries.add(amount)
-                : new Decimal(window.state.tokens.berries || 0).add(amount);
+            window.state.tokens.berry = DecimalUtils.isDecimal(window.state.tokens.berry)
+                ? window.state.tokens.berry.add(amount)
+                : new Decimal(window.state.tokens.berry || 0).add(amount);
         }
         
         // Track the awarded token

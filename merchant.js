@@ -36,6 +36,36 @@ class Boutique {
     this.tokenChallengeLastUsed = 0;
     this.tokenChallengeUsedSinceRestock = false;
     
+    // Halloween shop state - sync with window.state if available
+    if (window.state && window.state.halloweenShopPurchases) {
+      this.halloweenShopPurchases = window.state.halloweenShopPurchases;
+    } else {
+      this.halloweenShopPurchases = {
+        kpBoost: 0,
+        prismLightBoost: 0,
+        chargerBoost: 0,
+        pollenFlowerBoost: 0,
+        infinityPointBoost: 0,
+        swandyBoost: 0,
+        swandyShardBoost: 0,
+        hexingBoost: 0,
+        starterBundle: false,
+        sparkyBundle: false,
+        berryliciousBundle: false,
+        naturalBundle: false,
+        prismaBundle: false,
+        richesBundle: false,
+        premiumBundle: false,
+        ultimateOmegaBundle: false,
+        honeyBundle: false,
+        mirrorDwellerBundle: false
+      };
+      // Initialize window.state if needed
+      if (window.state) {
+        window.state.halloweenShopPurchases = this.halloweenShopPurchases;
+      }
+    }
+    
     // Timer management for memory leak prevention
     this.mainUpdateInterval = null;
     this.isDestroyed = false;
@@ -73,6 +103,7 @@ class Boutique {
     // Initialize character display
     setTimeout(() => {
       this.updateLepreCharacterDisplay();
+      this.updateHalloweenShopButtonVisibility();
     }, 100); // Small delay to ensure DOM is ready
     
     // Update timer every second for real-time countdown - store interval ID for cleanup
@@ -2671,6 +2702,8 @@ class Boutique {
     this.updateTokenChallengeButtonVisibility();
     // Update token challenge PB display
     this.updateTokenChallengePBDisplay();
+    // Update Halloween shop button visibility
+    this.updateHalloweenShopButtonVisibility();
   }
 
   // Check if lepre quest 5 is completed to show token challenge button
@@ -2857,7 +2890,9 @@ class Boutique {
       isIn727AnomalySequence: this.isIn727AnomalySequence,
       // Save token challenge cooldown state
       tokenChallengeLastUsed: this.tokenChallengeLastUsed,
-      tokenChallengeUsedSinceRestock: this.tokenChallengeUsedSinceRestock
+      tokenChallengeUsedSinceRestock: this.tokenChallengeUsedSinceRestock,
+      // Save Halloween shop purchases
+      halloweenShopPurchases: this.halloweenShopPurchases
     };
   }
 
@@ -2870,6 +2905,13 @@ class Boutique {
       if (data.currentShopItems) this.currentShopItems = data.currentShopItems;
       if (data.lastFreeBucksTime !== undefined) this.lastFreeBucksTime = data.lastFreeBucksTime;
       if (data.lastFreeBucksGameTime !== undefined) this.lastFreeBucksGameTime = data.lastFreeBucksGameTime;
+      if (data.halloweenShopPurchases) {
+        this.halloweenShopPurchases = data.halloweenShopPurchases;
+        // Sync with window.state
+        if (window.state) {
+          window.state.halloweenShopPurchases = this.halloweenShopPurchases;
+        }
+      }
       if (data.hasUsedFreeBucksToday !== undefined) this.hasUsedFreeBucksToday = data.hasUsedFreeBucksToday;
       
       // Load Lepre angry state
@@ -4315,14 +4357,1681 @@ class Boutique {
       this.currentSpeechTimeout = null;
     }
 
-
-
     // Clear speech queue
     this.speechQueue = [];
-    this.isSpeaking = false;    // Reset all state
+    this.isSpeaking = false;
+    
+    // Reset all state
     this.currentShopItems = [];
     this.purchaseHistory = {};
-    this.dailyStock = {};
+  }
+
+  // Halloween Shop Methods
+  openHalloweenShop() {
+    const modal = document.getElementById('halloweenShopModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    this.updateHalloweenShopUI();
+    this.renderHalloweenShopItems();
+  }
+  
+  closeHalloweenShop() {
+    const modal = document.getElementById('halloweenShopModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+  
+  switchHalloweenShopTab(tabName) {
+    const progressionTab = document.getElementById('halloweenShopProgressionTab');
+    const bundlesTab = document.getElementById('halloweenShopBundlesTab');
+    const progressionContent = document.getElementById('halloweenShopProgressionContent');
+    const bundlesContent = document.getElementById('halloweenShopBundlesContent');
+    
+    if (tabName === 'progression') {
+      progressionTab.style.background = '#FF8C00';
+      bundlesTab.style.background = '#555';
+      progressionContent.style.display = 'block';
+      bundlesContent.style.display = 'none';
+    } else {
+      progressionTab.style.background = '#555';
+      bundlesTab.style.background = '#FF8C00';
+      progressionContent.style.display = 'none';
+      bundlesContent.style.display = 'block';
+    }
+  }
+  
+  updateHalloweenShopUI() {
+    const candyDisplay = document.getElementById('halloweenShopCandyDisplay');
+    if (candyDisplay && window.state && window.state.tokens) {
+      const candyAmount = DecimalUtils.isDecimal(window.state.tokens.candy) 
+        ? window.state.tokens.candy.toNumber() 
+        : (window.state.tokens.candy || 0);
+      candyDisplay.textContent = Math.floor(candyAmount);
+    }
+  }
+  
+  renderHalloweenShopItems() {
+    this.renderProgressionItems();
+    this.renderBundleItems();
+  }
+  
+  renderProgressionItems() {
+    const container = document.getElementById('halloweenShopProgressionItems');
+    if (!container) return;
+    
+    const kpBoostPurchased = this.halloweenShopPurchases.kpBoost || 0;
+    const kpBoostMax = 100;
+    const kpBoostCost = 2 + (2 * kpBoostPurchased);
+    const canAffordKP = this.getCandyAmount() >= kpBoostCost;
+    const kpBoostMaxed = kpBoostPurchased >= kpBoostMax;
+    
+    const prismLightBoostPurchased = this.halloweenShopPurchases.prismLightBoost || 0;
+    const prismLightBoostMax = 100;
+    const prismLightBoostCost = 5 + (5 * prismLightBoostPurchased);
+    const canAffordPrismLight = this.getCandyAmount() >= prismLightBoostCost;
+    const prismLightBoostMaxed = prismLightBoostPurchased >= prismLightBoostMax;
+    
+    const chargerBoostPurchased = this.halloweenShopPurchases.chargerBoost || 0;
+    const chargerBoostMax = 100;
+    const chargerBoostCost = 10 + (10 * chargerBoostPurchased);
+    const canAffordCharger = this.getCandyAmount() >= chargerBoostCost;
+    const chargerBoostMaxed = chargerBoostPurchased >= chargerBoostMax;
+    
+    const pollenFlowerBoostPurchased = this.halloweenShopPurchases.pollenFlowerBoost || 0;
+    const pollenFlowerBoostMax = 100;
+    const pollenFlowerBoostCost = 5 + (5 * pollenFlowerBoostPurchased);
+    const canAffordPollenFlower = this.getCandyAmount() >= pollenFlowerBoostCost;
+    const pollenFlowerBoostMaxed = pollenFlowerBoostPurchased >= pollenFlowerBoostMax;
+    
+    const infinityPointBoostPurchased = this.halloweenShopPurchases.infinityPointBoost || 0;
+    const infinityPointBoostMax = 100;
+    const infinityPointBoostCost = 100 + (100 * infinityPointBoostPurchased);
+    const canAffordInfinityPoint = this.getCandyAmount() >= infinityPointBoostCost;
+    const infinityPointBoostMaxed = infinityPointBoostPurchased >= infinityPointBoostMax;
+    
+    const swandyBoostPurchased = this.halloweenShopPurchases.swandyBoost || 0;
+    const swandyBoostMax = 100;
+    const swandyBoostCost = 20 + (20 * swandyBoostPurchased);
+    const canAffordSwandy = this.getCandyAmount() >= swandyBoostCost;
+    const swandyBoostMaxed = swandyBoostPurchased >= swandyBoostMax;
+    
+    const swandyShardBoostPurchased = this.halloweenShopPurchases.swandyShardBoost || 0;
+    const swandyShardBoostMax = 100;
+    const swandyShardBoostCost = 25 + (25 * swandyShardBoostPurchased);
+    const canAffordSwandyShard = this.getCandyAmount() >= swandyShardBoostCost;
+    const swandyShardBoostMaxed = swandyShardBoostPurchased >= swandyShardBoostMax;
+    
+    const hexingBoostPurchased = this.halloweenShopPurchases.hexingBoost || 0;
+    const hexingBoostMax = 100;
+    const hexingBoostCost = 200 + (200 * hexingBoostPurchased);
+    const canAffordHexing = this.getCandyAmount() >= hexingBoostCost;
+    const hexingBoostMaxed = hexingBoostPurchased >= hexingBoostMax;
+    
+    const currentGrade = window.state && window.state.grade ? (DecimalUtils.isDecimal(window.state.grade) ? window.state.grade.toNumber() : window.state.grade) : 0;
+    const showChargerBoost = currentGrade >= 5;
+    const showPollenFlowerBoost = currentGrade >= 6;
+    const totalInfinity = window.infinitySystem ? window.infinitySystem.totalInfinityEarned : 0;
+    const showInfinityPointBoost = totalInfinity >= 1;
+    const hasS10 = window.state?.halloweenEvent?.treeUpgrades?.purchased?.crush_swandies || false;
+    const showSwandyShardBoost = hasS10;
+    const hexomancyMilestone = window.state?.halloweenEvent?.jadeca?.hexomancyMilestones?.milestone1 || false;
+    const showHexingBoost = hexomancyMilestone;
+    
+    let chargerBoostHTML = '';
+    if (showChargerBoost) {
+      chargerBoostHTML = `
+        <div style="background: rgba(51, 204, 255, 0.1); border: 2px solid #3cf; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #5dddff; margin: 0 0 5px 0;">Charger Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Charge gain by +0.1x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #3cf; font-size: 18px; font-weight: bold;">${chargerBoostPurchased} / ${chargerBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.1 * chargerBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('chargerBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${chargerBoostMaxed ? '#444' : (canAffordCharger ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${chargerBoostMaxed ? 'not-allowed' : (canAffordCharger ? 'pointer' : 'not-allowed')};
+              opacity: ${chargerBoostMaxed ? '0.5' : '1'};
+            "
+            ${chargerBoostMaxed || !canAffordCharger ? 'disabled' : ''}
+          >
+            ${chargerBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${chargerBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    let pollenFlowerBoostHTML = '';
+    if (showPollenFlowerBoost) {
+      pollenFlowerBoostHTML = `
+        <div style="background: rgba(144, 238, 144, 0.1); border: 2px solid #90EE90; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #98FB98; margin: 0 0 5px 0;">Pollen & Flower Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Pollen and Flower gain by +0.1x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #90EE90; font-size: 18px; font-weight: bold;">${pollenFlowerBoostPurchased} / ${pollenFlowerBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.1 * pollenFlowerBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('pollenFlowerBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${pollenFlowerBoostMaxed ? '#444' : (canAffordPollenFlower ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${pollenFlowerBoostMaxed ? 'not-allowed' : (canAffordPollenFlower ? 'pointer' : 'not-allowed')};
+              opacity: ${pollenFlowerBoostMaxed ? '0.5' : '1'};
+            "
+            ${pollenFlowerBoostMaxed || !canAffordPollenFlower ? 'disabled' : ''}
+          >
+            ${pollenFlowerBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${pollenFlowerBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    let infinityPointBoostHTML = '';
+    if (showInfinityPointBoost) {
+      infinityPointBoostHTML = `
+        <div style="background: rgba(138, 43, 226, 0.1); border: 2px solid #8B2BE2; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #9370DB; margin: 0 0 5px 0;">Infinity Point Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Infinity Point gain by +0.1x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #8B2BE2; font-size: 18px; font-weight: bold;">${infinityPointBoostPurchased} / ${infinityPointBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.1 * infinityPointBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('infinityPointBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${infinityPointBoostMaxed ? '#444' : (canAffordInfinityPoint ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${infinityPointBoostMaxed ? 'not-allowed' : (canAffordInfinityPoint ? 'pointer' : 'not-allowed')};
+              opacity: ${infinityPointBoostMaxed ? '0.5' : '1'};
+            "
+            ${infinityPointBoostMaxed || !canAffordInfinityPoint ? 'disabled' : ''}
+          >
+            ${infinityPointBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${infinityPointBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    let swandyBoostHTML = '';
+    const isHalloweenEventActive = window.state && window.state.halloweenEventActive;
+    if (isHalloweenEventActive) {
+      swandyBoostHTML = `
+        <div style="background: rgba(255, 165, 0, 0.1); border: 2px solid #FFA500; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #FFB347; margin: 0 0 5px 0;">Swandy Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Swandy gain and cap by +0.05x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #FFA500; font-size: 18px; font-weight: bold;">${swandyBoostPurchased} / ${swandyBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.05 * swandyBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('swandyBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${swandyBoostMaxed ? '#444' : (canAffordSwandy ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${swandyBoostMaxed ? 'not-allowed' : (canAffordSwandy ? 'pointer' : 'not-allowed')};
+              opacity: ${swandyBoostMaxed ? '0.5' : '1'};
+            "
+            ${swandyBoostMaxed || !canAffordSwandy ? 'disabled' : ''}
+          >
+            ${swandyBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${swandyBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    let swandyShardBoostHTML = '';
+    if (showSwandyShardBoost) {
+      swandyShardBoostHTML = `
+        <div style="background: rgba(138, 43, 226, 0.1); border: 2px solid #8A2BE2; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #9370DB; margin: 0 0 5px 0;">Swandy Shard Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Hexed Swandy Shard gain by +0.5x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #8A2BE2; font-size: 18px; font-weight: bold;">${swandyShardBoostPurchased} / ${swandyShardBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.5 * swandyShardBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('swandyShardBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${swandyShardBoostMaxed ? '#444' : (canAffordSwandyShard ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${swandyShardBoostMaxed ? 'not-allowed' : (canAffordSwandyShard ? 'pointer' : 'not-allowed')};
+              opacity: ${swandyShardBoostMaxed ? '0.5' : '1'};
+            "
+            ${swandyShardBoostMaxed || !canAffordSwandyShard ? 'disabled' : ''}
+          >
+            ${swandyShardBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${swandyShardBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    let hexingBoostHTML = '';
+    if (showHexingBoost) {
+      hexingBoostHTML = `
+        <div style="background: rgba(128, 0, 128, 0.1); border: 2px solid #800080; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div>
+              <h4 style="color: #BA55D3; margin: 0 0 5px 0;">Hexing Boost</h4>
+              <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases Hexflux and Hex gain by +0.02x per purchase</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="color: #800080; font-size: 18px; font-weight: bold;">${hexingBoostPurchased} / ${hexingBoostMax}</div>
+              <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.02 * hexingBoostPurchased).toFixed(2)}x</div>
+            </div>
+          </div>
+          <button 
+            onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('hexingBoost')"
+            style="
+              width: 100%; 
+              padding: 10px; 
+              background: ${hexingBoostMaxed ? '#444' : (canAffordHexing ? '#28a745' : '#666')}; 
+              color: white; 
+              border: none; 
+              border-radius: 8px; 
+              font-weight: bold; 
+              cursor: ${hexingBoostMaxed ? 'not-allowed' : (canAffordHexing ? 'pointer' : 'not-allowed')};
+              opacity: ${hexingBoostMaxed ? '0.5' : '1'};
+            "
+            ${hexingBoostMaxed || !canAffordHexing ? 'disabled' : ''}
+          >
+            ${hexingBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${hexingBoostCost} Candy`}
+          </button>
+        </div>
+      `;
+    }
+    
+    container.innerHTML = `
+      <div style="background: rgba(255, 140, 0, 0.1); border: 2px solid #FF8C00; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div>
+            <h4 style="color: #FFD700; margin: 0 0 5px 0;">Knowledge Point Boost</h4>
+            <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases KP gain by +0.1x per purchase</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="color: #FFA500; font-size: 18px; font-weight: bold;">${kpBoostPurchased} / ${kpBoostMax}</div>
+            <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.1 * kpBoostPurchased).toFixed(2)}x</div>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('kpBoost')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${kpBoostMaxed ? '#444' : (canAffordKP ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${kpBoostMaxed ? 'not-allowed' : (canAffordKP ? 'pointer' : 'not-allowed')};
+            opacity: ${kpBoostMaxed ? '0.5' : '1'};
+          "
+          ${kpBoostMaxed || !canAffordKP ? 'disabled' : ''}
+        >
+          ${kpBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${kpBoostCost} Candy`}
+        </button>
+      </div>
+      <div style="background: rgba(200, 150, 255, 0.1); border: 2px solid #C896FF; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div>
+            <h4 style="color: #DCC4FF; margin: 0 0 5px 0;">Prism Light Boost</h4>
+            <p style="color: #CCC; margin: 0; font-size: 14px;">Permanently increases all Light gain by +0.1x per purchase</p>
+          </div>
+          <div style="text-align: right;">
+            <div style="color: #C896FF; font-size: 18px; font-weight: bold;">${prismLightBoostPurchased} / ${prismLightBoostMax}</div>
+            <div style="color: #888; font-size: 12px;">Current Boost: ${(1 + 0.1 * prismLightBoostPurchased).toFixed(2)}x</div>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('prismLightBoost')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${prismLightBoostMaxed ? '#444' : (canAffordPrismLight ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${prismLightBoostMaxed ? 'not-allowed' : (canAffordPrismLight ? 'pointer' : 'not-allowed')};
+            opacity: ${prismLightBoostMaxed ? '0.5' : '1'};
+          "
+          ${prismLightBoostMaxed || !canAffordPrismLight ? 'disabled' : ''}
+        >
+          ${prismLightBoostMaxed ? 'MAX PURCHASED' : `Purchase for ${prismLightBoostCost} Candy`}
+        </button>
+      </div>
+      ${chargerBoostHTML}
+      ${pollenFlowerBoostHTML}
+      ${infinityPointBoostHTML}
+      ${swandyBoostHTML}
+      ${swandyShardBoostHTML}
+      ${hexingBoostHTML}
+    `;
+  }
+  
+  renderBundleItems() {
+    const container = document.getElementById('halloweenShopBundleItems');
+    if (!container) return;
+    
+    const starterBundlePurchased = this.halloweenShopPurchases.starterBundle || false;
+    const starterBundleCost = 20;
+    const canAffordStarter = this.getCandyAmount() >= starterBundleCost;
+    
+    const sparkyBundlePurchased = this.halloweenShopPurchases.sparkyBundle || false;
+    const sparkyBundleCost = 100;
+    const canAffordSparky = this.getCandyAmount() >= sparkyBundleCost;
+    
+    const berryliciousBundlePurchased = this.halloweenShopPurchases.berryliciousBundle || false;
+    const berryliciousBundleCost = 125;
+    const canAffordBerrylicious = this.getCandyAmount() >= berryliciousBundleCost;
+    
+    const naturalBundlePurchased = this.halloweenShopPurchases.naturalBundle || false;
+    const naturalBundleCost = 350;
+    const canAffordNatural = this.getCandyAmount() >= naturalBundleCost;
+    
+    const prismaBundlePurchased = this.halloweenShopPurchases.prismaBundle || false;
+    const prismaBundleCost = 500;
+    const canAffordPrisma = this.getCandyAmount() >= prismaBundleCost;
+    
+    const richesBundlePurchased = this.halloweenShopPurchases.richesBundle || false;
+    const richesBundleCost = 2000;
+    const canAffordRiches = this.getCandyAmount() >= richesBundleCost;
+    
+    const premiumBundlePurchased = this.halloweenShopPurchases.premiumBundle || false;
+    const premiumBundleCost = 5000;
+    const canAffordPremium = this.getCandyAmount() >= premiumBundleCost;
+    
+    const ultimateOmegaBundlePurchased = this.halloweenShopPurchases.ultimateOmegaBundle || false;
+    const ultimateOmegaBundleCost = 25000;
+    const canAffordUltimateOmega = this.getCandyAmount() >= ultimateOmegaBundleCost;
+
+    const honeyBundlePurchased = this.halloweenShopPurchases.honeyBundle || false;
+    const honeyBundleCost = 50000;
+    const canAffordHoney = this.getCandyAmount() >= honeyBundleCost;
+
+    const mirrorDwellerBundlePurchased = this.halloweenShopPurchases.mirrorDwellerBundle || false;
+    const mirrorDwellerBundleCost = 727000000;
+    const canAffordMirrorDweller = this.getCandyAmount() >= mirrorDwellerBundleCost;
+
+    container.innerHTML = `
+      <div style="background: rgba(46, 204, 113, 0.1); border: 2px solid #2ecc71; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #2ecc71; margin: 0 0 5px 0;">Starter Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A good starting bundle of 30 berries, 25 sparks, 20 prisma shards, 15 water and 10 petals</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry token.png" style="width: 24px; height: 24px;">
+            <span style="color: #2ecc71;">x30</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/spark token.png" style="width: 24px; height: 24px;">
+            <span style="color: #2ecc71;">x25</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/prisma token.png" style="width: 24px; height: 24px;">
+            <span style="color: #2ecc71;">x20</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/water token.png" style="width: 24px; height: 24px;">
+            <span style="color: #2ecc71;">x15</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #2ecc71;">x10</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('starterBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${starterBundlePurchased ? '#444' : (canAffordStarter ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${starterBundlePurchased ? 'not-allowed' : (canAffordStarter ? 'pointer' : 'not-allowed')};
+            opacity: ${starterBundlePurchased ? '0.5' : '1'};
+          "
+          ${starterBundlePurchased || !canAffordStarter ? 'disabled' : ''}
+        >
+          ${starterBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${starterBundleCost} Candy`}
+        </button>
+      </div>
+      <div style="background: rgba(255, 140, 0, 0.1); border: 2px solid #FF8C00; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FFD700; margin: 0 0 5px 0;">Sparky Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A sparkifying bundle of 100 sparks and 2 batteries!</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/spark token.png" style="width: 24px; height: 24px;">
+            <span style="color: #FFD700;">x100</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/battery token.png" style="width: 24px; height: 24px;">
+            <span style="color: #FFD700;">x2</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('sparkyBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${sparkyBundlePurchased ? '#444' : (canAffordSparky ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${sparkyBundlePurchased ? 'not-allowed' : (canAffordSparky ? 'pointer' : 'not-allowed')};
+            opacity: ${sparkyBundlePurchased ? '0.5' : '1'};
+          "
+          ${sparkyBundlePurchased || !canAffordSparky ? 'disabled' : ''}
+        >
+          ${sparkyBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${sparkyBundleCost} Candy`}
+        </button>
+      </div>
+      <div style="background: rgba(220, 20, 60, 0.1); border: 2px solid #DC143C; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FF6B6B; margin: 0 0 5px 0;">Berrylicious Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A delicious bundle of 150 berries and 3 berry plates</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry token.png" style="width: 24px; height: 24px;">
+            <span style="color: #FF6B6B;">x150</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry plate token.png" style="width: 24px; height: 24px;">
+            <span style="color: #FF6B6B;">x3</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('berryliciousBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${berryliciousBundlePurchased ? '#444' : (canAffordBerrylicious ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${berryliciousBundlePurchased ? 'not-allowed' : (canAffordBerrylicious ? 'pointer' : 'not-allowed')};
+            opacity: ${berryliciousBundlePurchased ? '0.5' : '1'};
+          "
+          ${berryliciousBundlePurchased || !canAffordBerrylicious ? 'disabled' : ''}
+        >
+          ${berryliciousBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${berryliciousBundleCost} Candy`}
+        </button>
+      </div>
+      <div style="background: rgba(107, 142, 35, 0.1); border: 2px solid #6B8E23; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #9ACD32; margin: 0 0 5px 0;">Natural Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A naturally delicate bundle of 100 berries, 75 mushroom, 75 petal, 50 water, 3 berry plates, 2 mushroom soups and 1 glittering petal</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x100</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/mushroom token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x75</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x75</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/water token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x50</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry plate token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x3</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/mushroom soup token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x2</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/glittering petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9ACD32;">x1</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('naturalBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${naturalBundlePurchased ? '#444' : (canAffordNatural ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${naturalBundlePurchased ? 'not-allowed' : (canAffordNatural ? 'pointer' : 'not-allowed')};
+            opacity: ${naturalBundlePurchased ? '0.5' : '1'};
+          "
+          ${naturalBundlePurchased || !canAffordNatural ? 'disabled' : ''}
+        >
+          ${naturalBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${naturalBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(0, 206, 209, 0.1); border: 2px solid #00CED1; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #00CED1; margin: 0 0 5px 0;">Prisma Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A shiny refracted bundle of 200 prisma shards, 200 sparks, 150 water, 150 stardust, 5 charged prisma, 5 batteries</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/prisma token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x200</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/spark token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x200</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/water token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x150</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/stardust token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x150</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/charged prism token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x5</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/battery token.png" style="width: 24px; height: 24px;">
+            <span style="color: #00CED1;">x5</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('prismaBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${prismaBundlePurchased ? '#444' : (canAffordPrisma ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${prismaBundlePurchased ? 'not-allowed' : (canAffordPrisma ? 'pointer' : 'not-allowed')};
+            opacity: ${prismaBundlePurchased ? '0.5' : '1'};
+          "
+          ${prismaBundlePurchased || !canAffordPrisma ? 'disabled' : ''}
+        >
+          ${prismaBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${prismaBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid #FFD700; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FFD700; margin: 0 0 5px 0;">Riches Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A regal bundle that contains 500 swa bucks, ka-ching ka-ching!</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/Swa Buck.png" style="width: 24px; height: 24px;">
+            <span style="color: #FFD700;">x500</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('richesBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${richesBundlePurchased ? '#444' : (canAffordRiches ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${richesBundlePurchased ? 'not-allowed' : (canAffordRiches ? 'pointer' : 'not-allowed')};
+            opacity: ${richesBundlePurchased ? '0.5' : '1'};
+          "
+          ${richesBundlePurchased || !canAffordRiches ? 'disabled' : ''}
+        >
+          ${richesBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${richesBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(147, 112, 219, 0.1); border: 2px solid #9370DB; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #9370DB; margin: 0 0 5px 0;">Premium Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">An exquisite bundle of 15 berry plates, 15 mushroom soups, 15 batteries, 10 charged prisma, and 10 glittering petals</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry plate token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9370DB;">x15</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/mushroom soup token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9370DB;">x15</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/battery token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9370DB;">x15</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/charged prism token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9370DB;">x10</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/glittering petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #9370DB;">x10</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('premiumBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${premiumBundlePurchased ? '#444' : (canAffordPremium ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${premiumBundlePurchased ? 'not-allowed' : (canAffordPremium ? 'pointer' : 'not-allowed')};
+            opacity: ${premiumBundlePurchased ? '0.5' : '1'};
+          "
+          ${premiumBundlePurchased || !canAffordPremium ? 'disabled' : ''}
+        >
+          ${premiumBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${premiumBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(220, 20, 60, 0.1); border: 2px solid #DC143C; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FF1744; margin: 0 0 5px 0;">ULTIMATE OMEGA BUNDLE</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">THE ULTIMATE OMEGA bundle! only for the most dedicated of players! 15000 berries, 1500 mushrooms, 1500 sparks, 1000 prisma shards, 1000 water, 1000 petals, 750 stardust, 200 swa bucks, 50 berry plates, 150 mushroom soups, 50 batteries, 30 charged prismas and 30 glittering petals!</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x15000</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/mushroom token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x1500</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/spark token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x1500</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/prisma token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x1000</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/water token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x1000</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x1000</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/stardust token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x750</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/Swa Buck.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x200</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/berry plate token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x50</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/mushroom soup token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x150</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/battery token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x50</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/charged prism token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x30</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/glittering petal token.png" style="width: 24px; height: 24px;">
+            <span style="color: #DC143C;">x30</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('ultimateOmegaBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${ultimateOmegaBundlePurchased ? '#444' : (canAffordUltimateOmega ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${ultimateOmegaBundlePurchased ? 'not-allowed' : (canAffordUltimateOmega ? 'pointer' : 'not-allowed')};
+            opacity: ${ultimateOmegaBundlePurchased ? '0.5' : '1'};
+          "
+          ${ultimateOmegaBundlePurchased || !canAffordUltimateOmega ? 'disabled' : ''}
+        >
+          ${ultimateOmegaBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${ultimateOmegaBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid #FFD700; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FFD700; margin: 0 0 5px 0;">Hon̶̤͂ė̷̡̨̤̞̰͔̩͓̹͇̞̙͐͛̀͊̇́̓͆̌͆̒͜͝ Bundle</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">ḥ̵̢̢̡̘͎̥̬̙̠͍̙̞͚̊̉ͅo̸͈̅̆͆͐n̴̠͈̞̜̬̺̂͊̂͊̐e̶̝͗́̔̀̿̇̃y̶̧̨͈̜̹͈͛̽̀́̉͛̕͘͜͝</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/honey token.png" style="width: 24px; height: 24px;">
+            <span style="color: #FFD700;">x1</span>
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('honeyBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${honeyBundlePurchased ? '#444' : (canAffordHoney ? '#FFD700' : '#666')}; 
+            color: ${honeyBundlePurchased || !canAffordHoney ? '#CCC' : '#000'}; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${honeyBundlePurchased ? 'not-allowed' : (canAffordHoney ? 'pointer' : 'not-allowed')};
+            opacity: ${honeyBundlePurchased ? '0.5' : '1'};
+          "
+          ${honeyBundlePurchased || !canAffordHoney ? 'disabled' : ''}
+        >
+          ${honeyBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${honeyBundleCost} Candy`}
+        </button>
+      </div>
+      
+      <div style="background: rgba(139, 0, 139, 0.1); border: 2px solid #8B008B; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h4 style="color: #FF00FF; margin: 0 0 5px 0;">MIRROR DWELLER BUNDLE</h4>
+          <p style="color: #CCC; margin: 0; font-size: 14px;">A good bundle that unlocks the elusive facial vrchat mirror</p>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; justify-content: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <img src="assets/icons/door.png" style="width: 40px; height: 40px;">
+          </div>
+        </div>
+        <button 
+          onclick="if(window.boutique) window.boutique.purchaseHalloweenItem('mirrorDwellerBundle')"
+          style="
+            width: 100%; 
+            padding: 10px; 
+            background: ${mirrorDwellerBundlePurchased ? '#444' : (canAffordMirrorDweller ? '#28a745' : '#666')}; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: ${mirrorDwellerBundlePurchased ? 'not-allowed' : (canAffordMirrorDweller ? 'pointer' : 'not-allowed')};
+            opacity: ${mirrorDwellerBundlePurchased ? '0.5' : '1'};
+          "
+          ${mirrorDwellerBundlePurchased || !canAffordMirrorDweller ? 'disabled' : ''}
+        >
+          ${mirrorDwellerBundlePurchased ? 'ALREADY PURCHASED' : `Purchase for ${mirrorDwellerBundleCost.toLocaleString()} Candy`}
+        </button>
+      </div>
+    `;
+
+  }
+  
+  getCandyAmount() {
+    if (!window.state || !window.state.tokens) return 0;
+    const candyAmount = DecimalUtils.isDecimal(window.state.tokens.candy) 
+      ? window.state.tokens.candy.toNumber() 
+      : (window.state.tokens.candy || 0);
+    return Math.floor(candyAmount);
+  }
+  
+  // Sync halloweenShopPurchases to window.state
+  syncHalloweenShopToState() {
+    if (window.state) {
+      window.state.halloweenShopPurchases = this.halloweenShopPurchases;
+    }
+  }
+  
+  purchaseHalloweenItem(itemId) {
+    if (itemId === 'kpBoost') {
+      const currentPurchases = this.halloweenShopPurchases.kpBoost || 0;
+      const maxPurchases = 100;
+      const cost = 2 + (2 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of KP boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.kpBoost = currentPurchases + 1;
+      this.syncHalloweenShopToState();
+      
+      this.showMessage('KP Boost purchased! Your KP gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'prismLightBoost') {
+      const currentPurchases = this.halloweenShopPurchases.prismLightBoost || 0;
+      const maxPurchases = 100;
+      const cost = 5 + (5 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Prism Light boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.prismLightBoost = currentPurchases + 1;
+      this.syncHalloweenShopToState();
+      
+      this.showMessage('Prism Light Boost purchased! All light gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'chargerBoost') {
+      const currentPurchases = this.halloweenShopPurchases.chargerBoost || 0;
+      const maxPurchases = 100;
+      const cost = 10 + (10 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Charger boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.chargerBoost = currentPurchases + 1;
+      
+      this.showMessage('Charger Boost purchased! Your charge gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'pollenFlowerBoost') {
+      const currentPurchases = this.halloweenShopPurchases.pollenFlowerBoost || 0;
+      const maxPurchases = 100;
+      const cost = 5 + (5 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Pollen & Flower boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.pollenFlowerBoost = currentPurchases + 1;
+      
+      this.showMessage('Pollen & Flower Boost purchased! Your pollen and flower gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'infinityPointBoost') {
+      const currentPurchases = this.halloweenShopPurchases.infinityPointBoost || 0;
+      const maxPurchases = 100;
+      const cost = 100 + (100 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Infinity Point boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.infinityPointBoost = currentPurchases + 1;
+      
+      this.showMessage('Infinity Point Boost purchased! Your infinity point gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'swandyBoost') {
+      const currentPurchases = this.halloweenShopPurchases.swandyBoost || 0;
+      const maxPurchases = 100;
+      const cost = 20 + (20 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Swandy boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.swandyBoost = currentPurchases + 1;
+      
+      this.showMessage('Swandy Boost purchased! Your swandy gain and cap are now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'swandyShardBoost') {
+      const currentPurchases = this.halloweenShopPurchases.swandyShardBoost || 0;
+      const maxPurchases = 100;
+      const cost = 25 + (25 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Swandy Shard boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.swandyShardBoost = currentPurchases + 1;
+      
+      this.showMessage('Swandy Shard Boost purchased! Your hexed swandy shard gain is now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'hexingBoost') {
+      const currentPurchases = this.halloweenShopPurchases.hexingBoost || 0;
+      const maxPurchases = 100;
+      const cost = 200 + (200 * currentPurchases);
+      
+      if (currentPurchases >= maxPurchases) {
+        this.showMessage('You have already purchased the maximum amount of Hexing boosts!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.hexingBoost = currentPurchases + 1;
+      
+      this.showMessage('Hexing Boost purchased! Your hexflux and hex gain are now permanently increased!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+    } else if (itemId === 'sparkyBundle') {
+      const cost = 100;
+      
+      if (this.halloweenShopPurchases.sparkyBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.spark) {
+        window.state.tokens.spark = new Decimal(0);
+      }
+      window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).plus(100);
+      
+      if (!window.state.batteries) {
+        window.state.batteries = new Decimal(0);
+      }
+      window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(2);
+      
+      this.halloweenShopPurchases.sparkyBundle = true;
+      
+      this.showMessage('Electrifying Bundle purchased! You received 100 sparks and 2 batteries!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+    } else if (itemId === 'berryliciousBundle') {
+      const cost = 125;
+      
+      if (this.halloweenShopPurchases.berryliciousBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.berry) {
+        window.state.tokens.berry = new Decimal(0);
+      }
+      window.state.tokens.berry = DecimalUtils.toDecimal(window.state.tokens.berry).plus(150);
+      
+      if (!window.state.berryPlate) {
+        window.state.berryPlate = new Decimal(0);
+      }
+      window.state.berryPlate = DecimalUtils.toDecimal(window.state.berryPlate).plus(3);
+      
+      this.halloweenShopPurchases.berryliciousBundle = true;
+      
+      this.showMessage('Berrylicious Bundle purchased! You received 150 berries and 3 berry plates!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'naturalBundle') {
+      const cost = 350;
+      
+      if (this.halloweenShopPurchases.naturalBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.berry) {
+        window.state.tokens.berry = new Decimal(0);
+      }
+      window.state.tokens.berry = DecimalUtils.toDecimal(window.state.tokens.berry).plus(100);
+      
+      if (!window.state.tokens.mushroom) {
+        window.state.tokens.mushroom = new Decimal(0);
+      }
+      window.state.tokens.mushroom = DecimalUtils.toDecimal(window.state.tokens.mushroom).plus(75);
+      
+      if (!window.state.tokens.petal) {
+        window.state.tokens.petal = new Decimal(0);
+      }
+      window.state.tokens.petal = DecimalUtils.toDecimal(window.state.tokens.petal).plus(75);
+      
+      if (!window.state.tokens.water) {
+        window.state.tokens.water = new Decimal(0);
+      }
+      window.state.tokens.water = DecimalUtils.toDecimal(window.state.tokens.water).plus(50);
+      
+      if (!window.state.berryPlate) {
+        window.state.berryPlate = new Decimal(0);
+      }
+      window.state.berryPlate = DecimalUtils.toDecimal(window.state.berryPlate).plus(3);
+      
+      if (!window.state.mushroomSoup) {
+        window.state.mushroomSoup = new Decimal(0);
+      }
+      window.state.mushroomSoup = DecimalUtils.toDecimal(window.state.mushroomSoup).plus(2);
+      
+      if (!window.state.glitteringPetals) {
+        window.state.glitteringPetals = new Decimal(0);
+      }
+      window.state.glitteringPetals = DecimalUtils.toDecimal(window.state.glitteringPetals).plus(1);
+      
+      this.halloweenShopPurchases.naturalBundle = true;
+      
+      this.showMessage('Natural Bundle purchased! You received 100 berries, 75 mushroom, 75 petal, 50 water, 3 berry plates, 2 mushroom soups and 1 glittering petal!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'prismaBundle') {
+      const cost = 500;
+      
+      if (this.halloweenShopPurchases.prismaBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.prisma) {
+        window.state.tokens.prisma = new Decimal(0);
+      }
+      window.state.tokens.prisma = DecimalUtils.toDecimal(window.state.tokens.prisma).plus(200);
+      
+      if (!window.state.tokens.spark) {
+        window.state.tokens.spark = new Decimal(0);
+      }
+      window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).plus(200);
+      
+      if (!window.state.tokens.water) {
+        window.state.tokens.water = new Decimal(0);
+      }
+      window.state.tokens.water = DecimalUtils.toDecimal(window.state.tokens.water).plus(150);
+      
+      if (!window.state.tokens.stardust) {
+        window.state.tokens.stardust = new Decimal(0);
+      }
+      window.state.tokens.stardust = DecimalUtils.toDecimal(window.state.tokens.stardust).plus(150);
+      
+      if (!window.state.chargedPrisma) {
+        window.state.chargedPrisma = new Decimal(0);
+      }
+      window.state.chargedPrisma = DecimalUtils.toDecimal(window.state.chargedPrisma).plus(5);
+      
+      if (!window.state.batteries) {
+        window.state.batteries = new Decimal(0);
+      }
+      window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(5);
+      
+      this.halloweenShopPurchases.prismaBundle = true;
+      
+      this.showMessage('Prisma Bundle purchased! You received 200 prisma shards, 200 sparks, 150 water, 150 stardust, 5 charged prisma and 5 batteries!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'richesBundle') {
+      const cost = 2000;
+      
+      if (this.halloweenShopPurchases.richesBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.swabucks) {
+        window.state.swabucks = new Decimal(0);
+      }
+      window.state.swabucks = DecimalUtils.toDecimal(window.state.swabucks).plus(500);
+      
+      this.halloweenShopPurchases.richesBundle = true;
+      
+      this.showMessage('Riches Bundle purchased! You received 500 swa bucks, ka-ching ka-ching!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'premiumBundle') {
+      const cost = 5000;
+      
+      if (this.halloweenShopPurchases.premiumBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.berryPlate) {
+        window.state.berryPlate = new Decimal(0);
+      }
+      window.state.berryPlate = DecimalUtils.toDecimal(window.state.berryPlate).plus(15);
+      
+      if (!window.state.mushroomSoup) {
+        window.state.mushroomSoup = new Decimal(0);
+      }
+      window.state.mushroomSoup = DecimalUtils.toDecimal(window.state.mushroomSoup).plus(15);
+      
+      if (!window.state.batteries) {
+        window.state.batteries = new Decimal(0);
+      }
+      window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(15);
+      
+      if (!window.state.chargedPrisma) {
+        window.state.chargedPrisma = new Decimal(0);
+      }
+      window.state.chargedPrisma = DecimalUtils.toDecimal(window.state.chargedPrisma).plus(10);
+      
+      if (!window.state.glitteringPetals) {
+        window.state.glitteringPetals = new Decimal(0);
+      }
+      window.state.glitteringPetals = DecimalUtils.toDecimal(window.state.glitteringPetals).plus(10);
+      
+      this.halloweenShopPurchases.premiumBundle = true;
+      
+      this.showMessage('Premium Bundle purchased! You received 15 berry plates, 15 mushroom soups, 15 batteries, 10 charged prisma and 10 glittering petals!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'ultimateOmegaBundle') {
+      const cost = 25000;
+      
+      if (this.halloweenShopPurchases.ultimateOmegaBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.berry) {
+        window.state.tokens.berry = new Decimal(0);
+      }
+      window.state.tokens.berry = DecimalUtils.toDecimal(window.state.tokens.berry).plus(15000);
+      
+      if (!window.state.tokens.mushroom) {
+        window.state.tokens.mushroom = new Decimal(0);
+      }
+      window.state.tokens.mushroom = DecimalUtils.toDecimal(window.state.tokens.mushroom).plus(1500);
+      
+      if (!window.state.tokens.spark) {
+        window.state.tokens.spark = new Decimal(0);
+      }
+      window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).plus(1500);
+      
+      if (!window.state.tokens.prisma) {
+        window.state.tokens.prisma = new Decimal(0);
+      }
+      window.state.tokens.prisma = DecimalUtils.toDecimal(window.state.tokens.prisma).plus(1000);
+      
+      if (!window.state.tokens.water) {
+        window.state.tokens.water = new Decimal(0);
+      }
+      window.state.tokens.water = DecimalUtils.toDecimal(window.state.tokens.water).plus(1000);
+      
+      if (!window.state.tokens.petal) {
+        window.state.tokens.petal = new Decimal(0);
+      }
+      window.state.tokens.petal = DecimalUtils.toDecimal(window.state.tokens.petal).plus(1000);
+      
+      if (!window.state.tokens.stardust) {
+        window.state.tokens.stardust = new Decimal(0);
+      }
+      window.state.tokens.stardust = DecimalUtils.toDecimal(window.state.tokens.stardust).plus(750);
+      
+      if (!window.state.tokens.swaBucks) {
+        window.state.tokens.swaBucks = new Decimal(0);
+      }
+      window.state.tokens.swaBucks = DecimalUtils.toDecimal(window.state.tokens.swaBucks).plus(200);
+      
+      if (!window.state.berryPlate) {
+        window.state.berryPlate = new Decimal(0);
+      }
+      window.state.berryPlate = DecimalUtils.toDecimal(window.state.berryPlate).plus(50);
+      
+      if (!window.state.mushroomSoup) {
+        window.state.mushroomSoup = new Decimal(0);
+      }
+      window.state.mushroomSoup = DecimalUtils.toDecimal(window.state.mushroomSoup).plus(150);
+      
+      if (!window.state.batteries) {
+        window.state.batteries = new Decimal(0);
+      }
+      window.state.batteries = DecimalUtils.toDecimal(window.state.batteries).plus(50);
+      
+      if (!window.state.chargedPrisma) {
+        window.state.chargedPrisma = new Decimal(0);
+      }
+      window.state.chargedPrisma = DecimalUtils.toDecimal(window.state.chargedPrisma).plus(30);
+      
+      if (!window.state.glitteringPetals) {
+        window.state.glitteringPetals = new Decimal(0);
+      }
+      window.state.glitteringPetals = DecimalUtils.toDecimal(window.state.glitteringPetals).plus(30);
+      
+      this.halloweenShopPurchases.ultimateOmegaBundle = true;
+      
+      this.showMessage('ULTIMATE OMEGA BUNDLE PURCHASED! You received 15000 berries, 1500 mushroom, 1500 sparks, 1000 prisma shards, 1000 water, 1000 petals, 750 stardust, 200 swa bucks, 50 berry plates, 150 mushroom soups, 50 batteries, 30 charged prisma and 30 glittering petals!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'honeyBundle') {
+      const cost = 50000;
+      
+      if (this.halloweenShopPurchases.honeyBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.honey) {
+        window.state.tokens.honey = new Decimal(0);
+      }
+      window.state.tokens.honey = DecimalUtils.toDecimal(window.state.tokens.honey).plus(1);
+      
+      this.halloweenShopPurchases.honeyBundle = true;
+      
+      // Trigger the game crash effect
+      this.triggerGameCrashEffect();
+      
+    } else if (itemId === 'mirrorDwellerBundle') {
+      const cost = 727000000;
+      
+      if (this.halloweenShopPurchases.mirrorDwellerBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy! You need 727,000,000 candy to unlock the forbidden mirror...', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      this.halloweenShopPurchases.mirrorDwellerBundle = true;
+      
+      this.showMessage('🔮 THE MIRROR HAS AWAKENED 🔮 You have unlocked the elusive facial vrchat mirror! You can now see your true reflection...', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+    }
+    
+    // Sync all purchases to window.state
+    this.syncHalloweenShopToState();
+
+  }
+  
+  updateHalloweenShopButtonVisibility() {
+    const halloweenShopBtn = document.getElementById('halloweenShopBtn');
+    if (!halloweenShopBtn) return;
+    
+    if (window.state && window.state.halloweenEventActive) {
+      halloweenShopBtn.style.display = 'block';
+    } else {
+      halloweenShopBtn.style.display = 'none';
+    }
+  }
+  
+  getHalloweenKPBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.kpBoost || 0;
+    return 1 + (0.1 * purchases);
+  }
+  
+  getHalloweenPrismLightBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.prismLightBoost || 0;
+    return 1 + (0.1 * purchases);
+  }
+  
+  getHalloweenChargerBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.chargerBoost || 0;
+    return 1 + (0.1 * purchases);
+  }
+  
+  getHalloweenPollenFlowerBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.pollenFlowerBoost || 0;
+    return 1 + (0.1 * purchases);
+  }
+  
+  getHalloweenInfinityPointBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.infinityPointBoost || 0;
+    return 1 + (0.1 * purchases);
+  }
+  
+  getHalloweenSwandyBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.swandyBoost || 0;
+    return 1 + (0.05 * purchases);
+  }
+  
+  getHalloweenSwandyShardBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.swandyShardBoost || 0;
+    return 1 + (0.5 * purchases);
+  }
+  
+  getHalloweenHexingBoostMultiplier() {
+    const purchases = this.halloweenShopPurchases.hexingBoost || 0;
+    return 1 + (0.02 * purchases);
+  }
+  
+  triggerGameCrashEffect() {
+    // Create crash screen overlay
+    const crashOverlay = document.createElement('div');
+    crashOverlay.id = 'gameCrashOverlay';
+    crashOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #0a0e27 25%, #1a2438 25%, #1a2438 50%, #0a0e27 50%, #0a0e27 75%, #1a2438 75%, #1a2438);
+      background-size: 20px 20px;
+      z-index: 999999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    `;
+    
+    // Create crash message content
+    const crashContent = document.createElement('div');
+    crashContent.style.cssText = `
+      text-align: center;
+      color: #0f0;
+      text-shadow: 0 0 10px #0f0;
+      font-size: 24px;
+      font-weight: bold;
+      animation: flicker 0.15s infinite;
+      z-index: 1000000;
+    `;
+    crashContent.innerHTML = `
+      <div style="font-size: 32px; margin-bottom: 20px;">CRITICAL SYSTEM ERROR</div>
+      <div style="font-size: 18px; line-height: 1.8;">
+        Fluff Inc has encountered a serious issue<br>
+        and needs to restart.<br>
+        <br>
+        ERROR_HONEY_OVERFLOW<br>
+        CODE: 0x7273D700<br>
+        <br>
+        Please stand by...<br>
+      </div>
+    `;
+    
+    // Add flicker animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes flicker {
+        0%, 18%, 22%, 25%, 53%, 57%, 100% {
+          opacity: 1;
+        }
+        20%, 24%, 55% {
+          opacity: 0.2;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    crashOverlay.appendChild(crashContent);
+    document.body.appendChild(crashOverlay);
+    
+    // After 2 seconds (while crash screen is still showing), close shop and switch to cargo tab
+    setTimeout(() => {
+      // Close the Halloween shop modal
+      this.closeHalloweenShop();
+      
+      // Switch to Cargo tab
+      if (typeof switchHomeSubTab === 'function') {
+        switchHomeSubTab('gamblingMain');
+      }
+      
+      // Update inventory to show the honey token
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+    }, 2000);
+    
+    // After 7 seconds, recover from crash (remove the crash screen)
+    setTimeout(() => {
+      // Remove crash overlay
+      if (crashOverlay.parentNode) {
+        crashOverlay.remove();
+      }
+    }, 7000);
   }
 }
 

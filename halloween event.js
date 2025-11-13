@@ -303,6 +303,10 @@ function switchToHalloweenEvent() {
       }
     }
   }
+  
+  if (window.boutique && typeof window.boutique.updateHalloweenShopButtonVisibility === 'function') {
+    window.boutique.updateHalloweenShopButtonVisibility();
+  }
 }
 
 // Define switchPage function if it doesn't exist
@@ -738,6 +742,10 @@ function cleanupHalloweenEventSystems() {
     // Restore normal time display
     if (typeof updateTimeDisplay === 'function') {
       updateTimeDisplay();
+    }
+    
+    if (window.boutique && typeof window.boutique.updateHalloweenShopButtonVisibility === 'function') {
+      window.boutique.updateHalloweenShopButtonVisibility();
     }
     
   }, 10);
@@ -1231,6 +1239,12 @@ function updateHalloweenUI() {
         const milestoneMult = new Decimal(2).pow(milestoneCount);
         generationRate = generationRate.mul(milestoneMult);
       }
+    }
+    
+    // Apply Halloween shop swandy boost
+    if (window.boutique && typeof window.boutique.getHalloweenSwandyBoostMultiplier === 'function') {
+      const swandyBoost = window.boutique.getHalloweenSwandyBoostMultiplier();
+      generationRate = generationRate.mul(swandyBoost);
     }
     
     // Apply soft-cap reduction to displayed generation rate if softcapped
@@ -5903,6 +5917,12 @@ function getSwandyCap() {
   const treeAgeCapMultiplier = getTreeAgeSwandyCapMultiplier();
   if (treeAgeCapMultiplier > 1) {
     cap = cap.mul(treeAgeCapMultiplier);
+  }
+  
+  // Apply Halloween shop swandy boost
+  if (window.boutique && typeof window.boutique.getHalloweenSwandyBoostMultiplier === 'function') {
+    const swandyBoost = window.boutique.getHalloweenSwandyBoostMultiplier();
+    cap = cap.mul(swandyBoost);
   }
   
   return cap;

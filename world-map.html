@@ -188,6 +188,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="break_eternity.js"></script>
   <script src="decimal_utils.js"></script>
+<script src="daynight.js"></script>
   <script>
     // IndexedDB configuration
     const dbName = 'FluffIncGame';
@@ -365,6 +366,39 @@
 
     // Update on page load
     document.addEventListener('DOMContentLoaded', updateHauntedGroveButton);
+    
+    // Update map image based on time of day
+    async function updateMapImage() {
+      const mapImage = document.querySelector('.map-image');
+      if (!mapImage) return;
+      
+      // Get current game time
+      let gameMinutes = 6 * 60; // Default to 6:00 (day)
+      
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('swariaGameMinutes');
+        if (saved !== null && !isNaN(Number(saved))) {
+          gameMinutes = Number(saved);
+        }
+      }
+      
+      // Determine which image to use based on time
+      let imagePath = 'assets/icons/water continent.png'; // Default day image
+      
+      if (gameMinutes >= 18 * 60 && gameMinutes < 22 * 60) {
+        // Dusk time (18:00-22:00)
+        imagePath = 'assets/icons/water continent dusk.png';
+      } else if ((gameMinutes >= 22 * 60 && gameMinutes < 24 * 60) || (gameMinutes >= 0 && gameMinutes < 6 * 60)) {
+        // Night time (22:00-6:00)
+        imagePath = 'assets/icons/water continent night.png';
+      }
+      
+      // Update the image source
+      mapImage.src = imagePath;
+    }
+    
+    // Update map image on page load
+    document.addEventListener('DOMContentLoaded', updateMapImage);
   </script>
 </body>
 </html>

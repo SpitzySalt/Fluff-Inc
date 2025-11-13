@@ -641,6 +641,12 @@ function getChargerGain() {
     }
   }
   
+  // Apply Halloween charger boost
+  if (window.boutique && typeof window.boutique.getHalloweenChargerBoostMultiplier === 'function') {
+    const halloweenBoost = window.boutique.getHalloweenChargerBoostMultiplier();
+    gain = gain.mul(halloweenBoost);
+  }
+  
   return gain;
 }
 

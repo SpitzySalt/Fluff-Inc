@@ -1159,7 +1159,15 @@ function calculateHexfluxGain() {
   const bonusHexflux = C * M * baseToK;
   const hexfluxRaw = 1 + bonusHexflux;
   
-  return new Decimal(hexfluxRaw);
+  let hexfluxGain = new Decimal(hexfluxRaw);
+  
+  // Apply Halloween shop hexing boost
+  if (window.boutique && typeof window.boutique.getHalloweenHexingBoostMultiplier === 'function') {
+    const hexingBoost = window.boutique.getHalloweenHexingBoostMultiplier();
+    hexfluxGain = hexfluxGain.mul(hexingBoost);
+  }
+  
+  return hexfluxGain;
 }
 
 // Check if player can perform Hexion reset
@@ -1888,7 +1896,13 @@ function calculateHexGenerationRate() {
   const exponentialTerm = logTerm.pow(p);
   
   // G = baseRate × F × exponentialTerm
-  const generationRate = F.mul(baseRate).mul(exponentialTerm);
+  let generationRate = F.mul(baseRate).mul(exponentialTerm);
+  
+  // Apply Halloween shop hexing boost
+  if (window.boutique && typeof window.boutique.getHalloweenHexingBoostMultiplier === 'function') {
+    const hexingBoost = window.boutique.getHalloweenHexingBoostMultiplier();
+    generationRate = generationRate.mul(hexingBoost);
+  }
   
   return generationRate;
 }
