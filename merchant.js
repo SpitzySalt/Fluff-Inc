@@ -5250,7 +5250,60 @@ class Boutique {
   }
   
   purchaseHalloweenItem(itemId) {
-    if (itemId === 'kpBoost') {
+    if (itemId === 'starterBundle') {
+      const cost = 20;
+      
+      if (this.halloweenShopPurchases.starterBundle) {
+        this.showMessage('You have already purchased this bundle!', 'error');
+        return;
+      }
+      
+      if (this.getCandyAmount() < cost) {
+        this.showMessage('Not enough candy!', 'error');
+        return;
+      }
+      
+      if (!window.state.tokens.candy) {
+        window.state.tokens.candy = new Decimal(0);
+      }
+      window.state.tokens.candy = DecimalUtils.toDecimal(window.state.tokens.candy).minus(cost);
+      
+      if (!window.state.tokens.berry) {
+        window.state.tokens.berry = new Decimal(0);
+      }
+      window.state.tokens.berry = DecimalUtils.toDecimal(window.state.tokens.berry).plus(30);
+      
+      if (!window.state.tokens.spark) {
+        window.state.tokens.spark = new Decimal(0);
+      }
+      window.state.tokens.spark = DecimalUtils.toDecimal(window.state.tokens.spark).plus(25);
+      
+      if (!window.state.tokens.prisma) {
+        window.state.tokens.prisma = new Decimal(0);
+      }
+      window.state.tokens.prisma = DecimalUtils.toDecimal(window.state.tokens.prisma).plus(20);
+      
+      if (!window.state.tokens.water) {
+        window.state.tokens.water = new Decimal(0);
+      }
+      window.state.tokens.water = DecimalUtils.toDecimal(window.state.tokens.water).plus(15);
+      
+      if (!window.state.tokens.petal) {
+        window.state.tokens.petal = new Decimal(0);
+      }
+      window.state.tokens.petal = DecimalUtils.toDecimal(window.state.tokens.petal).plus(10);
+      
+      this.halloweenShopPurchases.starterBundle = true;
+      
+      this.showMessage('Starter Bundle purchased! You received 30 berries, 25 sparks, 20 prisma shards, 15 water and 10 petals!', 'success');
+      this.updateHalloweenShopUI();
+      this.renderHalloweenShopItems();
+      
+      if (typeof renderInventoryTokens === 'function') {
+        renderInventoryTokens();
+      }
+      
+    } else if (itemId === 'kpBoost') {
       const currentPurchases = this.halloweenShopPurchases.kpBoost || 0;
       const maxPurchases = 100;
       const cost = 2 + (2 * currentPurchases);
