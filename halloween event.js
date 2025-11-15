@@ -2235,6 +2235,9 @@ window.upgradeHexMultiplierConfig = {
   },
   'crush_swandies': {
     hexRequired: 50000     // S10: Unlock hexed tiles (no multiplier effect)
+  },
+  'swandy_resety': {
+    hexRequired: 1000000   // S11: Swandy shattery effect (no multiplier effect)
   }
   // Add more upgrades here:
   // 'upgrade_id': { baseMultiplier: X, maxMultiplier: Y, hexRequired: Z, boostType: 'production' or 'shards' }

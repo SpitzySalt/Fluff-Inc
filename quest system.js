@@ -38,6 +38,35 @@ function initializeQuestState() {
   window.questSystem = window.state.questSystem;
 }
 
+// Fix missing tokens property in existing active quests
+function fixMissingTokensProperty() {
+  if (!window.state || !window.state.questSystem || !window.state.questSystem.activeQuests) return;
+  
+  window.state.questSystem.activeQuests.forEach(questId => {
+    const quest = questDefinitions[questId];
+    const progress = window.state.questSystem.questProgress?.[questId];
+    
+    if (quest && progress) {
+      // Fix tokens property if missing
+      if (quest.objectives && quest.objectives.tokens !== undefined) {
+        if (progress.tokens === undefined) {
+          progress.tokens = 0;
+        }
+        if (progress.tokensCollectedDuringQuest === undefined) {
+          progress.tokensCollectedDuringQuest = progress.tokens || 0;
+        }
+      }
+      
+      // Fix prismClickTokens property if missing
+      if (quest.objectives && quest.objectives.prismClickTokens !== undefined) {
+        if (progress.prismClickTokens === undefined) {
+          progress.prismClickTokens = 0;
+        }
+      }
+    }
+  });
+}
+
 // Clean up any incorrectly claimable WIP quests
 function cleanupWipQuests() {
   if (!window.state || !window.state.questSystem) return;
@@ -139,7 +168,9 @@ function getNextQuestForCharacter(characterName) {
 
 // Function to track token collection for active quests
 function trackTokenCollection(tokenValue = 1) {
-  if (!window.state || !window.state.questSystem || !window.state.questSystem.questProgress) return;
+  if (!window.state || !window.state.questSystem || !window.state.questSystem.questProgress) {
+    return;
+  }
   
   // Ensure tokenValue is a proper Decimal to prevent string concatenation issues
   const tokenAmountDecimal = DecimalUtils.toDecimal(tokenValue);
@@ -152,9 +183,18 @@ function trackTokenCollection(tokenValue = 1) {
     
     if (quest && progress && quest.objectives) {
       // Track legacy token objective (ensure proper numeric addition)
-      if (quest.objectives.tokens) {
-        const currentTokens = Number(progress.tokens || 0);
-        progress.tokens = currentTokens + tokenAmount;
+      if (quest.objectives.tokens !== undefined) {
+        if (progress.tokens === undefined) {
+          progress.tokens = 0;
+        }
+        if (progress.tokensCollectedDuringQuest === undefined) {
+          // Initialize to current tokens value to sync them
+          progress.tokensCollectedDuringQuest = progress.tokens || 0;
+        }
+        
+        // Increment both values
+        progress.tokens = (progress.tokens || 0) + tokenAmount;
+        progress.tokensCollectedDuringQuest = (progress.tokensCollectedDuringQuest || 0) + tokenAmount;
       }
       
       // Track collectAnyTokens objective (ensure numeric addition)
@@ -164,6 +204,11 @@ function trackTokenCollection(tokenValue = 1) {
       }
     }
   });
+  
+  // Force clear the quest modal cache to ensure UI updates
+  if (typeof window.questModalCache !== 'undefined') {
+    window.questModalCache = null;
+  }
   
   // Update quest modal if it's currently open (for immediate token progress updates)
   const questModal = document.getElementById('questModal');
@@ -177,7 +222,9 @@ function trackTokenCollection(tokenValue = 1) {
 
 // Function to track prism clicks for active quests
 function trackPrismClick(clickValue = 1) {
-  if (!window.state || !window.state.questSystem) return;
+  if (!window.state || !window.state.questSystem) {
+    return;
+  }
   
   // Increment global prism click counter
   if (!window.state.prismClicks) {
@@ -189,7 +236,9 @@ function trackPrismClick(clickValue = 1) {
   if (window.state.questSystem.questProgress) {
     window.state.questSystem.activeQuests.forEach(questId => {
       const progress = window.state.questSystem.questProgress[questId];
-      if (!progress) return;
+      if (!progress) {
+        return;
+      }
       
       // Track click prism tiles objectives
       if (progress.clickPrismTiles !== undefined) {
@@ -581,7 +630,7 @@ function trackTokenGivenToWorker(tokenType, amount = 1) {
 }
 
 // Function to track tokens collected from any department (lepre_quest_4)
-function trackTokenCollection(amount = 1) {
+function trackLepreTokenCollection(amount = 1) {
   if (!window.state || !window.state.questSystem || !window.state.questSystem.activeQuests) return;
   
   // Ensure amount is a proper Decimal to prevent string concatenation issues
@@ -601,6 +650,9 @@ function trackTokenCollection(amount = 1) {
         : DecimalUtils.toDecimal(progress.tokensCollected || 0).plus(amountDecimal);
     }
   });
+  
+  // Also call the general trackTokenCollection for other quests
+  trackTokenCollection(amount);
   
   // Update quest modal if it's currently open
   const questModal = document.getElementById('questModal');
@@ -4382,6 +4434,9 @@ function initializeQuestSystem() {
   // Initialize quest state first
   initializeQuestState();
   
+  // Fix missing tokens property in active quests (must run after questDefinitions is loaded, and must run every time)
+  fixMissingTokensProperty();
+  
   if (window.state.questSystem.initialized) return;
   
   // Clean up any inconsistent quest states on initialization
@@ -5499,6 +5554,7 @@ function completeQuestClaim() {
           swariaCollected: new Decimal(0),
           feathersCollected: new Decimal(0),
           artifactsCollected: new Decimal(0),
+          tokens: 0,
           tokensCollected: 0,
           tokensCollectedDuringQuest: 0,
           commonBoxesProduced: 0,
@@ -8446,6 +8502,7 @@ function cleanupPinnedQuestsOnLoad() {
 // Throttling and caching for quest modal updates
 let questModalLastUpdate = 0;
 let questModalCache = null;
+window.questModalCache = null; // Make it globally accessible for cache clearing
 let userScrollingData = {}; // Track which quest scrolls the user is actively using
 const QUEST_MODAL_UPDATE_INTERVAL = 1000; // Update at most every 1 second
 const USER_SCROLL_PROTECTION_TIME = 2000; // Protect user scrolling for 2 seconds
@@ -8496,6 +8553,7 @@ function updateQuestModal() {
     return;
   }
   questModalCache = contentSignature;
+  window.questModalCache = contentSignature; // Sync with global
   
   // Store scroll positions before updating
   const scrollPositions = {};

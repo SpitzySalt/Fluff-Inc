@@ -87,6 +87,13 @@ if (!window.state.halloweenEvent.swandyCrusher.hexStaff) {
   };
 }
 
+// Ensure Shattery Tier system exists (unlocked when S11 is fully hexed)
+if (!window.state.halloweenEvent.swandyCrusher.tier) {
+  window.state.halloweenEvent.swandyCrusher.tier = {
+    current: 0
+  };
+}
+
 // Grid cell structure: { type: 'red', isBlaster: false, blasterDirection: null, isOrb: false }
 // blasterDirection can be 'horizontal' or 'vertical'
 // Hexed positions are tracked separately in crusherState.hexedPositions as { "row,col": true }
@@ -516,6 +523,7 @@ function handleCellClick(row, col) {
     // First cell selected
     crusherState.selectedCell = { row, col };
     highlightCell(row, col, true);
+    updateSwandyCrusherUI();
   } else {
     // Second cell selected - check if adjacent
     const firstCell = crusherState.selectedCell;
@@ -524,12 +532,18 @@ function handleCellClick(row, col) {
       // Swap the cells
       swapCells(firstCell.row, firstCell.col, row, col);
       highlightCell(firstCell.row, firstCell.col, false);
-      crusherState.selectedCell = null;
+      // Don't clear selectedCell immediately - keep "Finish move first" state visible
+      // It will be cleared after 1.3 seconds (300ms swap animation + 1000ms extra delay)
+      setTimeout(() => {
+        crusherState.selectedCell = null;
+        updateSwandyCrusherUI();
+      }, 1300);
     } else {
       // Not adjacent - select this cell instead
       highlightCell(firstCell.row, firstCell.col, false);
       crusherState.selectedCell = { row, col };
       highlightCell(row, col, true);
+      updateSwandyCrusherUI();
     }
   }
 }
@@ -637,6 +651,9 @@ function swapCells(row1, col1, row2, col2) {
           
           // Re-enable moves after swap-back animation completes
           crusherState.isProcessing = false;
+          
+          // Update UI to re-enable the Shattery button
+          updateSwandyCrusherUI();
         }, 300);
       }, 100);
       return;
@@ -648,6 +665,9 @@ function swapCells(row1, col1, row2, col2) {
     
     // Set processing flag immediately to prevent additional moves during cascade
     crusherState.isProcessing = true;
+    
+    // Update UI immediately to disable the Shattery button
+    updateSwandyCrusherUI();
     
     // Remove transform and swapping class
     icon1.style.transform = '';
@@ -2576,6 +2596,9 @@ function processMatches(isPlayerMove = false) {
           crusherState.isComboActive = false;
           crusherState.isProcessing = false;
           
+          // Update UI to re-enable the Shattery button
+          updateSwandyCrusherUI();
+          
           // Check if there are any possible moves left
           if (!hasPossibleMoves(grid)) {
             // No possible moves - reshuffle the grid
@@ -3150,6 +3173,56 @@ function getScoreRequirementForLevel(level) {
   return 1000 * Math.pow(3, level - 2);
 }
 
+// Check if tier system is unlocked (S10 fully hexed)
+function isTierSystemUnlocked() {
+  const s10Data = window.state.halloweenEvent?.treeUpgrades?.hexData?.['crush_swandies'];
+  if (!s10Data) return false;
+  
+  const hexRequired = window.upgradeHexMultiplierConfig?.['crush_swandies']?.hexRequired || 50000;
+  return s10Data.hexDeposited >= hexRequired;
+}
+
+// Calculate tier requirement for a specific tier
+function getTierRequirement(tier) {
+  if (tier === 0) return new Decimal(0);
+  // Tier 1: 1M HSS, Tier 2: 100M HSS, Tier 3: 10B HSS, etc.
+  return new Decimal(1e6).times(Decimal.pow(100, tier - 1));
+}
+
+// Get current tier based on hexed swandy shards
+function getCurrentTier() {
+  if (!isTierSystemUnlocked()) return 0;
+  
+  const hss = window.state.halloweenEvent?.hexedSwandyShards || new Decimal(0);
+  let tier = 0;
+  
+  while (DecimalUtils.gte(hss, getTierRequirement(tier + 1))) {
+    tier++;
+  }
+  
+  return tier;
+}
+
+// Update tier if it has increased
+function checkTierProgress() {
+  if (!isTierSystemUnlocked()) return;
+  
+  // Ensure tier state exists
+  if (!window.state.halloweenEvent.swandyCrusher.tier) {
+    window.state.halloweenEvent.swandyCrusher.tier = {
+      current: 0
+    };
+  }
+  
+  const newTier = getCurrentTier();
+  const currentTier = window.state.halloweenEvent.swandyCrusher.tier.current;
+  
+  if (newTier > currentTier) {
+    window.state.halloweenEvent.swandyCrusher.tier.current = newTier;
+    // Could add notification or effect here in the future
+  }
+}
+
 // Check and update level based on score
 function checkLevelUp() {
   const crusherState = window.state.halloweenEvent.swandyCrusher;
@@ -3188,15 +3261,29 @@ function updateLevelMultipliers() {
   const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased || {};
   const hasHSS3 = treeUpgrades.hexed_shard_multi_3 || false;
   
+  // Get current tier
+  const currentTier = getCurrentTier();
+  
+  // Tier scaling factor (5% per tier = 0.05)
+  const tierScaling = 0.05;
+  
   // Swandy production multiplier: 1.3x per level (1.4x with HSS3)
   const prodBase = hasHSS3 ? 1.4 : 1.3;
-  const swandyProductionMult = Math.pow(prodBase, level);
-  crusherState.multipliers.swandyProduction = new Decimal(swandyProductionMult);
+  const baseProdMult = Math.pow(prodBase, level);
+  
+  // Apply tier boost: FinalMult = BaseMult ^ (1 + Tier * scaling)
+  const prodTierExponent = 1 + currentTier * tierScaling;
+  const finalProdMult = Math.pow(baseProdMult, prodTierExponent);
+  crusherState.multipliers.swandyProduction = new Decimal(finalProdMult);
   
   // Score multiplier: 1.5x per level (1.75x with HSS3)
   const scoreBase = hasHSS3 ? 1.75 : 1.5;
-  const scoreMult = Math.pow(scoreBase, level);
-  crusherState.multipliers.scoreMultiplier = new Decimal(scoreMult);
+  const baseScoreMult = Math.pow(scoreBase, level);
+  
+  // Apply tier boost: FinalMult = BaseMult ^ (1 + Tier * scaling)
+  const scoreTierExponent = 1 + currentTier * tierScaling;
+  const finalScoreMult = Math.pow(baseScoreMult, scoreTierExponent);
+  crusherState.multipliers.scoreMultiplier = new Decimal(finalScoreMult);
 }
 
 // Update Swandy Crusher UI
@@ -3205,6 +3292,9 @@ function updateSwandyCrusherUI() {
   
   // Check for level up
   checkLevelUp();
+  
+  // Update multipliers (includes tier boost if applicable)
+  updateLevelMultipliers();
   
   // Update score display
   const scoreElement = document.getElementById('crusherScore');
@@ -3236,7 +3326,44 @@ function updateSwandyCrusherUI() {
     
     const percentage = Math.min(100, (scoreProgress / scoreNeeded) * 100);
     progressBar.style.width = `${percentage}%`;
-    progressText.textContent = `Progress: ${Math.floor(percentage)}%`;
+    progressText.textContent = `Lvl progress: ${Math.floor(percentage)}%`;
+  }
+  
+  // Update tier progress bar (if S11 is fully hexed)
+  checkTierProgress();
+  const tierBar = document.getElementById('crusherTierProgress');
+  const tierBarContainer = document.getElementById('crusherTierProgressBar');
+  const tierText = document.getElementById('crusherTierText');
+  const tierProgressText = document.getElementById('crusherTierProgressText');
+  
+  if (tierBar && tierBarContainer && tierText && tierProgressText) {
+    if (isTierSystemUnlocked()) {
+      tierBarContainer.style.display = 'block';
+      tierText.style.display = 'block';
+      tierProgressText.style.display = 'block';
+      
+      // Ensure tier state exists
+      if (!crusherState.tier) {
+        crusherState.tier = { current: 0 };
+      }
+      
+      const currentTier = getCurrentTier();
+      const hss = window.state.halloweenEvent?.hexedSwandyShards || new Decimal(0);
+      const currentTierReq = getTierRequirement(currentTier);
+      const nextTierReq = getTierRequirement(currentTier + 1);
+      
+      const tierProgress = hss.minus(currentTierReq);
+      const tierNeeded = nextTierReq.minus(currentTierReq);
+      const tierPercentage = tierProgress.div(tierNeeded).times(100).toNumber();
+      
+      tierBar.style.width = `${Math.min(100, Math.max(0, tierPercentage))}%`;
+      tierText.textContent = `Tier ${currentTier}`;
+      tierProgressText.textContent = `Tier progress: ${Math.floor(tierPercentage)}%`;
+    } else {
+      tierBarContainer.style.display = 'none';
+      tierText.style.display = 'none';
+      tierProgressText.style.display = 'none';
+    }
   }
   
   // Update Swandy production multiplier display
@@ -3245,7 +3372,23 @@ function updateSwandyCrusherUI() {
     const mult = DecimalUtils.isDecimal(crusherState.multipliers.swandyProduction)
       ? crusherState.multipliers.swandyProduction
       : new Decimal(crusherState.multipliers.swandyProduction || 1);
-    multiplierElement.textContent = `${DecimalUtils.formatDecimal(mult)}x`;
+    
+    // Get current tier for display
+    const currentTier = getCurrentTier();
+    
+    if (currentTier > 0 && isTierSystemUnlocked()) {
+      // Calculate base multiplier and tier boost info
+      const level = crusherState.level;
+      const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased || {};
+      const hasHSS3 = treeUpgrades.hexed_shard_multi_3 || false;
+      const prodBase = hasHSS3 ? 1.4 : 1.3;
+      const baseMult = Math.pow(prodBase, level);
+      const tierExponent = 1 + currentTier * 0.05;
+      
+      multiplierElement.innerHTML = `<span style="font-size: 0.5em; opacity: 0.7;">${DecimalUtils.formatDecimal(new Decimal(baseMult))}^${tierExponent.toFixed(2)} = </span>${DecimalUtils.formatDecimal(mult)}x`;
+    } else {
+      multiplierElement.textContent = `${DecimalUtils.formatDecimal(mult)}x`;
+    }
   }
   
   // Update score multiplier display
@@ -3254,7 +3397,23 @@ function updateSwandyCrusherUI() {
     const scoreMult = DecimalUtils.isDecimal(crusherState.multipliers.scoreMultiplier)
       ? crusherState.multipliers.scoreMultiplier
       : new Decimal(crusherState.multipliers.scoreMultiplier || 1);
-    scoreMultiplierElement.textContent = `${DecimalUtils.formatDecimal(scoreMult)}x`;
+    
+    // Get current tier for display
+    const currentTier = getCurrentTier();
+    
+    if (currentTier > 0 && isTierSystemUnlocked()) {
+      // Calculate base multiplier and tier boost info
+      const level = crusherState.level;
+      const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased || {};
+      const hasHSS3 = treeUpgrades.hexed_shard_multi_3 || false;
+      const scoreBase = hasHSS3 ? 1.75 : 1.5;
+      const baseMult = Math.pow(scoreBase, level);
+      const tierExponent = 1 + currentTier * 0.05;
+      
+      scoreMultiplierElement.innerHTML = `<span style="font-size: 0.5em; opacity: 0.7;">${DecimalUtils.formatDecimal(new Decimal(baseMult))}^${tierExponent.toFixed(2)} = </span>${DecimalUtils.formatDecimal(scoreMult)}x`;
+    } else {
+      scoreMultiplierElement.textContent = `${DecimalUtils.formatDecimal(scoreMult)}x`;
+    }
   }
   
   // Update Resety button display
@@ -3400,14 +3559,24 @@ function updateSwandyCrusherUI() {
       }
     }
     
-    // Update button state based on level requirement
+    // Update button state based on level requirement and processing state
     const performButton = document.getElementById('performResetyButton');
     if (performButton) {
       const previousHighest = crusherState.resety.highestLevelReached || 0;
       const currentLevel = crusherState.level;
       const newLevelsGained = Math.max(0, currentLevel - Math.max(4, previousHighest));
       
-      if (crusherState.level >= 5 && newLevelsGained > 0) {
+      if (crusherState.isProcessing) {
+        performButton.disabled = true;
+        performButton.style.opacity = '0.5';
+        performButton.style.cursor = 'not-allowed';
+        performButton.textContent = 'Processing...';
+      } else if (crusherState.selectedCell) {
+        performButton.disabled = true;
+        performButton.style.opacity = '0.5';
+        performButton.style.cursor = 'not-allowed';
+        performButton.textContent = 'Finish move first';
+      } else if (crusherState.level >= 5 && newLevelsGained > 0) {
         performButton.disabled = false;
         performButton.style.opacity = '1';
         performButton.style.cursor = 'pointer';
@@ -3526,7 +3695,16 @@ function initializeSwandyCrusher() {
 function performSwandyResety() {
   const crusherState = window.state.halloweenEvent.swandyCrusher;
   
-  // Check if player meets requirements
+  if (crusherState.isProcessing) {
+    showToast('Cannot reset while processing moves!', 'error');
+    return;
+  }
+  
+  if (crusherState.selectedCell) {
+    showToast('Finish your move first!', 'error');
+    return;
+  }
+  
   if (crusherState.level < 5) {
     showToast('You need to reach level 5 to perform a Swandy Resety!', 'error');
     return;
@@ -4627,6 +4805,10 @@ window.updateHexStaffCursor = updateHexStaffCursor;
 window.handleHexStaffClick = handleHexStaffClick;
 window.updateSwandyBreakerUI = updateSwandyBreakerUI;
 window.checkAllTilesHexed = checkAllTilesHexed;
+window.isTierSystemUnlocked = isTierSystemUnlocked;
+window.getTierRequirement = getTierRequirement;
+window.getCurrentTier = getCurrentTier;
+window.checkTierProgress = checkTierProgress;
 
 // Test function to temporarily enable hex staff (for debugging)
 window.testUnlockHexStaff = function() {
@@ -4738,6 +4920,45 @@ window.checkOrbBlasterRequirements = function() {
   const treeUpgrades = window.state.halloweenEvent.treeUpgrades.purchased || {};
   
   
+};
+
+// Test function: Give hexed swandy shards for tier testing
+window.testGiveHexedShards = function(amount) {
+  if (!window.state.halloweenEvent.hexedSwandyShards) {
+    window.state.halloweenEvent.hexedSwandyShards = new Decimal(0);
+  }
+  
+  const amountToAdd = new Decimal(amount || 1000000);
+  window.state.halloweenEvent.hexedSwandyShards = window.state.halloweenEvent.hexedSwandyShards.add(amountToAdd);
+  
+  console.log(`Added ${DecimalUtils.formatDecimal(amountToAdd)} hexed swandy shards`);
+  console.log(`Total HSS: ${DecimalUtils.formatDecimal(window.state.halloweenEvent.hexedSwandyShards)}`);
+  console.log(`Current Tier: ${getCurrentTier()}`);
+  
+  updateSwandyCrusherUI();
+};
+
+// Test function: Fully hex S11 to unlock tier system
+window.testUnlockTierSystem = function() {
+  if (!window.state.halloweenEvent.treeUpgrades.hexData) {
+    window.state.halloweenEvent.treeUpgrades.hexData = {};
+  }
+  
+  if (!window.state.halloweenEvent.treeUpgrades.hexData.swandy_resety) {
+    window.state.halloweenEvent.treeUpgrades.hexData.swandy_resety = {
+      hexDeposited: 0,
+      isFullyHexed: false
+    };
+  }
+  
+  window.state.halloweenEvent.treeUpgrades.hexData.swandy_resety.hexDeposited = 1000000;
+  window.state.halloweenEvent.treeUpgrades.hexData.swandy_resety.isFullyHexed = true;
+  
+  console.log('S11 (swandy_resety) has been fully hexed!');
+  console.log('Tier system is now unlocked!');
+  console.log(`Current Tier: ${getCurrentTier()}`);
+  
+  updateSwandyCrusherUI();
 };
 
 

@@ -69,7 +69,8 @@ window.upgradeHexEffects = {
   'shards_multi_2': 'Hexes effects can still boost hexed swandy shard, X1.5 to HSS',
   'worst_upgrades': '2.22X to swandy shards',
   'revolution_upcoming': '1.111^ to swandy shards gain',
-  'crush_swandies': 'You\'ve hexed the swandy crusher, hexed tiles can now spawn'
+  'crush_swandies': 'You\'ve hexed the swandy crusher, hexed tiles can now spawn',
+  'swandy_resety': 'You\'ve hexed the swandy shattery...'
   // Add more hex effects here as needed:
   // 'upgrade_id': 'Description text when fully hexed'
 };

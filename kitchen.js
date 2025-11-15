@@ -235,14 +235,21 @@ function spawnIngredientToken(context, sourceElement) {
     return;
   }
   let chance = (context === 'generator') ? 1/1000 : 
-               (context === 'prism') ? 1/30 : 
+               (context === 'prism') ? 1/10 : 
                (context === 'terrarium') ? 1/1 : 
                (context === 'crusher') ? 1 : // Always pass for crusher (chance already checked)
                1/75;
   if (Math.random() > chance) {
     return;
   }
-  if (typeof window.currentGrade !== 'undefined' && window.currentGrade < 3) {
+  
+  // Check grade requirement (Grade 3+ needed for ingredient tokens)
+  if (window.state && window.state.grade) {
+    const grade = DecimalUtils.isDecimal(window.state.grade) ? window.state.grade : new Decimal(window.state.grade);
+    if (grade.lt(3)) {
+      return;
+    }
+  } else if (typeof window.currentGrade !== 'undefined' && window.currentGrade < 3) {
     return;
   }
   
@@ -585,12 +592,17 @@ function collectIngredientToken(type, token) {
   // Track tokens from specific sources for quest progress
   if (typeof window.trackTokensFromSource === 'function' && token.dataset && token.dataset.context) {
     const context = token.dataset.context;
+    
     if (context === 'generator') {
       window.trackTokensFromSource('boxes', tokenGainAmount);
     } else if (context === 'cargo') {
       window.trackTokensFromSource('cargoBoxes', tokenGainAmount);
     } else if (context === 'prism') {
       window.trackTokensFromSource('prism', tokenGainAmount);
+      // Also track prism clicks for quests that require clicking prism tiles
+      if (typeof window.trackPrismClick === 'function') {
+        window.trackPrismClick(1);
+      }
     } else if (context === 'terrarium') {
       window.trackTokensFromSource('terrarium', tokenGainAmount);
       

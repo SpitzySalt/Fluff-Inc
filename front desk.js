@@ -2975,16 +2975,15 @@
         if (worker) {
           const progress = this.getWorkerProgress(worker);
           const progressText = this.getProgressText(worker);
-          const canWork = this.canWorkerWork(slotId);
+          const isHungry = this.isWorkerHungry(slotId);
           progressFillElement.style.width = `${progress}%`;
           progressTextElement.textContent = progressText;
-          if (!canWork) {
-            progressFillElement.style.background = 'linear-gradient(90deg, #ff4444, #ff6666)';
-            progressFillElement.style.width = '100%';
+          if (isHungry) {
+            progressFillElement.style.background = 'linear-gradient(90deg, #ff9800, #ffb74d)';
           } else {
             progressFillElement.style.background = 'linear-gradient(90deg, #4CAF50, #66BB6A)';
           }
-          if (progress >= 100 && worker.job && canWork) {
+          if (progress >= 100 && worker.job) {
             this.executeWorkerAction(worker, slotId);
           }
         } else {
@@ -3091,13 +3090,14 @@
   canWorkerWork(slotId) {
     const worker = this.assignedWorkers[slotId];
     if (!worker) return false;
+    return true;
+  }
+  
+  isWorkerHungry(slotId) {
     const hunger = this.workerHunger[slotId] !== undefined ? this.workerHunger[slotId] : 100;
-    return hunger > 0;
+    return hunger <= 0;
   }
   executeWorkerAction(worker, slotId) {
-    if (!this.canWorkerWork(slotId)) {
-      return;
-    }
     if (this.workerHunger[slotId] !== undefined) {
       this.workerHunger[slotId] = Math.max(0, this.workerHunger[slotId] - 1);
     }
@@ -4006,7 +4006,7 @@
            (window.terrariumNectarXpUpgradeLevel || 0) > 0 ||
            (window.terrariumKpNectarUpgradeLevel || 0) > 0;
   }
-  getUpgradeAutomatorInterval(stars) {
+  getUpgradeAutomatorInterval(stars, slotId = null) {
     const intervals = {
       1: 100000,
       2: 60000,
@@ -4014,7 +4014,13 @@
       4: 10000,
       5: 2000
     };
-    return intervals[Math.min(stars, 5)] || intervals[1];
+    let baseInterval = intervals[Math.min(stars, 5)] || intervals[1];
+    
+    if (slotId && this.isWorkerHungry(slotId)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getAutoNectarizeInterval(stars) {
     const intervals = {
@@ -5435,7 +5441,14 @@
     } else {
       intervals = standardIntervals;
     }
-    return intervals[workerStars] || 5000;
+    let baseInterval = intervals[workerStars] || 5000;
+    
+    const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getDeliveryAutomatorInterval(worker, automator) {
     const deliveryIntervals = {
@@ -5446,7 +5459,14 @@
       5: 750
     };
     const workerStars = worker.stars || 1;
-    return deliveryIntervals[workerStars] || 60000;
+    let baseInterval = deliveryIntervals[workerStars] || 60000;
+    
+    const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getPrismTileAutomatorInterval(worker, automator) {
     const prismTileIntervals = {
@@ -5457,7 +5477,14 @@
       5: 250
     };
     const workerStars = worker.stars || 1;
-    return prismTileIntervals[workerStars] || 10000;
+    let baseInterval = prismTileIntervals[workerStars] || 10000;
+    
+    const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getLightGeneratorAutomatorInterval(worker, automator) {
     const lightGeneratorIntervals = {
@@ -5468,7 +5495,14 @@
       5: 20
     };
     const workerStars = worker.stars || 1;
-    return lightGeneratorIntervals[workerStars] || 10000;
+    let baseInterval = lightGeneratorIntervals[workerStars] || 10000;
+    
+    const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getTokenFinderAutomatorInterval(worker, automator) {
     const tokenFinderIntervals = {
@@ -5479,7 +5513,14 @@
       5: 5000
     };
     const workerStars = worker.stars || 1;
-    return tokenFinderIntervals[workerStars] || 100000;
+    let baseInterval = tokenFinderIntervals[workerStars] || 100000;
+    
+    const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      baseInterval *= 5;
+    }
+    
+    return baseInterval;
   }
   getWorkerProgress(worker) {
     if (!worker.job || !worker.lastActionTime) return 0;
@@ -5508,7 +5549,8 @@
       }
     }
     if (typeof worker.job === 'object' && worker.job.type === 'upgrade_automator') {
-      const interval = this.getUpgradeAutomatorInterval(worker.stars);
+      const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
+      const interval = this.getUpgradeAutomatorInterval(worker.stars, assignedSlot);
       const timeSinceLastAction = Date.now() - worker.lastActionTime;
       return Math.min(100, (timeSinceLastAction / interval) * 100);
     }
@@ -5536,8 +5578,8 @@
   getProgressText(worker) {
     if (!worker.job) return 'No job assigned';
     const assignedSlot = Object.keys(this.assignedWorkers).find(slot => this.assignedWorkers[slot] === worker);
-    if (assignedSlot && !this.canWorkerWork(assignedSlot)) {
-      return 'Too hungry to work!';
+    if (assignedSlot && this.isWorkerHungry(assignedSlot)) {
+      return 'Working slowly (hungry)';
     }
     if (typeof worker.job === 'object' && worker.job.type === 'delivery_automator') {
       const automator = this.deliveryAutomatorJobs.find(da => da.id === worker.job.id);
