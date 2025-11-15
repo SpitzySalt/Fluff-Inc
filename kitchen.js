@@ -135,9 +135,13 @@ const INGREDIENT_TYPES = [
 ];
 const INGREDIENT_TYPE_IMAGES = {
   mushroom: 'assets/icons/mushroom token.png',
+  mushrooms: 'assets/icons/mushroom token.png',
   spark: 'assets/icons/spark token.png',
+  sparks: 'assets/icons/spark token.png',
   berry: 'assets/icons/berry token.png',
+  berries: 'assets/icons/berry token.png',
   petal: 'assets/icons/petal token.png',
+  petals: 'assets/icons/petal token.png',
   water: 'assets/icons/water token.png', 
   prisma: 'assets/icons/prisma token.png',
   stardust: 'assets/icons/stardust token.png',
@@ -146,10 +150,22 @@ const INGREDIENT_TYPE_IMAGES = {
   honey: 'assets/icons/honey token.png'
 };
 
+// Helper function to normalize ingredient names (plural to singular)
+function normalizeIngredientName(ingredient) {
+  const pluralToSingular = {
+    'berries': 'berry',
+    'mushrooms': 'mushroom',
+    'sparks': 'spark',
+    'petals': 'petal'
+  };
+  return pluralToSingular[ingredient] || ingredient;
+}
+
 // Make kitchen.js variables globally accessible
 window.recipes = recipes;
 window.INGREDIENT_TYPES = INGREDIENT_TYPES;
 window.INGREDIENT_TYPE_IMAGES = INGREDIENT_TYPE_IMAGES;
+window.normalizeIngredientName = normalizeIngredientName;
 
 function getRandomIngredientType(context) {
   let weights;
@@ -762,6 +778,11 @@ function completeCooking(recipeId, amount) {
   }
   if (typeof window.trackCookingAction === 'function') {
     window.trackCookingAction(recipeId, amount);
+  }
+  
+  // Track food achievement
+  if (typeof window.trackFoodAchievement === 'function') {
+    window.trackFoodAchievement();
   }
 }
 
@@ -1949,7 +1970,8 @@ window.addEventListener('load', function() {
         // Check availability from window.state.tokens
         let hasAllIngredients = true;
         for (const [ingredient, amount] of Object.entries(totalCosts)) {
-          const available = (window.state && window.state.tokens && window.state.tokens[ingredient]) || new Decimal(0);
+          const normalizedIngredient = normalizeIngredientName(ingredient);
+          const available = (window.state && window.state.tokens && window.state.tokens[normalizedIngredient]) || new Decimal(0);
           if (DecimalUtils.isDecimal(available) ? available.lt(amount) : new Decimal(available).lt(amount)) {
             hasAllIngredients = false;
             break;
@@ -2000,10 +2022,11 @@ window.addEventListener('load', function() {
             if (!hasAllIngredients) return;
             // Deduct ingredients from window.state.tokens
             for (const [ingredient, amount] of Object.entries(totalCosts)) {
-              if (!DecimalUtils.isDecimal(window.state.tokens[ingredient])) {
-                window.state.tokens[ingredient] = new Decimal(0);
+              const normalizedIngredient = normalizeIngredientName(ingredient);
+              if (!DecimalUtils.isDecimal(window.state.tokens[normalizedIngredient])) {
+                window.state.tokens[normalizedIngredient] = new Decimal(0);
               }
-              window.state.tokens[ingredient] = window.state.tokens[ingredient].sub(amount);
+              window.state.tokens[normalizedIngredient] = window.state.tokens[normalizedIngredient].sub(amount);
             }
             if (typeof updateKitchenUI === 'function') updateKitchenUI();
             startCooking(bulkAmount, time.toNumber(), recipe.id);
