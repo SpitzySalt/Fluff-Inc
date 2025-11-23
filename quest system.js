@@ -5258,6 +5258,12 @@ function createWaveAnimation(word) {
 function showDialogueInterface() {
   if (!window.state || !window.state.questSystem || !window.state.questSystem.currentDialogue) return;
   
+  // Close quest modal when dialogue starts
+  const questModal = document.getElementById('questModal');
+  if (questModal) {
+    questModal.style.display = 'none';
+  }
+  
   const dialogue = window.state.questSystem.currentDialogue;
   const currentLine = dialogue.dialogue[dialogue.currentLine];
   const quest = questDefinitions[dialogue.questId];
@@ -8598,6 +8604,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${fluffComplete ? '#28a745' : deptColors.light};height:100%;width:${fluffPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'fluffCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8615,6 +8625,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${swariaComplete ? '#28a745' : deptColors.light};height:100%;width:${swariaPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'swariaCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8634,6 +8648,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${tokensComplete ? '#28a745' : deptColors.light};height:100%;width:${tokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'tokensCollectedDuringQuest')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8651,6 +8669,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${commonBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${commonBoxPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'commonBoxesProduced')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8670,6 +8692,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${uncommonBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${uncommonBoxPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'uncommonBoxesProduced')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8687,6 +8713,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${rareBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${rareBoxPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'rareBoxesProduced')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8706,6 +8736,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${mythicBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${mythicBoxPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'mythicBoxesProduced')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8723,6 +8757,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${legendaryBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${legendaryBoxPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'legendaryBoxesProduced')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8742,6 +8780,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${feathersComplete ? '#28a745' : deptColors.light};height:100%;width:${feathersPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'feathersCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8760,6 +8802,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${artifactsComplete ? '#28a745' : deptColors.light};height:100%;width:${artifactsPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'artifactsCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8776,6 +8822,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${allGeneratorsRunning ? '#28a745' : deptColors.light};height:100%;width:${generatorsPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'allBoxGeneratorsRunning')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8796,6 +8846,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${commonBoxesCompleteExp ? '#28a745' : deptColors.light};height:100%;width:${commonBoxPercentExp}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'commonBoxesProducedExponential')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8813,6 +8867,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${uncommonBoxesCompleteExp ? '#28a745' : deptColors.light};height:100%;width:${uncommonBoxPercentExp}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'uncommonBoxesProducedExponential')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8832,6 +8890,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${rareBoxesCompleteExp ? '#28a745' : deptColors.light};height:100%;width:${rareBoxPercentExp}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'rareBoxesProducedExponential')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8849,6 +8911,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${legendaryBoxesCompleteExp ? '#28a745' : deptColors.light};height:100%;width:${legendaryBoxPercentExp}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'legendaryBoxesProducedExponential')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8868,6 +8934,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${mythicBoxesCompleteExp ? '#28a745' : deptColors.light};height:100%;width:${mythicBoxPercentExp}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'mythicBoxesProducedExponential')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8886,6 +8956,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${powerRefillsComplete ? '#28a745' : deptColors.light};height:100%;width:${powerRefillPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'powerRefillsGained')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8908,6 +8982,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berryTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${berryTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berryTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8925,6 +9003,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${stardustTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${stardustTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'stardustTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8944,6 +9026,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berryPlatesComplete ? '#28a745' : deptColors.light};height:100%;width:${berryPlatePercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berryPlates')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8961,6 +9047,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${mushroomSoupsComplete ? '#28a745' : deptColors.light};height:100%;width:${mushroomSoupPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'mushroomSoups')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -8980,6 +9070,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismClicksComplete ? '#28a745' : deptColors.light};height:100%;width:${prismClickPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismClicksGained')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -8998,6 +9092,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${soapPokesComplete ? '#28a745' : deptColors.light};height:100%;width:${soapPokePercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'soapPokes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9015,6 +9113,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${ingredientsCookedComplete ? '#28a745' : deptColors.light};height:100%;width:${ingredientsCookedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'ingredientsCooked')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9035,6 +9137,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${friendshipComplete ? '#28a745' : deptColors.light};height:100%;width:${friendshipPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'friendshipLevels')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9052,6 +9158,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${petalTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${petalTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'petalTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9071,6 +9181,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${waterTokensNightComplete ? '#28a745' : deptColors.light};height:100%;width:${waterTokensNightPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'waterTokensNight')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9088,6 +9202,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${chargedPrismaComplete ? '#28a745' : deptColors.light};height:100%;width:${chargedPrismaPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'chargedPrisma')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9107,6 +9225,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${anomaliesFixedComplete ? '#28a745' : deptColors.light};height:100%;width:${anomaliesFixedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'anomaliesFixed')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9124,6 +9246,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismClicksNightComplete ? '#28a745' : deptColors.light};height:100%;width:${prismClicksNightPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismClicksNight')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9143,6 +9269,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${flowersClickedComplete ? '#28a745' : deptColors.light};height:100%;width:${flowersClickedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'flowersClicked')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9160,6 +9290,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${fluzzerPokesComplete ? '#28a745' : deptColors.light};height:100%;width:${fluzzerPokesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'fluzzerPokes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9179,6 +9313,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${leprePokesComplete ? '#28a745' : deptColors.light};height:100%;width:${leprePokesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'leprePokes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9197,23 +9335,31 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${lepreShopComplete ? '#28a745' : deptColors.light};height:100%;width:${lepreShopPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'lepreShopPurchases')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
               
-              if (quest.objectives.fluffCollected) {
-                const fluffCollectedCount = progress.fluffCollected || new Decimal(0);
-                const fluffCollectedComplete = DecimalUtils.isDecimal(fluffCollectedCount) ? fluffCollectedCount.gte(quest.objectives.fluffCollected) : fluffCollectedCount >= quest.objectives.fluffCollected;
-                const fluffCollectedPercent = fluffCollectedComplete ? 100 : Math.min(100, DecimalUtils.isDecimal(fluffCollectedCount) ? fluffCollectedCount.div(quest.objectives.fluffCollected).mul(100).toNumber() : (fluffCollectedCount / quest.objectives.fluffCollected) * 100);
+              if (quest.objectives.swaBucksFreeClaims) {
+                const swaBucksClaimsCount = DecimalUtils.isDecimal(progress.swaBucksFreeClaims) ? progress.swaBucksFreeClaims : new Decimal(progress.swaBucksFreeClaims || 0);
+                const swaBucksClaimsComplete = swaBucksClaimsCount.gte(quest.objectives.swaBucksFreeClaims);
+                const swaBucksClaimsPercent = swaBucksClaimsComplete ? 100 : Math.min(100, swaBucksClaimsCount.div(quest.objectives.swaBucksFreeClaims).mul(100).toNumber());
                 
                 progressItems.push(`
                   <div style="margin-bottom:0.5em;">
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.2em;">
-                      <span style="font-size:0.85em;color:${deptColors.text};">Collect Fluff</span>
-                      <span style="font-size:0.75em;color:${deptColors.text};opacity:0.9;">${fluffCollectedComplete ? '✓' : `${DecimalUtils.formatDecimal(fluffCollectedCount)}/${DecimalUtils.formatDecimal(quest.objectives.fluffCollected)}`}</span>
+                      <span style="font-size:0.85em;color:${deptColors.text};">Claim Free Swa Bucks</span>
+                      <span style="font-size:0.75em;color:${deptColors.text};opacity:0.9;">${swaBucksClaimsComplete ? '✓' : `${DecimalUtils.formatDecimal(swaBucksClaimsCount)}/${DecimalUtils.formatDecimal(quest.objectives.swaBucksFreeClaims)}`}</span>
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
-                      <div style="background:${fluffCollectedComplete ? '#28a745' : deptColors.light};height:100%;width:${fluffCollectedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                      <div style="background:${swaBucksClaimsComplete ? '#28a745' : deptColors.light};height:100%;width:${swaBucksClaimsPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'swaBucksFreeClaims')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9232,6 +9378,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${commonBoxesClicksComplete ? '#28a745' : deptColors.light};height:100%;width:${commonBoxesClickPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'commonBoxesClicks')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9252,6 +9402,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookBerryPlatesComplete ? '#28a745' : deptColors.light};height:100%;width:${cookBerryPlatesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookBerryPlates')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9269,6 +9423,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookMushroomSoupComplete ? '#28a745' : deptColors.light};height:100%;width:${cookMushroomSoupPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookMushroomSoup')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9288,6 +9446,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookBatteriesComplete ? '#28a745' : deptColors.light};height:100%;width:${cookBatteriesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookBatteries')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9306,6 +9468,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookGlitteringPetalsComplete ? '#28a745' : deptColors.light};height:100%;width:${cookGlitteringPetalsPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookGlitteringPetals')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9323,6 +9489,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookChargedPrismaComplete ? '#28a745' : deptColors.light};height:100%;width:${cookChargedPrismaPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookChargedPrisma')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9343,6 +9513,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berriesComplete ? '#28a745' : deptColors.light};height:100%;width:${berriesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berriesCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9360,6 +9534,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${waterComplete ? '#28a745' : deptColors.light};height:100%;width:${waterPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'waterCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9379,6 +9557,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${mushroomComplete ? '#28a745' : deptColors.light};height:100%;width:${mushroomPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'mushroomCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9397,6 +9579,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${sparksComplete ? '#28a745' : deptColors.light};height:100%;width:${sparksPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'sparksCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9414,6 +9600,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismaComplete ? '#28a745' : deptColors.light};height:100%;width:${prismaPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismaCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9434,6 +9624,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berryTokenComplete ? '#28a745' : deptColors.light};height:100%;width:${berryTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berryTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9452,6 +9646,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${sparksTokenComplete ? '#28a745' : deptColors.light};height:100%;width:${sparksTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'sparksTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9469,6 +9667,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismaTokenComplete ? '#28a745' : deptColors.light};height:100%;width:${prismaTokenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismaTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9490,6 +9692,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cargoTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${cargoTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cargoTokensFromBoxes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9507,6 +9713,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${generatorTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${generatorTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'generatorTokensFromBoxes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9526,6 +9736,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismClickTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${prismClickTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismClickTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9543,6 +9757,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${terrariumRustlingTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${terrariumRustlingTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'terrariumRustlingTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9562,6 +9780,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${nightTimeTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${nightTimeTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'nightTimeTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9579,6 +9801,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${collectAnyTokensComplete ? '#28a745' : deptColors.light};height:100%;width:${collectAnyTokensPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'collectAnyTokens')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9598,6 +9824,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${buyBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${buyBoxesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'buyBoxes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9615,6 +9845,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${buyBoxesAtNightComplete ? '#28a745' : deptColors.light};height:100%;width:${buyBoxesAtNightPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'buyBoxesAtNight')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9634,6 +9868,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${generateBoxesComplete ? '#28a745' : deptColors.light};height:100%;width:${generateBoxesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'generateBoxes')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9651,6 +9889,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${clickPrismTilesComplete ? '#28a745' : deptColors.light};height:100%;width:${clickPrismTilesPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'clickPrismTiles')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9670,6 +9912,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${clickPrismTilesAtNightComplete ? '#28a745' : deptColors.light};height:100%;width:${clickPrismTilesAtNightPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'clickPrismTilesAtNight')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9687,6 +9933,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${waterFlowersComplete ? '#28a745' : deptColors.light};height:100%;width:${waterFlowersPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'waterFlowers')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9706,6 +9956,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${extractPollenComplete ? '#28a745' : deptColors.light};height:100%;width:${extractPollenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'extractPollen')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9724,6 +9978,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${clickFlowersTotalComplete ? '#28a745' : deptColors.light};height:100%;width:${clickFlowersTotalPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'clickFlowersTotal')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9741,6 +9999,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${cookAnyIngredientsComplete ? '#28a745' : deptColors.light};height:100%;width:${cookAnyIngredientsPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'cookAnyIngredients')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9761,6 +10023,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${tokensPurchasedComplete ? '#28a745' : deptColors.light};height:100%;width:${tokensPurchasedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'tokensPurchased')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9778,6 +10044,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berryTokensPurchasedComplete ? '#28a745' : deptColors.light};height:100%;width:${berryTokensPurchasedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berryTokensPurchased')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9797,6 +10067,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${waterTokensPurchasedComplete ? '#28a745' : deptColors.light};height:100%;width:${waterTokensPurchasedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'waterTokensPurchased')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9815,6 +10089,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${premiumTokensPurchasedComplete ? '#28a745' : deptColors.light};height:100%;width:${premiumTokensPurchasedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'premiumTokensPurchased')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9832,6 +10110,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${freeBucksClaimedComplete ? '#28a745' : deptColors.light};height:100%;width:${freeBucksClaimedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'freeBucksClaimed')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9852,6 +10134,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${berriesGivenComplete ? '#28a745' : deptColors.light};height:100%;width:${berriesGivenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'berriesGiven')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9869,6 +10155,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${petalsGivenComplete ? '#28a745' : deptColors.light};height:100%;width:${petalsGivenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'petalsGiven')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9888,6 +10178,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${waterGivenComplete ? '#28a745' : deptColors.light};height:100%;width:${waterGivenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'waterGiven')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9905,6 +10199,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${prismaGivenComplete ? '#28a745' : deptColors.light};height:100%;width:${prismaGivenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'prismaGiven')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9925,6 +10223,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${tokensCollectedComplete ? '#28a745' : deptColors.light};height:100%;width:${tokensCollectedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'tokensCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9943,6 +10245,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${batteriesCraftedComplete ? '#28a745' : deptColors.light};height:100%;width:${batteriesCraftedPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'batteriesCrafted')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9960,6 +10266,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${tokensGivenComplete ? '#28a745' : deptColors.light};height:100%;width:${tokensGivenPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'tokensGiven')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -9981,6 +10291,10 @@ function updateQuestModal() {
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${freeSwaComplete ? '#28a745' : deptColors.light};height:100%;width:${freeSwaPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'freeSwaCollected')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
+                    </div>
                   </div>
                 `);
               }
@@ -9998,6 +10312,10 @@ function updateQuestModal() {
                     </div>
                     <div style="background:rgba(255,255,255,0.2);border-radius:6px;height:6px;overflow:hidden;">
                       <div style="background:${recordComplete ? '#28a745' : deptColors.light};height:100%;width:${recordPercent}%;transition:width 0.3s ease;border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.3em;margin-top:0.3em;">
+                      <button onclick="window.skipQuestObjective('${quest.id}', 'powerChallengeRecord')" style="font-size:0.65em;padding:0.2em 0.5em;background:rgba(255,100,100,0.3);border:1px solid rgba(255,100,100,0.5);border-radius:4px;color:#fff;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,100,100,0.5)'" onmouseout="this.style.background='rgba(255,100,100,0.3)'">Skip</button>
+                      <span style="font-size:0.6em;color:${deptColors.text};opacity:0.7;font-style:italic;">Only use if objective tracking is bugged</span>
                     </div>
                   </div>
                 `);
@@ -10671,10 +10989,220 @@ function onLepreCharacterDisplayUpdate() {
   }
 }
 
+// Skip specific objective function (anti-softlock mechanic)
+function skipQuestObjective(questId, objectiveKey) {
+  if (!window.state || !window.state.questSystem) return;
+  
+  const progress = window.state.questSystem.questProgress[questId];
+  if (!progress) return;
+  
+  const quest = questDefinitions[questId];
+  if (!quest || !quest.objectives) return;
+  
+  // Map progress keys to objective keys
+  const progressToObjectiveMap = {
+    'tokensCollectedDuringQuest': 'tokens',
+    'fluffCollected': 'fluff',
+    'swariaCollected': 'swaria',
+    'feathersCollected': 'feathers',
+    'artifactsCollected': 'artifacts',
+    'prismaCollected': 'prisma',
+    'commonBoxesProduced': 'commonBoxes',
+    'uncommonBoxesProduced': 'uncommonBoxes',
+    'rareBoxesProduced': 'rareBoxes',
+    'legendaryBoxesProduced': 'legendaryBoxes',
+    'mythicBoxesProduced': 'mythicBoxes',
+    'commonBoxesProducedExponential': 'commonBoxesExponential',
+    'uncommonBoxesProducedExponential': 'uncommonBoxesExponential',
+    'rareBoxesProducedExponential': 'rareBoxesExponential',
+    'legendaryBoxesProducedExponential': 'legendaryBoxesExponential',
+    'mythicBoxesProducedExponential': 'mythicBoxesExponential',
+    'powerRefillsGained': 'powerRefills',
+    'prismClicksGained': 'prismClicks',
+    'ingredientsCooked': 'ingredientsCooked'
+  };
+  
+  // Get the actual objective key (if mapped, use mapped value, otherwise use as-is)
+  const actualObjectiveKey = progressToObjectiveMap[objectiveKey] || objectiveKey;
+  
+  const objectiveValue = quest.objectives[actualObjectiveKey];
+  if (objectiveValue === undefined) return;
+  
+  // Set the progress value
+  if (DecimalUtils.isDecimal(objectiveValue)) {
+    progress[objectiveKey] = new Decimal(objectiveValue);
+  } else {
+    progress[objectiveKey] = objectiveValue;
+  }
+  
+  // For objectives that track gains from starting values, adjust the starting value
+  // so the calculation (current - starting = progress) still works
+  if (objectiveKey === 'swariaCollected') {
+    // Adjust startingSwaria so that current - starting = target
+    const currentSwaria = window.state.swaria ? (DecimalUtils.isDecimal(window.state.swaria) ? window.state.swaria : new Decimal(window.state.swaria)) : new Decimal(0);
+    const targetGain = new Decimal(objectiveValue);
+    const newStartingSwaria = currentSwaria.sub(targetGain);
+    // Ensure starting value doesn't go negative
+    progress.startingSwaria = newStartingSwaria.gte(0) ? newStartingSwaria : new Decimal(0);
+    // If we had to clamp to 0, adjust the progress value to match what the calculation will give
+    if (newStartingSwaria.lt(0)) {
+      progress[objectiveKey] = currentSwaria;
+    }
+  } else if (objectiveKey === 'fluffCollected') {
+    const currentFluff = window.state.fluff ? (DecimalUtils.isDecimal(window.state.fluff) ? window.state.fluff : new Decimal(window.state.fluff)) : new Decimal(0);
+    const targetGain = new Decimal(objectiveValue);
+    const newStartingFluff = currentFluff.sub(targetGain);
+    progress.startingFluff = newStartingFluff.gte(0) ? newStartingFluff : new Decimal(0);
+    if (newStartingFluff.lt(0)) {
+      progress[objectiveKey] = currentFluff;
+    }
+  } else if (objectiveKey === 'feathersCollected') {
+    const currentFeathers = window.state.feathers ? (DecimalUtils.isDecimal(window.state.feathers) ? window.state.feathers : new Decimal(window.state.feathers)) : new Decimal(0);
+    const targetGain = new Decimal(objectiveValue);
+    const newStartingFeathers = currentFeathers.sub(targetGain);
+    if (newStartingFeathers.gte(0)) {
+      progress.startingFeathers = newStartingFeathers;
+    } else {
+      progress.startingFeathers = new Decimal(0);
+      window.state.feathers = targetGain;
+    }
+  } else if (objectiveKey === 'artifactsCollected') {
+    const currentArtifacts = window.state.wingArtifacts ? (DecimalUtils.isDecimal(window.state.wingArtifacts) ? window.state.wingArtifacts : new Decimal(window.state.wingArtifacts)) : new Decimal(0);
+    const targetGain = new Decimal(objectiveValue);
+    const newStartingArtifacts = currentArtifacts.sub(targetGain);
+    progress.startingArtifacts = newStartingArtifacts.gte(0) ? newStartingArtifacts : new Decimal(0);
+    if (newStartingArtifacts.lt(0)) {
+      progress[objectiveKey] = currentArtifacts;
+    }
+  } else if (objectiveKey === 'prismaCollected') {
+    const currentPrisma = window.state.prisma ? (DecimalUtils.isDecimal(window.state.prisma) ? window.state.prisma : new Decimal(window.state.prisma)) : new Decimal(0);
+    const targetGain = new Decimal(objectiveValue);
+    const newStartingPrisma = currentPrisma.sub(targetGain);
+    progress.startingPrisma = newStartingPrisma.gte(0) ? newStartingPrisma : new Decimal(0);
+    if (newStartingPrisma.lt(0)) {
+      progress[objectiveKey] = currentPrisma;
+    }
+  } else if (objectiveKey === 'commonBoxesProduced') {
+    const currentCommonBoxes = typeof getCommonBoxCount === 'function' ? getCommonBoxCount() : 0;
+    const newStarting = currentCommonBoxes - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingCommonBoxes = newStarting;
+    } else {
+      // If current is less than target, set starting to 0 and increase current to meet target
+      progress.startingCommonBoxes = 0;
+      if (window.state && window.state.boxesProducedByType) {
+        window.state.boxesProducedByType.common = objectiveValue;
+      }
+    }
+  } else if (objectiveKey === 'uncommonBoxesProduced') {
+    const currentUncommonBoxes = typeof getUncommonBoxCount === 'function' ? getUncommonBoxCount() : 0;
+    const newStarting = currentUncommonBoxes - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingUncommonBoxes = newStarting;
+    } else {
+      // If current is less than target, set starting to 0 and increase current to meet target
+      progress.startingUncommonBoxes = 0;
+      if (window.state && window.state.boxesProducedByType) {
+        window.state.boxesProducedByType.uncommon = objectiveValue;
+      }
+    }
+  } else if (objectiveKey === 'rareBoxesProduced') {
+    const currentRareBoxes = typeof getRareBoxCount === 'function' ? getRareBoxCount() : 0;
+    const newStarting = currentRareBoxes - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingRareBoxes = newStarting;
+    } else {
+      progress.startingRareBoxes = 0;
+      if (window.state && window.state.boxesProducedByType) {
+        window.state.boxesProducedByType.rare = objectiveValue;
+      }
+    }
+  } else if (objectiveKey === 'legendaryBoxesProduced') {
+    const currentLegendaryBoxes = typeof getLegendaryBoxCount === 'function' ? getLegendaryBoxCount() : 0;
+    const newStarting = currentLegendaryBoxes - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingLegendaryBoxes = newStarting;
+    } else {
+      progress.startingLegendaryBoxes = 0;
+      if (window.state && window.state.boxesProducedByType) {
+        window.state.boxesProducedByType.legendary = objectiveValue;
+      }
+    }
+  } else if (objectiveKey === 'mythicBoxesProduced') {
+    const currentMythicBoxes = typeof getMythicBoxCount === 'function' ? getMythicBoxCount() : 0;
+    const newStarting = currentMythicBoxes - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingMythicBoxes = newStarting;
+    } else {
+      progress.startingMythicBoxes = 0;
+      if (window.state && window.state.boxesProducedByType) {
+        window.state.boxesProducedByType.mythic = objectiveValue;
+      }
+    }
+  } else if (objectiveKey === 'commonBoxesProducedExponential') {
+    const currentCommonBoxes = typeof getCommonBoxCount === 'function' ? getCommonBoxCount() : 0;
+    const newStarting = currentCommonBoxes - objectiveValue;
+    progress.startingCommonBoxesExponential = Math.max(0, newStarting);
+    if (newStarting < 0) {
+      progress[objectiveKey] = currentCommonBoxes;
+    }
+  } else if (objectiveKey === 'uncommonBoxesProducedExponential') {
+    const currentUncommonBoxes = typeof getUncommonBoxCount === 'function' ? getUncommonBoxCount() : 0;
+    const newStarting = currentUncommonBoxes - objectiveValue;
+    progress.startingUncommonBoxesExponential = Math.max(0, newStarting);
+    if (newStarting < 0) {
+      progress[objectiveKey] = currentUncommonBoxes;
+    }
+  } else if (objectiveKey === 'rareBoxesProducedExponential') {
+    const currentRareBoxes = typeof getRareBoxCount === 'function' ? getRareBoxCount() : 0;
+    const newStarting = currentRareBoxes - objectiveValue;
+    progress.startingRareBoxesExponential = Math.max(0, newStarting);
+    if (newStarting < 0) {
+      progress[objectiveKey] = currentRareBoxes;
+    }
+  } else if (objectiveKey === 'legendaryBoxesProducedExponential') {
+    const currentLegendaryBoxes = typeof getLegendaryBoxCount === 'function' ? getLegendaryBoxCount() : 0;
+    const newStarting = currentLegendaryBoxes - objectiveValue;
+    progress.startingLegendaryBoxesExponential = Math.max(0, newStarting);
+    if (newStarting < 0) {
+      progress[objectiveKey] = currentLegendaryBoxes;
+    }
+  } else if (objectiveKey === 'mythicBoxesProducedExponential') {
+    const currentMythicBoxes = typeof getMythicBoxCount === 'function' ? getMythicBoxCount() : 0;
+    const newStarting = currentMythicBoxes - objectiveValue;
+    progress.startingMythicBoxesExponential = Math.max(0, newStarting);
+    if (newStarting < 0) {
+      progress[objectiveKey] = currentMythicBoxes;
+    }
+  } else if (objectiveKey === 'powerRefillsGained') {
+    const currentPowerRefills = window.state.powerRefillCount || 0;
+    const newStarting = currentPowerRefills - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingPowerRefills = newStarting;
+    } else {
+      // If current is less than target, set starting to 0 and increase current to meet target
+      progress.startingPowerRefills = 0;
+      window.state.powerRefillCount = objectiveValue;
+    }
+  } else if (objectiveKey === 'prismClicksGained') {
+    const currentPrismClicks = window.state.prismClicks || 0;
+    const newStarting = currentPrismClicks - objectiveValue;
+    if (newStarting >= 0) {
+      progress.startingPrismClicks = newStarting;
+    } else {
+      progress.startingPrismClicks = 0;
+      window.state.prismClicks = objectiveValue;
+    }
+  }
+  
+  forceUpdateQuestModal();
+}
+
 // Make functions globally accessible
 window.initializeQuestSystem = initializeQuestSystem;
 window.updateQuestModal = updateQuestModal;
 window.forceUpdateQuestModal = forceUpdateQuestModal;
+window.skipQuestObjective = skipQuestObjective;
 window.trackUserScrollActivity = trackUserScrollActivity;
 window.debugQuestSystem = debugQuestSystem;
 window.checkQuestAvailability = checkQuestAvailability;

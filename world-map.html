@@ -312,12 +312,6 @@
 
     // Travel to Haunted Grove
     async function travelToHauntedGrove() {
-      // Easter egg: 0.1% chance to play spooky music when arriving at Halloween page
-      if (Math.random() < 0.001) {
-        // Set flag in sessionStorage to play music on arrival
-        sessionStorage.setItem('playSpookyMusic', 'true');
-      }
-      
       // Load current game state
       const state = await loadGameState();
       
@@ -355,7 +349,6 @@
               store.put(saveObject);
             }
           } catch (error) {
-            // Silent error handling
           }
         }
       }

@@ -750,6 +750,7 @@ function registerDayNightCallback() {
 }
 
 window.updateBoostDisplay = updateBoostDisplay;
+window.createBoostDisplayCard = createBoostDisplayCard;
 
 // --- SLEEP BUTTON AND NIGHT SKIP ANIMATION ---
 function createSleepButtonIfNeeded() {

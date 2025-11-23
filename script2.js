@@ -5769,6 +5769,7 @@ function saveToSlot(slotNumber) {
     terrariumXpMultiplierUpgradeLevel: window.terrariumXpMultiplierUpgradeLevel || 0,
     terrariumFlowerFieldExpansionUpgradeLevel: window.terrariumFlowerFieldExpansionUpgradeLevel || 0, 
     terrariumFlowerUpgrade4Level: window.terrariumFlowerUpgrade4Level || 0, 
+    terrariumFlowerUpgrade5Level: window.terrariumFlowerUpgrade5Level || 0,
     terrariumFlowerValueUpgradeLevel: window.terrariumFlowerValueUpgradeLevel || 0,
     terrariumPollenToolSpeedUpgradeLevel: window.terrariumPollenToolSpeedUpgradeLevel || 0,
     terrariumFlowerXPUpgradeLevel: window.terrariumFlowerXPUpgradeLevel || 0,
@@ -5778,6 +5779,7 @@ function saveToSlot(slotNumber) {
     terrariumPollenFlowerNectarUpgradeLevel: window.terrariumPollenFlowerNectarUpgradeLevel || 0,
     terrariumNectarXpUpgradeLevel: window.terrariumNectarXpUpgradeLevel || 0,
     terrariumNectarValueUpgradeLevel: window.terrariumNectarValueUpgradeLevel || 0,
+    terrariumNectarInfinityUpgradeLevel: window.terrariumNectarInfinityUpgradeLevel || 0,
     nectarUpgradeLevel: window.nectarUpgradeLevel || 0,
     nectarUpgradeCost: window.nectarUpgradeCost || 100,
     nectarizeMachineRepaired: window.nectarizeMachineRepaired || false,
@@ -6252,9 +6254,15 @@ function loadFromSlot(slotNumber) {
     if (typeof state.characterFullStatus.vi !== 'number') state.characterFullStatus.vi = 0;
     if (typeof data.terrariumNectar !== 'undefined') window.terrariumNectar = data.terrariumNectar;
     window.terrariumKpNectarUpgradeLevel = (typeof data.terrariumKpNectarUpgradeLevel !== 'undefined') ? data.terrariumKpNectarUpgradeLevel : 0;
+    window.kpNectarUpgradeLevel = window.terrariumKpNectarUpgradeLevel;
     window.terrariumPollenFlowerNectarUpgradeLevel = (typeof data.terrariumPollenFlowerNectarUpgradeLevel !== 'undefined') ? data.terrariumPollenFlowerNectarUpgradeLevel : 0;
+    window.pollenFlowerNectarUpgradeLevel = window.terrariumPollenFlowerNectarUpgradeLevel;
     window.terrariumNectarXpUpgradeLevel = (typeof data.terrariumNectarXpUpgradeLevel !== 'undefined') ? data.terrariumNectarXpUpgradeLevel : 0;
+    window.nectarXpUpgradeLevel = window.terrariumNectarXpUpgradeLevel;
     window.terrariumNectarValueUpgradeLevel = (typeof data.terrariumNectarValueUpgradeLevel !== 'undefined') ? data.terrariumNectarValueUpgradeLevel : 0;
+    window.nectarValueUpgradeLevel = window.terrariumNectarValueUpgradeLevel;
+    window.terrariumNectarInfinityUpgradeLevel = (typeof data.terrariumNectarInfinityUpgradeLevel !== 'undefined') ? data.terrariumNectarInfinityUpgradeLevel : 0;
+    window.nectarInfinityUpgradeLevel = window.terrariumNectarInfinityUpgradeLevel;
     if (typeof data.nectarUpgradeLevel !== 'undefined') window.nectarUpgradeLevel = data.nectarUpgradeLevel;
     if (typeof data.nectarUpgradeCost !== 'undefined') window.nectarUpgradeCost = data.nectarUpgradeCost;
 if (typeof data.nectarizeMachineRepaired !== 'undefined') window.nectarizeMachineRepaired = data.nectarizeMachineRepaired;
@@ -6606,27 +6614,41 @@ if (typeof data.nectarizePostResetTokenType !== 'undefined') window.nectarizePos
     if (typeof data.terrariumLevel !== 'undefined') window.terrariumLevel = data.terrariumLevel;
     if (typeof data.terrariumPollenValueUpgradeLevel !== 'undefined') {
       window.terrariumPollenValueUpgradeLevel = data.terrariumPollenValueUpgradeLevel;
+      window.pollenValueUpgradeLevel = data.terrariumPollenValueUpgradeLevel;
     }
     if (typeof data.terrariumPollenValueUpgrade2Level !== 'undefined') {
       window.terrariumPollenValueUpgrade2Level = data.terrariumPollenValueUpgrade2Level;
+      window.pollenValueUpgrade2Level = data.terrariumPollenValueUpgrade2Level;
     }
     if (typeof data.terrariumXpMultiplierUpgradeLevel !== 'undefined') {
       window.terrariumXpMultiplierUpgradeLevel = data.terrariumXpMultiplierUpgradeLevel;
+      window.xpMultiplierUpgradeLevel = data.terrariumXpMultiplierUpgradeLevel;
     }
       if (typeof data.terrariumFlowerUpgrade4Level !== 'undefined') {
     window.terrariumFlowerUpgrade4Level = data.terrariumFlowerUpgrade4Level; 
   }
+      if (typeof data.terrariumFlowerUpgrade5Level !== 'undefined') {
+    window.terrariumFlowerUpgrade5Level = data.terrariumFlowerUpgrade5Level; 
+  }
     if (typeof data.terrariumFlowerValueUpgradeLevel !== 'undefined') {
       window.terrariumFlowerValueUpgradeLevel = data.terrariumFlowerValueUpgradeLevel;
+      window.flowerValueUpgradeLevel = data.terrariumFlowerValueUpgradeLevel;
+    }
+    if (typeof data.terrariumFlowerFieldExpansionUpgradeLevel !== 'undefined') {
+      window.terrariumFlowerFieldExpansionUpgradeLevel = data.terrariumFlowerFieldExpansionUpgradeLevel;
+      window.flowerFieldExpansionUpgradeLevel = data.terrariumFlowerFieldExpansionUpgradeLevel;
     }
     if (typeof data.terrariumPollenToolSpeedUpgradeLevel !== 'undefined') {
       window.terrariumPollenToolSpeedUpgradeLevel = data.terrariumPollenToolSpeedUpgradeLevel;
+      window.pollenToolSpeedUpgradeLevel = data.terrariumPollenToolSpeedUpgradeLevel;
     }
     if (typeof data.terrariumFlowerXPUpgradeLevel !== 'undefined') {
       window.terrariumFlowerXPUpgradeLevel = data.terrariumFlowerXPUpgradeLevel;
+      window.flowerXPUpgradeLevel = data.terrariumFlowerXPUpgradeLevel;
     }
     if (typeof data.terrariumExtraChargeUpgradeLevel !== 'undefined') {
       window.terrariumExtraChargeUpgradeLevel = data.terrariumExtraChargeUpgradeLevel;
+      window.extraChargeUpgradeLevel = data.terrariumExtraChargeUpgradeLevel;
     }
     // Migrate old kitchenIngredients to window.state.tokens if present
     if (data.kitchenIngredients) {
@@ -8863,7 +8885,11 @@ function feedSwaria(itemType, skipDeduction = false, showSpeech = true) {
       if (!window.state.peachyHungerBoost) {
         window.state.peachyHungerBoost = 0;
       }
-      window.state.peachyHungerBoost = 10 * 60 * 1000; // 10 minutes
+      const baseDurationMs = 10 * 60 * 1000; // 10 minutes base
+      const adjustedDurationMs = (typeof window.applyMysticPremiumTokenBuff === 'function') 
+        ? window.applyMysticPremiumTokenBuff(baseDurationMs) 
+        : baseDurationMs;
+      window.state.peachyHungerBoost = adjustedDurationMs;
     }
     
     // Show feedback message with image changes (only if showSpeech is true)
@@ -10123,6 +10149,14 @@ function showCharacterSpeech(characterName, tokenType) {
     }
     if (tokenType === 'mushroomSoup' && characterName !== 'Mystic' && characterName !== 'Tico' && characterName !== 'MixingSystem') {
       alert('Mushroom Soup can only be given to Mystic or the Mixing Card!');
+      return;
+    }
+    if (characterName === 'PrismCore' && tokenType !== 'chargedPrisma') {
+      if (typeof window.showToast === 'function') {
+        window.showToast('The Prism Core can only accept Charged Prisma!', 'error');
+      } else {
+        alert('The Prism Core can only accept Charged Prisma!');
+      }
       return;
     }
     
@@ -12006,7 +12040,7 @@ function showCharacterSpeech(characterName, tokenType) {
     }
 
 
-    // Handle Swaria consumption
+    // Handle Swaria consumption (Swaria is the player character, also known as Peachy)
     if (characterName === 'Swaria') {
 
       if (tokenType === 'berryPlate') {
@@ -12020,9 +12054,18 @@ function showCharacterSpeech(characterName, tokenType) {
           : baseDurationMs;
         if (!window.state) window.state = {};
         window.state.peachyHungerBoost = adjustedDurationMs;
-        if (typeof window.updateBoostDisplay === 'function') {
-          window.updateBoostDisplay();
+        
+        // Force create boost display if it doesn't exist, then update it
+        if (typeof window.createBoostDisplayCard === 'function' && !document.getElementById('boostDisplayCard')) {
+          window.createBoostDisplayCard();
         }
+        
+        // Update boost display with a small delay to ensure it's created
+        setTimeout(() => {
+          if (typeof window.updateBoostDisplay === 'function') {
+            window.updateBoostDisplay();
+          }
+        }, 100);
         
         const swariaSpeech = document.getElementById('swariaSpeech');
         const swariaImg = document.getElementById('swariaCharacter');
@@ -12254,7 +12297,21 @@ function generateRecoveryExport(targetGrade) {
     terrariumXP: 0,
     terrariumLevel: 1,
     terrariumPollenValueUpgradeLevel: 0,
+    terrariumPollenValueUpgrade2Level: 0,
+    terrariumXpMultiplierUpgradeLevel: 0,
+    terrariumFlowerFieldExpansionUpgradeLevel: 0,
+    terrariumFlowerUpgrade4Level: 0,
+    terrariumFlowerUpgrade5Level: 0,
+    terrariumFlowerValueUpgradeLevel: 0,
+    terrariumPollenToolSpeedUpgradeLevel: 0,
+    terrariumFlowerXPUpgradeLevel: 0,
+    terrariumExtraChargeUpgradeLevel: 0,
     terrariumNectar: 0,
+    terrariumKpNectarUpgradeLevel: 0,
+    terrariumPollenFlowerNectarUpgradeLevel: 0,
+    terrariumNectarXpUpgradeLevel: 0,
+    terrariumNectarValueUpgradeLevel: 0,
+    terrariumNectarInfinityUpgradeLevel: 0,
     nectarizeMachineRepaired: targetGrade >= 6,
     hardModePermanentlyUnlocked: false,
     // Kitchen ingredients (basic tokens) - 50 of each

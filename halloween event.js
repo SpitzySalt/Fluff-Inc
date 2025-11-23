@@ -51,6 +51,7 @@ if (!DecimalUtils.isDecimal(window.state.halloweenEvent.swandy)) {
 // Halloween Music System
 let halloweenAudio = null;
 let halloweenMusicRolled = false;
+let hauntedGroveAudio = null;
 
 function initializeHalloweenMusic() {
   if (!halloweenAudio) {
@@ -60,15 +61,34 @@ function initializeHalloweenMusic() {
   }
 }
 
+function initializeHauntedGroveMusic() {
+  if (!hauntedGroveAudio) {
+    hauntedGroveAudio = new Audio('assets/music/wooden_disparity_house.mp3');
+    hauntedGroveAudio.loop = true;
+    hauntedGroveAudio.volume = 0.5;
+  }
+}
+
 function playHalloweenMusic() {
+  if (!window.settings || !window.settings.musicEnabled) {
+    return;
+  }
   if (!halloweenMusicRolled) {
     return;
   }
   initializeHalloweenMusic();
   if (halloweenAudio && halloweenAudio.paused) {
-    halloweenAudio.play().catch(err => {
-      console.error('Failed to play Halloween music:', err);
-    });
+    halloweenAudio.play().catch(err => {});
+  }
+}
+
+function playHauntedGroveMusic() {
+  if (!window.settings || !window.settings.musicEnabled) {
+    return;
+  }
+  initializeHauntedGroveMusic();
+  if (hauntedGroveAudio && hauntedGroveAudio.paused) {
+    hauntedGroveAudio.play().catch(err => {});
   }
 }
 
@@ -79,9 +99,20 @@ function stopHalloweenMusic() {
   }
 }
 
+function stopHauntedGroveMusic() {
+  if (hauntedGroveAudio && !hauntedGroveAudio.paused) {
+    hauntedGroveAudio.pause();
+    hauntedGroveAudio.currentTime = 0;
+  }
+}
+
 function rollHalloweenMusic() {
   halloweenMusicRolled = Math.random() < 0.001;
   return halloweenMusicRolled;
+}
+
+function rollHauntedGroveMusic() {
+  return Math.random() < 0.999;
 }
 
 // Ensure hex currency exists
@@ -274,6 +305,11 @@ function switchToHalloweenEvent() {
     playHalloweenMusic();
   }
   
+  // Roll for Haunted Grove music (99.9% chance)
+  if (rollHauntedGroveMusic()) {
+    playHauntedGroveMusic();
+  }
+  
   // Remove darkness effect when entering Halloween event
   if (typeof updateGeneratorDarknessEffect === 'function') {
     updateGeneratorDarknessEffect();
@@ -399,6 +435,10 @@ window.playHalloweenMusic = playHalloweenMusic;
 window.stopHalloweenMusic = stopHalloweenMusic;
 window.initializeHalloweenMusic = initializeHalloweenMusic;
 window.rollHalloweenMusic = rollHalloweenMusic;
+window.playHauntedGroveMusic = playHauntedGroveMusic;
+window.stopHauntedGroveMusic = stopHauntedGroveMusic;
+window.initializeHauntedGroveMusic = initializeHauntedGroveMusic;
+window.rollHauntedGroveMusic = rollHauntedGroveMusic;
 
 // Comprehensive Halloween Event Initialization
 function initializeHalloweenEventSystems() {
@@ -704,6 +744,9 @@ function cleanupHalloweenEventSystems() {
     // Stop Halloween music and reset roll
     stopHalloweenMusic();
     halloweenMusicRolled = false;
+    
+    // Stop Haunted Grove music
+    stopHauntedGroveMusic();
     
     // Stop auto speech
     if (typeof stopHalloweenPeachyAutoSpeech === 'function') {

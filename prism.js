@@ -1020,6 +1020,11 @@ function collectAllActiveLightTiles(friendshipMultiplier) {
       window.trackPrismClick();
     }
     
+    // Track prism tile click during night hours for KitoFox Challenge 2
+    if (typeof window.isNightTime === 'function' && window.isNightTime() && typeof window.trackKitoFox2PrismClickNight === 'function') {
+      window.trackKitoFox2PrismClickNight();
+    }
+    
     // Remove the tile
     tile.classList.remove("active-tile", "red-tile", "orange-tile", "white-tile", "yellow-tile", "green-tile", "blue-tile", "grey-tile");
     totalCollected++;

@@ -538,7 +538,8 @@ let settings = {
   confirmReset: true,
   confirmNectarizeReset: true,
   autosave: false,
-  autosaveInterval: 30
+  autosaveInterval: 30,
+  musicEnabled: true
 };
 window.settings = settings;
 window.applySettings = applySettings;
@@ -4806,6 +4807,7 @@ function applySettings() {
   }
   
   document.getElementById("disableOfflineProgressToggle").checked = settings.disableOfflineProgress;
+  document.getElementById("musicToggle").checked = settings.musicEnabled;
   document.getElementById("confirmResetToggle").checked = settings.confirmReset;
   const nectarizeResetLabel = document.getElementById("confirmNectarizeResetLabel");
   const nectarizeResetToggle = document.getElementById("confirmNectarizeResetToggle");
@@ -4882,6 +4884,20 @@ document.getElementById("disableOfflineProgressToggle").onchange = e => {
 document.getElementById("confirmResetToggle").onchange = e => {
   settings.confirmReset = e.target.checked;
   saveSettings();
+};
+document.getElementById("musicToggle").onchange = e => {
+  settings.musicEnabled = e.target.checked;
+  saveSettings();
+  
+  // Stop all music if disabled
+  if (!settings.musicEnabled) {
+    if (typeof stopHalloweenMusic === 'function') {
+      stopHalloweenMusic();
+    }
+    if (typeof stopHauntedGroveMusic === 'function') {
+      stopHauntedGroveMusic();
+    }
+  }
 };
 // Autosave toggle handler removed - save system disabled
 document.getElementById("confirmNectarizeResetToggle").onchange = e => {

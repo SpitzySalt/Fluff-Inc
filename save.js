@@ -1123,24 +1123,69 @@ window.SaveSystem = {
       
       // Ensure terrarium upgrade variables are properly restored
       if (window.state && window.state.terrarium) {
-        // Restore key terrarium upgrade variables that users reported missing
-        if (typeof window.state.terrarium.kpNectarUpgradeLevel !== 'undefined') {
-          window.terrariumKpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel;
-          // Extra safety: log this assignment to debug
-          console.log('Import: Setting kpNectarUpgradeLevel to', window.state.terrarium.kpNectarUpgradeLevel, '-> window.terrariumKpNectarUpgradeLevel =', window.terrariumKpNectarUpgradeLevel);
+        // Restore all 15 terrarium upgrade variables
+        // Pollen upgrade row (5 upgrades)
+        if (typeof window.state.terrarium.pollenValueUpgradeLevel !== 'undefined') {
+          window.pollenValueUpgradeLevel = window.state.terrarium.pollenValueUpgradeLevel;
+          window.terrariumPollenValueUpgradeLevel = window.state.terrarium.pollenValueUpgradeLevel;
         }
-        if (typeof window.state.terrarium.pollenFlowerNectarUpgradeLevel !== 'undefined') {
-          window.pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel;
-          window.terrariumPollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel;
+        if (typeof window.state.terrarium.pollenValueUpgrade2Level !== 'undefined') {
+          window.pollenValueUpgrade2Level = window.state.terrarium.pollenValueUpgrade2Level;
+          window.terrariumPollenValueUpgrade2Level = window.state.terrarium.pollenValueUpgrade2Level;
+        }
+        if (typeof window.state.terrarium.pollenToolSpeedUpgradeLevel !== 'undefined') {
+          window.pollenToolSpeedUpgradeLevel = window.state.terrarium.pollenToolSpeedUpgradeLevel;
+          window.terrariumPollenToolSpeedUpgradeLevel = window.state.terrarium.pollenToolSpeedUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.extraChargeUpgradeLevel !== 'undefined') {
+          window.extraChargeUpgradeLevel = window.state.terrarium.extraChargeUpgradeLevel;
+          window.terrariumExtraChargeUpgradeLevel = window.state.terrarium.extraChargeUpgradeLevel;
         }
         if (typeof window.state.terrarium.flowerFieldExpansionUpgradeLevel !== 'undefined') {
           window.flowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel;
           window.terrariumFlowerFieldExpansionUpgradeLevel = window.state.terrarium.flowerFieldExpansionUpgradeLevel;
         }
         
-        // Also ensure the terrarium flower upgrades are restored
+        // Flower upgrade row (5 upgrades)
+        if (typeof window.state.terrarium.flowerValueUpgradeLevel !== 'undefined') {
+          window.flowerValueUpgradeLevel = window.state.terrarium.flowerValueUpgradeLevel;
+          window.terrariumFlowerValueUpgradeLevel = window.state.terrarium.flowerValueUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.flowerXPUpgradeLevel !== 'undefined') {
+          window.flowerXPUpgradeLevel = window.state.terrarium.flowerXPUpgradeLevel;
+          window.terrariumFlowerXPUpgradeLevel = window.state.terrarium.flowerXPUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.xpMultiplierUpgradeLevel !== 'undefined') {
+          window.xpMultiplierUpgradeLevel = window.state.terrarium.xpMultiplierUpgradeLevel;
+          window.terrariumXpMultiplierUpgradeLevel = window.state.terrarium.xpMultiplierUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.terrariumFlowerUpgrade4Level !== 'undefined') {
+          window.terrariumFlowerUpgrade4Level = window.state.terrarium.terrariumFlowerUpgrade4Level;
+        }
         if (typeof window.state.terrarium.terrariumFlowerUpgrade5Level !== 'undefined') {
           window.terrariumFlowerUpgrade5Level = window.state.terrarium.terrariumFlowerUpgrade5Level;
+        }
+        
+        // Nectar upgrade row (5 upgrades)
+        if (typeof window.state.terrarium.kpNectarUpgradeLevel !== 'undefined') {
+          window.kpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel;
+          window.terrariumKpNectarUpgradeLevel = window.state.terrarium.kpNectarUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.pollenFlowerNectarUpgradeLevel !== 'undefined') {
+          window.pollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel;
+          window.terrariumPollenFlowerNectarUpgradeLevel = window.state.terrarium.pollenFlowerNectarUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.nectarXpUpgradeLevel !== 'undefined') {
+          window.nectarXpUpgradeLevel = window.state.terrarium.nectarXpUpgradeLevel;
+          window.terrariumNectarXpUpgradeLevel = window.state.terrarium.nectarXpUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.nectarValueUpgradeLevel !== 'undefined') {
+          window.nectarValueUpgradeLevel = window.state.terrarium.nectarValueUpgradeLevel;
+          window.terrariumNectarValueUpgradeLevel = window.state.terrarium.nectarValueUpgradeLevel;
+        }
+        if (typeof window.state.terrarium.nectarInfinityUpgradeLevel !== 'undefined') {
+          window.nectarInfinityUpgradeLevel = window.state.terrarium.nectarInfinityUpgradeLevel;
+          window.terrariumNectarInfinityUpgradeLevel = window.state.terrarium.nectarInfinityUpgradeLevel;
         }
         
         // Migrate any old terrarium upgrade values to the new state system
